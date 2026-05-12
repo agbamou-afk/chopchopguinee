@@ -21,6 +21,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { QrScanner } from "@/components/scanner/QrScanner";
+import logo from "@/assets/logo.png";
 
 type Step = "lookup" | "amount" | "confirm" | "done";
 
@@ -219,25 +220,32 @@ export default function AgentTopup() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to="/" className="p-1 hover:bg-muted rounded-lg">
+      <header className="gradient-primary p-4 pb-10 rounded-b-3xl">
+        <div className="max-w-md mx-auto flex items-center gap-3">
+          <Link
+            to="/agent"
+            className="p-1 hover:bg-white/10 rounded-lg text-primary-foreground"
+            aria-label="Retour"
+          >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div className="flex-1">
-            <h1 className="font-bold text-foreground">Recharge agent</h1>
-            <p className="text-xs text-muted-foreground">{agent?.business_name}</p>
+          <img src={logo} alt="Choper" className="h-10 w-auto object-contain" />
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-primary-foreground leading-tight">Recharge agent</h1>
+            <p className="text-xs text-primary-foreground/80 truncate">
+              {agent?.business_name}
+            </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-muted-foreground uppercase">Float</p>
-            <p className="font-bold text-foreground text-sm">
+            <p className="text-[10px] text-primary-foreground/80 uppercase">Float</p>
+            <p className="font-bold text-primary-foreground text-sm">
               {fmt(agent?.prepaid_float ?? 0)} GNF
             </p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 py-6">
+      <main className="max-w-md mx-auto px-4 -mt-6 pt-2 pb-6">
         <AnimatePresence mode="wait">
           {step === "lookup" && (
             <motion.div
