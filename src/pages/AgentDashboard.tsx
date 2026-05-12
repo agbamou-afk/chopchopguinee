@@ -8,9 +8,9 @@ import {
   Plus,
   Wallet as WalletIcon,
   XCircle,
-  Store,
   History,
 } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-GN").format(n);
 
@@ -124,28 +124,24 @@ export default function AgentDashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <header className="border-b bg-card">
-        <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-            <Store className="w-5 h-5 text-primary-foreground" />
-          </div>
+      <header className="gradient-primary p-4 pb-10 rounded-b-3xl">
+        <div className="max-w-md mx-auto flex items-center gap-3">
+          <img src={logo} alt="Choper" className="h-12 w-auto object-contain" />
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-foreground truncate">{agent!.business_name}</h1>
-            <p className="text-xs text-muted-foreground truncate">
+            <h1 className="font-bold text-primary-foreground truncate">
+              {agent!.business_name}
+            </h1>
+            <p className="text-xs text-primary-foreground/80 truncate">
               {agent!.location ?? "Agent Choper"}
             </p>
           </div>
-          <button
-            onClick={signOut}
-            className="p-2 hover:bg-muted rounded-lg text-muted-foreground"
-            aria-label="Se déconnecter"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <Button variant="secondary" size="sm" onClick={signOut}>
+            <LogOut className="w-4 h-4 mr-1" /> Quitter
+          </Button>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 py-6 space-y-5">
+      <main className="max-w-md mx-auto px-4 -mt-6 pt-2 pb-6 space-y-5">
         <div className="bg-card rounded-3xl p-5 shadow-elevated">
           <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-wide">
             <WalletIcon className="w-4 h-4" />
