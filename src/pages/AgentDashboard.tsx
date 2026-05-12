@@ -51,7 +51,7 @@ export default function AgentDashboard() {
       .eq("user_id", uid)
       .maybeSingle();
     if (!ap || ap.status !== "active") {
-      setError("Votre compte n'est pas un agent Choper actif. Contactez l'administrateur.");
+      setError("Votre compte n'est pas un agent CHOP CHOP actif. Contactez l'administrateur.");
       setLoading(false);
       return;
     }
@@ -126,13 +126,13 @@ export default function AgentDashboard() {
     <div className="min-h-screen bg-background pb-24">
       <header className="gradient-primary p-4 pb-10 rounded-b-3xl">
         <div className="max-w-md mx-auto flex items-center gap-3">
-          <img src={logo} alt="Choper" className="h-12 w-auto object-contain" />
+          <img src={logo} alt="CHOP CHOP" className="h-12 w-auto object-contain" />
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-primary-foreground truncate">
               {agent!.business_name}
             </h1>
             <p className="text-xs text-primary-foreground/80 truncate">
-              {agent!.location ?? "Agent Choper"}
+              {agent!.location ?? "Agent CHOP CHOP"}
             </p>
           </div>
           <Button variant="secondary" size="sm" onClick={signOut}>

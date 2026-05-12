@@ -63,7 +63,7 @@ export default function AgentTopup() {
         .eq("user_id", uid)
         .maybeSingle();
       if (!ap || ap.status !== "active") {
-        setAgentError("Votre compte n'est pas un agent Choper actif.");
+        setAgentError("Votre compte n'est pas un agent CHOP CHOP actif.");
       } else {
         const { data: w } = await supabase
           .from("wallets")
@@ -229,7 +229,7 @@ export default function AgentTopup() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <img src={logo} alt="Choper" className="h-10 w-auto object-contain" />
+          <img src={logo} alt="CHOP CHOP" className="h-10 w-auto object-contain" />
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-primary-foreground leading-tight">Recharge agent</h1>
             <p className="text-xs text-primary-foreground/80 truncate">
@@ -298,7 +298,7 @@ export default function AgentTopup() {
               <div className="bg-card rounded-2xl p-5 shadow-card">
                 <p className="text-xs text-muted-foreground">Client</p>
                 <p className="font-semibold text-foreground">
-                  {client.full_name ?? "Client Choper"}
+                  {client.full_name ?? "Client CHOP CHOP"}
                 </p>
                 {client.phone && (
                   <p className="text-sm text-muted-foreground">{client.phone}</p>

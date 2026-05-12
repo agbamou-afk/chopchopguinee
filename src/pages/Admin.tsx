@@ -165,7 +165,7 @@ export default function Admin() {
               <ShieldCheck className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-primary-foreground">Administration Choper</h1>
+              <h1 className="text-lg font-bold text-primary-foreground">Administration CHOP CHOP</h1>
               <p className="text-xs text-primary-foreground/80">{email}</p>
             </div>
           </div>
