@@ -30,36 +30,37 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 py-2 z-50">
-      <div className="max-w-md mx-auto flex justify-around items-center relative">
-        {(isDriverMode ? tabs : left).map((tab) => (
-          <NavButton
-            key={tab.id}
-            tab={tab}
-            active={activeTab === tab.id}
-            onClick={() => onTabChange(tab.id)}
-          />
-        ))}
-
-        {!isDriverMode && (
-          <button
-            onClick={onScanClick}
-            aria-label="Scanner"
-            className="relative -mt-8 w-14 h-14 rounded-full gradient-primary shadow-elevated flex items-center justify-center active:scale-95 transition"
-          >
-            <ScanLine className="w-6 h-6 text-primary-foreground" />
-          </button>
-        )}
-
-        {!isDriverMode &&
-          right.map((tab) => (
-            <NavButton
-              key={tab.id}
-              tab={tab}
-              active={activeTab === tab.id}
-              onClick={() => onTabChange(tab.id)}
-            />
+      {isDriverMode ? (
+        <div className="max-w-md mx-auto grid grid-cols-4 items-center relative">
+          {tabs.map((tab) => (
+            <div key={tab.id} className="flex justify-center">
+              <NavButton tab={tab} active={activeTab === tab.id} onClick={() => onTabChange(tab.id)} />
+            </div>
           ))}
-      </div>
+        </div>
+      ) : (
+        <div className="max-w-md mx-auto grid grid-cols-5 items-center relative">
+          {left.map((tab) => (
+            <div key={tab.id} className="flex justify-center">
+              <NavButton tab={tab} active={activeTab === tab.id} onClick={() => onTabChange(tab.id)} />
+            </div>
+          ))}
+          <div className="flex justify-center">
+            <button
+              onClick={onScanClick}
+              aria-label="Scanner"
+              className="-mt-8 w-14 h-14 rounded-full gradient-primary shadow-elevated flex items-center justify-center active:scale-95 transition"
+            >
+              <ScanLine className="w-6 h-6 text-primary-foreground" />
+            </button>
+          </div>
+          {right.map((tab) => (
+            <div key={tab.id} className="flex justify-center">
+              <NavButton tab={tab} active={activeTab === tab.id} onClick={() => onTabChange(tab.id)} />
+            </div>
+          ))}
+        </div>
+      )}
     </nav>
   );
 }
