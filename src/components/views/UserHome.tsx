@@ -45,7 +45,14 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         {/* Quick Actions */}
         <section>
           <h2 className="text-lg font-semibold text-foreground mb-4">Services</h2>
-          <QuickActions onActionClick={onActionClick} />
+          <div className="bg-card rounded-3xl shadow-card p-4">
+            <QuickActions onActionClick={onActionClick} />
+            <div className="mt-3 pt-3 border-t border-border text-center">
+              <p className="text-sm font-semibold text-primary tracking-wide">
+                Tout, Partout, Pour Tous
+              </p>
+            </div>
+          </div>
         </section>
 
         {/* Promos */}
