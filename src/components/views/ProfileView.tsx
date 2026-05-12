@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   User,
   Settings,
@@ -9,6 +10,7 @@ import {
   Star,
   Car,
   Gift,
+  ShieldCheck,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
@@ -112,6 +114,15 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
           <LogOut className="w-5 h-5" />
           Se déconnecter
         </motion.button>
+
+        {/* Admin link */}
+        <Link
+          to="/admin"
+          className="w-full flex items-center justify-center gap-2 mt-3 p-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ShieldCheck className="w-4 h-4" />
+          Espace administrateur
+        </Link>
 
         {/* Version */}
         <p className="text-center text-sm text-muted-foreground mt-6">

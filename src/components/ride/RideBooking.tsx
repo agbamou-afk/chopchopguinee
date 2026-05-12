@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { MapPin, Navigation, X, Bike, Car, Clock, CreditCard, Loader2, LocateFixed } from "lucide-react";
+import { MapPin, Navigation, X, Bike, Car, Clock, CreditCard, Loader2, LocateFixed, CheckCircle2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Fix default marker icon paths (Leaflet+bundlers issue)
 const pickupIcon = L.divIcon({
@@ -66,16 +67,12 @@ const rideOptions = {
   moto: {
     title: "Moto",
     icon: Bike,
-    basePrice: 5000,
-    pricePerKm: 1000,
     eta: "3-5 min",
     speedKmh: 28,
   },
   toktok: {
     title: "TokTok",
     icon: Car,
-    basePrice: 8000,
-    pricePerKm: 1500,
     eta: "5-8 min",
     speedKmh: 22,
   },
@@ -94,9 +91,27 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
   const [route, setRoute] = useState<[number, number][]>([]);
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [durationMin, setDurationMin] = useState<number | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [fare, setFare] = useState<{ base: number; perKm: number; currency: string }>({
+    base: type === "moto" ? 5000 : 8000,
+    perKm: type === "moto" ? 1000 : 1500,
+    currency: "GNF",
+  });
   const debounceRef = useRef<number | null>(null);
   const option = rideOptions[type];
   const Icon = option.icon;
+
+  // Load admin-managed fare for this ride type
+  useEffect(() => {
+    supabase
+      .from("fare_settings")
+      .select("base_price, price_per_km, currency")
+      .eq("ride_type", type)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setFare({ base: Number(data.base_price), perKm: Number(data.price_per_km), currency: data.currency });
+      });
+  }, [type]);
 
   // Mock 4 nearby drivers within ~800m of pickup
   const drivers = useMemo(() => {
@@ -222,7 +237,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
       .catch(() => {});
   }, [pickupCoords, destCoords, option.speedKmh]);
 
-  const estimatedPrice = option.basePrice + option.pricePerKm * (distanceKm ?? 5);
+  const estimatedPrice = fare.base + fare.perKm * (distanceKm ?? 5);
 
   return (
     <motion.div
@@ -232,7 +247,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
       className="fixed inset-0 bg-background z-50 flex flex-col"
     >
       {/* Header */}
-      <div className="gradient-primary p-4 pb-8 rounded-b-3xl">
+      <div className="gradient-primary p-4 pb-8 rounded-b-3xl relative z-[1000]">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={onClose}
@@ -244,7 +259,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
           <div className="w-9" />
         </div>
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 relative">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 relative z-[1100]">
           <div className="flex items-center gap-3 pb-4 border-b border-white/20">
             <div className="w-3 h-3 rounded-full bg-primary-foreground" />
             <input
@@ -283,7 +298,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
           </div>
 
           {activeField && (
-            <div className="absolute left-0 right-0 top-full mt-2 mx-2 bg-card text-foreground rounded-2xl shadow-elevated max-h-72 overflow-y-auto z-[500]">
+            <div className="absolute left-2 right-2 top-full mt-2 bg-card text-foreground rounded-2xl shadow-elevated max-h-72 overflow-y-auto z-[1200] ring-1 ring-border">
               {searching && (
                 <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" /> Recherche…
@@ -404,7 +419,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
             <p className="text-lg font-bold text-foreground">
               {new Intl.NumberFormat("fr-GN").format(Math.round(estimatedPrice))} GNF
             </p>
-            <p className="text-xs text-muted-foreground">Estimation</p>
+            <p className="text-xs text-muted-foreground">{confirmed ? "Tarif confirmé" : "Estimation"}</p>
           </div>
         </div>
 
@@ -414,12 +429,28 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
           <span className="ml-auto text-sm font-medium text-primary">Changer</span>
         </div>
 
-        <Button
-          onClick={onBook}
-          className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
-        >
-          Confirmer la course
-        </Button>
+        {!confirmed ? (
+          <Button
+            onClick={() => {
+              if (!destCoords) {
+                toast({ title: "Choisissez une destination" });
+                return;
+              }
+              setConfirmed(true);
+              toast({ title: "Itinéraire confirmé", description: "Le tarif appliqué est défini par l'administrateur." });
+            }}
+            className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
+          >
+            <CheckCircle2 className="w-5 h-5 mr-2" /> Confirmer l'itinéraire
+          </Button>
+        ) : (
+          <Button
+            onClick={onBook}
+            className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
+          >
+            Réserver pour {new Intl.NumberFormat("fr-GN").format(Math.round(estimatedPrice))} GNF
+          </Button>
+        )}
       </motion.div>
     </motion.div>
   );
