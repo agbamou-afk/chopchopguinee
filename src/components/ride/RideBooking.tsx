@@ -60,7 +60,7 @@ const POI_KEYWORDS = ["rond-point", "marché", "carrefour", "commune", "quartier
 interface RideBookingProps {
   type: "moto" | "toktok";
   onClose: () => void;
-  onBook: () => void;
+  onBook: (trip: { pickupCoords: [number, number]; destCoords: [number, number]; fare: number }) => void;
 }
 
 const rideOptions = {
@@ -445,7 +445,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
           </Button>
         ) : (
           <Button
-            onClick={onBook}
+            onClick={() => destCoords && onBook({ pickupCoords, destCoords, fare: estimatedPrice })}
             className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
           >
             Réserver pour {new Intl.NumberFormat("fr-GN").format(Math.round(estimatedPrice))} GNF
