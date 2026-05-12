@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
-import { Bell, Menu, Wallet, ChevronRight, User, HelpCircle, FileText, LogIn, Car, UserCircle2 } from "lucide-react";
-import { useState } from "react";
+import { Bell, Menu, Wallet, ChevronRight, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import {
   Sheet,
   SheetContent,
@@ -35,6 +38,28 @@ export function AppHeader({
   onAmountClick,
 }: AppHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const go = (path: string) => {
+    setMenuOpen(false);
+    navigate(path);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setMenuOpen(false);
+    toast({ title: "Déconnecté", description: "À bientôt sur CHOP CHOP" });
+  };
+
   const formatted = new Intl.NumberFormat("fr-GN").format(amountValue);
 
   // Driver mode keeps a distinct accent (gold/secondary tint), client mode stays neutral.
@@ -50,9 +75,9 @@ export function AppHeader({
   const avatarColor = isDriverMode ? "text-secondary" : "text-primary";
 
   const menuItems = [
-    { icon: UserCircle2, label: "Profil" },
-    { icon: HelpCircle, label: "Obtenir de l'aide" },
-    { icon: FileText, label: "Mentions légales" },
+    { icon: UserCircle2, label: "Profil", path: "/profile" },
+    { icon: HelpCircle, label: "Obtenir de l'aide", path: "/help" },
+    { icon: FileText, label: "Mentions légales", path: "/legal" },
   ];
 
   return (
@@ -74,10 +99,13 @@ export function AppHeader({
             </SheetTrigger>
             <SheetContent side="left" className="w-80">
               <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
-                  <img src={logo} alt="CHOP CHOP" className="h-10 w-auto" />
-                  <span>CHOP CHOP</span>
-                </SheetTitle>
+                <SheetTitle className="sr-only">Menu CHOP CHOP</SheetTitle>
+                <div className="flex flex-col items-center gap-2 pt-2">
+                  <img src={logo} alt="CHOP CHOP" className="h-24 w-auto object-contain" />
+                  <p className="text-xs font-medium text-muted-foreground italic">
+                    Tout, à portée de main.
+                  </p>
+                </div>
               </SheetHeader>
 
               <div className="mt-6 space-y-1">
@@ -106,6 +134,7 @@ export function AppHeader({
                 {menuItems.map((item) => (
                   <button
                     key={item.label}
+                    onClick={() => go(item.path)}
                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
                   >
                     <item.icon className="w-5 h-5 text-muted-foreground" />
@@ -114,18 +143,33 @@ export function AppHeader({
                 ))}
 
                 <div className="pt-4 border-t border-border mt-4 space-y-1">
-                  <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left">
-                    <LogIn className="w-5 h-5 text-primary" />
-                    <span className="font-medium text-foreground text-sm">Se connecter</span>
-                  </button>
-                  <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left">
-                    <User className="w-5 h-5 text-primary" />
-                    <span className="font-medium text-foreground text-sm">S'inscrire</span>
-                  </button>
-                  <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors text-left">
-                    <LogIn className="w-5 h-5 text-destructive rotate-180" />
-                    <span className="font-medium text-destructive text-sm">Se déconnecter</span>
-                  </button>
+                  {!isLoggedIn && (
+                    <>
+                      <button
+                        onClick={() => go("/auth")}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
+                      >
+                        <LogIn className="w-5 h-5 text-primary" />
+                        <span className="font-medium text-foreground text-sm">Se connecter</span>
+                      </button>
+                      <button
+                        onClick={() => go("/auth")}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
+                      >
+                        <User className="w-5 h-5 text-primary" />
+                        <span className="font-medium text-foreground text-sm">S'inscrire</span>
+                      </button>
+                    </>
+                  )}
+                  {isLoggedIn && (
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors text-left"
+                    >
+                      <LogOut className="w-5 h-5 text-destructive" />
+                      <span className="font-medium text-destructive text-sm">Se déconnecter</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </SheetContent>
