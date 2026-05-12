@@ -3,6 +3,7 @@ import { Power, BellRing } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DriverDashboard } from "@/components/driver/DriverDashboard";
 import { IncomingRequestPopup, type IncomingRequest } from "@/components/driver/IncomingRequestPopup";
+import { DriverTripView } from "@/components/driver/DriverTripView";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -51,20 +52,25 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   const [isOnline, setIsOnline] = useState(true);
   const [queue, setQueue] = useState<IncomingRequest[]>(mockOrders);
   const [current, setCurrent] = useState<IncomingRequest | null>(null);
+  const [activeTrip, setActiveTrip] = useState<IncomingRequest | null>(null);
 
   // Auto-pop next request when online and idle
   useEffect(() => {
-    if (!isOnline || current || queue.length === 0) return;
+    if (!isOnline || current || activeTrip || queue.length === 0) return;
     const t = setTimeout(() => {
       setCurrent(queue[0]);
       setQueue((q) => q.slice(1));
     }, 2500);
     return () => clearTimeout(t);
-  }, [isOnline, current, queue]);
+  }, [isOnline, current, activeTrip, queue]);
 
   const handleAccept = (id: string) => {
+    const accepted = current;
     setCurrent(null);
-    toast.success("Course acceptée ! En route vers le client.");
+    if (accepted) {
+      setActiveTrip(accepted);
+      toast.success("Course acceptée ! Navigation lancée vers le client.");
+    }
   };
 
   const handleDecline = (id: string) => {
@@ -147,6 +153,10 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         onDecline={handleDecline}
         timeoutSec={20}
       />
+
+      {activeTrip && (
+        <DriverTripView request={activeTrip} onClose={() => setActiveTrip(null)} />
+      )}
     </div>
   );
 }
