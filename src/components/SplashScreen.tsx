@@ -11,25 +11,32 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-between py-16 px-6"
-      onAnimationComplete={() => {
-        // outer trigger handled by parent timer
-      }}
+      className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-between py-16 px-6 overflow-hidden"
     >
+      {/* Soft radial glow to blend logo into background */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, hsl(var(--primary) / 0.12) 0%, hsl(var(--background) / 0) 60%)",
+        }}
+      />
+
       {/* Spacer */}
-      <div className="flex-1" />
+      <div className="flex-1 relative" />
 
       {/* Center logo */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="flex flex-col items-center"
+        className="flex flex-col items-center relative"
       >
         <motion.img
           src={logo}
           alt="Chop Chop"
-          className="w-56 h-56 object-contain"
+          className="w-56 h-56 object-contain mix-blend-multiply dark:mix-blend-screen drop-shadow-[0_8px_30px_hsl(var(--primary)/0.25)]"
           initial={{ y: 10 }}
           animate={{ y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
@@ -61,20 +68,31 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       </motion.div>
 
       {/* Spacer */}
-      <div className="flex-1" />
+      <div className="flex-1 relative" />
 
       {/* Bottom slogan */}
-      <div className="w-full overflow-hidden">
-        <motion.div
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-          className="flex items-center justify-center gap-2 text-base sm:text-lg font-extrabold uppercase tracking-wide"
-        >
-          <span className="text-destructive">Tout.</span>
-          <span className="text-secondary">Partout.</span>
-          <span className="text-primary">Pour Tous.</span>
-        </motion.div>
+      <div className="w-full relative">
+        <div className="flex items-center justify-center gap-2 text-base sm:text-lg font-extrabold uppercase tracking-wide">
+          {[
+            { text: "Tout.", color: "text-destructive" },
+            { text: "Partout.", color: "text-secondary" },
+            { text: "Pour Tous.", color: "text-primary" },
+          ].map((word, i) => (
+            <motion.span
+              key={word.text}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.45,
+                ease: "easeOut",
+                delay: 0.6 + i * 0.45,
+              }}
+              className={word.color}
+            >
+              {word.text}
+            </motion.span>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
