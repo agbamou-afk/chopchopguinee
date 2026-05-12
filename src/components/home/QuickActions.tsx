@@ -49,19 +49,19 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => onActionClick(action.id)}
-          className="flex flex-col items-center bg-card rounded-2xl p-3 shadow-card hover:shadow-elevated transition-shadow"
+          className="flex flex-col items-center transition-transform"
         >
-          <div className={`w-16 h-16 rounded-full ${action.tint} flex items-center justify-center mb-2`}>
+          <div className={`w-20 h-20 rounded-full ${action.tint} flex items-center justify-center mb-2`}>
             <img
               src={action.img}
               alt={action.label}
               loading="lazy"
               width={1024}
               height={1024}
-              className="w-12 h-12 object-contain"
+              className="w-16 h-16 object-contain"
             />
           </div>
-          <span className="text-sm font-semibold text-foreground">{action.label}</span>
+          <span className="text-xs font-medium text-foreground">{action.label}</span>
         </motion.button>
       ))}
     </motion.div>
