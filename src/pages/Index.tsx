@@ -24,7 +24,7 @@ const Index = () => {
   const [bookingRide, setBookingRide] = useState<RideType>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setShowSplash(false), 2200);
+    const t = setTimeout(() => setShowSplash(false), 4400);
     return () => clearTimeout(t);
   }, []);
 
