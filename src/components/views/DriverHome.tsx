@@ -7,6 +7,7 @@ import { DriverTripView } from "@/components/driver/DriverTripView";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LiveRidesPanel } from "@/components/driver/LiveRidesPanel";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
@@ -122,6 +123,8 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
           completedRides={12}
           onlineHours={6}
         />
+
+        <LiveRidesPanel />
 
         {isOnline && (
           <motion.div

@@ -459,6 +459,35 @@ export type Database = {
         }
         Returns: boolean
       }
+      ride_accept: {
+        Args: { p_ride_id: string }
+        Returns: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          dest_lat: number | null
+          dest_lng: number | null
+          driver_earning_gnf: number
+          driver_id: string | null
+          fare_gnf: number
+          hold_tx_id: string | null
+          id: string
+          metadata: Json | null
+          mode: Database["public"]["Enums"]["ride_mode"]
+          payment_tx_id: string | null
+          pickup_lat: number
+          pickup_lng: number
+          platform_fee_gnf: number
+          status: Database["public"]["Enums"]["ride_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rides"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       ride_cancel: {
         Args: { p_reason?: string; p_ride_id: string }
         Returns: {
