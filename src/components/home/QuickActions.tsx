@@ -40,7 +40,7 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-4 gap-4"
+      className="grid grid-cols-3 gap-4"
     >
       {actions.map((action) => (
         <motion.button
