@@ -309,6 +309,63 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_agent_float: {
+        Args: {
+          p_agent_user_id: string
+          p_delta_gnf: number
+          p_reason?: string
+        }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_create_agent: {
+        Args: {
+          p_business_name: string
+          p_commission_rate?: number
+          p_daily_limit_gnf?: number
+          p_location?: string
+          p_phone: string
+        }
+        Returns: {
+          business_name: string
+          commission_rate: number
+          created_at: string
+          daily_limit_gnf: number
+          id: string
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          prepaid_float_gnf: number
+          status: Database["public"]["Enums"]["wallet_status"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "agent_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       claim_first_admin: { Args: never; Returns: boolean }
       find_user_by_phone: {
         Args: { p_phone: string }
