@@ -137,6 +137,7 @@ const Index = () => {
             activeTab={activeTab}
             onTabChange={handleTabChange}
             isDriverMode={isDriverMode}
+            onScanClick={() => handleAction("scan")}
           />
         </>
       )}
