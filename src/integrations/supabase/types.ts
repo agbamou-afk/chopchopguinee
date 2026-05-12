@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_profiles: {
+        Row: {
+          business_name: string
+          commission_rate: number
+          created_at: string
+          daily_limit_gnf: number
+          id: string
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          prepaid_float_gnf: number
+          status: Database["public"]["Enums"]["wallet_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_name: string
+          commission_rate?: number
+          created_at?: string
+          daily_limit_gnf?: number
+          id?: string
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          prepaid_float_gnf?: number
+          status?: Database["public"]["Enums"]["wallet_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_name?: string
+          commission_rate?: number
+          created_at?: string
+          daily_limit_gnf?: number
+          id?: string
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          prepaid_float_gnf?: number
+          status?: Database["public"]["Enums"]["wallet_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       fare_settings: {
         Row: {
           base_price: number
@@ -44,6 +89,101 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          kyc_level: number
+          language: string
+          phone: string | null
+          pin_hash: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          kyc_level?: number
+          language?: string
+          phone?: string | null
+          pin_hash?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          kyc_level?: number
+          language?: string
+          phone?: string | null
+          pin_hash?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      topup_requests: {
+        Row: {
+          agent_user_id: string
+          amount_gnf: number
+          cancelled_reason: string | null
+          client_user_id: string
+          confirmation_code: string
+          confirmed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          reference: string
+          status: Database["public"]["Enums"]["topup_status"]
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_user_id: string
+          amount_gnf: number
+          cancelled_reason?: string | null
+          client_user_id: string
+          confirmation_code: string
+          confirmed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          reference: string
+          status?: Database["public"]["Enums"]["topup_status"]
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_user_id?: string
+          amount_gnf?: number
+          cancelled_reason?: string | null
+          client_user_id?: string
+          confirmation_code?: string
+          confirmed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          reference?: string
+          status?: Database["public"]["Enums"]["topup_status"]
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topup_requests_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -65,6 +205,105 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_transactions: {
+        Row: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        Insert: {
+          amount_gnf: number
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          from_wallet_id?: string | null
+          id?: string
+          metadata?: Json
+          reference: string
+          related_entity?: string | null
+          related_user_id?: string | null
+          status?: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id?: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        Update: {
+          amount_gnf?: number
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          from_wallet_id?: string | null
+          id?: string
+          metadata?: Json
+          reference?: string
+          related_entity?: string | null
+          related_user_id?: string | null
+          status?: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id?: string | null
+          type?: Database["public"]["Enums"]["txn_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_from_wallet_id_fkey"
+            columns: ["from_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_to_wallet_id_fkey"
+            columns: ["to_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance_gnf: number
+          created_at: string
+          currency: string
+          held_gnf: number
+          id: string
+          owner_user_id: string | null
+          party_type: Database["public"]["Enums"]["party_type"]
+          status: Database["public"]["Enums"]["wallet_status"]
+          updated_at: string
+        }
+        Insert: {
+          balance_gnf?: number
+          created_at?: string
+          currency?: string
+          held_gnf?: number
+          id?: string
+          owner_user_id?: string | null
+          party_type: Database["public"]["Enums"]["party_type"]
+          status?: Database["public"]["Enums"]["wallet_status"]
+          updated_at?: string
+        }
+        Update: {
+          balance_gnf?: number
+          created_at?: string
+          currency?: string
+          held_gnf?: number
+          id?: string
+          owner_user_id?: string | null
+          party_type?: Database["public"]["Enums"]["party_type"]
+          status?: Database["public"]["Enums"]["wallet_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -80,7 +319,22 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "client" | "driver" | "merchant" | "agent"
+      party_type: "client" | "driver" | "merchant" | "agent" | "master"
+      topup_status: "pending" | "confirmed" | "expired" | "cancelled"
+      txn_status: "pending" | "completed" | "failed" | "reversed" | "cancelled"
+      txn_type:
+        | "topup"
+        | "payment"
+        | "refund"
+        | "commission"
+        | "payout"
+        | "hold"
+        | "capture"
+        | "release"
+        | "transfer"
+        | "adjustment"
+      wallet_status: "active" | "frozen" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -208,7 +462,23 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "client", "driver", "merchant", "agent"],
+      party_type: ["client", "driver", "merchant", "agent", "master"],
+      topup_status: ["pending", "confirmed", "expired", "cancelled"],
+      txn_status: ["pending", "completed", "failed", "reversed", "cancelled"],
+      txn_type: [
+        "topup",
+        "payment",
+        "refund",
+        "commission",
+        "payout",
+        "hold",
+        "capture",
+        "release",
+        "transfer",
+        "adjustment",
+      ],
+      wallet_status: ["active", "frozen", "closed"],
     },
   },
 } as const
