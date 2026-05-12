@@ -20,11 +20,32 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const routeByRole = async (uid: string) => {
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid);
+    if (roles?.some((r) => r.role === "admin")) {
+      navigate("/admin", { replace: true });
+      return;
+    }
+    const { data: ap } = await supabase
+      .from("agent_profiles")
+      .select("user_id")
+      .eq("user_id", uid)
+      .maybeSingle();
+    if (ap) {
+      navigate("/agent", { replace: true });
+      return;
+    }
+    navigate("/", { replace: true });
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate("/admin", { replace: true });
+      if (data.session) routeByRole(data.session.user.id);
     });
-  }, [navigate]);
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,9 +65,9 @@ export default function Auth() {
         if (error) throw error;
         toast({ title: "Compte créé", description: "Vérifiez votre email pour confirmer." });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/admin", { replace: true });
+        if (data.user) await routeByRole(data.user.id);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erreur inconnue";
@@ -63,9 +84,9 @@ export default function Auth() {
           <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mb-3">
             <ShieldCheck className="w-7 h-7 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">Espace Administrateur</h1>
+          <h1 className="text-xl font-bold text-foreground">Connexion Choper</h1>
           <p className="text-sm text-muted-foreground">
-            {mode === "signin" ? "Connectez-vous pour gérer Choper" : "Créer un compte"}
+            {mode === "signin" ? "Admin ou agent — connectez-vous" : "Créer un compte"}
           </p>
         </div>
         <form onSubmit={submit} className="space-y-4">
