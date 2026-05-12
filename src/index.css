@@ -36,6 +36,20 @@
     --warning: 45 90% 62%;
     --warning-foreground: 0 0% 12%;
 
+    /* Service accents (HSL only) — used by service screens */
+    --accent-moto: 138 64% 39%;
+    --accent-moto-foreground: 0 0% 100%;
+    --accent-toktok: 45 90% 55%;
+    --accent-toktok-foreground: 0 0% 12%;
+    --accent-repas: 8 78% 55%;
+    --accent-repas-foreground: 0 0% 100%;
+    --accent-marche: 142 55% 38%;
+    --accent-marche-foreground: 0 0% 100%;
+    --accent-envoyer: 38 95% 52%;
+    --accent-envoyer-foreground: 0 0% 12%;
+    --accent-scanner: 0 0% 12%;
+    --accent-scanner-foreground: 138 64% 55%;
+
     --border: 0 0% 92%;
     --input: 0 0% 92%;
     --ring: 138 64% 39%;
