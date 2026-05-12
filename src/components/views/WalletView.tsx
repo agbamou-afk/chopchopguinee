@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -14,12 +15,20 @@ import {
 import { WalletCard } from "@/components/home/WalletCard";
 import { useWallet, type WalletTransaction } from "@/hooks/useWallet";
 import { PinSetup } from "@/components/wallet/PinSetup";
+import { MyQrModal } from "@/components/wallet/MyQrModal";
 import { Button } from "@/components/ui/button";
 
-const quickActions = [
+type ActionId = "send" | "receive" | "scan" | "add";
+
+const quickActions: {
+  id: ActionId;
+  icon: typeof ArrowUpRight;
+  label: string;
+  color: string;
+}[] = [
   { id: "send", icon: ArrowUpRight, label: "Envoyer", color: "gradient-primary" },
   { id: "receive", icon: ArrowDownLeft, label: "Recevoir", color: "gradient-secondary" },
-  { id: "scan", icon: QrCode, label: "Scanner", color: "bg-foreground" },
+  { id: "scan", icon: QrCode, label: "Mon QR", color: "bg-foreground" },
   { id: "add", icon: Plus, label: "Recharger", color: "bg-primary" },
 ];
 
@@ -56,6 +65,7 @@ function txDirection(tx: WalletTransaction, walletId: string): "in" | "out" {
 
 export function WalletView() {
   const { userId, wallet, transactions, profile, loading } = useWallet();
+  const [qrOpen, setQrOpen] = useState(false);
 
   if (loading) {
     return (
@@ -85,6 +95,11 @@ export function WalletView() {
   const available = wallet ? wallet.balance_gnf - wallet.held_gnf : 0;
   const needsPin = !profile?.pin_hash;
 
+  const onAction = (id: ActionId) => {
+    if (id === "scan" || id === "add" || id === "receive") setQrOpen(true);
+    else toast("Bientôt disponible");
+  };
+
   return (
     <div className="max-w-md mx-auto">
       {/* Header */}
@@ -97,7 +112,11 @@ export function WalletView() {
         {profile?.phone && (
           <p className="text-xs text-muted-foreground mb-4">{profile.phone}</p>
         )}
-        <WalletCard balance={available} />
+        <WalletCard
+          balance={available}
+          onSend={() => onAction("send")}
+          onReceive={() => onAction("receive")}
+        />
         {wallet && wallet.held_gnf > 0 && (
           <p className="text-xs text-muted-foreground mt-2 text-center">
             {formatMoney(wallet.held_gnf)} GNF en attente
@@ -123,6 +142,7 @@ export function WalletView() {
               transition={{ delay: index * 0.05 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => onAction(action.id)}
               className="flex flex-col items-center"
             >
               <div className={`p-3 rounded-2xl ${action.color} shadow-soft mb-2`}>
@@ -221,6 +241,13 @@ export function WalletView() {
           </div>
         )}
       </div>
+
+      <MyQrModal
+        open={qrOpen}
+        onClose={() => setQrOpen(false)}
+        userId={userId}
+        phone={profile?.phone ?? null}
+      />
     </div>
   );
 }
