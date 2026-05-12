@@ -1,4 +1,5 @@
 import { QuickActions } from "@/components/home/QuickActions";
+import { MapPin } from "lucide-react";
 import { PromoCarousel } from "@/components/home/PromoCarousel";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
@@ -29,6 +30,7 @@ const popularRestaurants = [
 
 export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
   const walletBalance = 2500000;
+  const userLocation = "Kaloum";
   return (
     <div className="max-w-md mx-auto">
       <AppHeader
@@ -47,11 +49,6 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
           <h2 className="text-lg font-semibold text-foreground mb-4">Services</h2>
           <div className="bg-card rounded-3xl shadow-card p-4">
             <QuickActions onActionClick={onActionClick} />
-            <div className="mt-3 pt-3 border-t border-border text-center">
-              <p className="text-sm font-semibold text-primary tracking-wide">
-                Tout, Partout, Pour Tous
-              </p>
-            </div>
           </div>
         </section>
 
@@ -64,7 +61,13 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         {/* Popular restaurants */}
         <section className="pb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Restaurants populaires</h2>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Restaurants populaires</h2>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                <MapPin className="w-3 h-3 text-primary" />
+                <span>Proche de {userLocation}</span>
+              </div>
+            </div>
             <button 
               onClick={() => onActionClick("food")}
               className="text-sm font-medium text-primary"
