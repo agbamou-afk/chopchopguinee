@@ -1,7 +1,27 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, X, Bike, Car, Clock, CreditCard } from "lucide-react";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import { MapPin, Navigation, X, Bike, Car, Clock, CreditCard, Loader2, LocateFixed } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { toast } from "@/hooks/use-toast";
+
+// Fix default marker icon paths (Leaflet+bundlers issue)
+const pickupIcon = L.divIcon({
+  className: "",
+  html: `<div style="width:18px;height:18px;border-radius:9999px;background:hsl(var(--primary));border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+});
+
+function Recenter({ position }: { position: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo(position, 15, { duration: 0.8 });
+  }, [position, map]);
+  return null;
+}
 
 interface RideBookingProps {
   type: "moto" | "toktok";
@@ -29,8 +49,40 @@ const rideOptions = {
 export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
+  // Default: Conakry, Guinea
+  const [pickupCoords, setPickupCoords] = useState<[number, number]>([9.6412, -13.5784]);
+  const [locating, setLocating] = useState(false);
   const option = rideOptions[type];
   const Icon = option.icon;
+
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Géolocalisation indisponible", description: "Votre navigateur ne supporte pas la géolocalisation." });
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setPickupCoords(coords);
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords[0]}&lon=${coords[1]}&zoom=16`,
+          );
+          const data = await res.json();
+          setPickup(data.display_name?.split(",").slice(0, 2).join(",") ?? "Ma position");
+        } catch {
+          setPickup("Ma position");
+        }
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        toast({ title: "Position introuvable", description: "Veuillez autoriser la géolocalisation." });
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
 
   const estimatedPrice = option.basePrice + option.pricePerKm * 5; // Assuming 5km
 
@@ -64,7 +116,19 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
               onChange={(e) => setPickup(e.target.value)}
               className="flex-1 bg-transparent text-primary-foreground placeholder:text-white/60 focus:outline-none"
             />
-            <MapPin className="w-5 h-5 text-white/60" />
+            <button
+              type="button"
+              onClick={handleLocateMe}
+              disabled={locating}
+              aria-label="Utiliser ma position actuelle"
+              className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 transition"
+            >
+              {locating ? (
+                <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+              ) : (
+                <LocateFixed className="w-4 h-4 text-primary-foreground" />
+              )}
+            </button>
           </div>
           <div className="flex items-center gap-3 pt-4">
             <div className="w-3 h-3 rounded-full bg-secondary" />
@@ -80,19 +144,45 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
         </div>
       </div>
 
-      {/* Map placeholder */}
+      {/* Interactive map */}
       <div className="flex-1 bg-muted relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 rounded-full gradient-primary mx-auto flex items-center justify-center mb-3 shadow-soft animate-pulse-soft">
-              <Icon className="w-8 h-8 text-primary-foreground" />
-            </div>
-            <p className="text-muted-foreground text-sm">Carte interactive</p>
-          </div>
-        </div>
-        {/* Decorative elements */}
-        <div className="absolute top-10 left-10 w-24 h-24 rounded-full bg-primary/10" />
-        <div className="absolute bottom-20 right-10 w-32 h-32 rounded-full bg-secondary/10" />
+        <MapContainer
+          center={pickupCoords}
+          zoom={14}
+          scrollWheelZoom
+          className="w-full h-full z-0"
+        >
+          <TileLayer
+            attribution='&copy; OpenStreetMap'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <Marker
+            position={pickupCoords}
+            icon={pickupIcon}
+            draggable
+            eventHandlers={{
+              dragend: (e) => {
+                const m = e.target as L.Marker;
+                const ll = m.getLatLng();
+                setPickupCoords([ll.lat, ll.lng]);
+              },
+            }}
+          />
+          <Recenter position={pickupCoords} />
+        </MapContainer>
+        <button
+          type="button"
+          onClick={handleLocateMe}
+          disabled={locating}
+          aria-label="Centrer sur ma position"
+          className="absolute bottom-4 right-4 z-[400] w-12 h-12 rounded-full bg-card shadow-elevated flex items-center justify-center active:scale-95 transition"
+        >
+          {locating ? (
+            <Loader2 className="w-5 h-5 text-primary animate-spin" />
+          ) : (
+            <LocateFixed className="w-5 h-5 text-primary" />
+          )}
+        </button>
       </div>
 
       {/* Bottom sheet */}
