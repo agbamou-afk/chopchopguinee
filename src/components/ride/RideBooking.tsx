@@ -247,7 +247,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
       className="fixed inset-0 bg-background z-50 flex flex-col"
     >
       {/* Header */}
-      <div className="gradient-primary p-4 pb-8 rounded-b-3xl">
+      <div className="gradient-primary p-4 pb-8 rounded-b-3xl relative z-[1000]">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={onClose}
