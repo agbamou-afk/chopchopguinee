@@ -310,12 +310,91 @@ export type Database = {
     }
     Functions: {
       claim_first_admin: { Args: never; Returns: boolean }
+      find_user_by_phone: {
+        Args: { p_phone: string }
+        Returns: {
+          full_name: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      wallet_topup_cancel: {
+        Args: { p_reason?: string; p_topup_id: string }
+        Returns: {
+          agent_user_id: string
+          amount_gnf: number
+          cancelled_reason: string | null
+          client_user_id: string
+          confirmation_code: string
+          confirmed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          reference: string
+          status: Database["public"]["Enums"]["topup_status"]
+          transaction_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "topup_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wallet_topup_confirm: {
+        Args: { p_code: string; p_topup_id: string }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wallet_topup_create: {
+        Args: { p_amount_gnf: number; p_client_user_id: string }
+        Returns: {
+          agent_user_id: string
+          amount_gnf: number
+          cancelled_reason: string | null
+          client_user_id: string
+          confirmation_code: string
+          confirmed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          reference: string
+          status: Database["public"]["Enums"]["topup_status"]
+          transaction_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "topup_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
