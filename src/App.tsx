@@ -9,6 +9,9 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import AgentTopup from "./pages/AgentTopup";
 import AgentDashboard from "./pages/AgentDashboard";
+import ProfileInfo from "./pages/ProfileInfo";
+import Help from "./pages/Help";
+import Legal from "./pages/Legal";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +27,9 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/agent" element={<AgentDashboard />} />
           <Route path="/agent/topup" element={<AgentTopup />} />
+          <Route path="/profile" element={<ProfileInfo />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/legal" element={<Legal />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
