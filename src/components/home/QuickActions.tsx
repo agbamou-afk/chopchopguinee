@@ -58,7 +58,7 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
               loading="lazy"
               width={1024}
               height={1024}
-              className="w-32 h-32 object-contain"
+              className="w-24 h-24 object-contain"
             />
           </div>
           <span className="text-xs font-medium text-foreground">{action.label}</span>
