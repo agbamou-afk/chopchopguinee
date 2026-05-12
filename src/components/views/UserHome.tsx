@@ -41,7 +41,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-sm opacity-80">Bonjour 👋</p>
-            <h1 className="text-xl font-bold">Bienvenue sur Choper</h1>
+            <h1 className="text-xl font-bold">Bienvenue sur Chop Chop</h1>
           </div>
           <div className="flex items-center gap-2">
             <button

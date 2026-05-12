@@ -88,7 +88,7 @@ export function MarketView({ onBack }: MarketViewProps) {
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="text-xl font-bold text-foreground">Marché Choper</h1>
+          <h1 className="text-xl font-bold text-foreground">Marché Chop Chop</h1>
         </div>
 
         {/* Search */}

@@ -124,7 +124,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
 
         <div className="flex items-center gap-2 p-3 bg-muted rounded-xl mb-4">
           <CreditCard className="w-5 h-5 text-muted-foreground" />
-          <span className="text-sm text-foreground">Portefeuille Choper</span>
+          <span className="text-sm text-foreground">Portefeuille Chop Chop</span>
           <span className="ml-auto text-sm font-medium text-primary">Changer</span>
         </div>
 

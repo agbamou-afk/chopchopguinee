@@ -31,7 +31,7 @@ const recentEarnings = [
   {
     id: 3,
     type: "delivery" as const,
-    description: "Livraison colis - Marché Choper",
+    description: "Livraison colis - Marché Chop Chop",
     amount: 12000,
     time: "10:15",
     tip: 3000,
