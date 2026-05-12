@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
+import { SplashScreen } from "@/components/SplashScreen";
 import { UserHome } from "@/components/views/UserHome";
 import { DriverHome } from "@/components/views/DriverHome";
 import { RideBooking } from "@/components/ride/RideBooking";
@@ -16,10 +17,16 @@ export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
 
 const Index = () => {
+  const [showSplash, setShowSplash] = useState(true);
   const [isDriverMode, setIsDriverMode] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const [activeView, setActiveView] = useState<ActiveView>("home");
   const [bookingRide, setBookingRide] = useState<RideType>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowSplash(false), 2200);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleAction = (action: string) => {
     switch (action) {
@@ -105,6 +112,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <AnimatePresence>
+        {showSplash && <SplashScreen />}
+      </AnimatePresence>
+
       <AnimatePresence mode="wait">
         {bookingRide && (
           <RideBooking
