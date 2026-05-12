@@ -128,6 +128,84 @@ export type Database = {
         }
         Relationships: []
       }
+      rides: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          dest_lat: number | null
+          dest_lng: number | null
+          driver_earning_gnf: number
+          driver_id: string | null
+          fare_gnf: number
+          hold_tx_id: string | null
+          id: string
+          metadata: Json | null
+          mode: Database["public"]["Enums"]["ride_mode"]
+          payment_tx_id: string | null
+          pickup_lat: number
+          pickup_lng: number
+          platform_fee_gnf: number
+          status: Database["public"]["Enums"]["ride_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          dest_lat?: number | null
+          dest_lng?: number | null
+          driver_earning_gnf?: number
+          driver_id?: string | null
+          fare_gnf: number
+          hold_tx_id?: string | null
+          id?: string
+          metadata?: Json | null
+          mode: Database["public"]["Enums"]["ride_mode"]
+          payment_tx_id?: string | null
+          pickup_lat: number
+          pickup_lng: number
+          platform_fee_gnf?: number
+          status?: Database["public"]["Enums"]["ride_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          dest_lat?: number | null
+          dest_lng?: number | null
+          driver_earning_gnf?: number
+          driver_id?: string | null
+          fare_gnf?: number
+          hold_tx_id?: string | null
+          id?: string
+          metadata?: Json | null
+          mode?: Database["public"]["Enums"]["ride_mode"]
+          payment_tx_id?: string | null
+          pickup_lat?: number
+          pickup_lng?: number
+          platform_fee_gnf?: number
+          status?: Database["public"]["Enums"]["ride_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rides_hold_tx_id_fkey"
+            columns: ["hold_tx_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rides_payment_tx_id_fkey"
+            columns: ["payment_tx_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topup_requests: {
         Row: {
           agent_user_id: string
@@ -381,6 +459,106 @@ export type Database = {
         }
         Returns: boolean
       }
+      ride_cancel: {
+        Args: { p_reason?: string; p_ride_id: string }
+        Returns: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          dest_lat: number | null
+          dest_lng: number | null
+          driver_earning_gnf: number
+          driver_id: string | null
+          fare_gnf: number
+          hold_tx_id: string | null
+          id: string
+          metadata: Json | null
+          mode: Database["public"]["Enums"]["ride_mode"]
+          payment_tx_id: string | null
+          pickup_lat: number
+          pickup_lng: number
+          platform_fee_gnf: number
+          status: Database["public"]["Enums"]["ride_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rides"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ride_complete: {
+        Args: {
+          p_actual_fare_gnf?: number
+          p_commission_bps?: number
+          p_ride_id: string
+        }
+        Returns: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          dest_lat: number | null
+          dest_lng: number | null
+          driver_earning_gnf: number
+          driver_id: string | null
+          fare_gnf: number
+          hold_tx_id: string | null
+          id: string
+          metadata: Json | null
+          mode: Database["public"]["Enums"]["ride_mode"]
+          payment_tx_id: string | null
+          pickup_lat: number
+          pickup_lng: number
+          platform_fee_gnf: number
+          status: Database["public"]["Enums"]["ride_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rides"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ride_create: {
+        Args: {
+          p_dest_lat: number
+          p_dest_lng: number
+          p_driver_id?: string
+          p_fare_gnf: number
+          p_hold_tx_id: string
+          p_mode: Database["public"]["Enums"]["ride_mode"]
+          p_pickup_lat: number
+          p_pickup_lng: number
+        }
+        Returns: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          dest_lat: number | null
+          dest_lng: number | null
+          driver_earning_gnf: number
+          driver_id: string | null
+          fare_gnf: number
+          hold_tx_id: string | null
+          id: string
+          metadata: Json | null
+          mode: Database["public"]["Enums"]["ride_mode"]
+          payment_tx_id: string | null
+          pickup_lat: number
+          pickup_lng: number
+          platform_fee_gnf: number
+          status: Database["public"]["Enums"]["ride_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rides"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       wallet_capture: {
         Args: {
           p_actual_amount_gnf?: number
@@ -416,6 +594,37 @@ export type Database = {
           p_amount_gnf: number
           p_description?: string
           p_reference?: string
+        }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wallet_internal_transfer: {
+        Args: {
+          p_amount_gnf: number
+          p_description: string
+          p_from_party_type: string
+          p_from_user_id: string
+          p_to_party_type: string
+          p_to_user_id: string
         }
         Returns: {
           amount_gnf: number
@@ -539,6 +748,8 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user" | "client" | "driver" | "merchant" | "agent"
       party_type: "client" | "driver" | "merchant" | "agent" | "master"
+      ride_mode: "moto" | "toktok" | "food"
+      ride_status: "pending" | "in_progress" | "completed" | "cancelled"
       topup_status: "pending" | "confirmed" | "expired" | "cancelled"
       txn_status: "pending" | "completed" | "failed" | "reversed" | "cancelled"
       txn_type:
@@ -682,6 +893,8 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user", "client", "driver", "merchant", "agent"],
       party_type: ["client", "driver", "merchant", "agent", "master"],
+      ride_mode: ["moto", "toktok", "food"],
+      ride_status: ["pending", "in_progress", "completed", "cancelled"],
       topup_status: ["pending", "confirmed", "expired", "cancelled"],
       txn_status: ["pending", "completed", "failed", "reversed", "cancelled"],
       txn_type: [

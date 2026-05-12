@@ -20,6 +20,7 @@ interface LiveTrackingProps {
   fare: number;
   onClose: () => void;
   holdId?: string | null;
+  rideId?: string | null;
 }
 
 const MODE_LABELS: Record<TrackingMode, { title: string; emoji: string }> = {
@@ -70,7 +71,7 @@ const DRIVERS = [
   { name: "Aïssatou Barry", rating: 4.95, plate: "RC-1051-C", trips: 2104 },
 ];
 
-export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, holdId }: LiveTrackingProps) {
+export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, holdId, rideId }: LiveTrackingProps) {
   const [phase, setPhase] = useState<Phase>("searching");
   const [driverPos, setDriverPos] = useState<[number, number]>(() => [
     pickupCoords[0] + (Math.random() - 0.5) * 0.012,
@@ -185,15 +186,21 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
   const handleRatingSubmit = (rating: number, review: string) => {
     void review;
     (async () => {
-      if (holdId && !settledRef.current) {
+      if (!settledRef.current && (rideId || holdId)) {
         settledRef.current = true;
-        const { error } = await supabase.rpc("wallet_capture", {
-          p_hold_id: holdId,
-          p_to_user_id: null,
-          p_to_party_type: "master",
-          p_actual_amount_gnf: Math.round(fare),
-          p_description: `Course ${MODE_LABELS[mode].title}`,
-        });
+        const { error } = rideId
+          ? await supabase.rpc("ride_complete", {
+              p_ride_id: rideId,
+              p_actual_fare_gnf: Math.round(fare),
+              p_commission_bps: 1500,
+            })
+          : await supabase.rpc("wallet_capture", {
+              p_hold_id: holdId!,
+              p_to_user_id: null,
+              p_to_party_type: "master",
+              p_actual_amount_gnf: Math.round(fare),
+              p_description: `Course ${MODE_LABELS[mode].title}`,
+            });
         if (error) {
           toast({ title: "Paiement échoué", description: error.message });
           return;
@@ -208,12 +215,13 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
   };
 
   const handleClose = async () => {
-    if (holdId && !settledRef.current && phase !== "completed") {
+    if (!settledRef.current && phase !== "completed" && (rideId || holdId)) {
       settledRef.current = true;
-      await supabase.rpc("wallet_release", {
-        p_hold_id: holdId,
-        p_reason: "Course annulée",
-      });
+      if (rideId) {
+        await supabase.rpc("ride_cancel", { p_ride_id: rideId, p_reason: "Course annulée" });
+      } else {
+        await supabase.rpc("wallet_release", { p_hold_id: holdId!, p_reason: "Course annulée" });
+      }
       toast({ title: "Réservation libérée", description: "Aucun montant débité." });
     }
     onClose();

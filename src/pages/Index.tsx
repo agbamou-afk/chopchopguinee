@@ -32,6 +32,7 @@ const Index = () => {
     destCoords?: [number, number];
     fare: number;
     holdId?: string | null;
+    rideId?: string | null;
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
 
@@ -151,7 +152,23 @@ const Index = () => {
                 toast({ title: "Solde insuffisant", description: error.message });
                 return;
               }
-              setActiveTrip({ mode: bookingRide, ...trip, holdId: (data as { id: string }).id });
+              const holdId = (data as { id: string }).id;
+              const { data: ride, error: rideErr } = await supabase.rpc("ride_create", {
+                p_mode: bookingRide,
+                p_pickup_lat: trip.pickupCoords[0],
+                p_pickup_lng: trip.pickupCoords[1],
+                p_dest_lat: trip.destCoords?.[0] ?? null,
+                p_dest_lng: trip.destCoords?.[1] ?? null,
+                p_fare_gnf: Math.round(trip.fare),
+                p_hold_tx_id: holdId,
+                p_driver_id: null,
+              });
+              if (rideErr) {
+                await supabase.rpc("wallet_release", { p_hold_id: holdId, p_reason: "Création course échouée" });
+                toast({ title: "Erreur", description: rideErr.message });
+                return;
+              }
+              setActiveTrip({ mode: bookingRide, ...trip, holdId, rideId: (ride as { id: string }).id });
               setBookingRide(null);
               toast({
                 title: "Fonds réservés",
@@ -167,6 +184,7 @@ const Index = () => {
             destCoords={activeTrip.destCoords}
             fare={activeTrip.fare}
             holdId={activeTrip.holdId}
+            rideId={activeTrip.rideId}
             onClose={() => {
               setActiveTrip(null);
               setActiveView("orders");
