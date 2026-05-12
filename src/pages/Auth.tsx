@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const schema = z.object({
   email: z.string().trim().email({ message: "Email invalide" }).max(255),
@@ -81,9 +82,7 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mb-3">
-            <ShieldCheck className="w-7 h-7 text-primary-foreground" />
-          </div>
+          <img src={logo} alt="Choper" className="h-20 w-auto object-contain mb-2" />
           <h1 className="text-xl font-bold text-foreground">Connexion Choper</h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signin" ? "Admin ou agent — connectez-vous" : "Créer un compte"}
