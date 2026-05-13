@@ -418,7 +418,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
           </div>
           <div className="text-right">
             <p className="text-lg font-bold text-foreground">
-              {formatGNF(Math.round(estimatedPrice))} GNF
+              {formatGNF(Math.round(estimatedPrice))}
             </p>
             <p className="text-xs text-muted-foreground">{confirmed ? "Tarif confirmé" : "Estimation"}</p>
           </div>
@@ -449,7 +449,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
             onClick={() => destCoords && onBook({ pickupCoords, destCoords, fare: estimatedPrice })}
             className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
           >
-            Réserver pour {formatGNF(Math.round(estimatedPrice))} GNF
+            Réserver pour {formatGNF(Math.round(estimatedPrice))}
           </Button>
         )}
       </motion.div>
