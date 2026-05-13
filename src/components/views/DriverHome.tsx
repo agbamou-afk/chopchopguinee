@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { DriverDashboard } from "@/components/driver/DriverDashboard";
 import { IncomingRequestPopup, type IncomingRequest } from "@/components/driver/IncomingRequestPopup";
 import { DriverTripView } from "@/components/driver/DriverTripView";
+import { DriverActiveTrip } from "@/components/driver/DriverActiveTrip";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   const [toggling, setToggling] = useState(false);
   const [current, setCurrent] = useState<IncomingRequest | null>(null);
   const [activeTrip, setActiveTrip] = useState<IncomingRequest | null>(null);
+  const [activeRideId, setActiveRideId] = useState<string | null>(null);
   const { available: driverBalance, loading: walletLoading } = useWallet("driver");
   const { offers, refetch: refetchOffers } = useIncomingOffers(isOnline);
   const queue = offers.map(offerToRequest);
@@ -90,7 +92,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   const handleAccept = async (id: string) => {
     const accepted = current;
     setCurrent(null);
-    const { error } = await supabase.rpc("driver_offer_accept", { p_offer_id: id });
+    const { data, error } = await supabase.rpc("driver_offer_accept", { p_offer_id: id });
     if (error) {
       toast.error(error.message || "Impossible d'accepter cette course.");
       refetchOffers();
@@ -98,6 +100,8 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     }
     if (accepted) {
       setActiveTrip(accepted);
+      const rideId = (data as any)?.ride_id as string | undefined;
+      if (rideId) setActiveRideId(rideId);
       toast.success("Course acceptée — direction le client.");
     }
     Analytics.track("driver.ride.accepted", { metadata: { offer_id: id, fare_gnf: accepted?.estimatedPrice } });
@@ -310,7 +314,19 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
       />
 
       {activeTrip && (
-        <DriverTripView request={activeTrip} onClose={() => setActiveTrip(null)} />
+        activeRideId &&
+        (typeof window !== "undefined" &&
+          (localStorage.getItem("cc_realtime_trip") === "1" ||
+            /[?&]trip=v2/.test(window.location.search)))
+          ? (
+            <DriverActiveTrip
+              rideId={activeRideId}
+              onClose={() => { setActiveTrip(null); setActiveRideId(null); }}
+            />
+          )
+          : (
+            <DriverTripView request={activeTrip} onClose={() => { setActiveTrip(null); setActiveRideId(null); }} />
+          )
       )}
     </div>
   );
