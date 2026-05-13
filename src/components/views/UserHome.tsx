@@ -77,6 +77,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         onAmountClick={() => onActionClick("send")}
         onRecharge={() => onActionClick("send")}
         location={`${userLocation}, Conakry`}
+        showWalletCard={false}
       />
 
       {/* Content */}

@@ -29,6 +29,7 @@ interface AppHeaderProps {
   onAmountClick?: () => void;
   location?: string;
   onRecharge?: () => void;
+  showWalletCard?: boolean;
 }
 
 export function AppHeader({
@@ -44,6 +45,7 @@ export function AppHeader({
   onAmountClick,
   location = "Kaloum, Conakry",
   onRecharge,
+  showWalletCard = true,
 }: AppHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -273,6 +275,7 @@ export function AppHeader({
         </div>
 
         {/* Wallet hero — green gradient, glass CTA, prominent balance */}
+        {showWalletCard && (
         <motion.button
           onClick={onAmountClick}
           whileTap={{ scale: 0.985 }}
@@ -307,6 +310,7 @@ export function AppHeader({
             </button>
           </div>
         </motion.button>
+        )}
       </motion.header>
     </div>
   );
