@@ -49,9 +49,10 @@ const Index = () => {
     if (!requireAuth()) return;
     if (!isDriver) {
       toast({
-        title: "Mode chauffeur indisponible",
-        description: "Votre compte n'a pas encore le rôle chauffeur.",
+        title: "Devenir chauffeur",
+        description: "Postulez pour commencer à conduire avec CHOP CHOP.",
       });
+      navigate("/driver/apply");
       return;
     }
     setIsDriverMode(true);
