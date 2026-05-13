@@ -1,5 +1,5 @@
 import { QuickActions } from "@/components/home/QuickActions";
-import { MapPin, Home as HomeIcon, Briefcase, Clock, Bike } from "lucide-react";
+import { MapPin, Home as HomeIcon, Briefcase, Clock, Bike, UtensilsCrossed } from "lucide-react";
 import { PromoCarousel } from "@/components/home/PromoCarousel";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
@@ -19,24 +19,16 @@ interface UserHomeProps {
   onToggleDriverMode: () => void;
 }
 
-const popularRestaurants = [
-  {
-    name: "Chez Mama Fatoumata",
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop",
-    rating: 4.8,
-    deliveryTime: "20-30 min",
-    distance: "1.2 km",
-    category: "Cuisine locale",
-  },
-  {
-    name: "Grillades du Port",
-    image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=300&fit=crop",
-    rating: 4.6,
-    deliveryTime: "25-35 min",
-    distance: "2.1 km",
-    category: "Grillades",
-  },
-];
+/** Real popular-restaurants data is wired in a later pass; until then we
+ *  intentionally render an empty-state instead of fake listings. */
+const popularRestaurants: Array<{
+  name: string;
+  image: string;
+  rating: number;
+  deliveryTime: string;
+  distance: string;
+  category: string;
+}> = [];
 
 export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
   const { available: walletBalance, loading: walletLoading, error: walletError, wallet } = useWallet("client");
@@ -199,15 +191,35 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               Voir tout
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {popularRestaurants.map((restaurant) => (
-              <RestaurantCard
-                key={restaurant.name}
-                {...restaurant}
+          {popularRestaurants.length > 0 ? (
+            <div className="grid grid-cols-2 gap-3">
+              {popularRestaurants.map((restaurant) => (
+                <RestaurantCard
+                  key={restaurant.name}
+                  {...restaurant}
+                  onClick={() => onActionClick("food")}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-dashed border-border/70 bg-card/50 p-6 text-center">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+                <UtensilsCrossed className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">
+                Bientôt disponible à {userLocation}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Les restaurants partenaires de votre quartier seront affichés ici dès leur ouverture.
+              </p>
+              <button
                 onClick={() => onActionClick("food")}
-              />
-            ))}
-          </div>
+                className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary"
+              >
+                Explorer Repas
+              </button>
+            </div>
+          )}
           <p className="text-center text-[11px] text-muted-foreground mt-5">
             CHOP CHOP · Partout à Conakry, services près de vous
           </p>
