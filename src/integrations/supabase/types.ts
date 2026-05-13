@@ -427,6 +427,75 @@ export type Database = {
           },
         ]
       }
+      driver_applications: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision: Database["public"]["Enums"]["driver_application_decision"]
+          decision_reason: string | null
+          id: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: Database["public"]["Enums"]["driver_application_decision"]
+          decision_reason?: string | null
+          id?: string
+          payload?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: Database["public"]["Enums"]["driver_application_decision"]
+          decision_reason?: string | null
+          id?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      driver_cash_ledger: {
+        Row: {
+          cash_collected_gnf: number
+          commission_owed_gnf: number
+          created_at: string
+          driver_id: string
+          id: string
+          note: string | null
+          ride_id: string | null
+          settled_amount_gnf: number
+          settled_at: string | null
+        }
+        Insert: {
+          cash_collected_gnf?: number
+          commission_owed_gnf?: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          note?: string | null
+          ride_id?: string | null
+          settled_amount_gnf?: number
+          settled_at?: string | null
+        }
+        Update: {
+          cash_collected_gnf?: number
+          commission_owed_gnf?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          note?: string | null
+          ride_id?: string | null
+          settled_amount_gnf?: number
+          settled_at?: string | null
+        }
+        Relationships: []
+      }
       driver_locations: {
         Row: {
           heading: number | null
@@ -457,6 +526,75 @@ export type Database = {
           updated_at?: string
           user_id?: string
           zone?: string | null
+        }
+        Relationships: []
+      }
+      driver_profiles: {
+        Row: {
+          accept_rate: number
+          approved_at: string | null
+          approved_by: string | null
+          cash_debt_gnf: number
+          created_at: string
+          debt_limit_gnf: number
+          driver_photo_url: string | null
+          id_doc_url: string | null
+          last_seen_at: string | null
+          plate_number: string | null
+          presence: Database["public"]["Enums"]["driver_presence"]
+          rating: number
+          rejected_reason: string | null
+          status: Database["public"]["Enums"]["driver_status"]
+          suspended_reason: string | null
+          updated_at: string
+          user_id: string
+          vehicle_photo_url: string | null
+          vehicle_type: Database["public"]["Enums"]["driver_vehicle_type"]
+          zones: string[]
+        }
+        Insert: {
+          accept_rate?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          cash_debt_gnf?: number
+          created_at?: string
+          debt_limit_gnf?: number
+          driver_photo_url?: string | null
+          id_doc_url?: string | null
+          last_seen_at?: string | null
+          plate_number?: string | null
+          presence?: Database["public"]["Enums"]["driver_presence"]
+          rating?: number
+          rejected_reason?: string | null
+          status?: Database["public"]["Enums"]["driver_status"]
+          suspended_reason?: string | null
+          updated_at?: string
+          user_id: string
+          vehicle_photo_url?: string | null
+          vehicle_type?: Database["public"]["Enums"]["driver_vehicle_type"]
+          zones?: string[]
+        }
+        Update: {
+          accept_rate?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          cash_debt_gnf?: number
+          created_at?: string
+          debt_limit_gnf?: number
+          driver_photo_url?: string | null
+          id_doc_url?: string | null
+          last_seen_at?: string | null
+          plate_number?: string | null
+          presence?: Database["public"]["Enums"]["driver_presence"]
+          rating?: number
+          rejected_reason?: string | null
+          status?: Database["public"]["Enums"]["driver_status"]
+          suspended_reason?: string | null
+          updated_at?: string
+          user_id?: string
+          vehicle_photo_url?: string | null
+          vehicle_type?: Database["public"]["Enums"]["driver_vehicle_type"]
+          zones?: string[]
         }
         Relationships: []
       }
@@ -1114,6 +1252,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ride_offers: {
+        Row: {
+          decline_reason: string | null
+          destination_zone: string | null
+          distance_to_pickup_m: number | null
+          driver_id: string
+          estimated_earning_gnf: number | null
+          estimated_fare_gnf: number | null
+          expires_at: string
+          id: string
+          pickup_zone: string | null
+          responded_at: string | null
+          ride_id: string
+          sent_at: string
+          status: Database["public"]["Enums"]["ride_offer_status"]
+        }
+        Insert: {
+          decline_reason?: string | null
+          destination_zone?: string | null
+          distance_to_pickup_m?: number | null
+          driver_id: string
+          estimated_earning_gnf?: number | null
+          estimated_fare_gnf?: number | null
+          expires_at?: string
+          id?: string
+          pickup_zone?: string | null
+          responded_at?: string | null
+          ride_id: string
+          sent_at?: string
+          status?: Database["public"]["Enums"]["ride_offer_status"]
+        }
+        Update: {
+          decline_reason?: string | null
+          destination_zone?: string | null
+          distance_to_pickup_m?: number | null
+          driver_id?: string
+          estimated_earning_gnf?: number | null
+          estimated_fare_gnf?: number | null
+          expires_at?: string
+          id?: string
+          pickup_zone?: string | null
+          responded_at?: string | null
+          ride_id?: string
+          sent_at?: string
+          status?: Database["public"]["Enums"]["ride_offer_status"]
+        }
+        Relationships: []
+      }
       rides: {
         Row: {
           client_id: string
@@ -1746,6 +1932,159 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      driver_admin_decide: {
+        Args: { p_decision: string; p_reason?: string; p_user_id: string }
+        Returns: {
+          accept_rate: number
+          approved_at: string | null
+          approved_by: string | null
+          cash_debt_gnf: number
+          created_at: string
+          debt_limit_gnf: number
+          driver_photo_url: string | null
+          id_doc_url: string | null
+          last_seen_at: string | null
+          plate_number: string | null
+          presence: Database["public"]["Enums"]["driver_presence"]
+          rating: number
+          rejected_reason: string | null
+          status: Database["public"]["Enums"]["driver_status"]
+          suspended_reason: string | null
+          updated_at: string
+          user_id: string
+          vehicle_photo_url: string | null
+          vehicle_type: Database["public"]["Enums"]["driver_vehicle_type"]
+          zones: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      driver_apply: {
+        Args: { p_payload: Json }
+        Returns: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision: Database["public"]["Enums"]["driver_application_decision"]
+          decision_reason: string | null
+          id: string
+          payload: Json
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      driver_cash_settle: {
+        Args: {
+          p_amount_gnf: number
+          p_driver_user_id: string
+          p_note?: string
+        }
+        Returns: {
+          cash_collected_gnf: number
+          commission_owed_gnf: number
+          created_at: string
+          driver_id: string
+          id: string
+          note: string | null
+          ride_id: string | null
+          settled_amount_gnf: number
+          settled_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_cash_ledger"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      driver_offer_accept: {
+        Args: { p_offer_id: string }
+        Returns: {
+          decline_reason: string | null
+          destination_zone: string | null
+          distance_to_pickup_m: number | null
+          driver_id: string
+          estimated_earning_gnf: number | null
+          estimated_fare_gnf: number | null
+          expires_at: string
+          id: string
+          pickup_zone: string | null
+          responded_at: string | null
+          ride_id: string
+          sent_at: string
+          status: Database["public"]["Enums"]["ride_offer_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ride_offers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      driver_offer_decline: {
+        Args: { p_offer_id: string; p_reason?: string }
+        Returns: {
+          decline_reason: string | null
+          destination_zone: string | null
+          distance_to_pickup_m: number | null
+          driver_id: string
+          estimated_earning_gnf: number | null
+          estimated_fare_gnf: number | null
+          expires_at: string
+          id: string
+          pickup_zone: string | null
+          responded_at: string | null
+          ride_id: string
+          sent_at: string
+          status: Database["public"]["Enums"]["ride_offer_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ride_offers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      driver_set_status: {
+        Args: { p_status: Database["public"]["Enums"]["driver_presence"] }
+        Returns: {
+          accept_rate: number
+          approved_at: string | null
+          approved_by: string | null
+          cash_debt_gnf: number
+          created_at: string
+          debt_limit_gnf: number
+          driver_photo_url: string | null
+          id_doc_url: string | null
+          last_seen_at: string | null
+          plate_number: string | null
+          presence: Database["public"]["Enums"]["driver_presence"]
+          rating: number
+          rejected_reason: string | null
+          status: Database["public"]["Enums"]["driver_status"]
+          suspended_reason: string | null
+          updated_at: string
+          user_id: string
+          vehicle_photo_url: string | null
+          vehicle_type: Database["public"]["Enums"]["driver_vehicle_type"]
+          zones: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -2247,6 +2586,14 @@ export type Database = {
         | "finance_admin"
         | "god_admin"
       approval_status: "pending" | "approved" | "rejected" | "cancelled"
+      driver_application_decision:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "more_info"
+      driver_presence: "offline" | "online" | "on_trip"
+      driver_status: "pending" | "approved" | "rejected" | "suspended"
+      driver_vehicle_type: "moto" | "toktok" | "livraison" | "auto"
       insight_confidence: "low" | "medium" | "high"
       insight_section:
         | "executive"
@@ -2292,6 +2639,13 @@ export type Database = {
       party_type: "client" | "driver" | "merchant" | "agent" | "master"
       report_status: "open" | "reviewed" | "actioned" | "dismissed"
       ride_mode: "moto" | "toktok" | "food"
+      ride_offer_status:
+        | "pending"
+        | "accepted"
+        | "declined"
+        | "missed"
+        | "expired"
+        | "cancelled"
       ride_status: "pending" | "in_progress" | "completed" | "cancelled"
       topup_status:
         | "pending"
@@ -2459,6 +2813,15 @@ export const Constants = {
         "god_admin",
       ],
       approval_status: ["pending", "approved", "rejected", "cancelled"],
+      driver_application_decision: [
+        "pending",
+        "approved",
+        "rejected",
+        "more_info",
+      ],
+      driver_presence: ["offline", "online", "on_trip"],
+      driver_status: ["pending", "approved", "rejected", "suspended"],
+      driver_vehicle_type: ["moto", "toktok", "livraison", "auto"],
       insight_confidence: ["low", "medium", "high"],
       insight_section: [
         "executive",
@@ -2508,6 +2871,14 @@ export const Constants = {
       party_type: ["client", "driver", "merchant", "agent", "master"],
       report_status: ["open", "reviewed", "actioned", "dismissed"],
       ride_mode: ["moto", "toktok", "food"],
+      ride_offer_status: [
+        "pending",
+        "accepted",
+        "declined",
+        "missed",
+        "expired",
+        "cancelled",
+      ],
       ride_status: ["pending", "in_progress", "completed", "cancelled"],
       topup_status: [
         "pending",

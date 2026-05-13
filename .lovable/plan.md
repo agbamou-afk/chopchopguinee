@@ -1,118 +1,78 @@
-# CHOP CHOP Wallet — Orange Money Top-Up & Reconciliation
+# Day 5 — Driver System & Operational Flow
 
-This is a large piece of work. I'll ship it in phases so each phase is reviewable, testable, and the app stays working between approvals.
+Goal: turn driver mode into a real operational tool — role-gated, onboarded, approvable, live-trackable, with trip lifecycle, earnings, cash-commission tracking, support, and live admin oversight. No design overhaul, no auth/wallet rewrites.
 
-## Current state (what already exists)
+## Current state (from earlier days)
+- `driver_locations` table exists with RLS (drivers upsert own; clients see assigned driver; admins see all).
+- `rides` table + `ride_create / ride_accept / ride_complete / ride_cancel` RPCs already wired.
+- Wallet + commission split already happen inside `ride_complete` (1500 bps to master).
+- `useAuth.isAdmin` + `can_manage_operations(_user_id)` already exist.
+- `DriverHome` exists but is mostly mock; no application flow, no incoming-request popup, no trip lifecycle, no earnings page beyond a stub.
+- No `driver_profiles`, `driver_applications`, `driver_cash_ledger`, `ride_offers` tables yet.
 
-- `wallets` table with `owner_user_id`, `party_type`, `balance_gnf`, `held_gnf`. Already used by app.
-- `wallet_transactions` table with `type` (topup/payment/refund/adjustment/transfer/...), `status`, `amount_gnf`, `from_wallet_id`, `to_wallet_id`, `reference`.
-- `topup_requests` table — currently scoped to **agent → client** top-ups (has `agent_user_id`, `confirmation_code`).
-- RPCs: `wallet_hold`, `wallet_capture`, `wallet_release`, `wallet_internal_transfer`, `wallet_topup_create/confirm/cancel`, `admin_adjust_agent_float`.
-- `audit_logs` already exists with actor/role/module/before/after.
-- Home `WalletCard` currently shows a hard-coded `walletBalance = 2500000` in `UserHome.tsx`.
-- No Orange Money provider, no reconciliation UI, no provider event ingestion.
+## Phases (each phase is one approval gate)
 
-The existing schema already covers ~70% of what's specified. I'll **extend** rather than duplicate so `agent → client` top-ups keep working alongside the new Orange Money flow.
+### Phase 1 — Database foundations (single migration)
+- `app_role` already has `driver`. Add new tables:
+  - `driver_profiles` (user_id PK, status enum: pending/approved/rejected/suspended, vehicle_type enum: moto/toktok/livraison, plate, photo_url, id_doc_url, vehicle_photo_url, zones text[], rating numeric, accept_rate numeric, cash_debt_gnf bigint, debt_limit_gnf bigint, last_seen_at, approved_at, approved_by, rejected_reason, suspended_reason).
+  - `driver_applications` (history of submissions; one driver can re-apply).
+  - `ride_offers` (ride_id, driver_id, status enum: pending/accepted/declined/missed/expired, sent_at, responded_at, expires_at) — for incoming-request flow + accept/decline telemetry.
+  - `driver_cash_ledger` (driver_id, ride_id, cash_collected_gnf, commission_owed_gnf, settled_at).
+- RPCs:
+  - `driver_apply(payload jsonb)` — creates/updates pending application + driver_profiles row with status=pending.
+  - `driver_admin_decide(p_user_id, p_decision, p_reason)` — approve/reject/suspend; on approve grants `driver` role + creates driver wallet via `wallet_ensure('driver')`. Restricted to `god_admin` / `operations_admin`.
+  - `driver_set_status(p_status)` — driver toggles online/offline; gates on approved + not suspended + cash_debt < limit.
+  - `driver_offer_accept(p_offer_id)` / `driver_offer_decline(p_offer_id, p_reason)` — wraps `ride_accept` and updates offer row.
+  - `driver_cash_settle(p_driver_id, p_amount_gnf)` — admin-only, decrements cash_debt and posts wallet entry.
+- RLS: drivers RW their own row; admins (ops/god) full; clients only read approved+online location through existing policy.
 
----
+### Phase 2 — Driver onboarding flow (frontend)
+- New `/driver/apply` route with 6-step wizard: personal info → vehicle type → vehicle details → docs upload (Storage bucket `driver-docs` private) → zones → review/submit.
+- Calls `driver_apply` RPC.
+- Reusable `useDriverProfile()` hook returning {status, profile, refetch}.
+- `BecomeDriverCTA` shown on profile + driver-mode toggle when no driver role.
+- Status banner: "Votre demande est en cours de vérification." / rejected reason / suspended.
 
-## Phase 1 — Real wallet balance on home + `useWallet` hook (small, ship first)
+### Phase 3 — Driver mode gating + DriverHome rebuild
+- Replace toggle in `AppHeader` so switching to driver mode requires `useDriverProfile().status === 'approved'`. If not, route to `/driver/apply`.
+- `DriverHome` sections:
+  - Status header (online/offline switch, daily earnings, wallet balance).
+  - KPI grid (Aujourd'hui / Courses / Heures / Acceptation / Note).
+  - Quick actions (Mes courses, Mes revenus, Support, Profil chauffeur).
+  - Application-status card if not approved.
+- Skeleton + empty + error states everywhere.
 
-Outcome: Home page wallet card and any other balance display reflect the authenticated user's true `client` wallet balance with loading/error states. No mock numbers anywhere.
+### Phase 4 — Online lifecycle + location updates + incoming requests
+- `useDriverPresence()` hook:
+  - Throttled `navigator.geolocation.watchPosition` (every 8 s, or 3 s on active trip).
+  - Pauses on `document.hidden`, offline, or low-data mode (unless on_trip).
+  - Upserts `driver_locations` and updates `driver_profiles.last_seen_at`.
+- Realtime subscription on `ride_offers` filtered by `driver_id = me`.
+- `IncomingRequestPopup`: service type, pickup/dest zone, fare estimate, driver earning (fare × (1-1500bps)), distance, 20 s countdown, big Accept / Decline.
+  - Accept → `driver_offer_accept` → `DriverTripView`.
+  - Decline → `driver_offer_decline`.
+  - Timeout → marks `missed`.
 
-Changes:
-- Audit `useWallet` hook (already exists at `src/hooks/useWallet.ts`) — make sure it returns `{ balance, held, available, loading, error, refresh }` and subscribes to realtime `wallets` row changes for the current user.
-- `UserHome.tsx`: remove `walletBalance = 2500000`, use `useWallet()`. Skeleton while loading, error fallback, "Créer portefeuille" CTA only if no row exists (auto-created by `handle_new_user` trigger so this is rare).
-- `AppHeader` already takes `amountValue` — drive it from the hook.
-- `WalletView` — same wiring; remove any remaining mock balances.
-- Add visibility toggle (eye icon) persisted to `localStorage`.
-- Driver mode: show driver-party wallet balance instead of client wallet on driver home.
+### Phase 5 — Trip lifecycle + earnings + cash commission
+- `DriverTripView` with state machine for moto and livraison (call client, open route via `geo:` URL, report issue, cancel-with-reason).
+- `useDriverEarnings()` aggregates today/week from `wallet_transactions` + `rides` + `driver_cash_ledger`.
+- `DriverEarningsView` shows today / week / wallet / cash collected / commission owed / payouts pending / completed rides.
+- Cash-commission gate in `driver_set_status`: if `cash_debt_gnf >= debt_limit_gnf`, refuse going online and show warning toast.
 
-No DB migration in this phase.
+### Phase 6 — Admin tools, notifications, analytics, mobile QA
+- `Admin → Drivers`:
+  - Tabs: Pending applications / Approved / Suspended / All.
+  - Live operations panel: online / on_trip / offline counts, last-seen timestamps, cash debt column, suspend/reactivate actions, manual assign (later — out of scope, just wire the button to a stub).
+- Notifications: insert into existing `notification_log` for application submitted / approved / rejected / suspended / missed request / commission warning. WhatsApp + push deferred (just rows in log).
+- Analytics: register all `driver.*` events in `eventTaxonomy.ts` and emit from the relevant components.
+- Driver support: pre-fills `support_messages` with tag in metadata `{ category: 'driver_support', kind }`.
+- Mobile QA at 390×844: online toggle thumb-reachable, IncomingRequestPopup buttons ≥ 56 px, trip view padding-bottom 28, no horizontal overflow.
 
-## Phase 2 — Orange Money top-up data model
+## Out of scope (explicit, to keep scope honest)
+- WhatsApp / push delivery infra (just notification_log entries for now).
+- "Auto" vehicle type (column accepts it but UI does not show it).
+- Manual ride reassignment from admin (UI shell only).
+- Driver document OCR / KYC integration.
 
-Outcome: New tables to support merchant-account top-ups and provider event ingestion, without breaking the existing agent flow.
-
-Migration:
-- Extend `topup_requests`:
-  - Make `agent_user_id` nullable (it's currently NOT NULL).
-  - Add `provider text` (default `'agent'`, allowed: `'agent' | 'orange_money'`).
-  - Add `user_phone text`, `matched_provider_transaction_id text`, `expires_at` already exists.
-  - Extend status enum to include `'matched'`, `'needs_review'`, `'credited'` (alias of `'confirmed'` kept for back-compat).
-- New table `payment_provider_events` (provider, event_type, provider_transaction_id UNIQUE, payer_phone, amount_gnf, currency, status, raw_payload jsonb, matched_user_id, matched_topup_request_id, match_confidence numeric, processing_status, created_at, processed_at). RLS: admin-only read/write; `service_role` insert via edge function.
-- Reference generator helper: SQL function `gen_topup_reference()` returning `CC-TOPUP-YYYY-NNNNNN` from a sequence.
-- New RPC `wallet_topup_om_create(p_amount_gnf, p_user_phone)` — creates a `pending` topup_request with `provider = 'orange_money'`, `expires_at = now() + 24h`, returns reference.
-- New RPC `wallet_topup_om_credit(p_event_id)` — SECURITY DEFINER, called only by edge function with service role; performs deterministic match → credits client wallet via `wallet_internal_transfer` from `master`, marks event `credited`, marks topup_request `credited`, writes `audit_logs` row.
-- New RPC `wallet_admin_credit(p_user_id, p_amount_gnf, p_reason, p_provider_tx_id?)` — restricted to `god_admin`/`finance_admin` (use existing `is_god_admin` + new `is_finance_admin` helper or check `user_roles`), creates `adjustment` transaction, logs to `audit_logs`. Operations admin denied at RPC level.
-- RLS: users read own `topup_requests`; admins read all; `payment_provider_events` admin-only.
-
-## Phase 3 — User-facing top-up flow (Orange Money)
-
-Outcome: User can request a top-up, gets a clear payment instruction screen with reference, and sees the request transition through statuses in real time.
-
-Changes:
-- New screen `WalletTopUpOM.tsx`: amount input (GNF), confirm → calls `wallet_topup_om_create` → shows instruction card:
-  - "Envoyez {amount} GNF via Orange Money au numéro marchand CHOP CHOP `{merchant_msisdn}`"
-  - Reference badge (copy button): `CC-TOPUP-2026-000001`
-  - Countdown to `expires_at`
-  - Live status (subscribes to `topup_requests` row by id)
-  - When `credited`: success animation + new balance + receipt link
-- Merchant MSISDN sourced from a new `app_settings` row (or `feature_flags`) so it's editable by admin without code change.
-- Notifications: in-app toast on each transition; reuse existing `NotificationService` to enqueue WhatsApp/SMS receipt on `credited`.
-- Add to `WalletView`: "Recharger" → opens new sheet with two options "Agent CHOP CHOP" (existing) or "Orange Money".
-
-## Phase 4 — Admin reconciliation dashboard
-
-Outcome: Finance/God admins can manage Orange Money reconciliation end-to-end.
-
-Changes:
-- New admin page `WalletReconciliation.tsx` under `/admin/wallet/reconciliation`. Tabs:
-  1. Auto-credited (last 7d)
-  2. Pending top-up requests
-  3. Provider events needing review
-  4. Failed / expired requests
-  5. Duplicates / suspicious
-  6. Manual allocations
-- For each `needs_review` event: show payer phone, amount, time, top suggested matches (computed in edge function `om-suggest-matches` using phone fuzzy + amount + time window) with confidence score. Buttons: Approve credit → calls `wallet_topup_om_credit` with chosen `topup_request_id`; Reject; Add note; Escalate.
-- Manual import: CSV uploader (admin pastes/uploads Orange Money export) → edge function `om-import-csv` parses rows and inserts into `payment_provider_events` with `processing_status = 'received'`, then runs auto-match.
-- Existing `WalletAdmin.tsx` page: add "Créditer le portefeuille" action on user row → modal (amount, reason, optional provider tx id, admin PIN confirm) → calls `wallet_admin_credit`. Visible only for god_admin/finance_admin.
-
-## Phase 5 — Auto-match edge function + AI advisory
-
-Outcome: Provider events flow in (via webhook stub or CSV import) and match automatically when safe; AI helps admins on the rest.
-
-Changes:
-- Edge function `orange-money-webhook` (verify_jwt = false, HMAC signature check using `ORANGE_MONEY_WEBHOOK_SECRET`) — inserts into `payment_provider_events`, then calls `om_auto_match` SQL function.
-- SQL `om_auto_match(event_id)`:
-  1. provider status = `successful`
-  2. provider_transaction_id not previously used (UNIQUE constraint enforces)
-  3. find pending `topup_requests` where `provider='orange_money'`, `status='pending'`, `expires_at > now()`, `requested_amount_gnf = event.amount_gnf`, and (`user_phone = event.payer_phone` OR `reference appears in event memo`)
-  4. exactly one match → call `wallet_topup_om_credit`; else mark event `needs_review`.
-- Edge function `om-suggest-matches` (admin-only, JWT verified, role-checked) — calls Lovable AI Gateway `google/gemini-2.5-flash` with the unmatched event + a shortlist of candidate users; returns ranked suggestions with rationale. **Read-only**, never credits.
-- Fraud checks in `wallet_topup_om_credit`: rate-limit (>5 top-ups/24h flags), wallet must be `active`, high-value threshold (>5,000,000 GNF) → forces `needs_review` even on perfect match.
-
-## Phase 6 — Notifications, audit, tests
-
-- Hook `notification_log` for every status transition.
-- Every privileged RPC writes to `audit_logs` with before/after.
-- Vitest tests for the conditions in spec (Testing Requirements section).
-- Update `AUDIT.md` and memory.
-
-## Secrets needed (asked at the right phase)
-
-- `ORANGE_MONEY_MERCHANT_MSISDN` (Phase 3)
-- `ORANGE_MONEY_WEBHOOK_SECRET` (Phase 5)
-- `ORANGE_MONEY_API_KEY` + `ORANGE_MONEY_API_SECRET` if/when we wire the live verify-status endpoint (Phase 5, optional — manual import path works without it)
-
-## Technical notes
-
-- `topup_status` enum currently: `pending, confirmed, expired, cancelled, failed`. Adding `matched, needs_review, credited` requires `ALTER TYPE ... ADD VALUE` (one per migration statement, no transaction).
-- `wallet_topup_om_credit` will reuse `wallet_internal_transfer('master' → 'client')` so the master wallet acts as the "Réserve plateforme" mirror of the OM merchant account. Ops will reconcile master vs OM merchant balance daily.
-- Driver-mode wallet shown on driver home will read the `driver` party_type wallet for that user (already created by `ride_accept`).
-
-## Proposed first action after approval
-
-Implement **Phase 1** end-to-end (no migration, low-risk, immediate user-visible win), then come back for Phase 2 migration approval.
-
-If you'd rather I start with the schema (Phase 2) so the data model is locked first, say so and I'll reorder.
+## Approval ask
+This plan touches DB structure (Phase 1) and a lot of frontend. Please confirm and I'll proceed phase by phase, pausing after each migration / major UI surface for a quick check.
