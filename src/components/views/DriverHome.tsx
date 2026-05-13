@@ -12,6 +12,8 @@ import { LiveRidesPanel } from "@/components/driver/LiveRidesPanel";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { useWallet } from "@/hooks/useWallet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
+import { useDriverPresence } from "@/hooks/useDriverPresence";
+import { useIncomingOffers, type RideOffer } from "@/hooks/useIncomingOffers";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { formatGNF } from "@/lib/format";
@@ -20,51 +22,33 @@ interface DriverHomeProps {
   onToggleDriverMode: () => void;
 }
 
-const mockOrders: IncomingRequest[] = [
-  {
-    id: "1",
-    type: "ride" as const,
-    pickup: "Marché Madina, Conakry",
-    destination: "Aéroport International",
-    customerName: "Amadou Diallo",
-    customerRating: 4.7,
-    estimatedPrice: 45000,
-    distance: "12 km",
-    eta: "25 min",
-  },
-  {
-    id: "2",
-    type: "food" as const,
-    pickup: "Restaurant Chez Mama",
-    destination: "Kipé Dadia",
-    customerName: "Mariama Bah",
-    customerRating: 4.9,
-    estimatedPrice: 25000,
-    distance: "5 km",
-    eta: "15 min",
-  },
-  {
-    id: "3",
-    type: "delivery" as const,
-    pickup: "Carrefour Hamdallaye",
-    destination: "Rond-point Bambeto",
-    customerName: "Ousmane Bah",
-    customerRating: 4.6,
-    estimatedPrice: 18000,
-    distance: "4 km",
-    eta: "12 min",
-  },
-];
+function offerToRequest(o: RideOffer): IncomingRequest {
+  const distKm = o.distance_to_pickup_m ? (o.distance_to_pickup_m / 1000).toFixed(1) : "—";
+  return {
+    id: o.id,
+    type: "ride",
+    pickup: o.pickup_zone || "Point de départ",
+    destination: o.destination_zone || "Destination",
+    customerName: "Client",
+    customerRating: 5,
+    estimatedPrice: o.estimated_earning_gnf ?? o.estimated_fare_gnf ?? 0,
+    distance: distKm === "—" ? "—" : `${distKm} km`,
+    eta: "—",
+  };
+}
 
 export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   const navigate = useNavigate();
   const { profile, loading: profileLoading, refetch } = useDriverProfile();
   const [isOnline, setIsOnline] = useState(false);
   const [toggling, setToggling] = useState(false);
-  const [queue, setQueue] = useState<IncomingRequest[]>(mockOrders);
   const [current, setCurrent] = useState<IncomingRequest | null>(null);
   const [activeTrip, setActiveTrip] = useState<IncomingRequest | null>(null);
   const { available: driverBalance, loading: walletLoading } = useWallet("driver");
+  const { offers, refetch: refetchOffers } = useIncomingOffers(isOnline);
+  const queue = offers.map(offerToRequest);
+
+  useDriverPresence({ enabled: isOnline, onTrip: !!activeTrip });
 
   // Sync local toggle with persisted presence
   useEffect(() => {
@@ -92,28 +76,34 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     toast.success(next === "online" ? "Vous êtes en ligne." : "Vous êtes hors ligne.");
   };
 
-  // Auto-pop next request when online and idle
+  // Auto-pop next offer when online and idle
   useEffect(() => {
     if (!isOnline || current || activeTrip || queue.length === 0) return;
-    const t = setTimeout(() => {
-      setCurrent(queue[0]);
-      setQueue((q) => q.slice(1));
-    }, 2500);
-    return () => clearTimeout(t);
+    setCurrent(queue[0]);
   }, [isOnline, current, activeTrip, queue]);
 
-  const handleAccept = (id: string) => {
+  const handleAccept = async (id: string) => {
     const accepted = current;
     setCurrent(null);
+    const { error } = await supabase.rpc("driver_offer_accept", { p_offer_id: id });
+    if (error) {
+      toast.error(error.message || "Impossible d'accepter cette course.");
+      refetchOffers();
+      return;
+    }
     if (accepted) {
       setActiveTrip(accepted);
-      toast.success("Course acceptée ! Navigation lancée vers le client.");
+      toast.success("Course acceptée — direction le client.");
     }
+    refetchOffers();
   };
 
-  const handleDecline = (id: string) => {
+  const handleDecline = async (id: string) => {
     setCurrent(null);
-    toast.info("Course refusée");
+    const { error } = await supabase.rpc("driver_offer_decline", { p_offer_id: id });
+    if (error) toast.error(error.message);
+    else toast.info("Course refusée");
+    refetchOffers();
   };
 
   const triggerNext = () => {
@@ -122,7 +112,6 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
       return;
     }
     setCurrent(queue[0]);
-    setQueue((q) => q.slice(1));
   };
 
   // Application/status gating UI
