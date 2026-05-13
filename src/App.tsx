@@ -9,7 +9,7 @@ import { OfflineBanner } from "@/components/system/OfflineBanner";
 import { InstallPrompt } from "@/components/system/InstallPrompt";
 import { ProfileCompletionRedirect } from "@/components/auth/ProfileCompletionRedirect";
 import { useTopupNotifications } from "@/hooks/useTopupNotifications";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
 
@@ -30,30 +30,30 @@ import Legal from "./pages/Legal";
 import Notifications from "./pages/Notifications";
 import NotificationSettings from "./pages/NotificationSettings";
 import Unsubscribe from "./pages/Unsubscribe";
-import { AdminLayout } from "./components/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import LiveOps from "./pages/admin/LiveOps";
-import UsersAdmin from "./pages/admin/UsersAdmin";
-import DriversAdmin from "./pages/admin/DriversAdmin";
-import MerchantsAdmin from "./pages/admin/MerchantsAdmin";
-import VendorsAdmin from "./pages/admin/VendorsAdmin";
-import WalletAdmin from "./pages/admin/WalletAdmin";
-import WalletReconciliation from "./pages/admin/WalletReconciliation";
-import PricingAdmin from "./pages/admin/PricingAdmin";
-import OrdersAdmin from "./pages/admin/OrdersAdmin";
-import RepasAdmin from "./pages/admin/RepasAdmin";
-import MarcheAdmin from "./pages/admin/MarcheAdmin";
-import SupportAdmin from "./pages/admin/SupportAdmin";
-import RiskAdmin from "./pages/admin/RiskAdmin";
-import NotificationsAdmin from "./pages/admin/NotificationsAdmin";
-import PromotionsAdmin from "./pages/admin/PromotionsAdmin";
-import ReportsAdmin from "./pages/admin/ReportsAdmin";
-import ZonesAdmin from "./pages/admin/ZonesAdmin";
-import FlagsAdmin from "./pages/admin/FlagsAdmin";
-import SettingsAdmin from "./pages/admin/SettingsAdmin";
-import AdminsAdmin from "./pages/admin/AdminsAdmin";
-import AuditAdmin from "./pages/admin/AuditAdmin";
-import AnalyticsAdmin from "./pages/admin/AnalyticsAdmin";
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const LiveOps = lazy(() => import("./pages/admin/LiveOps"));
+const UsersAdmin = lazy(() => import("./pages/admin/UsersAdmin"));
+const DriversAdmin = lazy(() => import("./pages/admin/DriversAdmin"));
+const MerchantsAdmin = lazy(() => import("./pages/admin/MerchantsAdmin"));
+const VendorsAdmin = lazy(() => import("./pages/admin/VendorsAdmin"));
+const WalletAdmin = lazy(() => import("./pages/admin/WalletAdmin"));
+const WalletReconciliation = lazy(() => import("./pages/admin/WalletReconciliation"));
+const PricingAdmin = lazy(() => import("./pages/admin/PricingAdmin"));
+const OrdersAdmin = lazy(() => import("./pages/admin/OrdersAdmin"));
+const RepasAdmin = lazy(() => import("./pages/admin/RepasAdmin"));
+const MarcheAdmin = lazy(() => import("./pages/admin/MarcheAdmin"));
+const SupportAdmin = lazy(() => import("./pages/admin/SupportAdmin"));
+const RiskAdmin = lazy(() => import("./pages/admin/RiskAdmin"));
+const NotificationsAdmin = lazy(() => import("./pages/admin/NotificationsAdmin"));
+const PromotionsAdmin = lazy(() => import("./pages/admin/PromotionsAdmin"));
+const ReportsAdmin = lazy(() => import("./pages/admin/ReportsAdmin"));
+const ZonesAdmin = lazy(() => import("./pages/admin/ZonesAdmin"));
+const FlagsAdmin = lazy(() => import("./pages/admin/FlagsAdmin"));
+const SettingsAdmin = lazy(() => import("./pages/admin/SettingsAdmin"));
+const AdminsAdmin = lazy(() => import("./pages/admin/AdminsAdmin"));
+const AuditAdmin = lazy(() => import("./pages/admin/AuditAdmin"));
+const AnalyticsAdmin = lazy(() => import("./pages/admin/AnalyticsAdmin"));
 import PrivacySettings from "./pages/PrivacySettings";
 import OfflinePage from "./pages/Offline";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
@@ -97,7 +97,7 @@ const App = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
           <Route path="/no-access" element={<NoAccess />} />
-          <Route path="/admin" element={<AdminLayout />}>
+          <Route path="/admin" element={<Suspense fallback={null}><AdminLayout /></Suspense>}>
             <Route index element={<AdminDashboard />} />
             <Route path="live" element={<LiveOps />} />
             <Route path="users" element={<UsersAdmin />} />
