@@ -189,7 +189,7 @@ export function AppHeader({
             </SheetContent>
           </Sheet>
 
-          <img src={logo} alt="CHOP CHOP" className="h-16 w-auto object-contain" />
+          <img src={logo} alt="CHOP CHOP" className="h-16 w-auto object-contain mix-blend-multiply dark:mix-blend-screen" />
 
           <button
             className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors relative"
