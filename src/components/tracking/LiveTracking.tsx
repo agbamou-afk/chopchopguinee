@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { QrScanner } from "@/components/scanner/QrScanner";
 import { RatingPrompt } from "@/components/tracking/RatingPrompt";
+import { DriverSearchOverlay } from "@/components/booking/DriverSearchOverlay";
 
 export type TrackingMode = "moto" | "toktok" | "food";
 
@@ -256,6 +257,27 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-background flex flex-col"
     >
+      {/* Branded driver search overlay (only while searching, moto/toktok) */}
+      {(mode === "moto" || mode === "toktok") && (
+        <DriverSearchOverlay
+          open={phase === "searching" || phase === "assigned"}
+          phase={phase === "searching" ? "searching" : "matched"}
+          serviceType={mode}
+          driver={
+            phase === "assigned"
+              ? {
+                  id: driver.plate,
+                  name: driver.name,
+                  rating: driver.rating,
+                  vehicle: `${MODE_LABELS[mode].title} · ${driver.plate}`,
+                  etaSeconds: etaSec,
+                }
+              : null
+          }
+          onCancel={handleClose}
+          onConfirmMatch={() => setPhase("enroute")}
+        />
+      )}
       {/* Header */}
       <div className="gradient-primary px-4 py-3 flex items-center justify-between">
         <button

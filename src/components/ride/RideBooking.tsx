@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ChopMap, type ChopMapHandle, MapMarker, PinSet, RoutePolyline, DriverCluster } from "@/components/map";
 import { RoutingService, decodePolyline, bbox as bboxOf, formatDistance, formatDuration } from "@/lib/maps";
+import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
 
 function haversineKm(a: [number, number], b: [number, number]): number {
   const R = 6371;
@@ -221,6 +222,16 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
 
   const estimatedPrice = fare.base + fare.perKm * (distanceKm ?? 5);
 
+  const previewState: "idle" | "calculating" | "ready" | "unavailable" | "network" =
+    !destCoords ? "idle"
+    : routing ? "calculating"
+    : routeError && distanceKm == null ? "unavailable"
+    : routeError ? "network"
+    : distanceKm != null ? "ready"
+    : "calculating";
+  const fareLow = Math.round(estimatedPrice * 0.95);
+  const fareHigh = Math.round(estimatedPrice * 1.1);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -375,37 +386,18 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="bg-card rounded-t-3xl p-6 shadow-elevated"
+        className="bg-card rounded-t-3xl p-5 pb-6 shadow-elevated space-y-4"
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl gradient-primary">
-              <Icon className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground">{option.title}</h3>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="w-4 h-4" />
-                <span>
-                  {durationMin ? `${durationMin} min` : option.eta}
-                  {distanceKm ? ` • ${distanceKm.toFixed(1)} km` : ""}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-lg font-bold text-foreground">
-              {formatGNF(Math.round(estimatedPrice))}
-            </p>
-            <p className="text-xs text-muted-foreground">{confirmed ? "Tarif confirmé" : "Estimation"}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 p-3 bg-muted rounded-xl mb-4">
-          <CreditCard className="w-5 h-5 text-muted-foreground" />
-          <span className="text-sm text-foreground">Portefeuille CHOP CHOP</span>
-          <span className="ml-auto text-sm font-medium text-primary">Changer</span>
-        </div>
+        <EtaPricePreview
+          state={previewState}
+          serviceType={type}
+          durationS={durationMin != null ? durationMin * 60 : undefined}
+          distanceM={distanceKm != null ? distanceKm * 1000 : undefined}
+          fareLowGnf={previewState === "ready" ? fareLow : undefined}
+          fareHighGnf={previewState === "ready" ? fareHigh : undefined}
+          paymentMethod="wallet"
+          onRetry={() => destCoords && setDestCoords([...destCoords] as [number, number])}
+        />
 
         {!confirmed ? (
           <Button
