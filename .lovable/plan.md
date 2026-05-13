@@ -1,84 +1,53 @@
-Your message is essentially the full product spec for CHOP CHOP. It's far too much to ship in a single iteration without losing quality, so I'm proposing a phased plan. Each phase ends with a working, testable app. Confirm or tell me which phase to start with (or to reorder).
+# CHOP CHOP — Plan de refonte global (A→M)
 
-# Phase 0 — Foundations (small, do first)
-- Tighten the design system (semantic tokens, soft cards, large tap targets, calmer spacing) so every new screen inherits the right "Google-for-West-Africa" feel.
-- Add a global `ServiceAccent` token map (Moto=green/yellow, TokTok=yellow/green, Repas=red/warm, Marché=green, Envoyer=yellow/black, Scanner=black/green) used by all service screens.
-- Bottom nav restructure: `Accueil · Activité · Scanner (center, elevated) · Portefeuille · Compte`.
+Cette demande couvre ~300 items répartis en 13 chapitres (A→M) touchant design system, refactor, nouvelles pages, wallet, ride, marché, repas, scanner, profil, auth, notifications. C'est l'équivalent de plusieurs sprints. Je propose de la livrer en **6 phases séquentielles** approuvables une à une, plutôt que tout en bloc (risque de régression massif et impossible à QA).
 
-# Phase 1 — Home screen rebuild
-- Header (menu, compact logo, notifications, avatar shortcut).
-- Greeting block ("Bonjour, {prénom} 👋 Prêt à vous déplacer ?").
-- Wallet card with `Recharger / Envoyer / Historique`.
-- Universal search ("Où allez-vous ? Que voulez-vous faire ?").
-- Services grid: Moto, TokTok, Repas, Marché, Envoyer, Scanner.
-- Promo/recommendation cards.
-- Recent activity (Maison, Travail, last order, last parcel).
+## Phase 0 — Audit (lecture seule, ce message)
+Livrable : `AUDIT.md` à la racine résumant :
+- Stack (React 18 + Vite + TS + Tailwind + shadcn + Supabase/Lovable Cloud)
+- Routes (`/`, `/auth`, `/admin`, `/agent`, `/agent/topup`, `/profile`, `/help`, `/legal`)
+- Composants existants par domaine (home, marche, food, ride, wallet, driver, scanner)
+- Tokens actuels dans `index.css` + `tailwind.config.ts`
+- Tables Supabase + RLS (déjà connues)
+- Top 20 problèmes visuels observés (chapitre B item 1)
 
-# Phase 2 — Moto (extend existing RideBooking)
-- Landmark assist field ("près de la station Total…").
-- Ride tier cards: Standard / Plus / Nuit with ETA, fare range, description.
-- Payment selector (Cash default, Wallet, Promo).
-- Matching → Driver found (photo, plate, call, WhatsApp) → Tracking (share trip, emergency) → Completion (rating, tip, report).
+## Phase 1 — Design system foundation (chapitre A)
+- `PROJECT_RULES.md`, `DESIGN_SYSTEM.md`
+- Tokens couleurs CHOP CHOP (vert/jaune/rouge + variantes muted) dans `index.css`
+- Échelle d'espacement, radius, shadows, typo Poppins normalisés
+- Audit + remplacement des couleurs hardcodées (`text-white`, `bg-black`, hex bruts)
+- Primitives réutilisables : `AppShell`, `PageHeader`, `ActionButton`, `PrimaryButton`, `SecondaryButton`, `SearchBar`, `EmptyState`, `LoadingState`, `ErrorState`, `StatusTimeline` (les autres — `BottomNav`, `ServiceCard`, `WalletCard`, `ListingCard`, `RestaurantCard` — existent déjà, je les normalise sur les nouveaux tokens)
 
-# Phase 3 — TokTok
-- New service screen mirroring Moto but with: purpose selector (Me déplacer / Courses / Petit chargement / Famille), load + volume + passenger count, fare range, driver screen.
+## Phase 2 — Polish visuel global (chapitre B + C + D)
+- Home : header, greeting, wallet preview, search, services, recents, offers, restaurants
+- Skeletons + empty states
+- Drawer latéral redesigné avec slogan exact "Tout. Partout. Pour Tous."
+- Format GNF unifié `2 500 000 GNF`
+- BottomNav polish + bouton scanner central
+- Padding bas global pour ne plus masquer le contenu
 
-# Phase 4 — Repas
-- Browse: search, category chips, featured vendors, "Cuisine locale près de vous".
-- Restaurant page, dish customization (quantité, piment, sauce, instructions), cart, checkout, order tracking timeline with friendly copy.
+## Phase 3 — Wallet + Driver (chapitres E + F)
+- Wallet : toggle visibilité solde, PIN 6 chiffres, actions Envoyer/Recevoir/QR/Recharger, page recharge agent + Orange Money "Bientôt", références `CC-RC-000001`, alerte solde bas
+- Driver : Tableau chauffeur, états Hors ligne / En ligne / Recherche, stats normalisées, ride-request bottom sheet avec timer, pages earnings detail + trip history
 
-# Phase 5 — Marché
-- Categories + featured bundles (Pack Cuisine / Famille / Semaine / Étudiant).
-- Product cards with unit + estimated price ranges, quantity selector.
-- Substitution preferences, delivery windows, shopper tracking + chat.
+## Phase 4 — Services transport + repas (chapitres G + H)
+- Moto + TokTok : map+sheet responsive, repère utile, estimation tarif, sélecteur paiement, écrans confirmation/assigné/en cours/terminé/annulation
+- Repas : restaurant detail, menu, panier, checkout, tracking timeline, états closed/unavailable
 
-# Phase 6 — Envoyer
-- Pickup + drop-off forms with landmark + recipient.
-- Package type/size/value, speed (Standard/Express/Programmé).
-- Delivery code as proof, tracking timeline, "Envoyer pour mon commerce" stub.
+## Phase 5 — Marché + Scanner (chapitres I + J)
+- Marché : badges (Vérifié, Livraison CC, Négociable, Urgent), filtres+tri, saved listings, chat acheteur-vendeur avec quick replies, signalement, flow livraison + code de confirmation
+- Scanner : page dédiée avec frame QR, saisie manuelle, écrans success/error pour paiement, top-up, livraison, vérification chauffeur
 
-# Phase 7 — Scanner
-- Camera scanner (QR) with manual code entry + flash.
-- Action handlers: payment, driver verification, promo, delivery confirmation. Always confirm before pay.
+## Phase 6 — Profil + Auth + Notifications (chapitres K + L + M)
+- Profil refondu (téléphone-first, adresses, langue, sécurité, danger zone, applications driver/merchant)
+- Auth : `+224` phone-first, OTP screen + timer (NB : actuellement auto-confirm activé sur ta demande précédente — l'OTP UI sera en mock jusqu'à activation Twilio/SMS provider)
+- Onboarding 4 slides + permissions
+- `notifications.ts` + `sms.ts` (templates centralisés), notification center, mock SMS adapter, table de log
 
-# Phase 8 — Wallet, Activity, Support, Profile
-- Wallet: balance card, top-up flows (agent / driver cash / promo), transaction history with statuses.
-- Activité tabs: En cours / Passé / Annulé with reorder + help.
-- Aide center with WhatsApp + call + in-app form, emergency button on active trips.
-- Profil: saved addresses with landmark + instructions, payment methods, language, become a driver, business account.
+## Détails techniques
+- Tous les nouveaux composants utilisent uniquement les tokens HSL semantic (jamais `text-white` direct)
+- Pas de migration DB en Phase 0–2 ; les phases 3–6 ajouteront migrations ciblées (notifications, addresses, sms_logs) au cas par cas, chacune approuvée séparément
+- Aucun composant fonctionnel existant n'est cassé : on ajoute des primitives à côté puis on migre les écrans progressivement
 
-# Phase 9 — Driver/Courier mode polish
-- Per-service flows (Moto, Envoyer, Repas, Marché shopper).
-- Earnings (today / semaine / cash collected / commission).
-- Verification + safety badges.
-
-# Phase 10 — Admin console with 3 tiers
-Roles (DB enum `app_role`): `super_admin`, `ops_admin`, `support_admin`.
-- `super_admin`: everything (manage admins, fares, financial settings, ban/unban, refunds any amount, feature flags).
-- `ops_admin`: fares, promos, bonuses, driver verification/ban, dispatch overrides, refunds up to a cap.
-- `support_admin`: investigate orders/users, issue small promos/credits, escalate to ops/super, view logs only.
-
-Admin screens:
-1. Dashboard — KPIs (rides today, GMV, active drivers, open incidents).
-2. Investigations — search any order/user/driver, full timeline, attached messages, escalate.
-3. Drivers — verify, suspend, ban, reinstate, view earnings + complaints.
-4. Users — view, credit, suspend, reset.
-5. Fares — current `fare_settings` editor (already exists), plus surge windows.
-6. Promos & Bonuses — create codes, target audiences, expiry, budget caps.
-7. Refunds & Wallet adjustments — with role-based caps + audit log.
-8. Audit log — every admin action recorded with actor, target, before/after.
-
-Backing tables (added in one migration when we reach Phase 10): `admin_actions`, `promos`, `bonuses`, `driver_status`, `investigations`, with RLS keyed off `has_role(auth.uid(), …)` and a new `has_min_role()` security-definer helper.
-
-# Technical notes (for the developer)
-- Keep all colors as HSL semantic tokens; add `--accent-moto`, `--accent-toktok`, `--accent-repas`, `--accent-marche`, `--accent-envoyer`, `--accent-scanner`.
-- Reuse Leaflet + Nominatim + OSRM patterns already in `RideBooking.tsx` for TokTok and Envoyer.
-- Scanner uses `@zxing/browser` (small, no native deps).
-- All admin mutations go through SECURITY DEFINER RPCs that check `has_min_role()` and write to `admin_actions`.
-- French microcopy exactly as specified; avoid jargon.
-
-# What I need from you
-Pick one:
-- **A. Ship in order, Phases 0→10** (recommended; ~10 iterations).
-- **B. Start with a specific phase** (tell me which).
-- **C. Compress: ship Phase 0 + 1 + 10 first** (visual reset, new home, admin tiers) and then fill services.
+## Question avant de démarrer
+Je commence par **Phase 0 (audit lecture seule, livre `AUDIT.md`)** maintenant, puis tu valides phase par phase ? Ou tu veux que j'enchaîne automatiquement Phase 0 → Phase 1 sans pause ?
