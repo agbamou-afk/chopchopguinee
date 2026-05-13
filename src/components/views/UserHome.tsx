@@ -1,10 +1,12 @@
 import { QuickActions } from "@/components/home/QuickActions";
-import { MapPin, Home as HomeIcon, Briefcase, Clock, Users, Timer, ShoppingBag, ShieldCheck } from "lucide-react";
+import { MapPin, Home as HomeIcon, Briefcase, Clock, Users, Timer, ShoppingBag, ShieldCheck, Bike } from "lucide-react";
 import { PromoCarousel } from "@/components/home/PromoCarousel";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { SmartSearchBar } from "@/components/ui/SmartSearchBar";
 import { motion } from "framer-motion";
+import { Marker } from "react-map-gl";
+import { ChopMap, DriverCluster, MapMarker } from "@/components/map";
 
 interface UserHomeProps {
   onActionClick: (action: string, params?: { destination?: string }) => void;
@@ -33,6 +35,7 @@ const popularRestaurants = [
 export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
   const walletBalance = 2500000;
   const userLocation = "Kaloum";
+  const userCoords = { lat: 9.5092, lng: -13.7122 };
   const recents = [
     { icon: HomeIcon, label: "Maison", sub: "Ratoma" },
     { icon: Briefcase, label: "Travail", sub: "Kaloum" },
@@ -93,6 +96,47 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
           <div className="bg-card rounded-3xl shadow-card p-4 border border-border/60">
             <QuickActions onActionClick={onActionClick} />
           </div>
+        </section>
+
+        {/* Nearby drivers — live map preview */}
+        <section>
+          <div className="flex items-end justify-between mb-3">
+            <div>
+              <h2 className="text-lg font-bold text-foreground leading-tight">Chauffeurs près de vous</h2>
+              <p className="text-xs text-muted-foreground">Mis à jour en temps réel</p>
+            </div>
+            <button
+              onClick={() => onActionClick("moto")}
+              className="text-sm font-semibold text-primary"
+            >
+              Réserver
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => onActionClick("moto")}
+            className="relative block w-full h-44 rounded-3xl overflow-hidden shadow-card border border-border/60 active:scale-[0.99] transition-transform"
+            aria-label="Voir les chauffeurs disponibles"
+          >
+            <ChopMap
+              className="absolute inset-0 w-full h-full"
+              interactive={false}
+              initialView={{ longitude: userCoords.lng, latitude: userCoords.lat, zoom: 13 }}
+            >
+              <DriverCluster variant="moto" />
+              <Marker longitude={userCoords.lng} latitude={userCoords.lat} anchor="center">
+                <MapMarker variant="pickup" pulse size={28} label="Vous" />
+              </Marker>
+            </ChopMap>
+            <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-card/95 backdrop-blur rounded-full px-2.5 py-1 shadow-card">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-70 pulse-dot" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success" />
+              </span>
+              <Bike className="w-3 h-3 text-primary" />
+              <span className="text-[11px] font-semibold text-foreground">En direct</span>
+            </div>
+          </button>
         </section>
 
         {/* Recent destinations */}

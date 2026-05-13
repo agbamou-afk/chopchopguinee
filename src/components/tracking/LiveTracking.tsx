@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { Marker } from "react-map-gl";
+import { ChopMap, type ChopMapHandle, MapMarker, RoutePolyline, PinSet } from "@/components/map";
+import { RoutingService } from "@/lib/maps";
 import QRCode from "react-qr-code";
 import { Loader2, Phone, MessageCircle, Star, ScanLine, CheckCircle2, X, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,30 +30,6 @@ const MODE_LABELS: Record<TrackingMode, { title: string; emoji: string }> = {
   food: { title: "Repas", emoji: "🍱" },
 };
 
-const clientIcon = L.divIcon({
-  className: "",
-  html: `<div style="width:18px;height:18px;border-radius:9999px;background:hsl(var(--primary));border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
-});
-
-function makeDriverIcon(emoji: string) {
-  return L.divIcon({
-    className: "",
-    html: `<div style="width:34px;height:34px;border-radius:9999px;background:white;border:2px solid hsl(var(--primary));display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:18px">${emoji}</div>`,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-  });
-}
-
-function FitTo({ a, b }: { a: [number, number]; b: [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    map.fitBounds(L.latLngBounds([a, b]), { padding: [60, 60], maxZoom: 16 });
-  }, [a[0], a[1], b[0], b[1], map]);
-  return null;
-}
-
 type Phase =
   | "searching"
   | "assigned"
@@ -79,14 +55,17 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
     pickupCoords[1] + (Math.random() - 0.5) * 0.012,
   ]);
   const [etaSec, setEtaSec] = useState(180);
+  const [routePolyline, setRoutePolyline] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState<null | "start" | "end">(null);
   const [showDriverQR, setShowDriverQR] = useState<null | "start" | "end">(null);
   const tickRef = useRef<number | null>(null);
   const settledRef = useRef(false);
+  const mapRef = useRef<ChopMapHandle>(null);
 
   const driver = useMemo(() => DRIVERS[Math.floor(Math.random() * DRIVERS.length)], []);
   const driverEmoji = mode === "moto" ? "🛵" : mode === "toktok" ? "🛺" : "🛵";
-  const driverIcon = useMemo(() => makeDriverIcon(driverEmoji), [driverEmoji]);
+  void driverEmoji;
+  const variant: 'moto' | 'toktok' | 'food' = mode === 'food' ? 'food' : mode === 'toktok' ? 'toktok' : 'moto';
   const tripId = useMemo(
     () => Math.random().toString(36).slice(2, 8).toUpperCase(),
     [],
@@ -155,6 +134,48 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
       if (tickRef.current) clearInterval(tickRef.current);
     };
   }, [phase, pickupCoords, destCoords]);
+
+  // Compute route polyline + auto-fit when driver/destination changes
+  useEffect(() => {
+    let cancelled = false;
+    const target: [number, number] | null =
+      phase === "enroute" || phase === "arrived" || phase === "assigned"
+        ? pickupCoords
+        : phase === "inTrip" || phase === "atDestination"
+        ? (destCoords ?? null)
+        : null;
+    if (!target) {
+      setRoutePolyline(null);
+      return;
+    }
+    (async () => {
+      try {
+        const r = await RoutingService.route(
+          { lat: driverPos[0], lng: driverPos[1] },
+          { lat: target[0], lng: target[1] },
+          mode === "moto" ? "two_wheeler" : "driving",
+        );
+        if (!cancelled) setRoutePolyline(r.polyline);
+      } catch {
+        if (!cancelled) setRoutePolyline(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [phase, pickupCoords, destCoords, mode, driverPos[0], driverPos[1]]);
+
+  // Auto-fit map to driver + relevant target
+  useEffect(() => {
+    if (phase === "searching") return;
+    const target: [number, number] =
+      phase === "inTrip" || phase === "atDestination"
+        ? (destCoords ?? pickupCoords)
+        : pickupCoords;
+    const minLng = Math.min(driverPos[1], target[1]);
+    const maxLng = Math.max(driverPos[1], target[1]);
+    const minLat = Math.min(driverPos[0], target[0]);
+    const maxLat = Math.max(driverPos[0], target[0]);
+    mapRef.current?.fitBounds([minLng, minLat, maxLng, maxLat], 80);
+  }, [phase, driverPos[0], driverPos[1], pickupCoords, destCoords]);
 
   const formatEta = (s: number) => {
     const m = Math.floor(s / 60);
@@ -228,8 +249,6 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
     onClose();
   };
 
-  const driverFar: [number, number] = driverPos;
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -254,27 +273,32 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
 
       {/* Map */}
       <div className="flex-1 relative">
-        <MapContainer center={pickupCoords} zoom={15} scrollWheelZoom className="w-full h-full z-0">
-          <TileLayer
-            attribution="&copy; OpenStreetMap"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        <ChopMap
+          ref={mapRef}
+          className="absolute inset-0 w-full h-full"
+          initialView={{ longitude: pickupCoords[1], latitude: pickupCoords[0], zoom: 15 }}
+        >
+          {routePolyline && <RoutePolyline encoded={routePolyline} />}
+          <PinSet
+            pickup={{ lat: pickupCoords[0], lng: pickupCoords[1] }}
+            dropoff={destCoords ? { lat: destCoords[0], lng: destCoords[1] } : undefined}
+            pulseActive={phase === "inTrip" || phase === "atDestination" ? "dropoff" : "pickup"}
           />
-          <Marker position={pickupCoords} icon={clientIcon} />
-          {phase !== "searching" && <Marker position={driverFar} icon={driverIcon} />}
-          {(phase === "enroute" || phase === "inTrip") && (
-            <Polyline
-              positions={[
-                driverFar,
-                phase === "inTrip" && destCoords ? destCoords : pickupCoords,
-              ]}
-              pathOptions={{ color: "hsl(138, 64%, 39%)", weight: 4, opacity: 0.7, dashArray: "6 8" }}
-            />
+          {phase !== "searching" && (
+            <Marker longitude={driverPos[1]} latitude={driverPos[0]} anchor="center">
+              <MapMarker
+                variant={variant}
+                state={phase === "inTrip" ? "busy" : "online"}
+                size={36}
+                pulse={phase === "enroute" || phase === "inTrip"}
+                label={`Chauffeur ${driver.name}`}
+              />
+            </Marker>
           )}
-          {phase !== "searching" && <FitTo a={pickupCoords} b={driverFar} />}
-        </MapContainer>
+        </ChopMap>
 
         {/* Status pill */}
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-card/95 backdrop-blur shadow-elevated rounded-full px-4 py-1.5 text-xs font-semibold text-foreground z-[400]">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-card/95 backdrop-blur shadow-elevated rounded-full px-4 py-1.5 text-xs font-semibold text-foreground z-10">
           {phase === "searching" && "Recherche du chauffeur le plus proche…"}
           {phase === "assigned" && "Chauffeur trouvé"}
           {phase === "enroute" && `Arrivée dans ${formatEta(etaSec)}`}
