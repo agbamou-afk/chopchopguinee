@@ -1,113 +1,84 @@
+# CHOP CHOP Mapping System
 
-# CHOP CHOP — Admin Dashboard Architecture (Phase 1: Scaffold)
+A production-grade map layer built on **Mapbox GL JS** for rendering and **Google Directions/Distance Matrix** (proxied via edge functions) for routing and ETA — wrapped in a provider abstraction so we can swap to GraphHopper or OSRM later without touching the UI.
 
-This phase delivers the skeleton: data model, RBAC, layout, navigation, routing, and placeholder pages for all 20 modules. Functional logic for each module ships in later phases. **No changes to the public app UI.**
+## What gets built
 
-## Goals
+### 1. Secrets & config
+- `MAPBOX_PUBLIC_TOKEN` — Mapbox public token (pk.*). Safe in frontend, but stored as a runtime secret and exposed via a tiny `map-config` edge function so we can rotate it without redeploying the SPA.
+- `GOOGLE_MAPS_SERVER_KEY` — restricted server key, never sent to the browser.
+- New table `map_provider_settings` for default provider, style URL, default zoom/center, and feature flags (heatmaps, clustering, surge).
 
-- 3-tier admin RBAC enforced in DB (RLS) and UI (route guards + permission map)
-- One scalable `AdminLayout` with collapsible sidebar, topbar, and breadcrumbs
-- All 20 modules accessible via `/admin/*` routes with placeholder pages that already render headers, empty states, and access-gated controls
-- Audit log + approval-request tables ready to be written to from any future action
-- Existing `/admin` page (fares + agents) preserved and folded into the new shell
-
----
-
-## 1. Data Model (migration)
-
-**New enum**: `admin_role` = `super_admin | ops_admin | finance_admin` (separate from existing `app_role` so we don't break anything; the existing `admin` role auto-maps to `super_admin` initially).
-
-**New tables** (all RLS-protected, only `super_admin` can write):
-
-- `admin_users` — `user_id`, `admin_role`, `status` (active/suspended), `created_by`, `notes`
-- `audit_logs` — `actor_user_id`, `actor_role`, `action`, `module`, `target_type`, `target_id`, `before` jsonb, `after` jsonb, `ip`, `user_agent`, `note`, `created_at`
-- `approval_requests` — `requested_by`, `requested_role`, `action`, `module`, `payload` jsonb, `status` (pending/approved/rejected), `reviewed_by`, `review_note`, `created_at`, `reviewed_at`
-- `feature_flags` — `key`, `enabled`, `description`, `updated_by`, `updated_at`
-- `zones` — `country`, `city`, `commune`, `neighborhood`, `kind` (service/restricted/pricing), `metadata` jsonb
-
-**New security-definer functions**:
-
-- `is_admin(uid)` → boolean
-- `has_admin_role(uid, admin_role)` → boolean
-- `current_admin_role(uid)` → admin_role
-- `log_admin_action(...)` — used by future RPCs to write `audit_logs`
-
-**Seed**: feature flags for `moto`, `toktok`, `repas`, `marche`, `scanner`, `wallet`, `agent_topup`, `orange_money`, `driver_mode`, `merchant_portal`, `marketplace_chat`, `boosted_listings`.
-
-## 2. RBAC — Permissions Map
-
-`src/lib/admin/permissions.ts` exports a typed permissions matrix matching the user's spec (the "Access Matrix" table). Shape:
-
-```ts
-type Module = 'dashboard' | 'live_ops' | 'users' | 'drivers' | ...;
-type Capability = 'view' | 'edit' | 'approve' | 'export' | 'delete';
-const matrix: Record<AdminRole, Partial<Record<Module, Capability[]>>>;
-export function can(role, module, cap): boolean;
-```
-
-Plus `requiresApproval(action)` for actions like large refunds, price changes, admin creation, etc.
-
-`src/hooks/useAdminAuth.ts` — fetches current admin role + exposes `can()`.
-
-## 3. Routing & Layout
-
-- **New route prefix**: `/admin/*` (the existing `/admin` becomes `/admin` dashboard home; the old fares+agents UI moves into `/admin/pricing` and `/admin/vendors`).
-- **`AdminLayout.tsx`** — uses shadcn `Sidebar` (collapsible icon mode), topbar with admin name + role badge + sign-out, `<Outlet />` content area, breadcrumbs.
-- **`AdminGuard.tsx`** — redirects non-admins to `/`. Shows access-denied state for modules outside their permissions.
-- **`AdminSidebar.tsx`** — grouped nav (Operations / Finance / Platform / System), active-route highlighting, hides items the role can't access.
-
-## 4. Module Placeholder Pages
-
-All under `src/pages/admin/`. Each placeholder includes: page header (title + subtitle), role-gated action buttons (disabled with tooltip if not allowed), and an `EmptyState` describing what will live there. This makes the structure immediately navigable.
-
+### 2. Routing provider abstraction (`src/lib/maps/`)
 ```text
-/admin                  → Dashboard (KPI cards stub + live status stub + quick actions)
-/admin/live             → Live Operations (map placeholder)
-/admin/users            → Users
-/admin/drivers          → Drivers
-/admin/merchants        → Merchants
-/admin/vendors          → Top-Up Vendors (port existing AgentsPanel here)
-/admin/wallet           → Wallet / Ledger
-/admin/pricing          → Pricing (port existing FareRow UI here, expand tabs for Moto/TokTok/Envoyer/Repas/Marché/Wallet)
-/admin/orders           → Orders / Rides / Deliveries
-/admin/repas            → Repas Admin
-/admin/marche           → Marché Admin
-/admin/support          → Support / Disputes
-/admin/risk             → Fraud / Risk
-/admin/notifications    → Notifications / WhatsApp/SMS
-/admin/promotions       → Promotions
-/admin/reports          → Reports
-/admin/zones            → Zones
-/admin/flags            → Feature Flags (wired to feature_flags table)
-/admin/settings         → Settings
-/admin/admins           → Admin Users (super_admin only — wired to admin_users table)
-/admin/audit            → Audit Logs (wired to audit_logs table, role-scoped)
+src/lib/maps/
+  providers/
+    types.ts          ← RouteProvider interface (route, eta, matrix, snap)
+    googleProvider.ts ← calls our edge proxy
+    osrmProvider.ts   ← stub, ready
+    graphhopperProvider.ts ← stub, ready
+  RoutingService.ts   ← picks provider via env/flag, caches, retries
+  geo.ts              ← haversine, bbox, decode polyline, bearing
+  zones.ts            ← Conakry quartiers/communes lookup
+  markerIcons.ts      ← SVG factory for moto/toktok/food/wallet/marche/pin
 ```
 
-## 5. Approval System
+The `RouteProvider` interface returns a normalized `Route { polyline, distanceM, durationS, steps[], bbox }` so callers never care which engine produced it.
 
-- `src/lib/admin/approvals.ts` — `requestApproval(action, payload)` writes to `approval_requests`.
-- `/admin/admins` page includes an "Approval queue" tab visible only to super_admin.
-- Future destructive actions in any module call `requireApprovalOr(execute)` — Phase 1 ships the helper, modules adopt it as they're built out.
+### 3. Edge functions (Google key stays server-side)
+- `maps-route` — POST `{origin, destination, mode, waypoints?}` → calls Google Directions, returns normalized route. Per-user rate limit, audit log row in `ai_request_log`-style table `maps_request_log`.
+- `maps-eta` — POST `{origins[], destinations[]}` → Distance Matrix, normalized.
+- `maps-config` — GET → returns Mapbox public token + style URL + active feature flags. Cached 5 min.
+- `driver-location-publish` — POST `{lat,lng,heading,speed,status}` → upserts into `driver_locations` (admin/auth-only, driver writes own row).
 
-## 6. Audit Logging
+### 4. Realtime driver tracking
+- Table `driver_locations(user_id pk, lat, lng, heading, speed, status, updated_at)` with RLS: driver writes own row, admins read all, clients read only the driver assigned to their active ride.
+- Realtime publication enabled.
+- Hook `useDriverLocation(driverId)` subscribes via supabase realtime channel.
+- Smooth interpolation: client keeps `{from, to, t0}` and on each animation frame lerps marker position + bearing → markers glide instead of teleport. Re-target on each new event.
 
-- All admin RPCs (existing `admin_create_agent`, `admin_adjust_agent_float`, `claim_first_admin`) get a follow-up migration that wraps them to call `log_admin_action`. Phase 1 ships the function + table; existing RPCs are updated in the same migration to log automatically.
+### 5. Map components (`src/components/map/`)
+- `<ChopMap />` — Mapbox container, applies CHOP CHOP theme, exposes imperative ref for fitBounds/flyTo.
+- `<MapMarker />` — SVG marker with variants: `moto`, `toktok`, `food`, `wallet`, `marche`, `pickup`, `dropoff`. Props: `state` (online/offline/busy), `pulse`, `rotation`, `selected`.
+- `<DriverMarker />` — wraps MapMarker + interpolation hook.
+- `<DriverCluster />` — Mapbox GL clustering at low zoom, expands at high zoom.
+- `<RoutePolyline />` — animated draw-on with gradient stroke (primary → primary-glow), updates live when re-routed.
+- `<PinSet />` — pickup/dropoff with pulse on the active leg.
+- `<HeatmapLayer />` (scaffolded, hidden behind `flag:heatmap`).
+- `<SurgeZonesLayer />` (scaffolded, hidden behind `flag:surge`).
 
-## 7. What is NOT in this phase
+### 6. CHOP CHOP map theme
+- Custom Mapbox style URL (set via `maps-config`); fallback uses `mapbox://styles/mapbox/light-v11` overridden at runtime: muted roads, hidden POI labels, emerald water, sand land, and our service-marker palette layered above.
 
-- Real KPI queries, live map, ledger filters, ticket workflow, promo engine, message broadcaster, report exports — all stubbed with empty states.
-- 2FA / device recognition / login alerts for super_admin (noted as Phase 3).
-- Public app UI is untouched.
+### 7. Wire into existing flows
+- `RideBooking` — replace static route preview with `<ChopMap>` + `RoutingService.route()` for ETA and polyline; pickup/dropoff pins; nearby driver cluster.
+- `Activity` (active ride) — live driver marker with smooth glide, ETA refreshing every 20 s.
+- `UserHome` — small map preview showing nearby moto/toktok markers (read from `driver_locations` filtered to ~3 km radius).
+- `Marche`, `Repas` — pickup pin + ETA badge on listing detail.
+- `AgentTopup` map of nearby wallet agents.
 
----
+### 8. Future-proof (scaffolded, off by default)
+- Heatmap layer driven by `analytics_events` aggregations.
+- Surge zones layer driven by ride demand RPC.
+- Geofence helpers in `lib/maps/geofence.ts`.
+- Dispatch hooks (`useDispatchCandidates`) returning ranked drivers — stub today.
+- Delivery batching helper (`batchByCorridor`) — stub today.
 
-## Technical notes
+## Technical details
 
-- Sidebar uses `react-router-dom` `NavLink` + `useLocation` per the shadcn-sidebar guidance.
-- Permissions enforced **both** in DB (RLS using `has_admin_role`) and UI (`can()` in `useAdminAuth`). Never trust the client.
-- `super_admin` is bootstrapped from anyone already in `user_roles` with role `admin`. New admins are created exclusively via super_admin from `/admin/admins`.
-- Existing `/admin` redirect-to-auth behavior preserved — admins must still sign in (the dev auth bypass in `useAuthGuard` does not apply to `/admin/*` because that route uses its own `AdminGuard` against the DB).
-- Files added: ~1 migration, ~25 new files (layout, guard, sidebar, permissions lib, 20 placeholder pages, hooks). Existing `src/pages/Admin.tsx` is replaced by the new shell; its fares + agents content moves into `/admin/pricing` and `/admin/vendors` so nothing is lost.
+- Mapbox SDK: `mapbox-gl` + `react-map-gl` v7 (uses Mapbox GL under the hood, idiomatic React).
+- Realtime: Supabase Realtime channel `driver-locations` per zone for fanout efficiency.
+- Interpolation: requestAnimationFrame loop; clamp to 1 s window so a stalled feed doesn't drag markers across the city.
+- Caching: in-memory LRU for routes keyed by `origin|dest|mode`, 60 s TTL. Distance Matrix cached 30 s.
+- Rate limits: 60 route calls/user/min, 120 ETA/min, enforced in edge functions via existing `ai_rate_limits`-style pattern (new `maps_rate_limits` table).
+- Audit: every server route/ETA call inserts into `maps_request_log` (admin-only RLS).
+- Bundle: Mapbox is heavy (~700 KB gz). Lazy-load `<ChopMap>` via `React.lazy` so initial home stays fast.
+- Accessibility: markers have aria-labels; the map view has a "list view" toggle for screen-reader users.
 
-After approval, I'll execute the migration first, then ship the code in a single pass.
+## What I need from you before building
+
+1. **Mapbox public token** (`pk.*`) — get one free at mapbox.com/account → tokens. I'll store it as a runtime secret.
+2. **Google Maps server key** with Directions API + Distance Matrix API enabled, restricted by IP/referrer to Lovable Cloud functions only.
+3. (Optional) A custom Mapbox **style URL** if you already have one; otherwise I'll ship a tuned default.
+
+Once those are in place I'll build in this order: secrets + edge proxies → provider abstraction → `<ChopMap>` + theme → markers + interpolation → driver_locations table + realtime → wire into RideBooking and Activity → scaffold heatmap/surge/dispatch placeholders.
