@@ -257,6 +257,60 @@ export type Database = {
         }
         Relationships: []
       }
+      message_log: {
+        Row: {
+          body: string
+          channel: Database["public"]["Enums"]["message_channel"]
+          created_at: string
+          delivered_at: string | null
+          error: string | null
+          id: string
+          payload: Json
+          provider: string
+          provider_message_id: string | null
+          retry_count: number
+          sent_at: string | null
+          status: Database["public"]["Enums"]["message_status"]
+          template: Database["public"]["Enums"]["message_template"]
+          to_address: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          channel: Database["public"]["Enums"]["message_channel"]
+          created_at?: string
+          delivered_at?: string | null
+          error?: string | null
+          id?: string
+          payload?: Json
+          provider: string
+          provider_message_id?: string | null
+          retry_count?: number
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["message_status"]
+          template: Database["public"]["Enums"]["message_template"]
+          to_address: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          channel?: Database["public"]["Enums"]["message_channel"]
+          created_at?: string
+          delivered_at?: string | null
+          error?: string | null
+          id?: string
+          payload?: Json
+          provider?: string
+          provider_message_id?: string | null
+          retry_count?: number
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["message_status"]
+          template?: Database["public"]["Enums"]["message_template"]
+          to_address?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachment_url: string | null
@@ -294,6 +348,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          preferred_channel: Database["public"]["Enums"]["message_channel"]
+          sms_enabled: boolean
+          topic_marketing: boolean
+          topic_otp: boolean
+          topic_ride: boolean
+          topic_wallet: boolean
+          updated_at: string
+          user_id: string
+          whatsapp_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          preferred_channel?: Database["public"]["Enums"]["message_channel"]
+          sms_enabled?: boolean
+          topic_marketing?: boolean
+          topic_otp?: boolean
+          topic_ride?: boolean
+          topic_wallet?: boolean
+          updated_at?: string
+          user_id: string
+          whatsapp_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          preferred_channel?: Database["public"]["Enums"]["message_channel"]
+          sms_enabled?: boolean
+          topic_marketing?: boolean
+          topic_otp?: boolean
+          topic_ride?: boolean
+          topic_wallet?: boolean
+          updated_at?: string
+          user_id?: string
+          whatsapp_enabled?: boolean
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1179,7 +1272,26 @@ export type Database = {
       app_role: "admin" | "user" | "client" | "driver" | "merchant" | "agent"
       listing_kind: "merchant" | "community" | "service"
       listing_status: "active" | "sold" | "paused" | "removed"
+      message_channel: "whatsapp" | "sms" | "inapp"
       message_kind: "text" | "image" | "location" | "quick_reply"
+      message_status:
+        | "queued"
+        | "sending"
+        | "sent"
+        | "delivered"
+        | "read"
+        | "failed"
+      message_template:
+        | "otp_code"
+        | "welcome"
+        | "topup_pending"
+        | "topup_success"
+        | "payment_success"
+        | "refund"
+        | "ride_confirmed"
+        | "driver_assigned"
+        | "delivery_completed"
+        | "suspicious_activity"
       party_type: "client" | "driver" | "merchant" | "agent" | "master"
       report_status: "open" | "reviewed" | "actioned" | "dismissed"
       ride_mode: "moto" | "toktok" | "food"
@@ -1328,7 +1440,28 @@ export const Constants = {
       app_role: ["admin", "user", "client", "driver", "merchant", "agent"],
       listing_kind: ["merchant", "community", "service"],
       listing_status: ["active", "sold", "paused", "removed"],
+      message_channel: ["whatsapp", "sms", "inapp"],
       message_kind: ["text", "image", "location", "quick_reply"],
+      message_status: [
+        "queued",
+        "sending",
+        "sent",
+        "delivered",
+        "read",
+        "failed",
+      ],
+      message_template: [
+        "otp_code",
+        "welcome",
+        "topup_pending",
+        "topup_success",
+        "payment_success",
+        "refund",
+        "ride_confirmed",
+        "driver_assigned",
+        "delivery_completed",
+        "suspicious_activity",
+      ],
       party_type: ["client", "driver", "merchant", "agent", "master"],
       report_status: ["open", "reviewed", "actioned", "dismissed"],
       ride_mode: ["moto", "toktok", "food"],

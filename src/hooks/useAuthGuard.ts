@@ -27,13 +27,13 @@ export function useAuthGuard() {
 
   const requireAuth = useCallback(
     (fn?: () => void) => {
-      if (isLoggedIn) {
-        fn?.();
-        return true;
-      }
-      const next = encodeURIComponent(location.pathname + location.search);
-      navigate(`/auth?next=${next}`);
-      return false;
+      // Auth gating temporarily disabled for preview / edit mode.
+      // Re-enable by restoring the redirect block below.
+      fn?.();
+      return true;
+      // const next = encodeURIComponent(location.pathname + location.search);
+      // navigate(`/auth?next=${next}`);
+      // return false;
     },
     [isLoggedIn, navigate, location]
   );

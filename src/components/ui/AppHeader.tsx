@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Bell, Menu, Wallet, ChevronRight, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut } from "lucide-react";
+import { Bell, Menu, Wallet, ChevronRight, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,6 +88,7 @@ export function AppHeader({
 
   const menuItems = [
     { icon: UserCircle2, label: "Profil", path: "/profile" },
+    { icon: BellRing, label: "Notifications", path: "/settings/notifications" },
     { icon: HelpCircle, label: "Obtenir de l'aide", path: "/help" },
     { icon: FileText, label: "Mentions légales", path: "/legal" },
   ];
