@@ -1,7 +1,7 @@
 // CHOP CHOP — central prompt registry for the AI assistants.
 // Keep prompts here so they're versioned, reviewable, and never inline in code.
 
-export type AssistantKind = 'admin' | 'support' | 'marche' | 'fraud'
+export type AssistantKind = 'admin' | 'support' | 'marche' | 'fraud' | 'user'
 
 export interface PromptDef {
   system: string
@@ -101,6 +101,38 @@ Réponds STRICTEMENT au format JSON suivant :\n\
       additionalProperties: false,
     },
   },
+
+  // 5. User Home Assistant — open to any authenticated user
+  'user.assistant': {
+    adminOnly: false,
+    model: 'google/gemini-3-flash-preview',
+    maxInputChars: 4_000,
+    system: `${TONE}\n\nTu es l'assistant CHOP CHOP intégré à la barre de recherche \
+de la page d'accueil. L'utilisateur peut te demander n'importe quoi en français, \
+anglais, soussou, peul ou malinké : réserver une moto ou un TokTok, commander à \
+manger, parcourir le Marché, envoyer de l'argent, scanner un QR, ou simplement \
+poser une question sur l'app. Sois bref (1 à 3 phrases), chaleureux, jamais \
+commercial. Si l'intention est claire, propose UNE action parmi : \
+"moto", "toktok", "food", "market", "send", "scan". Sinon, mets "none".\n\n\
+N'invente jamais de prix, de chauffeur, de commande, ni d'estimation chiffrée. \
+Pour toute question sur un solde, une commande, un ticket ou un paiement précis, \
+oriente vers l'écran concerné — ne fabrique pas de chiffres.\n\n\
+Réponds STRICTEMENT au format JSON suivant :\n\
+{ "answer": "...", "suggested_action": "moto|toktok|food|market|send|scan|none", "suggested_action_label": "..." }\n\n${SAFETY}`,
+    jsonSchema: {
+      type: 'object',
+      properties: {
+        answer: { type: 'string' },
+        suggested_action: {
+          type: 'string',
+          enum: ['moto', 'toktok', 'food', 'market', 'send', 'scan', 'none'],
+        },
+        suggested_action_label: { type: 'string' },
+      },
+      required: ['answer', 'suggested_action', 'suggested_action_label'],
+      additionalProperties: false,
+    },
+  },
 }
 
 export const ASSISTANT_OF: Record<string, AssistantKind> = {
@@ -108,4 +140,5 @@ export const ASSISTANT_OF: Record<string, AssistantKind> = {
   'support.draft_reply': 'support',
   'marche.improve_listing': 'marche',
   'fraud.assess': 'fraud',
+  'user.assistant': 'user',
 }
