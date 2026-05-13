@@ -1,14 +1,15 @@
-import { motion } from "framer-motion";
-import { ArrowLeft, Search } from "lucide-react";
-import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Search, SlidersHorizontal } from "lucide-react";
+import { useMemo, useState } from "react";
 import { FoodCategories } from "@/components/food/FoodCategories";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
+import { RestaurantDetail, type Restaurant } from "@/components/food/RestaurantDetail";
 
 interface FoodViewProps {
   onBack: () => void;
 }
 
-const allRestaurants = [
+const allRestaurants: Restaurant[] = [
   {
     name: "Chez Mama Fatoumata",
     image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop",
@@ -16,6 +17,11 @@ const allRestaurants = [
     deliveryTime: "20-30 min",
     distance: "1.2 km",
     category: "Cuisine locale",
+    menu: [
+      { id: "m1", name: "Riz au gras", description: "Riz parfumé, viande mijotée, sauce tomate", price: 35000 },
+      { id: "m2", name: "Poulet braisé", description: "Demi-poulet braisé, attiéké et piment", price: 55000 },
+      { id: "m3", name: "Foutou banane", description: "Foutou banane, sauce graine traditionnelle", price: 40000 },
+    ],
   },
   {
     name: "Grillades du Port",
@@ -24,6 +30,10 @@ const allRestaurants = [
     deliveryTime: "25-35 min",
     distance: "2.1 km",
     category: "Grillades",
+    menu: [
+      { id: "g1", name: "Brochettes de bœuf", description: "5 brochettes marinées, frites, salade", price: 45000 },
+      { id: "g2", name: "Capitaine grillé", description: "Capitaine entier, riz blanc, sauce piment", price: 70000 },
+    ],
   },
   {
     name: "Le Palmier",
@@ -32,6 +42,9 @@ const allRestaurants = [
     deliveryTime: "30-40 min",
     distance: "3.0 km",
     category: "Cuisine locale",
+    menu: [
+      { id: "p1", name: "Plat du jour", description: "Selon la cuisinière du jour", price: 38000 },
+    ],
   },
   {
     name: "Café Conakry",
@@ -40,6 +53,10 @@ const allRestaurants = [
     deliveryTime: "15-25 min",
     distance: "0.8 km",
     category: "Boissons",
+    menu: [
+      { id: "c1", name: "Café noir", description: "Espresso de Guinée forestière", price: 8000 },
+      { id: "c2", name: "Jus de bissap", description: "Frais, hibiscus & gingembre", price: 12000 },
+    ],
   },
   {
     name: "La Terrasse",
@@ -48,6 +65,9 @@ const allRestaurants = [
     deliveryTime: "35-45 min",
     distance: "4.2 km",
     category: "Grillades",
+    menu: [
+      { id: "t1", name: "Mouton braisé", description: "Avec attiéké et oignons", price: 60000 },
+    ],
   },
   {
     name: "Pâtisserie Belle Vue",
@@ -56,12 +76,32 @@ const allRestaurants = [
     deliveryTime: "20-30 min",
     distance: "1.5 km",
     category: "Desserts",
+    menu: [
+      { id: "b1", name: "Tarte mangue", description: "Pâte sablée, mangue de Kindia", price: 25000 },
+      { id: "b2", name: "Cookies coco", description: "Lot de 4 cookies maison", price: 15000 },
+    ],
   },
 ];
+
+type SortKey = "rating" | "time" | "distance";
 
 export function FoodView({ onBack }: FoodViewProps) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<SortKey>("rating");
+  const [active, setActive] = useState<Restaurant | null>(null);
+
+  const visible = useMemo(() => {
+    const filtered = allRestaurants.filter((r) =>
+      r.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+    const parseFirst = (s: string) => parseFloat(s.replace(",", ".")) || 0;
+    return [...filtered].sort((a, b) => {
+      if (sort === "rating") return b.rating - a.rating;
+      if (sort === "time") return parseFirst(a.deliveryTime) - parseFirst(b.deliveryTime);
+      return parseFirst(a.distance) - parseFirst(b.distance);
+    });
+  }, [searchQuery, sort]);
 
   return (
     <div className="max-w-md mx-auto">
@@ -98,27 +138,53 @@ export function FoodView({ onBack }: FoodViewProps) {
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
         />
+
+        {/* Sort */}
+        <div className="flex items-center gap-2 mt-3 overflow-x-auto scrollbar-none -mx-4 px-4">
+          <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+            <SlidersHorizontal className="w-3.5 h-3.5" /> Trier :
+          </span>
+          {([
+            ["rating", "Mieux notés"],
+            ["time", "Plus rapides"],
+            ["distance", "Plus proches"],
+          ] as const).map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setSort(k)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                sort === k
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </motion.header>
 
       {/* Restaurant list */}
       <div className="px-4 pt-2 pb-6">
         <div className="grid grid-cols-2 gap-3">
-          {allRestaurants
-            .filter((r) =>
-              r.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .map((restaurant, index) => (
+          {visible.map((restaurant, index) => (
               <motion.div
                 key={restaurant.name}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <RestaurantCard {...restaurant} />
+                <RestaurantCard {...restaurant} onClick={() => setActive(restaurant)} />
               </motion.div>
             ))}
         </div>
       </div>
+
+      <AnimatePresence>
+        {active && (
+          <RestaurantDetail restaurant={active} onClose={() => setActive(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
