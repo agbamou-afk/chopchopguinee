@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          admin_role: Database["public"]["Enums"]["admin_role"]
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["admin_user_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_role: Database["public"]["Enums"]["admin_role"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["admin_user_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_role?: Database["public"]["Enums"]["admin_role"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["admin_user_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       agent_profiles: {
         Row: {
           business_name: string
@@ -56,6 +89,96 @@ export type Database = {
           status?: Database["public"]["Enums"]["wallet_status"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      approval_requests: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          module: string
+          payload: Json
+          requested_by: string
+          requested_role: Database["public"]["Enums"]["admin_role"] | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["approval_status"]
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          module: string
+          payload?: Json
+          requested_by: string
+          requested_role?: Database["public"]["Enums"]["admin_role"] | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["approval_status"]
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          module?: string
+          payload?: Json
+          requested_by?: string
+          requested_role?: Database["public"]["Enums"]["admin_role"] | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["approval_status"]
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_role: Database["public"]["Enums"]["admin_role"] | null
+          actor_user_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          id: string
+          ip: string | null
+          module: string
+          note: string | null
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_role?: Database["public"]["Enums"]["admin_role"] | null
+          actor_user_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          module: string
+          note?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: Database["public"]["Enums"]["admin_role"] | null
+          actor_user_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          module?: string
+          note?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -119,6 +242,30 @@ export type Database = {
           id?: string
           price_per_km?: number
           ride_type?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          description: string | null
+          enabled: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean
+          key?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -794,6 +941,42 @@ export type Database = {
         }
         Relationships: []
       }
+      zones: {
+        Row: {
+          city: string | null
+          commune: string | null
+          country: string
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json
+          neighborhood: string | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          commune?: string | null
+          country?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          neighborhood?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          commune?: string | null
+          country?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          neighborhood?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       agent_topup_requests: {
@@ -939,6 +1122,10 @@ export type Database = {
         }
       }
       claim_first_admin: { Args: never; Returns: boolean }
+      current_admin_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["admin_role"]
+      }
       find_user_by_phone: {
         Args: { p_phone: string }
         Returns: {
@@ -946,12 +1133,32 @@ export type Database = {
           user_id: string
         }[]
       }
+      has_admin_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["admin_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      log_admin_action: {
+        Args: {
+          _action: string
+          _after?: Json
+          _before?: Json
+          _module: string
+          _note?: string
+          _target_id?: string
+          _target_type?: string
+        }
+        Returns: string
       }
       ride_accept: {
         Args: { p_ride_id: string }
@@ -1269,7 +1476,10 @@ export type Database = {
       }
     }
     Enums: {
+      admin_role: "super_admin" | "ops_admin" | "finance_admin"
+      admin_user_status: "active" | "suspended"
       app_role: "admin" | "user" | "client" | "driver" | "merchant" | "agent"
+      approval_status: "pending" | "approved" | "rejected" | "cancelled"
       listing_kind: "merchant" | "community" | "service"
       listing_status: "active" | "sold" | "paused" | "removed"
       message_channel: "whatsapp" | "sms" | "inapp"
@@ -1437,7 +1647,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_role: ["super_admin", "ops_admin", "finance_admin"],
+      admin_user_status: ["active", "suspended"],
       app_role: ["admin", "user", "client", "driver", "merchant", "agent"],
+      approval_status: ["pending", "approved", "rejected", "cancelled"],
       listing_kind: ["merchant", "community", "service"],
       listing_status: ["active", "sold", "paused", "removed"],
       message_channel: ["whatsapp", "sms", "inapp"],
