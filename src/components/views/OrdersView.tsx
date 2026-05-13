@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Package, MapPin, Clock, ChevronRight, Bike, UtensilsCrossed, ShoppingBag } from "lucide-react";
+import { Clock, ChevronRight, Bike, UtensilsCrossed, ShoppingBag, Timer, ShieldCheck } from "lucide-react";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { LiveStrip } from "@/components/ui/LiveStrip";
 
 const orders = [
   {
@@ -60,25 +62,24 @@ export function OrdersView() {
 
   return (
     <div className="max-w-md mx-auto">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-4 pt-6 pb-4"
-      >
-        <h1 className="text-2xl font-bold text-foreground">Mes commandes</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Suivez vos courses et livraisons
-        </p>
-      </motion.header>
+      <ScreenHeader title="Mes commandes" subtitle="Suivez vos courses et livraisons" />
+
+      <div className="mt-4">
+        <LiveStrip
+          stats={[
+            { icon: Timer, label: "Mises à jour en direct", bg: "bg-primary/10", tone: "text-primary" },
+            { icon: ShieldCheck, label: "Course garantie", bg: "bg-success/10", tone: "text-success" },
+          ]}
+        />
+      </div>
 
       {/* Tabs */}
-      <div className="px-4 mb-4">
-        <div className="flex gap-2 bg-muted rounded-xl p-1">
-          <button className="flex-1 py-2 rounded-lg gradient-primary text-primary-foreground text-sm font-medium">
+      <div className="px-4 mt-4 mb-4">
+        <div className="flex gap-2 bg-muted rounded-2xl p-1">
+          <button className="flex-1 py-2 rounded-xl gradient-wallet text-primary-foreground text-sm font-semibold">
             En cours
           </button>
-          <button className="flex-1 py-2 rounded-lg text-muted-foreground text-sm font-medium hover:text-foreground transition-colors">
+          <button className="flex-1 py-2 rounded-xl text-muted-foreground text-sm font-semibold hover:text-foreground transition-colors">
             Historique
           </button>
         </div>

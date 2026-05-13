@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Power, BellRing, Radar } from "lucide-react";
+import { Power, BellRing, Radar, Users, Star, TrendingUp, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DriverDashboard } from "@/components/driver/DriverDashboard";
 import { IncomingRequestPopup, type IncomingRequest } from "@/components/driver/IncomingRequestPopup";
@@ -8,6 +8,7 @@ import { AppHeader } from "@/components/ui/AppHeader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LiveRidesPanel } from "@/components/driver/LiveRidesPanel";
+import { LiveStrip } from "@/components/ui/LiveStrip";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
@@ -97,10 +98,19 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         amountLabel="Gains du jour"
         amountValue={185000}
         notificationCount={queue.length + (current ? 1 : 0)}
+        location="Conakry, en service"
       />
 
       {/* Content */}
-      <div className="px-4 mt-6 space-y-4">
+      <div className="px-4 mt-5 space-y-4">
+        <LiveStrip
+          stats={[
+            { icon: Users, label: `${queue.length} demandes proches`, bg: "bg-primary/10", tone: "text-primary" },
+            { icon: Timer, label: "Temps moyen 12 min", bg: "bg-secondary/20", tone: "text-foreground" },
+            { icon: Star, label: "Note 4.9", bg: "bg-[hsl(45_90%_55%/0.14)]", tone: "text-[hsl(38_85%_40%)]" },
+            { icon: TrendingUp, label: "+18% cette semaine", bg: "bg-success/10", tone: "text-success" },
+          ]}
+        />
         {/* Online toggle — 3 states: Hors ligne / En ligne / Recherche */}
         {(() => {
           const searching = isOnline && !current && !activeTrip;
@@ -110,26 +120,26 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
               ? "Recherche de courses…"
               : "En ligne — course en cours";
           const tone = !isOnline
-            ? "bg-muted text-foreground"
+            ? "bg-card border border-border text-foreground shadow-card"
             : searching
-              ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-secondary-foreground";
+              ? "gradient-wallet text-primary-foreground ring-glow-primary"
+              : "bg-secondary text-secondary-foreground shadow-card";
           return (
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => setIsOnline(!isOnline)}
-              className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl shadow-card overflow-hidden ${tone} transition-colors`}
+              className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl overflow-hidden ${tone} transition-colors`}
             >
               {searching && (
                 <motion.span
                   aria-hidden
-                  className="absolute inset-0 bg-primary-foreground/15"
+                  className="absolute inset-0 bg-white/10"
                   animate={{ opacity: [0.05, 0.25, 0.05] }}
                   transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                 />
               )}
               {isOnline ? <Radar className="w-5 h-5 relative" /> : <Power className="w-5 h-5 relative" />}
-              <span className="font-semibold relative">{label}</span>
+              <span className="font-bold relative">{label}</span>
             </motion.button>
           );
         })()}

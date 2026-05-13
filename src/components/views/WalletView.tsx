@@ -20,6 +20,9 @@ import { PinSetup } from "@/components/wallet/PinSetup";
 import { MyQrModal } from "@/components/wallet/MyQrModal";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { LiveStrip } from "@/components/ui/LiveStrip";
+import { Timer, Users } from "lucide-react";
 
 type ActionId = "send" | "receive" | "scan" | "add";
 
@@ -106,16 +109,12 @@ export function WalletView() {
 
   return (
     <div className="max-w-md mx-auto">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-4 pt-6 pb-4"
-      >
-        <h1 className="text-2xl font-bold text-foreground mb-1">Portefeuille</h1>
-        {profile?.phone && (
-          <p className="text-xs text-muted-foreground mb-4">{profile.phone}</p>
-        )}
+      <ScreenHeader
+        title="Portefeuille"
+        subtitle={profile?.phone ?? "Vos paiements en GNF"}
+      />
+
+      <div className="px-4 mt-4">
         <WalletCard
           balance={available}
           onSend={() => onAction("send")}
@@ -126,11 +125,21 @@ export function WalletView() {
             {formatMoney(wallet.held_gnf)} en attente
           </p>
         )}
-      </motion.header>
+      </div>
+
+      <div className="mt-4">
+        <LiveStrip
+          stats={[
+            { icon: ShieldCheck, label: "Paiements sécurisés", bg: "bg-primary/10", tone: "text-primary" },
+            { icon: Timer, label: "Recharge instantanée", bg: "bg-secondary/20", tone: "text-foreground" },
+            { icon: Users, label: "Réseau d'agents CHOP CHOP", bg: "bg-success/10", tone: "text-success" },
+          ]}
+        />
+      </div>
 
       {/* PIN setup */}
       {needsPin && (
-        <div className="px-4 mb-6">
+        <div className="px-4 mt-4 mb-6">
           <PinSetup userId={userId} onDone={() => window.location.reload()} />
         </div>
       )}
@@ -156,7 +165,7 @@ export function WalletView() {
       )}
 
       {/* Quick actions */}
-      <div className="px-4 mb-6">
+      <div className="px-4 mt-4 mb-6">
         <div className="grid grid-cols-4 gap-3">
           {quickActions.map((action, index) => (
             <motion.button
@@ -198,8 +207,8 @@ export function WalletView() {
       {/* Transaction history */}
       <div className="px-4 pb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-foreground">Historique</h2>
-          <button className="text-sm font-medium text-primary flex items-center gap-1">
+          <h2 className="text-lg font-bold text-foreground">Historique</h2>
+          <button className="text-sm font-semibold text-primary flex items-center gap-1">
             <History className="w-4 h-4" />
             Voir tout
           </button>

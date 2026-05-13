@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown } from "lucide-react";
+import { Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown, ShoppingBag, Timer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryGrid } from "@/components/marche/CategoryGrid";
 import { FeaturedBanners } from "@/components/marche/FeaturedBanners";
@@ -10,6 +10,8 @@ import { SellFlow } from "@/components/marche/SellFlow";
 import { InboxView } from "@/components/marche/InboxView";
 import { categoryLabel } from "@/lib/marche";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { LiveStrip } from "@/components/ui/LiveStrip";
 
 interface MarketViewProps {
   onBack: () => void;
@@ -114,31 +116,27 @@ export function MarketView({ onBack }: MarketViewProps) {
 
   return (
     <div className="max-w-md mx-auto pb-24">
-      {/* Header */}
-      <header className="bg-card px-4 pt-6 pb-4 sticky top-0 z-30 shadow-card">
-        <div className="flex items-center justify-between mb-3">
-          <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-muted">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <div className="text-center flex-1">
-            <h1 className="text-lg font-bold text-foreground">Marché</h1>
-            <div className="flex items-center justify-center gap-1 text-[11px] text-muted-foreground">
-              <MapPin className="w-3 h-3 text-primary" />
-              <span>Kipé, Conakry</span>
-            </div>
-          </div>
+      <ScreenHeader
+        title="Marché"
+        subtitle="Kipé, Conakry · annonces près de vous"
+        onBack={onBack}
+        right={
           <div className="flex items-center gap-1">
-            <button onClick={() => requireAuth(() => setScreen("inbox"))} className="p-2 rounded-full hover:bg-muted relative">
-              <MessageSquare className="w-5 h-5" />
+            <button onClick={() => requireAuth(() => setScreen("inbox"))} aria-label="Messages" className="w-10 h-10 rounded-full bg-card border border-border/60 hover:bg-muted flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-foreground" />
             </button>
-            <button className="p-2 rounded-full hover:bg-muted">
-              <Bell className="w-5 h-5" />
+            <button aria-label="Notifications" className="w-10 h-10 rounded-full bg-card border border-border/60 hover:bg-muted flex items-center justify-center">
+              <Bell className="w-5 h-5 text-foreground" />
             </button>
           </div>
-        </div>
+        }
+      />
 
-        <div className="flex items-center gap-2 bg-muted rounded-2xl px-4 py-3">
-          <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+      <div className="px-4 mt-3">
+        <div className="h-14 flex items-center gap-3 px-4 bg-card rounded-2xl shadow-soft border border-border/60">
+          <div className="w-9 h-9 rounded-xl bg-secondary/20 flex items-center justify-center">
+            <Search className="w-4 h-4 text-foreground" />
+          </div>
           <input
             type="text"
             value={search}
@@ -147,28 +145,38 @@ export function MarketView({ onBack }: MarketViewProps) {
             className="flex-1 bg-transparent placeholder:text-muted-foreground focus:outline-none text-sm text-foreground"
           />
           {search && (
-            <button onClick={() => setSearch("")}>
+            <button onClick={() => setSearch("")} aria-label="Effacer">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           )}
         </div>
-      </header>
+      </div>
+
+      <div className="mt-3">
+        <LiveStrip
+          stats={[
+            { icon: ShoppingBag, label: "120 nouvelles annonces", bg: "bg-secondary/20", tone: "text-foreground" },
+            { icon: Timer, label: "Mises à jour en direct", bg: "bg-primary/10", tone: "text-primary" },
+            { icon: MapPin, label: "Près de Kipé", bg: "bg-success/10", tone: "text-success" },
+          ]}
+        />
+      </div>
 
       <div className="px-4 pt-4 space-y-5">
         {/* Tabs */}
         <div className="flex gap-2">
           <button
             onClick={() => setTab("all")}
-            className={`flex-1 py-2 rounded-xl text-sm font-medium transition ${
-              tab === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            className={`flex-1 py-2.5 rounded-2xl text-sm font-semibold transition ${
+              tab === "all" ? "gradient-wallet text-primary-foreground" : "bg-card border border-border text-muted-foreground"
             }`}
           >
             Toutes les annonces
           </button>
           <button
             onClick={() => requireAuth(() => setTab("saved"))}
-            className={`flex-1 py-2 rounded-xl text-sm font-medium transition flex items-center justify-center gap-1.5 ${
-              tab === "saved" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            className={`flex-1 py-2.5 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-1.5 ${
+              tab === "saved" ? "gradient-wallet text-primary-foreground" : "bg-card border border-border text-muted-foreground"
             }`}
           >
             <Heart className="w-4 h-4" /> Sauvegardées
@@ -225,10 +233,10 @@ export function MarketView({ onBack }: MarketViewProps) {
                 <button
                   key={k}
                   onClick={() => setSort(k)}
-                  className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-medium ${
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold ${
                     sort === k
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
+                      ? "gradient-wallet text-primary-foreground"
+                      : "bg-card border border-border text-muted-foreground"
                   }`}
                 >
                   {label}

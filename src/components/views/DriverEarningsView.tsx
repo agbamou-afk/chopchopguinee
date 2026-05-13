@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { TrendingUp, Calendar, Download, ChevronRight, Bike, UtensilsCrossed, Package } from "lucide-react";
+import { TrendingUp, Calendar, Download, ChevronRight, Bike, UtensilsCrossed, Package, Wallet, ShieldCheck, Timer } from "lucide-react";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { LiveStrip } from "@/components/ui/LiveStrip";
 
 const weeklyData = [
   { day: "Lun", amount: 85000, rides: 5 },
@@ -62,50 +64,68 @@ export function DriverEarningsView() {
 
   return (
     <div className="max-w-md mx-auto">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="gradient-hero text-primary-foreground px-4 pt-6 pb-8 rounded-b-3xl"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold">Mes gains</h1>
-          <button className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
-            <Calendar className="w-5 h-5" />
+      <ScreenHeader
+        title="Mes gains"
+        subtitle="Suivi des revenus et pourboires"
+        right={
+          <button aria-label="Calendrier" className="w-10 h-10 rounded-full bg-card border border-border/60 flex items-center justify-center hover:bg-muted">
+            <Calendar className="w-5 h-5 text-foreground" />
           </button>
-        </div>
+        }
+      />
 
-        <div className="text-center mb-6">
-          <p className="text-sm opacity-80">Total cette semaine</p>
-          <h2 className="text-4xl font-bold mt-2">{formatMoney(totalWeekly)}</h2>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <TrendingUp className="w-4 h-4" />
-            <span className="text-sm">+18% vs semaine dernière</span>
+      {/* Wallet-style total card */}
+      <div className="px-4 mt-4">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="gradient-wallet rounded-3xl p-5 text-primary-foreground ring-glow-primary relative overflow-hidden"
+        >
+          <div className="pointer-events-none absolute -top-12 -right-10 w-44 h-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
+          <div className="flex items-center gap-2 opacity-90">
+            <Wallet className="w-4 h-4" />
+            <p className="text-[11px] uppercase tracking-wider">Total cette semaine</p>
           </div>
-        </div>
+          <h2 className="text-3xl font-extrabold mt-1 leading-none">{formatMoney(totalWeekly)}</h2>
+          <div className="flex items-center gap-2 mt-2 text-[12px] opacity-90">
+            <TrendingUp className="w-4 h-4" />
+            <span>+18 % vs semaine dernière</span>
+          </div>
 
-        {/* Weekly chart */}
-        <div className="flex items-end justify-between gap-2 h-24 px-2">
-          {weeklyData.map((data, index) => (
-            <div key={data.day} className="flex-1 flex flex-col items-center gap-1">
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: `${(data.amount / maxAmount) * 100}%` }}
-                transition={{ delay: index * 0.05, duration: 0.5 }}
-                className="w-full bg-white/30 rounded-t-md min-h-[8px]"
-              />
-              <span className="text-xs opacity-80">{data.day}</span>
-            </div>
-          ))}
-        </div>
-      </motion.header>
+          {/* Weekly chart inside the hero */}
+          <div className="mt-4 flex items-end justify-between gap-2 h-20">
+            {weeklyData.map((data, index) => (
+              <div key={data.day} className="flex-1 flex flex-col items-center gap-1">
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: `${(data.amount / maxAmount) * 100}%` }}
+                  transition={{ delay: index * 0.05, duration: 0.5 }}
+                  className="w-full bg-white/40 rounded-t-md min-h-[8px]"
+                />
+                <span className="text-[10px] opacity-80">{data.day}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Live strip */}
+      <div className="mt-4">
+        <LiveStrip
+          stats={[
+            { icon: TrendingUp, label: "+18% cette semaine", bg: "bg-success/10", tone: "text-success" },
+            { icon: Timer, label: "42h en ligne", bg: "bg-primary/10", tone: "text-primary" },
+            { icon: ShieldCheck, label: "Versement sous 24h", bg: "bg-secondary/20", tone: "text-foreground" },
+          ]}
+        />
+      </div>
 
       {/* Quick stats */}
-      <div className="px-4 -mt-4 mb-6">
+      <div className="px-4 mt-4 mb-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl p-4 shadow-elevated grid grid-cols-3 gap-4"
+          className="bg-card rounded-2xl p-4 shadow-card border border-border/60 grid grid-cols-3 gap-4"
         >
           <div className="text-center">
             <p className="text-2xl font-bold text-foreground">64</p>
@@ -128,7 +148,7 @@ export function DriverEarningsView() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-2 py-4 bg-primary text-primary-foreground rounded-2xl font-medium"
+            className="flex items-center justify-center gap-2 py-4 gradient-wallet text-primary-foreground rounded-2xl font-semibold ring-glow-primary"
           >
             <Download className="w-5 h-5" />
             Retirer
@@ -136,7 +156,7 @@ export function DriverEarningsView() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-2 py-4 bg-muted text-foreground rounded-2xl font-medium"
+            className="flex items-center justify-center gap-2 py-4 bg-card border border-border text-foreground rounded-2xl font-semibold"
           >
             Historique
             <ChevronRight className="w-5 h-5" />
@@ -146,7 +166,7 @@ export function DriverEarningsView() {
 
       {/* Recent earnings */}
       <div className="px-4 pb-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Gains récents</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">Gains récents</h2>
         <div className="space-y-3">
           {recentEarnings.map((earning, index) => {
             const Icon = typeIcons[earning.type];

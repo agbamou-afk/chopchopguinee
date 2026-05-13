@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Clock, MapPin, Navigation, Phone, MessageCircle, CheckCircle } from "lucide-react";
+import { Clock, Navigation, Phone, MessageCircle, CheckCircle, Users, Timer } from "lucide-react";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { LiveStrip } from "@/components/ui/LiveStrip";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -64,17 +66,16 @@ export function DriverOrdersView() {
 
   return (
     <div className="max-w-md mx-auto">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-4 pt-6 pb-4"
-      >
-        <h1 className="text-2xl font-bold text-foreground">Mes courses</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Gérez vos courses en cours
-        </p>
-      </motion.header>
+      <ScreenHeader title="Mes courses" subtitle="Gérez vos courses en cours" />
+
+      <div className="mt-4 mb-2">
+        <LiveStrip
+          stats={[
+            { icon: Users, label: "Demandes proches", bg: "bg-primary/10", tone: "text-primary" },
+            { icon: Timer, label: "Navigation en direct", bg: "bg-secondary/20", tone: "text-foreground" },
+          ]}
+        />
+      </div>
 
       {activeOrder ? (
         <div className="px-4 pb-6">
@@ -85,10 +86,10 @@ export function DriverOrdersView() {
             className="bg-card rounded-2xl shadow-elevated overflow-hidden"
           >
             {/* Status banner */}
-            <div className={`${statusInfo[activeOrder.status].color} px-4 py-3`}>
+            <div className={`${activeOrder.status === "arrived" ? "bg-success" : "gradient-wallet"} px-4 py-3`}>
               <div className="flex items-center justify-between text-primary-foreground">
-                <span className="font-medium">{statusInfo[activeOrder.status].label}</span>
-                <span className="text-sm opacity-80">{activeOrder.id}</span>
+                <span className="font-bold">{statusInfo[activeOrder.status].label}</span>
+                <span className="text-xs opacity-80">{activeOrder.id}</span>
               </div>
             </div>
 
@@ -153,7 +154,7 @@ export function DriverOrdersView() {
               {/* Action button */}
               <Button
                 onClick={handleStatusUpdate}
-                className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90"
+                className="w-full h-14 text-base font-bold gradient-wallet text-primary-foreground ring-glow-primary hover:opacity-95"
               >
                 <CheckCircle className="w-5 h-5 mr-2" />
                 {statusInfo[activeOrder.status].action}
