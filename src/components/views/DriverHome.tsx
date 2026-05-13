@@ -314,7 +314,19 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
       />
 
       {activeTrip && (
-        <DriverTripView request={activeTrip} onClose={() => setActiveTrip(null)} />
+        activeRideId &&
+        (typeof window !== "undefined" &&
+          (localStorage.getItem("cc_realtime_trip") === "1" ||
+            /[?&]trip=v2/.test(window.location.search)))
+          ? (
+            <DriverActiveTrip
+              rideId={activeRideId}
+              onClose={() => { setActiveTrip(null); setActiveRideId(null); }}
+            />
+          )
+          : (
+            <DriverTripView request={activeTrip} onClose={() => { setActiveTrip(null); setActiveRideId(null); }} />
+          )
       )}
     </div>
   );
