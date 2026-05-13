@@ -37,7 +37,7 @@ export function PinSetup({ userId, onDone }: PinSetupProps) {
     try {
       const pin_hash = await hashPin(pin, userId);
       const { error } = await supabase
-        .from("profiles")
+        .from("user_pins")
         .upsert(
           { user_id: userId, pin_hash },
           { onConflict: "user_id" },

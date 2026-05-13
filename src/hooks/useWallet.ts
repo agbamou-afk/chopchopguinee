@@ -23,7 +23,7 @@ export type WalletTransaction = {
 };
 
 export type WalletProfile = {
-  pin_hash: string | null;
+  has_pin: boolean;
   full_name: string | null;
   phone: string | null;
 };
@@ -55,7 +55,7 @@ export function useWallet() {
 
     const { data: p } = await supabase
       .from("profiles")
-      .select("pin_hash, full_name, phone")
+      .select("has_pin, full_name, phone")
       .eq("user_id", uid)
       .maybeSingle();
     setProfile(p as WalletProfile | null);
