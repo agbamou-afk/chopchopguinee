@@ -7,6 +7,7 @@ import { SmartSearchBar } from "@/components/ui/SmartSearchBar";
 import { motion } from "framer-motion";
 import { Marker } from "react-map-gl";
 import { ChopMap, DriverCluster, MapMarker } from "@/components/map";
+import { useWallet } from "@/hooks/useWallet";
 
 interface UserHomeProps {
   onActionClick: (action: string, params?: { destination?: string }) => void;
@@ -33,7 +34,7 @@ const popularRestaurants = [
 ];
 
 export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
-  const walletBalance = 2500000;
+  const { available: walletBalance, loading: walletLoading } = useWallet("client");
   const userLocation = "Kaloum";
   const userCoords = { lat: 9.5092, lng: -13.7122 };
   const recents = [
@@ -54,7 +55,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         isDriverMode={false}
         onToggleDriverMode={onToggleDriverMode}
         amountLabel="Solde portefeuille"
-        amountValue={walletBalance}
+        amountValue={walletLoading ? 0 : walletBalance}
         notificationCount={1}
         onAmountClick={() => onActionClick("send")}
         onRecharge={() => onActionClick("send")}
