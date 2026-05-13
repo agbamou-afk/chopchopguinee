@@ -49,6 +49,13 @@ const LOCATIONS: Array<{ label: string; aliases: string[] }> = [
   { label: "Matoto", aliases: ["matoto"] },
   { label: "Taouyah", aliases: ["taouyah", "tawya"] },
   { label: "Conakry", aliases: ["conakry", "konakry"] },
+  { label: "Dixinn", aliases: ["dixinn", "dixin"] },
+  { label: "Lambanyi", aliases: ["lambanyi", "lambagni"] },
+  { label: "Sonfonia", aliases: ["sonfonia"] },
+  { label: "Cosa", aliases: ["cosa"] },
+  { label: "Nongo", aliases: ["nongo"] },
+  { label: "Aéroport", aliases: ["aeroport", "aéroport", "airport", "gbessia"] },
+  { label: "Matam", aliases: ["matam"] },
 ];
 
 /** Synonym → intent. Matched on whole word boundaries, accent-insensitive. */
