@@ -7,7 +7,7 @@ import { SmartSearchBar } from "@/components/ui/SmartSearchBar";
 import { motion } from "framer-motion";
 
 interface UserHomeProps {
-  onActionClick: (action: string) => void;
+  onActionClick: (action: string, params?: { destination?: string }) => void;
   onToggleDriverMode: () => void;
 }
 
