@@ -103,7 +103,7 @@ export function AppHeader({
                 <div className="flex flex-col items-center gap-2 pt-2">
                   <img src={logo} alt="CHOP CHOP" className="h-24 w-auto object-contain" />
                   <p className="text-xs font-medium text-muted-foreground italic">
-                    Tout, à portée de main.
+                    Tout, Part Tout, Pour Tout
                   </p>
                 </div>
               </SheetHeader>
