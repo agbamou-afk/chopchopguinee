@@ -31,6 +31,16 @@ export const EVENTS = {
   "search.result.clicked": "search",
   "search.ai.fallback_used": "search",
 
+  // --- Day 4 Home / CommandBar surface ---
+  "home.viewed": "session",
+  "home.primary_action.clicked": "session",
+  "commandbar.opened": "search",
+  "commandbar.query.submitted": "search",
+  "commandbar.intent.detected": "search",
+  "commandbar.result.clicked": "search",
+  "commandbar.no_results": "search",
+  "search.routed_to_service": "search",
+
   // --- Mobility ---
   "moto.booking.started": "moto",
   "moto.booking.completed": "moto",

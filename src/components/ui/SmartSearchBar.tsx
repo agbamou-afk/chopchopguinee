@@ -2,6 +2,7 @@ import { Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandBarSheet } from "@/components/ai/CommandBarSheet";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 interface SmartSearchBarProps {
   prompts?: string[];
@@ -15,10 +16,10 @@ interface SmartSearchBarProps {
 
 const DEFAULT_PROMPTS = [
   "Où allez-vous ?",
-  "Commandez un repas",
   "Rechercher dans Marché",
+  "Commander un repas",
   "Envoyer un colis",
-  "Trouver un chauffeur",
+  "Recharger mon portefeuille",
 ];
 
 export function SmartSearchBar({
@@ -39,7 +40,7 @@ export function SmartSearchBar({
   return (
     <>
       <button
-        onClick={onClick ?? (() => setOpen(true))}
+        onClick={onClick ?? (() => { Analytics.track("commandbar.opened", { metadata: { source: "home" } }); setOpen(true); })}
         className="w-full h-14 flex items-center gap-3 px-4 bg-card rounded-2xl shadow-soft border border-border/60 text-left hover:border-primary/40 transition-colors group"
         aria-label="Ouvrir l'assistant CHOP CHOP"
       >

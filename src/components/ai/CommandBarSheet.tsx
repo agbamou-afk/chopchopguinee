@@ -29,6 +29,7 @@ import {
 import { AIService } from "@/lib/ai";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 interface Props {
   open: boolean;
@@ -93,6 +94,25 @@ export function CommandBarSheet({ open, onOpenChange, onAction, location }: Prop
     }
   }, [open]);
 
+  // Emit query/intent telemetry — debounced, never includes raw text.
+  useEffect(() => {
+    if (!open) return;
+    const q = query.trim();
+    if (!q) return;
+    const t = window.setTimeout(() => {
+      const flatIntents = Array.from(new Set(groups.flatMap((g) => g.items.map((i) => i.intent))));
+      Analytics.track("commandbar.query.submitted", {
+        metadata: { query_length: q.length, result_count: groups.reduce((n, g) => n + g.items.length, 0) },
+      });
+      if (flatIntents.length > 0) {
+        Analytics.track("commandbar.intent.detected", { metadata: { intents: flatIntents } });
+      } else {
+        Analytics.track("commandbar.no_results", { metadata: { query_length: q.length } });
+      }
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [query, groups, open]);
+
   // AI fallback — only for queries ≥ 4 chars where local router returned just
   // the generic "Demander de l'aide" fallback. Debounced.
   useEffect(() => {
@@ -125,6 +145,8 @@ export function CommandBarSheet({ open, onOpenChange, onAction, location }: Prop
   }, [query, groups, location]);
 
   function fire(intent: CommandIntent, params?: { destination?: string }) {
+    Analytics.track("commandbar.result.clicked", { metadata: { intent, has_destination: !!params?.destination } });
+    Analytics.track("search.routed_to_service", { metadata: { intent, destination: params?.destination ?? null } });
     if (intent === "support") {
       onOpenChange(false);
       setTimeout(() => navigate("/help"), 80);
