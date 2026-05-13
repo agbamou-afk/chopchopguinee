@@ -278,6 +278,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       approval_requests: {
         Row: {
           action: string
@@ -1775,6 +1799,23 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      om_auto_match: { Args: { p_event_id: string }; Returns: Json }
+      om_pending_topups_for_event: {
+        Args: { p_event_id: string }
+        Returns: {
+          amount_gnf: number
+          amount_match: boolean
+          client_name: string
+          client_phone: string
+          client_user_id: string
+          created_at: string
+          expires_at: string
+          phone_match: boolean
+          reference: string
+          status: string
+          topup_id: string
+        }[]
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }

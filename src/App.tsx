@@ -29,6 +29,7 @@ import DriversAdmin from "./pages/admin/DriversAdmin";
 import MerchantsAdmin from "./pages/admin/MerchantsAdmin";
 import VendorsAdmin from "./pages/admin/VendorsAdmin";
 import WalletAdmin from "./pages/admin/WalletAdmin";
+import WalletReconciliation from "./pages/admin/WalletReconciliation";
 import PricingAdmin from "./pages/admin/PricingAdmin";
 import OrdersAdmin from "./pages/admin/OrdersAdmin";
 import RepasAdmin from "./pages/admin/RepasAdmin";
@@ -90,6 +91,7 @@ const App = () => {
             <Route path="merchants" element={<MerchantsAdmin />} />
             <Route path="vendors" element={<VendorsAdmin />} />
             <Route path="wallet" element={<WalletAdmin />} />
+            <Route path="wallet/reconciliation" element={<WalletReconciliation />} />
             <Route path="pricing" element={<PricingAdmin />} />
             <Route path="orders" element={<OrdersAdmin />} />
             <Route path="repas" element={<RepasAdmin />} />
