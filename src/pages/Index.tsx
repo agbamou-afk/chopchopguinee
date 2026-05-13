@@ -19,7 +19,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
 import { notifications as notif } from "@/lib/notifications";
 import { useNavigate } from "react-router-dom";
 
