@@ -21,7 +21,8 @@ export type AdminModule =
   | "flags"
   | "settings"
   | "admins"
-  | "audit";
+  | "audit"
+  | "analytics";
 
 export type Capability = "view" | "edit" | "approve" | "export" | "delete";
 
@@ -32,7 +33,7 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     dashboard: ALL, live_ops: ALL, users: ALL, drivers: ALL, merchants: ALL,
     vendors: ALL, wallet: ALL, pricing: ALL, orders: ALL, repas: ALL, marche: ALL,
     support: ALL, risk: ALL, notifications: ALL, promotions: ALL, reports: ALL,
-    zones: ALL, flags: ALL, settings: ALL, admins: ALL, audit: ALL,
+    zones: ALL, flags: ALL, settings: ALL, admins: ALL, audit: ALL, analytics: ALL,
   },
   operations_admin: {
     dashboard: ["view"],
@@ -52,6 +53,7 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     promotions: ["view"],
     reports: ["view"],
     audit: ["view"],
+    analytics: ["view"],
   },
   finance_admin: {
     dashboard: ["view"],
@@ -68,6 +70,7 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     notifications: ["view"],
     reports: ["view", "export"],
     audit: ["view"],
+    analytics: ["view"],
   },
 };
 

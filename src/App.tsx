@@ -43,6 +43,9 @@ import FlagsAdmin from "./pages/admin/FlagsAdmin";
 import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import AdminsAdmin from "./pages/admin/AdminsAdmin";
 import AuditAdmin from "./pages/admin/AuditAdmin";
+import AnalyticsAdmin from "./pages/admin/AnalyticsAdmin";
+import PrivacySettings from "./pages/PrivacySettings";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +63,10 @@ const App = () => {
     }, 4400);
     return () => clearTimeout(t);
   }, [showSplash]);
+
+  useEffect(() => {
+    Analytics.init();
+  }, []);
 
   return (
   <QueryClientProvider client={queryClient}>
@@ -97,6 +104,7 @@ const App = () => {
             <Route path="settings" element={<SettingsAdmin />} />
             <Route path="admins" element={<AdminsAdmin />} />
             <Route path="audit" element={<AuditAdmin />} />
+            <Route path="analytics" element={<AnalyticsAdmin />} />
           </Route>
           <Route path="/agent" element={<AgentDashboard />} />
           <Route path="/agent/topup" element={<AgentTopup />} />
@@ -105,6 +113,7 @@ const App = () => {
           <Route path="/legal" element={<Legal />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings/notifications" element={<NotificationSettings />} />
+          <Route path="/settings/privacy" element={<PrivacySettings />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
