@@ -1,8 +1,10 @@
 import { QuickActions } from "@/components/home/QuickActions";
-import { MapPin, Search, Home as HomeIcon, Briefcase, Clock } from "lucide-react";
+import { MapPin, Home as HomeIcon, Briefcase, Clock, Users, Timer, ShoppingBag, ShieldCheck } from "lucide-react";
 import { PromoCarousel } from "@/components/home/PromoCarousel";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { SmartSearchBar } from "@/components/ui/SmartSearchBar";
+import { motion } from "framer-motion";
 
 interface UserHomeProps {
   onActionClick: (action: string) => void;
@@ -37,6 +39,12 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
     { icon: Clock, label: "Madina", sub: "Récent" },
     { icon: Clock, label: "Aéroport", sub: "Récent" },
   ];
+  const liveStats = [
+    { icon: Users, label: "24 chauffeurs actifs", tone: "text-primary", bg: "bg-primary/10" },
+    { icon: Timer, label: "Livraison en 15 min", tone: "text-[hsl(8_78%_45%)]", bg: "bg-[hsl(8_78%_55%/0.10)]" },
+    { icon: ShoppingBag, label: "120 nouvelles annonces", tone: "text-foreground", bg: "bg-secondary/20" },
+    { icon: ShieldCheck, label: "Paiements sécurisés", tone: "text-primary", bg: "bg-primary/10" },
+  ];
   return (
     <div className="max-w-md mx-auto">
       <AppHeader
@@ -46,32 +54,50 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         amountValue={walletBalance}
         notificationCount={1}
         onAmountClick={() => onActionClick("send")}
+        onRecharge={() => onActionClick("send")}
+        location={`${userLocation}, Conakry`}
       />
 
       {/* Content */}
-      <div className="px-4 mt-6 space-y-6">
-        {/* Universal search */}
-        <button
-          onClick={() => onActionClick("moto")}
-          className="w-full flex items-center gap-3 px-4 py-3.5 bg-card rounded-2xl shadow-card text-left hover:bg-muted/50 transition-colors"
-        >
-          <Search className="w-5 h-5 text-muted-foreground shrink-0" />
-          <span className="text-sm text-muted-foreground">
-            Où allez-vous ? Que voulez-vous faire ?
-          </span>
-        </button>
+      <div className="px-4 mt-5 space-y-6">
+        {/* Universal search — dynamic, inviting */}
+        <SmartSearchBar onClick={() => onActionClick("moto")} />
+
+        {/* Live system pulse — ecosystem gravity */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
+          {liveStats.map((s) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`shrink-0 inline-flex items-center gap-2 ${s.bg} rounded-full pl-2 pr-3 py-1.5`}
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-70 pulse-dot" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success" />
+              </span>
+              <s.icon className={`w-3.5 h-3.5 ${s.tone}`} />
+              <span className="text-[11px] font-semibold text-foreground whitespace-nowrap">{s.label}</span>
+            </motion.div>
+          ))}
+        </div>
 
         {/* Quick Actions */}
         <section>
-          <h2 className="text-lg font-semibold text-foreground mb-4">Services</h2>
-          <div className="bg-card rounded-3xl shadow-card p-4">
+          <div className="flex items-end justify-between mb-3">
+            <div>
+              <h2 className="text-lg font-bold text-foreground leading-tight">Services</h2>
+              <p className="text-xs text-muted-foreground">Connecté à votre ville</p>
+            </div>
+          </div>
+          <div className="bg-card rounded-3xl shadow-card p-4 border border-border/60">
             <QuickActions onActionClick={onActionClick} />
           </div>
         </section>
 
         {/* Recent destinations */}
         <section>
-          <h2 className="text-lg font-semibold text-foreground mb-3">Récents</h2>
+          <h2 className="text-lg font-bold text-foreground mb-3">Récents</h2>
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
             {recents.map((r) => (
               <button
@@ -84,7 +110,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-medium text-foreground leading-tight">{r.label}</p>
-                  <p className="text-[10px] text-muted-foreground leading-tight">{r.sub}</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight font-light">{r.sub}</p>
                 </div>
               </button>
             ))}
@@ -93,7 +119,10 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
 
         {/* Promos */}
         <section>
-          <h2 className="text-lg font-semibold text-foreground mb-4">Offres spéciales</h2>
+          <div className="flex items-end justify-between mb-3">
+            <h2 className="text-lg font-bold text-foreground leading-tight">Offres spéciales</h2>
+            <span className="text-[11px] text-muted-foreground">Mises à jour en direct</span>
+          </div>
           <PromoCarousel />
         </section>
 
@@ -101,15 +130,15 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         <section className="pb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Restaurants populaires</h2>
+              <h2 className="text-lg font-bold text-foreground leading-tight">Populaire à {userLocation}</h2>
               <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                 <MapPin className="w-3 h-3 text-primary" />
-                <span>Proche de {userLocation}</span>
+                <span>Livraison rapide aujourd'hui · près de vous</span>
               </div>
             </div>
             <button 
               onClick={() => onActionClick("food")}
-              className="text-sm font-medium text-primary"
+              className="text-sm font-semibold text-primary"
             >
               Voir tout
             </button>
@@ -123,6 +152,9 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               />
             ))}
           </div>
+          <p className="text-center text-[11px] text-muted-foreground mt-5">
+            CHOP CHOP · Partout à Conakry, services près de vous
+          </p>
         </section>
       </div>
     </div>
