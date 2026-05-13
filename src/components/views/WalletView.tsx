@@ -12,6 +12,7 @@ import {
   Loader2,
   LogIn,
   ShieldCheck,
+  AlertTriangle,
 } from "lucide-react";
 import { WalletCard } from "@/components/home/WalletCard";
 import { useWallet, type WalletTransaction } from "@/hooks/useWallet";
@@ -96,6 +97,7 @@ export function WalletView() {
 
   const available = wallet ? wallet.balance_gnf - wallet.held_gnf : 0;
   const needsPin = !profile?.has_pin;
+  const lowBalance = wallet !== null && available < 50000;
 
   const onAction = (id: ActionId) => {
     if (id === "scan" || id === "add" || id === "receive") setQrOpen(true);
@@ -130,6 +132,26 @@ export function WalletView() {
       {needsPin && (
         <div className="px-4 mb-6">
           <PinSetup userId={userId} onDone={() => window.location.reload()} />
+        </div>
+      )}
+
+      {/* Low balance alert */}
+      {!needsPin && lowBalance && (
+        <div className="px-4 mb-6">
+          <div className="bg-brand-yellow-muted border border-secondary/40 rounded-2xl p-4 flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-secondary/20 shrink-0">
+              <AlertTriangle className="w-5 h-5 text-secondary-foreground" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground text-sm">Solde faible</p>
+              <p className="text-xs text-muted-foreground">
+                Rechargez chez un agent CHOP CHOP pour continuer à payer vos courses et vos repas.
+              </p>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setQrOpen(true)}>
+              Recharger
+            </Button>
+          </div>
         </div>
       )}
 
