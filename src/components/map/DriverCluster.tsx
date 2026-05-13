@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Source, Layer } from 'react-map-gl';
 import { supabase } from '@/integrations/supabase/client';
 interface DriverRow { user_id: string; lat: number; lng: number; status: string }
-export function DriverCluster({ variant = 'moto' as 'moto' | 'toktok' }) {
+export function DriverCluster({
+  variant = 'moto' as 'moto' | 'toktok',
+  statusFilter,
+}: { variant?: 'moto' | 'toktok'; statusFilter?: string[] }) {
   const [rows, setRows] = useState<DriverRow[]>([]);
   useEffect(() => {
     let alive = true;
     const load = async () => {
-      const { data } = await supabase.from('driver_locations').select('user_id,lat,lng,status').eq('status', 'online');
+      let q = supabase.from('driver_locations').select('user_id,lat,lng,status');
+      if (statusFilter && statusFilter.length) q = q.in('status', statusFilter);
+      const { data } = await q;
       if (alive && data) setRows(data as any);
     };
     load();
@@ -18,7 +23,7 @@ export function DriverCluster({ variant = 'moto' as 'moto' | 'toktok' }) {
         load)
       .subscribe();
     return () => { alive = false; supabase.removeChannel(channel); };
-  }, []);
+  }, [statusFilter?.join(',')]);
   const data = { type: 'FeatureCollection' as const, features: rows.map(r => ({
     type: 'Feature' as const, properties: { id: r.user_id, status: r.status },
     geometry: { type: 'Point' as const, coordinates: [r.lng, r.lat] },

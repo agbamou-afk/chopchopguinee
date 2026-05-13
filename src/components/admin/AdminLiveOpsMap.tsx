@@ -4,8 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Bike, Loader2, RefreshCw } from 'lucide-react';
+import { Activity, Bike, Loader2, RefreshCw, Wifi } from 'lucide-react';
 import { useMapPerfMonitor } from '@/hooks/useMapPerfMonitor';
+import { useLowDataMode } from '@/hooks/useLowDataMode';
 
 interface DriverRow { user_id: string; lat: number; lng: number; status: string; updated_at: string }
 
@@ -17,7 +18,9 @@ export function AdminLiveOpsMap({ variant = 'moto', className }: { variant?: 'mo
   const mapRef = useRef<ChopMapHandle>(null);
   const [rows, setRows] = useState<DriverRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'online' | 'on_trip' | 'stale'>('all');
   const { fps, degraded } = useMapPerfMonitor(true);
+  const { low, pref, setPref } = useLowDataMode();
 
   const load = async () => {
     setLoading(true);
@@ -45,21 +48,51 @@ export function AdminLiveOpsMap({ variant = 'moto', className }: { variant?: 'mo
     return { online, onTrip, stale };
   }, [rows]);
 
+  const clusterStatuses = useMemo<string[] | undefined>(() => {
+    if (filter === 'online') return ['online'];
+    if (filter === 'on_trip') return ['on_trip'];
+    if (filter === 'stale' || filter === 'all') return ['online', 'on_trip'];
+    return undefined;
+  }, [filter]);
+
+  const FILTERS: { id: typeof filter; label: string; count: number }[] = [
+    { id: 'all', label: 'Tous', count: rows.length },
+    { id: 'online', label: 'En ligne', count: stats.online },
+    { id: 'on_trip', label: 'En course', count: stats.onTrip },
+    { id: 'stale', label: 'GPS perdu', count: stats.stale },
+  ];
+
   const recenter = () => mapRef.current?.flyTo(-13.5784, 9.6412, 12);
 
   return (
     <Card className={`relative overflow-hidden p-0 ${className ?? ''}`}>
       <div className="absolute z-10 top-3 left-3 right-3 flex items-start justify-between gap-2 pointer-events-none">
         <div className="flex flex-wrap gap-2 pointer-events-auto">
-          <Badge variant="secondary" className="gap-1.5"><Bike className="w-3 h-3" />En ligne · {stats.online}</Badge>
-          <Badge variant="secondary" className="gap-1.5"><Activity className="w-3 h-3" />En course · {stats.onTrip}</Badge>
-          {stats.stale > 0 && (
-            <Badge variant="outline" className="gap-1.5 border-amber-500/50 text-amber-700">
-              GPS perdu · {stats.stale}
-            </Badge>
-          )}
+          {FILTERS.map((f) => (
+            <Button
+              key={f.id}
+              size="sm"
+              variant={filter === f.id ? 'default' : 'secondary'}
+              className="h-7 px-2.5 text-xs gap-1.5"
+              onClick={() => setFilter(f.id)}
+            >
+              {f.id === 'all' && <Bike className="w-3 h-3" />}
+              {f.id === 'on_trip' && <Activity className="w-3 h-3" />}
+              {f.label}
+              <span className="opacity-70">{f.count}</span>
+            </Button>
+          ))}
         </div>
         <div className="flex items-center gap-2 pointer-events-auto">
+          <Button
+            size="sm"
+            variant={low ? 'default' : 'outline'}
+            className="h-7 gap-1.5 text-xs"
+            onClick={() => setPref(pref === 'on' ? 'auto' : 'on')}
+            title="Mode données réduites"
+          >
+            <Wifi className="w-3 h-3" /> {low ? 'Économie' : 'Auto'}
+          </Button>
           <Badge variant={degraded ? 'destructive' : 'outline'} className="font-mono">
             {fps} fps
           </Badge>
@@ -74,7 +107,7 @@ export function AdminLiveOpsMap({ variant = 'moto', className }: { variant?: 'mo
         </div>
       )}
       <ChopMap ref={mapRef} className="w-full h-[420px]">
-        <DriverCluster variant={variant} />
+        <DriverCluster variant={variant} statusFilter={clusterStatuses} />
       </ChopMap>
     </Card>
   );

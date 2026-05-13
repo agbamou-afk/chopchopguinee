@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapConfig } from '@/lib/maps';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Analytics } from '@/lib/analytics/AnalyticsService';
+import { useLowDataMode } from '@/hooks/useLowDataMode';
 export interface ChopMapHandle {
   getMap: () => MapRef | null;
   flyTo: (lng: number, lat: number, zoom?: number) => void;
@@ -22,6 +23,7 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
   const { config, error } = useMapConfig();
   const mapRef = useRef<MapRef>(null);
   const loadedRef = useRef(false);
+  const { low } = useLowDataMode();
   React.useEffect(() => {
     if (error) {
       try { Analytics.track('map.load.failed' as any, { metadata: { reason: String(error?.message ?? error) } }); } catch {}
@@ -46,6 +48,8 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
         }}
         style={{ width: '100%', height: '100%' }}
         attributionControl={false} interactive={interactive}
+        maxPitch={low ? 0 : 60}
+        fadeDuration={low ? 0 : 300}
         onLoad={(e) => {
           if (!loadedRef.current) {
             loadedRef.current = true;
