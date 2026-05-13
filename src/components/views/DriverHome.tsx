@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Power, BellRing } from "lucide-react";
+import { Power, BellRing, Radar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DriverDashboard } from "@/components/driver/DriverDashboard";
 import { IncomingRequestPopup, type IncomingRequest } from "@/components/driver/IncomingRequestPopup";
@@ -101,21 +101,38 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
 
       {/* Content */}
       <div className="px-4 mt-6 space-y-4">
-        {/* Online toggle */}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsOnline(!isOnline)}
-          className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl shadow-card ${
-            isOnline
-              ? "bg-secondary text-secondary-foreground"
-              : "bg-muted text-foreground"
-          } transition-colors`}
-        >
-          <Power className="w-5 h-5" />
-          <span className="font-semibold">
-            {isOnline ? "En ligne - Recherche de courses" : "Hors ligne - Appuyez pour commencer"}
-          </span>
-        </motion.button>
+        {/* Online toggle — 3 states: Hors ligne / En ligne / Recherche */}
+        {(() => {
+          const searching = isOnline && !current && !activeTrip;
+          const label = !isOnline
+            ? "Hors ligne — appuyez pour commencer"
+            : searching
+              ? "Recherche de courses…"
+              : "En ligne — course en cours";
+          const tone = !isOnline
+            ? "bg-muted text-foreground"
+            : searching
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-secondary-foreground";
+          return (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setIsOnline(!isOnline)}
+              className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl shadow-card overflow-hidden ${tone} transition-colors`}
+            >
+              {searching && (
+                <motion.span
+                  aria-hidden
+                  className="absolute inset-0 bg-primary-foreground/15"
+                  animate={{ opacity: [0.05, 0.25, 0.05] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                />
+              )}
+              {isOnline ? <Radar className="w-5 h-5 relative" /> : <Power className="w-5 h-5 relative" />}
+              <span className="font-semibold relative">{label}</span>
+            </motion.button>
+          );
+        })()}
 
         <DriverDashboard
           todayEarnings={185000}
