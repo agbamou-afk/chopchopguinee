@@ -74,6 +74,12 @@ export default function CompleteProfile() {
       return;
     }
     await refresh();
+    // Make sure the signed-in user has a client wallet (idempotent).
+    try {
+      await supabase.rpc("wallet_ensure", { _party_type: "client" });
+    } catch {
+      /* non-blocking */
+    }
     toast({ title: "Profil complété" });
     navigate("/", { replace: true });
   };
