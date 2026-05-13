@@ -27,15 +27,16 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
   const [copied, setCopied] = useState<"ref" | "msisdn" | null>(null);
   const [now, setNow] = useState(Date.now());
 
-  // Load merchant MSISDN from feature flags
+  // Load merchant MSISDN from app_settings.orange_money
   useEffect(() => {
     supabase
-      .from("feature_flags")
-      .select("description")
-      .eq("key", "orange_money.merchant_msisdn")
+      .from("app_settings")
+      .select("value")
+      .eq("key", "orange_money")
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.description) setMerchant(data.description);
+        const v = (data?.value ?? {}) as { merchant_msisdn?: string };
+        if (v.merchant_msisdn && v.merchant_msisdn.trim()) setMerchant(v.merchant_msisdn);
       });
   }, []);
 
