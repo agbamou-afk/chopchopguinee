@@ -12,6 +12,8 @@ import { categoryLabel } from "@/lib/marche";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface MarketViewProps {
   onBack: () => void;
