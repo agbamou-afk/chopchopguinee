@@ -262,12 +262,12 @@ export const SupportSection: React.FC = () => (
 
 // ---------- Generic Heading + Text re-exports for templates ----------
 
-export const H1: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Heading style={h1}>{children}</Heading>
+export const H1: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+  <Heading style={{ ...h1, ...(style ?? {}) }}>{children}</Heading>
 )
 
-export const H2: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Heading as="h2" style={h2}>
+export const H2: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+  <Heading as="h2" style={{ ...h2, ...(style ?? {}) }}>
     {children}
   </Heading>
 )
