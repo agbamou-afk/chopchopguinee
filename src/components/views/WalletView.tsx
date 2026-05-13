@@ -237,7 +237,7 @@ export function WalletView() {
       )}
 
       {/* Transaction history */}
-      <div className="px-4 pb-6">
+      <div className="px-4 pb-28">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold text-foreground">Historique</h2>
           <button className="text-sm font-semibold text-primary flex items-center gap-1">

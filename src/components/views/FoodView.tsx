@@ -168,7 +168,7 @@ export function FoodView({ onBack }: FoodViewProps) {
       </div>
 
       {/* Restaurant list */}
-      <div className="px-4 pt-4 pb-6">
+      <div className="px-4 pt-4 pb-28">
         <div className="grid grid-cols-2 gap-3">
           {visible.map((restaurant, index) => (
               <motion.div

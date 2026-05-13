@@ -176,7 +176,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         </section>
 
         {/* Popular restaurants */}
-        <section className="pb-6">
+        <section className="pb-28">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-bold text-foreground leading-tight">Populaire à {userLocation}</h2>

@@ -165,7 +165,7 @@ export function DriverEarningsView() {
       </div>
 
       {/* Recent earnings */}
-      <div className="px-4 pb-6">
+      <div className="px-4 pb-28">
         <h2 className="text-lg font-bold text-foreground mb-4">Gains récents</h2>
         <div className="space-y-3">
           {recentEarnings.map((earning, index) => {
