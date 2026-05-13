@@ -19,6 +19,8 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { notifications as notif } from "@/lib/notifications";
+import { formatGNF } from "@/lib/format";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -185,6 +187,11 @@ const Index = () => {
               }
               setActiveTrip({ mode: bookingRide, ...trip, holdId, rideId: (ride as { id: string }).id });
               setBookingRide(null);
+              notif.push({
+                kind: "ride",
+                title: "Course confirmée",
+                body: `Votre ${bookingRide?.toUpperCase()} est en route. Fonds réservés : ${formatGNF(holdAmount)}.`,
+              });
               toast({
                 title: "Fonds réservés",
                 description: `${formatGNF(holdAmount)} bloqués jusqu'à la fin de course.`,
