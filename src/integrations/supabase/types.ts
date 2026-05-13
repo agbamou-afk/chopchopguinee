@@ -583,6 +583,51 @@ export type Database = {
           },
         ]
       }
+      notification_log: {
+        Row: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          error_message: string | null
+          external_id: string | null
+          id: string
+          payload: Json
+          priority: Database["public"]["Enums"]["notification_priority"]
+          recipient: string | null
+          status: Database["public"]["Enums"]["notification_status"]
+          template: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          payload?: Json
+          priority?: Database["public"]["Enums"]["notification_priority"]
+          recipient?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          template: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          payload?: Json
+          priority?: Database["public"]["Enums"]["notification_priority"]
+          recipient?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          template?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -1669,6 +1714,14 @@ export type Database = {
         | "driver_assigned"
         | "delivery_completed"
         | "suspicious_activity"
+      notification_channel: "email" | "sms" | "whatsapp" | "push" | "inapp"
+      notification_priority: "critical" | "high" | "normal" | "low"
+      notification_status:
+        | "pending"
+        | "sent"
+        | "failed"
+        | "suppressed"
+        | "skipped"
       party_type: "client" | "driver" | "merchant" | "agent" | "master"
       report_status: "open" | "reviewed" | "actioned" | "dismissed"
       ride_mode: "moto" | "toktok" | "food"
@@ -1852,6 +1905,15 @@ export const Constants = {
         "driver_assigned",
         "delivery_completed",
         "suspicious_activity",
+      ],
+      notification_channel: ["email", "sms", "whatsapp", "push", "inapp"],
+      notification_priority: ["critical", "high", "normal", "low"],
+      notification_status: [
+        "pending",
+        "sent",
+        "failed",
+        "suppressed",
+        "skipped",
       ],
       party_type: ["client", "driver", "merchant", "agent", "master"],
       report_status: ["open", "reviewed", "actioned", "dismissed"],

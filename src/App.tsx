@@ -20,6 +20,7 @@ import Help from "./pages/Help";
 import Legal from "./pages/Legal";
 import Notifications from "./pages/Notifications";
 import NotificationSettings from "./pages/NotificationSettings";
+import Unsubscribe from "./pages/Unsubscribe";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import LiveOps from "./pages/admin/LiveOps";
@@ -104,6 +105,7 @@ const App = () => {
           <Route path="/legal" element={<Legal />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings/notifications" element={<NotificationSettings />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
