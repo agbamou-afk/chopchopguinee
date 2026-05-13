@@ -1,14 +1,17 @@
 import { QuickActions } from "@/components/home/QuickActions";
-import { MapPin, Home as HomeIcon, Briefcase, Clock, Users, Timer, ShoppingBag, ShieldCheck, Bike } from "lucide-react";
+import { MapPin, Home as HomeIcon, Briefcase, Clock, Bike } from "lucide-react";
 import { PromoCarousel } from "@/components/home/PromoCarousel";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { SmartSearchBar } from "@/components/ui/SmartSearchBar";
 import { motion } from "framer-motion";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAppEnv } from "@/contexts/AppEnvContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PrimaryActionGrid, type PrimaryAction } from "@/components/home/PrimaryActionGrid";
+import { WalletHero } from "@/components/home/WalletHero";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 const NearbyDriversMap = lazy(() => import("@/components/home/NearbyDriversMap"));
 
@@ -37,7 +40,7 @@ const popularRestaurants = [
 ];
 
 export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
-  const { available: walletBalance, loading: walletLoading } = useWallet("client");
+  const { available: walletBalance, loading: walletLoading, error: walletError, wallet } = useWallet("client");
   const { lowDataMode } = useAppEnv();
   const userLocation = "Kaloum";
   const userCoords = { lat: 9.5092, lng: -13.7122 };
@@ -47,12 +50,22 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
     { icon: Clock, label: "Madina", sub: "Récent" },
     { icon: Clock, label: "Aéroport", sub: "Récent" },
   ];
-  const liveStats = [
-    { icon: Users, label: "24 chauffeurs actifs", tone: "text-primary", bg: "bg-primary/10" },
-    { icon: Timer, label: "Livraison en 15 min", tone: "text-[hsl(8_78%_45%)]", bg: "bg-[hsl(8_78%_55%/0.10)]" },
-    { icon: ShoppingBag, label: "120 nouvelles annonces", tone: "text-foreground", bg: "bg-secondary/20" },
-    { icon: ShieldCheck, label: "Paiements sécurisés", tone: "text-primary", bg: "bg-primary/10" },
-  ];
+
+  useEffect(() => {
+    Analytics.track("home.viewed", { metadata: { location: userLocation } });
+  }, []);
+
+  const walletStatus: "active" | "frozen" | "restricted" =
+    wallet?.status === "frozen" ? "frozen" : wallet?.status === "restricted" ? "restricted" : "active";
+
+  const handlePrimary = (a: PrimaryAction) => {
+    Analytics.track("home.primary_action.clicked", { metadata: { action: a } });
+    if (a === "topup") onActionClick("wallet");
+    else if (a === "ride") onActionClick("moto");
+    else if (a === "order") onActionClick("food");
+    else if (a === "market") onActionClick("market");
+  };
+
   return (
     <div className="max-w-md mx-auto">
       <AppHeader
@@ -68,35 +81,29 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
       />
 
       {/* Content */}
-      <div className="px-4 mt-5 space-y-6">
-        {/* Universal search — dynamic, inviting */}
+      <div className="px-4 mt-4 space-y-5">
+        {/* 1 — Wallet hero (trust anchor) */}
+        <WalletHero
+          balance={walletBalance}
+          loading={walletLoading}
+          error={walletError}
+          status={walletStatus}
+          onTopUp={() => handlePrimary("topup")}
+          onHistory={() => onActionClick("wallet")}
+        />
+
+        {/* 2 — Four primary actions, visible above the fold */}
+        <PrimaryActionGrid onAction={handlePrimary} />
+
+        {/* 3 — Smart command bar */}
         <SmartSearchBar onAction={onActionClick} location={`${userLocation}, Conakry`} />
 
-        {/* Live system pulse — ecosystem gravity */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
-          {liveStats.map((s) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`shrink-0 inline-flex items-center gap-2 ${s.bg} rounded-full pl-2 pr-3 py-1.5`}
-            >
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-70 pulse-dot" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success" />
-              </span>
-              <s.icon className={`w-3.5 h-3.5 ${s.tone}`} />
-              <span className="text-[11px] font-semibold text-foreground whitespace-nowrap">{s.label}</span>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Quick Actions */}
+        {/* 4 — Services secondaires */}
         <section>
           <div className="flex items-end justify-between mb-3">
             <div>
-              <h2 className="text-lg font-bold text-foreground leading-tight">Services</h2>
-              <p className="text-xs text-muted-foreground">Connecté à votre ville</p>
+              <h2 className="text-base font-bold text-foreground leading-tight">Plus de services</h2>
+              <p className="text-xs text-muted-foreground">Près de vous à {userLocation}</p>
             </div>
           </div>
           <div className="bg-card rounded-3xl shadow-card p-4 border border-border/60">
