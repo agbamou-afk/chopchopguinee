@@ -48,32 +48,64 @@ Deno.serve(async (req) => {
 
     const key = Deno.env.get('GOOGLE_MAPS_SERVER_KEY');
     if (!key) throw new Error('GOOGLE_MAPS_SERVER_KEY not configured');
-    const params = new URLSearchParams({
-      origins: origins.map(o => `${o.lat},${o.lng}`).join('|'),
-      destinations: destinations.map(d => `${d.lat},${d.lng}`).join('|'),
-      mode,
-      key,
-      region: 'gn',
-      language: 'fr',
+    const travelModeMap: Record<string, string> = {
+      driving: 'DRIVE',
+      walking: 'WALK',
+      bicycling: 'BICYCLE',
+      two_wheeler: 'TWO_WHEELER',
+    };
+    const travelMode = travelModeMap[mode] ?? 'DRIVE';
+    const toWp = (p: LatLng) => ({
+      waypoint: { location: { latLng: { latitude: p.lat, longitude: p.lng } } },
     });
-    const r = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?${params}`);
+    const reqBody: any = {
+      origins: origins.map(toWp),
+      destinations: destinations.map(toWp),
+      travelMode,
+      languageCode: 'fr',
+      regionCode: 'gn',
+    };
+    if (travelMode === 'DRIVE' || travelMode === 'TWO_WHEELER') {
+      reqBody.routingPreference = 'TRAFFIC_AWARE';
+    }
+    const r = await fetch('https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': key,
+        'X-Goog-FieldMask': 'originIndex,destinationIndex,duration,distanceMeters,status,condition',
+      },
+      body: JSON.stringify(reqBody),
+    });
     const data = await r.json();
-    if (data.status !== 'OK') {
+    if (!r.ok || !Array.isArray(data)) {
       await logMapsRequest(admin, {
         user_id: userId, provider: 'google', action: 'eta',
         input: body, status: 'error',
-        error_message: data.status, latency_ms: Date.now() - start,
+        error_message: data?.error?.message ?? data?.[0]?.error?.message ?? 'ERROR',
+        latency_ms: Date.now() - start,
       });
-      return new Response(JSON.stringify({ error: data.status }), {
+      return new Response(JSON.stringify({ error: data?.error?.status ?? 'ERROR', details: data?.error?.message }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    const rows = data.rows.map((row: any) => row.elements.map((el: any) => ({
-      status: el.status,
-      distanceM: el.distance?.value ?? null,
-      durationS: el.duration?.value ?? null,
-    })));
+    const parseDur = (d: string | undefined) =>
+      d ? parseInt(String(d).replace('s', ''), 10) || 0 : 0;
+    const rows: any[][] = Array.from({ length: origins.length }, () =>
+      Array.from({ length: destinations.length }, () => ({
+        status: 'ZERO_RESULTS', distanceM: null, durationS: null,
+      })),
+    );
+    for (const el of data) {
+      const oi = el.originIndex ?? 0;
+      const di = el.destinationIndex ?? 0;
+      rows[oi][di] = {
+        status: el.condition === 'ROUTE_EXISTS' ? 'OK' : (el.condition ?? 'ZERO_RESULTS'),
+        distanceM: el.distanceMeters ?? null,
+        durationS: parseDur(el.duration),
+      };
+    }
     await logMapsRequest(admin, {
       user_id: userId, provider: 'google', action: 'eta',
       input: { o: origins.length, d: destinations.length },

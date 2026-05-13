@@ -62,48 +62,92 @@ Deno.serve(async (req) => {
     if (!key) throw new Error('GOOGLE_MAPS_SERVER_KEY not configured');
 
     const mode = body.mode ?? 'driving';
-    const params = new URLSearchParams({
-      origin: `${body.origin.lat},${body.origin.lng}`,
-      destination: `${body.destination.lat},${body.destination.lng}`,
-      mode,
-      key,
-      region: 'gn',
-      language: 'fr',
-    });
+    const travelModeMap: Record<string, string> = {
+      driving: 'DRIVE',
+      walking: 'WALK',
+      bicycling: 'BICYCLE',
+      two_wheeler: 'TWO_WHEELER',
+    };
+    const travelMode = travelModeMap[mode] ?? 'DRIVE';
+    const toWp = (p: LatLng) => ({ location: { latLng: { latitude: p.lat, longitude: p.lng } } });
+    const reqBody: any = {
+      origin: toWp(body.origin),
+      destination: toWp(body.destination),
+      travelMode,
+      languageCode: 'fr',
+      regionCode: 'gn',
+      polylineEncoding: 'ENCODED_POLYLINE',
+    };
+    if (travelMode === 'DRIVE' || travelMode === 'TWO_WHEELER') {
+      reqBody.routingPreference = 'TRAFFIC_AWARE';
+    }
     if (body.waypoints?.length) {
-      params.set('waypoints', body.waypoints.map(w => `${w.lat},${w.lng}`).join('|'));
+      reqBody.intermediates = body.waypoints.map(toWp);
     }
 
-    const r = await fetch(`https://maps.googleapis.com/maps/api/directions/json?${params}`);
+    const fieldMask = [
+      'routes.duration',
+      'routes.distanceMeters',
+      'routes.polyline.encodedPolyline',
+      'routes.viewport',
+      'routes.legs.steps.distanceMeters',
+      'routes.legs.steps.staticDuration',
+      'routes.legs.steps.polyline.encodedPolyline',
+      'routes.legs.steps.navigationInstruction',
+      'routes.legs.steps.startLocation',
+      'routes.legs.steps.endLocation',
+    ].join(',');
+
+    const r = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': key,
+        'X-Goog-FieldMask': fieldMask,
+      },
+      body: JSON.stringify(reqBody),
+    });
     const data = await r.json();
 
-    if (data.status !== 'OK' || !data.routes?.[0]) {
+    if (!r.ok || !data.routes?.[0]) {
       await logMapsRequest(admin, {
         user_id: userId, provider: 'google', action: 'route',
         input: body, status: 'error',
-        error_message: data.status, latency_ms: Date.now() - start,
+        error_message: data?.error?.message ?? 'NO_ROUTE',
+        latency_ms: Date.now() - start,
       });
-      return new Response(JSON.stringify({ error: data.status, details: data.error_message }), {
+      return new Response(JSON.stringify({ error: data?.error?.status ?? 'NO_ROUTE', details: data?.error?.message }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const route = data.routes[0];
-    const leg = route.legs[0];
+    const parseDur = (d: string | undefined) =>
+      d ? parseInt(String(d).replace('s', ''), 10) || 0 : 0;
+    const allSteps = (route.legs ?? []).flatMap((l: any) => l.steps ?? []);
     const normalized = {
-      polyline: route.overview_polyline.points,
-      distanceM: route.legs.reduce((s: number, l: any) => s + (l.distance?.value ?? 0), 0),
-      durationS: route.legs.reduce((s: number, l: any) => s + (l.duration?.value ?? 0), 0),
-      bbox: route.bounds,
-      steps: leg.steps.map((s: any) => ({
-        instruction: s.html_instructions,
-        distanceM: s.distance.value,
-        durationS: s.duration.value,
-        polyline: s.polyline.points,
-        maneuver: s.maneuver ?? null,
-        startLocation: s.start_location,
-        endLocation: s.end_location,
+      polyline: route.polyline?.encodedPolyline,
+      distanceM: route.distanceMeters ?? 0,
+      durationS: parseDur(route.duration),
+      bbox: route.viewport
+        ? {
+            northeast: { lat: route.viewport.high?.latitude, lng: route.viewport.high?.longitude },
+            southwest: { lat: route.viewport.low?.latitude, lng: route.viewport.low?.longitude },
+          }
+        : null,
+      steps: allSteps.map((s: any) => ({
+        instruction: s.navigationInstruction?.instructions ?? '',
+        distanceM: s.distanceMeters ?? 0,
+        durationS: parseDur(s.staticDuration),
+        polyline: s.polyline?.encodedPolyline,
+        maneuver: s.navigationInstruction?.maneuver ?? null,
+        startLocation: s.startLocation?.latLng
+          ? { lat: s.startLocation.latLng.latitude, lng: s.startLocation.latLng.longitude }
+          : null,
+        endLocation: s.endLocation?.latLng
+          ? { lat: s.endLocation.latLng.latitude, lng: s.endLocation.latLng.longitude }
+          : null,
       })),
       provider: 'google',
     };
