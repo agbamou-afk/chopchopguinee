@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Marker } from "react-map-gl";
 import { motion } from "framer-motion";
 import {
-  ChopMap, type ChopMapHandle, MapMarker, PinSet, RoutePolyline,
+  ChopMap, type ChopMapHandle, PinSet, RoutePolyline,
 } from "@/components/map";
 import {
-  RoutingService, bbox as bboxOf, formatDuration, formatDistance, type LatLng,
+  bbox as bboxOf, formatDuration, formatDistance, type LatLng,
 } from "@/lib/maps";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
+import { useTurnByTurn } from "@/hooks/useTurnByTurn";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { NavigationHud } from "./NavigationHud";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,8 +45,11 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   const { ride, loading } = useRideRealtime(rideId);
   const mapRef = useRef<ChopMapHandle>(null);
   const [busy, setBusy] = useState(false);
-  const [route, setRoute] = useState<{ polyline: string; durationS: number; distanceM: number } | null>(null);
   const [clientPhone, setClientPhone] = useState<string | null>(null);
+  const [muted, setMuted] = useState(false);
+  const { position: driverPos, request: requestGeo, isReady: geoReady } = useGeolocation({ watch: true });
+
+  useEffect(() => { if (!geoReady) requestGeo(); }, [geoReady, requestGeo]);
 
   const pickup: LatLng | null = ride ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null;
   const dropoff: LatLng | null = ride?.dest_lat != null && ride?.dest_lng != null
@@ -67,20 +72,21 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
       .then(({ data }) => setClientPhone(data?.phone ?? null));
   }, [ride?.client_id]);
 
-  // Compute the active route depending on phase
-  useEffect(() => {
-    if (!pickup) return;
-    const origin = phase === "approach" || phase === "arrived" ? pickup : pickup;
-    const destination = phase === "approach" || phase === "arrived" ? pickup : dropoff;
-    if (!destination || (origin.lat === destination.lat && origin.lng === destination.lng)) {
-      setRoute(null); return;
-    }
-    let alive = true;
-    RoutingService.route(origin, destination, ride?.mode === "moto" ? "two_wheeler" : "driving")
-      .then(r => { if (alive) setRoute({ polyline: r.polyline, durationS: r.durationS, distanceM: r.distanceM }); })
-      .catch(() => { if (alive) setRoute(null); });
-    return () => { alive = false; };
-  }, [phase, pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng, ride?.mode]);
+  // Turn-by-turn navigation: origin/destination flip with the trip phase.
+  const navOrigin: LatLng | null = (phase === "on_trip" || phase === "at_destination")
+    ? pickup
+    : (driverPos ? { lat: driverPos.lat, lng: driverPos.lng } : pickup);
+  const navDestination: LatLng | null =
+    (phase === "on_trip" || phase === "at_destination") ? dropoff : pickup;
+  const navMode = ride?.mode === "moto" ? "two_wheeler" : "driving";
+  const nav = useTurnByTurn({
+    origin: navOrigin,
+    destination: navDestination,
+    driverPos: driverPos ? { lat: driverPos.lat, lng: driverPos.lng } : null,
+    mode: navMode,
+    enabled: !!ride && phase !== "at_destination",
+    mute: muted,
+  });
 
   // Fit bounds whenever endpoints arrive
   useEffect(() => {
@@ -171,13 +177,15 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
             <PinSet pickup={pickup} dropoff={dropoff ?? undefined}
               pulseActive={phase === "approach" || phase === "arrived" ? "pickup" : "dropoff"} />
           )}
-          {route && (
-            <RoutePolyline encoded={route.polyline}
+          {nav.route && (
+            <RoutePolyline encoded={nav.route.polyline}
               state={phase === "on_trip" || phase === "at_destination" ? "active" : "approach"} animated />
           )}
         </ChopMap>
 
-        <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-card/95 backdrop-blur border border-border px-3 py-1.5 shadow-md">
+        <NavigationHud state={nav} muted={muted} onToggleMute={() => setMuted(m => !m)} />
+
+        <div className="absolute left-1/2 bottom-3 -translate-x-1/2 rounded-full bg-card/95 backdrop-blur border border-border px-3 py-1.5 shadow-md">
           <span className="text-xs font-semibold">{PHASE_LABEL[phase]}</span>
         </div>
       </div>
@@ -189,10 +197,10 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
               {phase === "on_trip" || phase === "at_destination" ? "Vers destination" : "Vers client"}
             </p>
             <p className="text-2xl font-bold tabular-nums">
-              {route ? formatDuration(route.durationS) : "—"}
-              {route && (
+              {nav.route ? formatDuration(nav.remainingDurationS || nav.route.durationS) : "—"}
+              {nav.route && (
                 <span className="text-sm font-normal text-muted-foreground ml-2">
-                  {formatDistance(route.distanceM)}
+                  {formatDistance(nav.remainingDistanceM || nav.route.distanceM)}
                 </span>
               )}
             </p>
