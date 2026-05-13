@@ -4,6 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AppEnvProvider } from "@/contexts/AppEnvContext";
+import { OfflineBanner } from "@/components/system/OfflineBanner";
+import { InstallPrompt } from "@/components/system/InstallPrompt";
 import { ProfileCompletionRedirect } from "@/components/auth/ProfileCompletionRedirect";
 import { useTopupNotifications } from "@/hooks/useTopupNotifications";
 import { useEffect, useState } from "react";
@@ -52,6 +55,7 @@ import AdminsAdmin from "./pages/admin/AdminsAdmin";
 import AuditAdmin from "./pages/admin/AuditAdmin";
 import AnalyticsAdmin from "./pages/admin/AnalyticsAdmin";
 import PrivacySettings from "./pages/PrivacySettings";
+import OfflinePage from "./pages/Offline";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 const queryClient = new QueryClient();
@@ -77,14 +81,17 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
+    <AppEnvProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <OfflineBanner />
       <AnimatePresence>{showSplash && <SplashScreen />}</AnimatePresence>
       <BrowserRouter>
       <AuthProvider>
         <ProfileCompletionRedirect />
         <TopupNotificationsMount />
+        <InstallPrompt />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
@@ -124,12 +131,14 @@ const App = () => {
           <Route path="/settings/notifications" element={<NotificationSettings />} />
           <Route path="/settings/privacy" element={<PrivacySettings />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/offline" element={<OfflinePage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+    </AppEnvProvider>
   </QueryClientProvider>
   );
 };

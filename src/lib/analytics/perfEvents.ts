@@ -25,8 +25,10 @@ async function flush() {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     const rows = batch.map((e) => ({
+      event_type: "performance",
+      event_category: "performance",
       event_name: e.name,
-      properties: e.payload as never,
+      metadata: e.payload as never,
       user_id: user?.id ?? null,
       created_at: e.ts,
     }));
