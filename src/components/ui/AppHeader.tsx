@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Bell, Menu, Wallet, ChevronRight, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing, MapPin, Plus } from "lucide-react";
+import { Bell, Menu, Wallet, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing, MapPin, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
