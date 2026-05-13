@@ -62,6 +62,8 @@ interface RideBookingProps {
   type: "moto" | "toktok";
   onClose: () => void;
   onBook: (trip: { pickupCoords: [number, number]; destCoords: [number, number]; fare: number }) => void;
+  /** Prefilled destination text (the user still confirms via search). */
+  initialDestination?: string;
 }
 
 const rideOptions = {
@@ -79,9 +81,9 @@ const rideOptions = {
   },
 };
 
-export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
+export function RideBooking({ type, onClose, onBook, initialDestination }: RideBookingProps) {
   const [pickup, setPickup] = useState("");
-  const [destination, setDestination] = useState("");
+  const [destination, setDestination] = useState(initialDestination ?? "");
   // Default: Conakry, Guinea
   const [pickupCoords, setPickupCoords] = useState<[number, number]>([9.6412, -13.5784]);
   const [destCoords, setDestCoords] = useState<[number, number] | null>(null);
