@@ -110,6 +110,45 @@ Deno.serve(async (req) => {
     const data = await r.json();
 
     if (!r.ok || !data.routes?.[0]) {
+      // Fallback to public OSRM so the UI keeps working when Google blocks/denies.
+      try {
+        const profile = travelMode === 'WALK' ? 'foot' : travelMode === 'BICYCLE' ? 'bike' : 'driving';
+        const coords = `${body.origin.lng},${body.origin.lat};${body.destination.lng},${body.destination.lat}`;
+        const osrmUrl = `https://router.project-osrm.org/route/v1/${profile}/${coords}?overview=full&geometries=polyline&steps=true`;
+        const or = await fetch(osrmUrl);
+        const od = await or.json();
+        const oroute = od?.routes?.[0];
+        if (or.ok && oroute) {
+          const fallback = {
+            polyline: oroute.geometry,
+            distanceM: Math.round(oroute.distance ?? 0),
+            durationS: Math.round(oroute.duration ?? 0),
+            bbox: null,
+            steps: (oroute.legs?.[0]?.steps ?? []).map((s: any) => ({
+              instruction: s.maneuver?.instruction ?? s.name ?? '',
+              distanceM: Math.round(s.distance ?? 0),
+              durationS: Math.round(s.duration ?? 0),
+              polyline: s.geometry,
+              maneuver: s.maneuver?.type ?? null,
+              startLocation: s.maneuver?.location
+                ? { lat: s.maneuver.location[1], lng: s.maneuver.location[0] }
+                : null,
+              endLocation: null,
+            })),
+            provider: 'osrm-fallback',
+          };
+          await logMapsRequest(admin, {
+            user_id: userId, provider: 'osrm', action: 'route',
+            input: { origin: body.origin, destination: body.destination, mode },
+            output_summary: { distanceM: fallback.distanceM, durationS: fallback.durationS, fallback_reason: data?.error?.status },
+            latency_ms: Date.now() - start,
+          });
+          return new Response(JSON.stringify(fallback), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      } catch (_) { /* fall through to original error */ }
+
       await logMapsRequest(admin, {
         user_id: userId, provider: 'google', action: 'route',
         input: body, status: 'error',
