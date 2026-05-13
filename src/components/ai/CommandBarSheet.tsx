@@ -16,6 +16,7 @@ import {
   LifeBuoy,
   Package,
   MapPin,
+  Shield,
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +29,7 @@ import {
 } from "@/lib/ai/commandRouter";
 import { AIService } from "@/lib/ai";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 
@@ -44,10 +46,12 @@ const ICONS: Record<CommandIntent, typeof Bike> = {
   food: UtensilsCrossed,
   market: ShoppingBag,
   send: Send,
+  parcel: Package,
   scan: QrCode,
   wallet: Wallet,
   support: LifeBuoy,
   orders: Package,
+  admin: Shield,
   navigate: MapPin,
 };
 
@@ -57,10 +61,12 @@ const TINTS: Partial<Record<CommandIntent, string>> = {
   food: "bg-[hsl(8_78%_55%/0.10)] text-[hsl(8_78%_45%)]",
   market: "bg-secondary/30 text-foreground",
   send: "bg-primary/10 text-primary",
+  parcel: "bg-[hsl(45_90%_55%/0.15)] text-[hsl(38_80%_38%)]",
   wallet: "bg-primary/10 text-primary",
   scan: "bg-secondary/30 text-foreground",
   support: "bg-[hsl(45_90%_55%/0.15)] text-[hsl(38_80%_38%)]",
   orders: "bg-primary/10 text-primary",
+  admin: "bg-foreground/10 text-foreground",
   navigate: "bg-secondary/30 text-foreground",
 };
 
@@ -76,13 +82,14 @@ export function CommandBarSheet({ open, onOpenChange, onAction, location }: Prop
   const aiAbort = useRef<number | null>(null);
   const navigate = useNavigate();
   const { requireAuth } = useAuthGuard();
+  const { isAdmin } = useAuth();
 
   const isEmpty = query.trim().length === 0;
 
   const groups = useMemo(() => {
-    const results = isEmpty ? defaultSuggestions() : routeQuery(query);
+    const results = isEmpty ? defaultSuggestions({ isAdmin }) : routeQuery(query, { isAdmin });
     return groupResults(results);
-  }, [query, isEmpty]);
+  }, [query, isEmpty, isAdmin]);
 
   // Reset on open
   useEffect(() => {
@@ -150,6 +157,13 @@ export function CommandBarSheet({ open, onOpenChange, onAction, location }: Prop
     if (intent === "support") {
       onOpenChange(false);
       setTimeout(() => navigate("/help"), 80);
+      return;
+    }
+    if (intent === "admin") {
+      if (!isAdmin) return;
+      onOpenChange(false);
+      const path = params?.destination?.startsWith("/admin") ? params.destination : "/admin";
+      setTimeout(() => navigate(path), 80);
       return;
     }
     if (!requireAuth()) return;
