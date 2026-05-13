@@ -4,7 +4,6 @@ import { PromoCarousel } from "@/components/home/PromoCarousel";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { SmartSearchBar } from "@/components/ui/SmartSearchBar";
-import { motion } from "framer-motion";
 import { lazy, Suspense, useEffect } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAppEnv } from "@/contexts/AppEnvContext";
