@@ -17,6 +17,7 @@ import { useIncomingOffers, type RideOffer } from "@/hooks/useIncomingOffers";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { formatGNF } from "@/lib/format";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
@@ -62,6 +63,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     const next = isOnline ? "offline" : "online";
     if (next === "online" && cashOverLimit) {
       toast.error("Limite de cash atteinte. Réglez votre commission pour repasser en ligne.");
+      Analytics.track("driver.cash.over_limit", { metadata: { cash_debt_gnf: profile.cash_debt_gnf } });
       return;
     }
     setToggling(true);
@@ -73,6 +75,9 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     }
     setIsOnline(next === "online");
     refetch();
+    Analytics.track(next === "online" ? "driver.online" : "driver.offline", {
+      metadata: { vehicle_type: profile.vehicle_type },
+    });
     toast.success(next === "online" ? "Vous êtes en ligne." : "Vous êtes hors ligne.");
   };
 
@@ -95,6 +100,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
       setActiveTrip(accepted);
       toast.success("Course acceptée — direction le client.");
     }
+    Analytics.track("driver.ride.accepted", { metadata: { offer_id: id, fare_gnf: accepted?.estimatedPrice } });
     refetchOffers();
   };
 
@@ -103,6 +109,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     const { error } = await supabase.rpc("driver_offer_decline", { p_offer_id: id });
     if (error) toast.error(error.message);
     else toast.info("Course refusée");
+    Analytics.track("driver.ride.declined", { metadata: { offer_id: id } });
     refetchOffers();
   };
 
@@ -172,7 +179,15 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
               <h2 className="text-lg font-bold text-foreground">{config.title}</h2>
               <p className="text-sm text-muted-foreground mt-1">{config.desc}</p>
             </div>
-            <Button className="w-full h-11 gradient-primary" onClick={() => navigate(config.to)}>
+            <Button
+              className="w-full h-11 gradient-primary"
+              onClick={() => {
+                if (config.to === "/help") {
+                  Analytics.track("driver.support.opened", { metadata: { from_status: status ?? "none" } });
+                }
+                navigate(config.to);
+              }}
+            >
               {config.cta}
             </Button>
             <Button variant="ghost" className="w-full" onClick={onToggleDriverMode}>
