@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   User,
   Settings,
@@ -14,6 +14,8 @@ import {
   MapPin,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 interface ProfileViewProps {
   isDriverMode: boolean;
@@ -30,6 +32,37 @@ const menuItems = [
 ];
 
 export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewProps) {
+  const { profile, user, roles, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const isDriver = roles.includes("driver");
+  const fullName =
+    profile?.full_name?.trim() ||
+    [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim() ||
+    profile?.display_name ||
+    "Utilisateur CHOP CHOP";
+  const initials = (
+    (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "")
+  ).toUpperCase() || (user?.email?.[0]?.toUpperCase() ?? "C");
+  const phone = profile?.phone ?? user?.phone ?? "Téléphone non renseigné";
+
+  const handleLogout = async () => {
+    await signOut();
+    toast({ title: "Déconnecté", description: "À bientôt sur CHOP CHOP." });
+    navigate("/auth", { replace: true });
+  };
+
+  const handleDriverToggle = () => {
+    if (!isDriverMode && !isDriver) {
+      toast({
+        title: "Mode chauffeur indisponible",
+        description: "Votre compte n'a pas encore le rôle chauffeur.",
+      });
+      return;
+    }
+    onToggleDriverMode();
+  };
+
   return (
     <div className="max-w-md mx-auto">
       {/* Unified profile hero */}
@@ -43,16 +76,24 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
           <div className="pointer-events-none absolute -bottom-24 -left-12 w-48 h-48 rounded-full bg-secondary/10 blur-3xl" aria-hidden />
 
           <div className="relative flex items-center gap-4">
-            <div className="w-20 h-20 rounded-2xl gradient-wallet text-primary-foreground flex items-center justify-center text-2xl font-extrabold ring-glow-primary shrink-0">
-              MD
-            </div>
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-20 h-20 rounded-2xl gradient-wallet text-primary-foreground flex items-center justify-center text-2xl font-extrabold ring-glow-primary shrink-0 overflow-hidden"
+              aria-label="Voir mon profil"
+            >
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt={fullName} className="w-full h-full object-cover" />
+              ) : (
+                initials
+              )}
+            </button>
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-extrabold text-foreground truncate">Mamadou Diallo</h2>
-              <p className="text-xs text-muted-foreground truncate">+224 622 123 456</p>
+              <h2 className="text-lg font-extrabold text-foreground truncate">{fullName}</h2>
+              <p className="text-xs text-muted-foreground truncate">{phone}</p>
               <div className="flex items-center gap-1 mt-1.5">
                 <Star className="w-4 h-4 fill-secondary text-secondary" />
-                <span className="text-sm font-bold text-foreground">4.9</span>
-                <span className="text-xs text-muted-foreground">(127 avis)</span>
+                <span className="text-sm font-bold text-foreground">—</span>
+                <span className="text-xs text-muted-foreground">Nouveau membre</span>
               </div>
               <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                 <MapPin className="w-3 h-3 text-primary" />
@@ -77,11 +118,11 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
             <div>
               <p className="font-bold text-foreground">Mode Chauffeur</p>
               <p className="text-sm text-muted-foreground">
-                {isDriverMode ? "Activé" : "Désactivé"}
+                {isDriver ? (isDriverMode ? "Activé" : "Désactivé") : "Rôle chauffeur requis"}
               </p>
             </div>
           </div>
-          <Switch checked={isDriverMode} onCheckedChange={onToggleDriverMode} />
+          <Switch checked={isDriverMode} onCheckedChange={handleDriverToggle} disabled={!isDriver && !isDriverMode} />
         </motion.div>
       </div>
 
@@ -117,20 +158,23 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 mt-4 p-4 bg-destructive/10 text-destructive rounded-2xl font-medium hover:bg-destructive/20 transition-colors"
         >
           <LogOut className="w-5 h-5" />
           Se déconnecter
         </motion.button>
 
-        {/* Admin link */}
-        <Link
-          to="/admin"
-          className="w-full flex items-center justify-center gap-2 mt-3 p-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ShieldCheck className="w-4 h-4" />
-          Espace administrateur
-        </Link>
+        {/* Admin link — only when the user actually has an admin role */}
+        {isAdmin && (
+          <Link
+            to="/admin"
+            className="w-full flex items-center justify-center gap-2 mt-3 p-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Espace administrateur
+          </Link>
+        )}
 
         {/* Version */}
         <p className="text-center text-sm text-muted-foreground mt-6">
