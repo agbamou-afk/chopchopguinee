@@ -86,7 +86,7 @@ export function OrdersView() {
       </div>
 
       {/* Orders list */}
-      <div className="px-4 pb-6 space-y-3">
+      <div className="px-4 pb-28 space-y-3">
         {orders.map((order, index) => {
           const Icon = typeIcons[order.type];
           return (

@@ -152,7 +152,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
       </div>
 
       {/* Menu */}
-      <div className="px-4 pb-6">
+      <div className="px-4 pb-28">
         <div className="bg-card rounded-2xl shadow-card border border-border/60 overflow-hidden">
           {menuItems.map((item, index) => (
             <motion.button

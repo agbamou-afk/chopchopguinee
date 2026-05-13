@@ -78,7 +78,7 @@ export function DriverOrdersView() {
       </div>
 
       {activeOrder ? (
-        <div className="px-4 pb-6">
+        <div className="px-4 pb-28">
           {/* Active order card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
