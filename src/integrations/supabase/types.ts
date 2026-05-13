@@ -403,6 +403,39 @@ export type Database = {
           },
         ]
       }
+      driver_locations: {
+        Row: {
+          heading: number | null
+          lat: number
+          lng: number
+          speed: number | null
+          status: string
+          updated_at: string
+          user_id: string
+          zone: string | null
+        }
+        Insert: {
+          heading?: number | null
+          lat: number
+          lng: number
+          speed?: number | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          zone?: string | null
+        }
+        Update: {
+          heading?: number | null
+          lat?: number
+          lng?: number
+          speed?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          zone?: string | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -613,6 +646,99 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      map_provider_settings: {
+        Row: {
+          default_lat: number
+          default_lng: number
+          default_zoom: number
+          flags: Json
+          id: number
+          routing_provider: string
+          style_url: string
+          updated_at: string
+        }
+        Insert: {
+          default_lat?: number
+          default_lng?: number
+          default_zoom?: number
+          flags?: Json
+          id?: number
+          routing_provider?: string
+          style_url?: string
+          updated_at?: string
+        }
+        Update: {
+          default_lat?: number
+          default_lng?: number
+          default_zoom?: number
+          flags?: Json
+          id?: number
+          routing_provider?: string
+          style_url?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      maps_rate_limits: {
+        Row: {
+          count: number
+          user_id: string
+          window_kind: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          user_id: string
+          window_kind: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          user_id?: string
+          window_kind?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      maps_request_log: {
+        Row: {
+          action: string
+          created_at: string
+          error_message: string | null
+          id: string
+          input: Json
+          latency_ms: number | null
+          output_summary: Json | null
+          provider: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input?: Json
+          latency_ms?: number | null
+          output_summary?: Json | null
+          provider: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input?: Json
+          latency_ms?: number | null
+          output_summary?: Json | null
+          provider?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       marketplace_listings: {
         Row: {
