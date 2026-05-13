@@ -38,6 +38,7 @@ export function AppHeader({
   onAmountClick,
 }: AppHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
@@ -180,6 +181,7 @@ export function AppHeader({
           <button
             className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors relative"
             aria-label="Notifications"
+            onClick={() => setNotifOpen(true)}
           >
             <Bell className="w-6 h-6 text-foreground" />
             {notificationCount > 0 && (
@@ -188,6 +190,25 @@ export function AppHeader({
               </span>
             )}
           </button>
+
+          <Sheet open={notifOpen} onOpenChange={setNotifOpen}>
+            <SheetContent side="right" className="w-80">
+              <SheetHeader>
+                <SheetTitle>Notifications</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6 flex flex-col items-center justify-center text-center py-12">
+                <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-3">
+                  <Bell className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="font-semibold text-foreground text-sm">
+                  Aucune notification
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-[220px]">
+                  Vos courses, paiements et messages CHOP CHOP apparaîtront ici.
+                </p>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
 
         <div className="mt-4 flex items-center gap-3">
