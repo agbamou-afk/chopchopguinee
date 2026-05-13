@@ -108,29 +108,41 @@ export default function Auth() {
       }
       setBusy(true);
       const display = `${first.trim()} ${last.trim()}`;
-      const { error } = await supabase.auth.signUp({
-        phone: normalizePhone(phone),
-        password,
-        options: {
-          data: {
+      // SMS confirmation is disabled — create the account pre-confirmed
+      // via an edge function that uses the admin API, then sign in.
+      const { data: created, error: createErr } = await supabase.functions.invoke(
+        "signup-no-sms",
+        {
+          body: {
+            phone: normalizePhone(phone),
+            password,
             first_name: first.trim(),
             last_name: last.trim(),
             full_name: display,
             email: email.trim() || null,
           },
         },
-      });
-      setBusy(false);
-      if (error) {
-        toast({ title: "Échec inscription", description: error.message });
+      );
+      if (createErr || (created as any)?.error) {
+        setBusy(false);
+        toast({
+          title: "Échec inscription",
+          description: (created as any)?.error || createErr?.message || "Erreur",
+        });
         return;
       }
-      toast({
-        title: "Compte créé",
-        description: "Vous pouvez maintenant vous connecter.",
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        phone: normalizePhone(phone),
+        password,
       });
-      setMode("signin");
-      setChannel("phone_password");
+      setBusy(false);
+      if (signInErr) {
+        toast({ title: "Compte créé", description: "Connectez-vous pour continuer." });
+        setMode("signin");
+        setChannel("phone_password");
+        return;
+      }
+      toast({ title: "Bienvenue !", description: "Votre compte CHOP CHOP est prêt." });
       return;
     }
 
