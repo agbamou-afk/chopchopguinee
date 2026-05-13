@@ -10,6 +10,7 @@ import { useRideRealtime } from "@/hooks/useRideRealtime";
 import { useTurnByTurn } from "@/hooks/useTurnByTurn";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { NavigationHud } from "./NavigationHud";
+import { DriverTripReceipt } from "./DriverTripReceipt";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -46,6 +47,9 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   const mapRef = useRef<ChopMapHandle>(null);
   const [busy, setBusy] = useState(false);
   const [clientPhone, setClientPhone] = useState<string | null>(null);
+  const [clientName, setClientName] = useState<string | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptFare, setReceiptFare] = useState<number>(0);
   const [muted, setMuted] = useState(false);
   const { position: driverPos, request: requestGeo, isReady: geoReady } = useGeolocation({ watch: true });
 
@@ -68,8 +72,12 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   // Lookup client phone for the call button
   useEffect(() => {
     if (!ride?.client_id) return;
-    supabase.from("profiles").select("phone").eq("user_id", ride.client_id).maybeSingle()
-      .then(({ data }) => setClientPhone(data?.phone ?? null));
+    supabase.from("profiles").select("phone, full_name, display_name")
+      .eq("user_id", ride.client_id).maybeSingle()
+      .then(({ data }) => {
+        setClientPhone(data?.phone ?? null);
+        setClientName(data?.display_name ?? data?.full_name ?? null);
+      });
   }, [ride?.client_id]);
 
   // Turn-by-turn navigation: origin/destination flip with the trip phase.
@@ -130,8 +138,8 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     setBusy(false);
     if (error) { toast({ title: "Erreur", description: error.message }); return; }
     try { Analytics.track("driver.ride.completed" as any, { metadata: { rideId } }); } catch {}
-    toast({ title: "Course terminée", description: `Vous avez gagné ${formatGNF((ride.fare_gnf ?? 0) - Math.round((ride.fare_gnf ?? 0) * 0.15))}` });
-    onClose();
+    setReceiptFare(ride.fare_gnf ?? 0);
+    setShowReceipt(true);
   };
 
   const cancelTrip = async () => {
@@ -157,6 +165,16 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-background flex flex-col"
     >
+      {showReceipt && (
+        <DriverTripReceipt
+          rideId={rideId}
+          fareGnf={receiptFare}
+          commissionBps={1500}
+          clientName={clientName}
+          paymentLabel="Espèces"
+          onClose={onClose}
+        />
+      )}
       <div className="gradient-primary px-4 py-3 flex items-center justify-between shrink-0">
         <button onClick={onClose} aria-label="Fermer"
           className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition">
