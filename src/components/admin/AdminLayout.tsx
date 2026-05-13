@@ -1,4 +1,5 @@
 import { Outlet, useNavigate } from "react-router-dom";
+import { Suspense } from "react";
 import { LogOut } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -77,7 +78,9 @@ export function AdminLayout() {
               </div>
             </header>
             <main className="flex-1 p-4 md:p-6 overflow-auto scrollbar-hide scroll-smooth">
-              <Outlet />
+              <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Chargement…</div>}>
+                <Outlet />
+              </Suspense>
             </main>
           </div>
         </div>

@@ -5,9 +5,12 @@ import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { SmartSearchBar } from "@/components/ui/SmartSearchBar";
 import { motion } from "framer-motion";
-import { Marker } from "react-map-gl";
-import { ChopMap, DriverCluster, MapMarker } from "@/components/map";
+import { lazy, Suspense } from "react";
 import { useWallet } from "@/hooks/useWallet";
+import { useAppEnv } from "@/contexts/AppEnvContext";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const NearbyDriversMap = lazy(() => import("@/components/home/NearbyDriversMap"));
 
 interface UserHomeProps {
   onActionClick: (action: string, params?: { destination?: string }) => void;
@@ -35,6 +38,7 @@ const popularRestaurants = [
 
 export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
   const { available: walletBalance, loading: walletLoading } = useWallet("client");
+  const { lowDataMode } = useAppEnv();
   const userLocation = "Kaloum";
   const userCoords = { lat: 9.5092, lng: -13.7122 };
   const recents = [
@@ -120,16 +124,15 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
             className="relative block w-full h-44 rounded-3xl overflow-hidden shadow-card border border-border/60 active:scale-[0.99] transition-transform"
             aria-label="Voir les chauffeurs disponibles"
           >
-            <ChopMap
-              className="absolute inset-0 w-full h-full"
-              interactive={false}
-              initialView={{ longitude: userCoords.lng, latitude: userCoords.lat, zoom: 13 }}
-            >
-              <DriverCluster variant="moto" />
-              <Marker longitude={userCoords.lng} latitude={userCoords.lat} anchor="center">
-                <MapMarker variant="pickup" pulse size={28} label="Vous" />
-              </Marker>
-            </ChopMap>
+            {lowDataMode ? (
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/15 via-muted to-secondary/20 flex items-center justify-center">
+                <span className="text-xs font-semibold text-foreground/80">Carte désactivée — mode données réduites</span>
+              </div>
+            ) : (
+              <Suspense fallback={<Skeleton className="absolute inset-0 w-full h-full" />}>
+                <NearbyDriversMap lng={userCoords.lng} lat={userCoords.lat} />
+              </Suspense>
+            )}
             <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-card/95 backdrop-blur rounded-full px-2.5 py-1 shadow-card">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-70 pulse-dot" />
