@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { AnimatePresence } from "framer-motion";
-import { SplashScreen } from "@/components/SplashScreen";
 import { UserHome } from "@/components/views/UserHome";
 import { DriverHome } from "@/components/views/DriverHome";
 import { RideBooking } from "@/components/ride/RideBooking";
@@ -25,7 +24,6 @@ export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
 
 const Index = () => {
-  const [showSplash, setShowSplash] = useState(true);
   const [isDriverMode, setIsDriverMode] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const [activeView, setActiveView] = useState<ActiveView>("home");
@@ -40,11 +38,6 @@ const Index = () => {
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const { requireAuth } = useAuthGuard();
-
-  useEffect(() => {
-    const t = setTimeout(() => setShowSplash(false), 4400);
-    return () => clearTimeout(t);
-  }, []);
 
   const handleAction = (action: string) => {
     // "market" = browsing is allowed without account.
@@ -143,10 +136,6 @@ const Index = () => {
         canonical="/"
       />
       <h1 className="sr-only">CHOP CHOP — Vos services de transport, livraison et paiements en Guinée</h1>
-      <AnimatePresence>
-        {showSplash && <SplashScreen />}
-      </AnimatePresence>
-
       <AnimatePresence mode="wait">
         {bookingRide && (
           <RideBooking
