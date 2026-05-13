@@ -1,12 +1,12 @@
 import { Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HomeAssistantSheet } from "@/components/ai/HomeAssistantSheet";
+import { CommandBarSheet } from "@/components/ai/CommandBarSheet";
 
 interface SmartSearchBarProps {
   prompts?: string[];
-  /** Called when the assistant suggests a primary action (moto, food, etc.). */
-  onAction?: (action: string) => void;
+  /** Called when the assistant routes the user to an action. */
+  onAction?: (action: string, params?: { destination?: string }) => void;
   /** Optional click override; if provided, replaces the default AI assistant. */
   onClick?: () => void;
   intervalMs?: number;
@@ -65,10 +65,10 @@ export function SmartSearchBar({
         </span>
       </button>
       {!onClick && (
-        <HomeAssistantSheet
+        <CommandBarSheet
           open={open}
           onOpenChange={setOpen}
-          onAction={(a) => onAction?.(a)}
+          onAction={(a, params) => onAction?.(a, params)}
           location={location}
         />
       )}
