@@ -9,6 +9,11 @@ import { useTopupNotifications } from "@/hooks/useTopupNotifications";
 import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
+
+function TopupNotificationsMount() {
+  useTopupNotifications();
+  return null;
+}
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
