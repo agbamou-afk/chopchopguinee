@@ -739,6 +739,51 @@ export type Database = {
         }
         Relationships: []
       }
+      landmarks: {
+        Row: {
+          active: boolean
+          aliases: string[]
+          category: string
+          commune: string | null
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          neighborhood: string | null
+          popularity: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          aliases?: string[]
+          category: string
+          commune?: string | null
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          neighborhood?: string | null
+          popularity?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          aliases?: string[]
+          category?: string
+          commune?: string | null
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          neighborhood?: string | null
+          popularity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listing_images: {
         Row: {
           created_at: string
@@ -1403,6 +1448,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_places: {
+        Row: {
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["saved_place_kind"]
+          label: string
+          landmark_note: string | null
+          lat: number
+          lng: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["saved_place_kind"]
+          label: string
+          landmark_note?: string | null
+          lat: number
+          lng: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["saved_place_kind"]
+          label?: string
+          landmark_note?: string | null
+          lat?: number
+          lng?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       service_profiles: {
         Row: {
@@ -2293,6 +2374,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       wallet_admin_credit: {
         Args: {
           p_amount_gnf: number
@@ -2647,6 +2730,7 @@ export type Database = {
         | "expired"
         | "cancelled"
       ride_status: "pending" | "in_progress" | "completed" | "cancelled"
+      saved_place_kind: "home" | "work" | "favorite"
       topup_status:
         | "pending"
         | "confirmed"
@@ -2880,6 +2964,7 @@ export const Constants = {
         "cancelled",
       ],
       ride_status: ["pending", "in_progress", "completed", "cancelled"],
+      saved_place_kind: ["home", "work", "favorite"],
       topup_status: [
         "pending",
         "confirmed",
