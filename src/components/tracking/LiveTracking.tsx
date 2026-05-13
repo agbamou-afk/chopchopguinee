@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { QrScanner } from "@/components/scanner/QrScanner";
 import { RatingPrompt } from "@/components/tracking/RatingPrompt";
+import { DriverSearchOverlay } from "@/components/booking/DriverSearchOverlay";
 
 export type TrackingMode = "moto" | "toktok" | "food";
 
