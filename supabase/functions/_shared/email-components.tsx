@@ -53,7 +53,7 @@ export const BrandHeader: React.FC = () => (
     <table cellPadding={0} cellSpacing={0} border={0} style={{ width: '100%' }}>
       <tbody>
         <tr>
-          <td style={logoCell}>
+          <td align="center" style={logoCell}>
             <span style={logoMark}>CC</span>
             <span style={logoWord}>CHOP&nbsp;CHOP</span>
           </td>
@@ -307,12 +307,14 @@ const card: React.CSSProperties = {
 }
 
 const headerSection: React.CSSProperties = {
-  padding: '4px 4px 8px',
+  padding: '8px 4px 12px',
+  textAlign: 'center',
 }
 
 const logoCell: React.CSSProperties = {
   padding: '4px 0',
   verticalAlign: 'middle',
+  textAlign: 'center',
 }
 
 const logoMark: React.CSSProperties = {
