@@ -59,6 +59,41 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          last_message_at: string
+          listing_id: string
+          seller_id: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          listing_id: string
+          seller_id: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          listing_id?: string
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fare_settings: {
         Row: {
           base_price: number
@@ -88,6 +123,177 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      listing_images: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          position: number
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          position?: number
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          position?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_images_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          listing_id: string
+          reason: string
+          reporter_id: string | null
+          status: Database["public"]["Enums"]["report_status"]
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          listing_id: string
+          reason: string
+          reporter_id?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          listing_id?: string
+          reason?: string
+          reporter_id?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_reports_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_listings: {
+        Row: {
+          category: string
+          commune: string | null
+          condition: string | null
+          created_at: string
+          delivery_available: boolean
+          description: string | null
+          id: string
+          is_negotiable: boolean
+          is_urgent: boolean
+          kind: Database["public"]["Enums"]["listing_kind"]
+          landmark: string | null
+          neighborhood: string | null
+          price_gnf: number | null
+          seller_id: string
+          status: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          category: string
+          commune?: string | null
+          condition?: string | null
+          created_at?: string
+          delivery_available?: boolean
+          description?: string | null
+          id?: string
+          is_negotiable?: boolean
+          is_urgent?: boolean
+          kind?: Database["public"]["Enums"]["listing_kind"]
+          landmark?: string | null
+          neighborhood?: string | null
+          price_gnf?: number | null
+          seller_id: string
+          status?: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          category?: string
+          commune?: string | null
+          condition?: string | null
+          created_at?: string
+          delivery_available?: boolean
+          description?: string | null
+          id?: string
+          is_negotiable?: boolean
+          is_urgent?: boolean
+          kind?: Database["public"]["Enums"]["listing_kind"]
+          landmark?: string | null
+          neighborhood?: string | null
+          price_gnf?: number | null
+          seller_id?: string
+          status?: Database["public"]["Enums"]["listing_status"]
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          attachment_url: string | null
+          body: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          sender_id: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
+          sender_id: string
+        }
+        Update: {
+          attachment_url?: string | null
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -205,6 +411,77 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_listings: {
+        Row: {
+          created_at: string
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_listings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_profiles: {
+        Row: {
+          availability: string | null
+          bio: string | null
+          created_at: string
+          id: string
+          portfolio_urls: string[]
+          pricing_range: string | null
+          profession: string
+          rating: number
+          response_rate: number
+          service_areas: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          portfolio_urls?: string[]
+          pricing_range?: string | null
+          profession: string
+          rating?: number
+          response_rate?: number
+          service_areas?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          portfolio_urls?: string[]
+          pricing_range?: string | null
+          profession?: string
+          rating?: number
+          response_rate?: number
+          service_areas?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       support_messages: {
         Row: {
@@ -800,7 +1077,11 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "client" | "driver" | "merchant" | "agent"
+      listing_kind: "merchant" | "community" | "service"
+      listing_status: "active" | "sold" | "paused" | "removed"
+      message_kind: "text" | "image" | "location" | "quick_reply"
       party_type: "client" | "driver" | "merchant" | "agent" | "master"
+      report_status: "open" | "reviewed" | "actioned" | "dismissed"
       ride_mode: "moto" | "toktok" | "food"
       ride_status: "pending" | "in_progress" | "completed" | "cancelled"
       topup_status: "pending" | "confirmed" | "expired" | "cancelled"
@@ -945,7 +1226,11 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "client", "driver", "merchant", "agent"],
+      listing_kind: ["merchant", "community", "service"],
+      listing_status: ["active", "sold", "paused", "removed"],
+      message_kind: ["text", "image", "location", "quick_reply"],
       party_type: ["client", "driver", "merchant", "agent", "master"],
+      report_status: ["open", "reviewed", "actioned", "dismissed"],
       ride_mode: ["moto", "toktok", "food"],
       ride_status: ["pending", "in_progress", "completed", "cancelled"],
       topup_status: ["pending", "confirmed", "expired", "cancelled"],
