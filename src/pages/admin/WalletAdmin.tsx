@@ -59,6 +59,10 @@ export default function WalletAdmin() {
       toast.error("Renseignez user_id, montant > 0 et raison");
       return;
     }
+    if (!navigator.onLine) {
+      toast.error("Connexion indisponible. Crédit admin bloqué hors ligne.");
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.rpc("wallet_admin_credit", {
       p_user_id: form.user_id.trim(),
