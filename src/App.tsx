@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProfileCompletionRedirect } from "@/components/auth/ProfileCompletionRedirect";
+import { useTopupNotifications } from "@/hooks/useTopupNotifications";
 import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -78,6 +79,7 @@ const App = () => {
       <BrowserRouter>
       <AuthProvider>
         <ProfileCompletionRedirect />
+        <TopupNotificationsMount />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
