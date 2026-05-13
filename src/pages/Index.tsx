@@ -16,6 +16,7 @@ import { DriverOrdersView } from "@/components/views/DriverOrdersView";
 import { DriverEarningsView } from "@/components/views/DriverEarningsView";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
+import { Seo } from "@/components/Seo";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -127,6 +128,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <Seo
+        title="CHOP CHOP — Transport, livraison et paiements en Guinée"
+        description="La super-app guinéenne : moto et TokTok, livraison de repas, marché en ligne et transferts d'argent en GNF. Tout, partout, pour tous."
+        canonical="/"
+      />
+      <h1 className="sr-only">CHOP CHOP — Vos services de transport, livraison et paiements en Guinée</h1>
       <AnimatePresence>
         {showSplash && <SplashScreen />}
       </AnimatePresence>

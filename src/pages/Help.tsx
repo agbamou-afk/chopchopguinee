@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
+import { Seo } from "@/components/Seo";
 
 const FAQS = [
   {
@@ -105,6 +106,20 @@ export default function Help() {
 
   return (
     <div className="min-h-screen bg-background pb-12">
+      <Seo
+        title="Aide & FAQ — CHOP CHOP"
+        description="Réponses aux questions fréquentes sur CHOP CHOP : recharge portefeuille, courses moto, livraison de repas, transferts d'argent et sécurité."
+        canonical="/help"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQS.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }}
+      />
       <header className="gradient-primary text-primary-foreground rounded-b-3xl px-4 pt-6 pb-8">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
