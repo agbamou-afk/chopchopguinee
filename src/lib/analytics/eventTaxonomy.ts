@@ -94,6 +94,26 @@ export const EVENTS = {
   "driver.cash.settle.requested": "driver",
   "driver.support.opened": "driver",
 
+  // --- Maps / routing / location (Day 6) ---
+  "map.loaded": "map",
+  "map.load.failed": "map",
+  "route.requested": "map",
+  "route.calculated": "map",
+  "route.success": "map",
+  "route.failed": "map",
+  "eta.calculated": "map",
+  "pickup.adjusted": "map",
+  "driver.search.started": "map",
+  "driver.search.matched": "map",
+  "driver.search.failed": "map",
+  "location.permission.requested": "map",
+  "location.permission.granted": "map",
+  "location.permission.denied": "map",
+  "location.low_accuracy": "map",
+  "saved_place.created": "map",
+  "saved_place.used": "map",
+  "saved_place.deleted": "map",
+
   // --- Agent (top-up vendor) ---
   "agent.topup.created": "agent",
   "agent.topup.confirmed": "agent",

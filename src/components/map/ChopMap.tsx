@@ -3,6 +3,7 @@ import Map, { type MapRef, NavigationControl, type ViewState } from 'react-map-g
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapConfig } from '@/lib/maps';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Analytics } from '@/lib/analytics/AnalyticsService';
 export interface ChopMapHandle {
   getMap: () => MapRef | null;
   flyTo: (lng: number, lat: number, zoom?: number) => void;
@@ -20,6 +21,12 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
 ) {
   const { config, error } = useMapConfig();
   const mapRef = useRef<MapRef>(null);
+  const loadedRef = useRef(false);
+  React.useEffect(() => {
+    if (error) {
+      try { Analytics.track('map.load.failed' as any, { metadata: { reason: String(error?.message ?? error) } }); } catch {}
+    }
+  }, [error]);
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
     flyTo: (lng, lat, zoom = 14) => mapRef.current?.flyTo({ center: [lng, lat], zoom, essential: true }),
@@ -38,7 +45,18 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
           padding: { top: 0, bottom: 0, left: 0, right: 0 },
         }}
         style={{ width: '100%', height: '100%' }}
-        attributionControl={false} interactive={interactive} onLoad={onLoad} reuseMaps>
+        attributionControl={false} interactive={interactive}
+        onLoad={(e) => {
+          if (!loadedRef.current) {
+            loadedRef.current = true;
+            try { Analytics.track('map.loaded' as any, { metadata: { provider: config.provider, style: config.styleUrl } }); } catch {}
+          }
+          onLoad?.();
+        }}
+        onError={(e) => {
+          try { Analytics.track('map.load.failed' as any, { metadata: { reason: String((e as any)?.error?.message ?? 'unknown') } }); } catch {}
+        }}
+        reuseMaps>
         {interactive && <NavigationControl position="top-right" showCompass={false} />}
         {children}
       </Map>
