@@ -11,12 +11,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ModulePage } from "@/components/admin/ModulePage";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { ROLE_LABELS, AdminRole } from "@/lib/admin/permissions";
 import { logAction } from "@/lib/admin/approvals";
 import { toast } from "@/hooks/use-toast";
 
+/** Legacy `admin_users.admin_role` values (kept as the table predates the unified roles). */
+type LegacyAdminRole = "super_admin" | "ops_admin" | "finance_admin";
+
+const LEGACY_ROLE_LABELS: Record<LegacyAdminRole, string> = {
+  super_admin: "GOD Admin",
+  ops_admin: "Operations Admin",
+  finance_admin: "Finance Admin",
+};
+
 interface AdminUserRow {
-  id: string; user_id: string; admin_role: AdminRole; status: string; notes: string | null; created_at: string;
+  id: string; user_id: string; admin_role: LegacyAdminRole; status: string; notes: string | null; created_at: string;
   profile?: { full_name: string | null; phone: string | null } | null;
 }
 
@@ -67,7 +75,7 @@ function AdminsList({ canManage }: { canManage: boolean }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge>{ROLE_LABELS[r.admin_role]}</Badge>
+            <Badge>{LEGACY_ROLE_LABELS[r.admin_role]}</Badge>
             <Badge variant={r.status === "active" ? "secondary" : "destructive"}>{r.status}</Badge>
           </div>
         </Card>
@@ -78,7 +86,7 @@ function AdminsList({ canManage }: { canManage: boolean }) {
 
 function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
-  const [phone, setPhone] = useState(""); const [role, setRole] = useState<AdminRole>("ops_admin");
+  const [phone, setPhone] = useState(""); const [role, setRole] = useState<LegacyAdminRole>("ops_admin");
   const [notes, setNotes] = useState(""); const [busy, setBusy] = useState(false);
   const create = async () => {
     setBusy(true);
@@ -101,7 +109,7 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
           <div><Label className="text-xs">Téléphone du compte</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+224..." /></div>
           <div>
             <Label className="text-xs">Rôle</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as AdminRole)}>
+            <Select value={role} onValueChange={(v) => setRole(v as LegacyAdminRole)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="super_admin">Super Admin</SelectItem>

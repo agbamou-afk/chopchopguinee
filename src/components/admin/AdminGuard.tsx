@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { AdminModule, Capability } from "@/lib/admin/permissions";
 
@@ -11,7 +12,9 @@ interface Props {
 }
 
 export function AdminGuard({ children, module, capability = "view" }: Props) {
-  const { ready, isAdmin, can } = useAdminAuth();
+  const { ready, isLoggedIn, isProfileComplete } = useAuth();
+  const { isAdmin, can } = useAdminAuth();
+  const location = useLocation();
   if (!ready) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -19,7 +22,12 @@ export function AdminGuard({ children, module, capability = "view" }: Props) {
       </div>
     );
   }
-  if (!isAdmin) return <Navigate to="/auth?next=/admin" replace />;
+  if (!isLoggedIn) {
+    const next = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/auth?next=${next}`} replace />;
+  }
+  if (!isProfileComplete) return <Navigate to="/complete-profile" replace />;
+  if (!isAdmin) return <Navigate to="/no-access" replace />;
   if (module && !can(module, capability)) {
     return (
       <div className="p-10 text-center">

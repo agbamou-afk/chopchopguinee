@@ -3,12 +3,16 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProfileCompletionRedirect } from "@/components/auth/ProfileCompletionRedirect";
 import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import CompleteProfile from "./pages/CompleteProfile";
+import NoAccess from "./pages/NoAccess";
 import AgentTopup from "./pages/AgentTopup";
 import AgentDashboard from "./pages/AgentDashboard";
 import ProfileInfo from "./pages/ProfileInfo";
@@ -63,9 +67,13 @@ const App = () => {
       <Sonner />
       <AnimatePresence>{showSplash && <SplashScreen />}</AnimatePresence>
       <BrowserRouter>
+      <AuthProvider>
+        <ProfileCompletionRedirect />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/complete-profile" element={<CompleteProfile />} />
+          <Route path="/no-access" element={<NoAccess />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="live" element={<LiveOps />} />
@@ -99,6 +107,7 @@ const App = () => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+      </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

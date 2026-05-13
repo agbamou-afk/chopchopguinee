@@ -537,37 +537,52 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string
           avatar_url: string | null
           created_at: string
+          display_name: string | null
+          email: string | null
+          first_name: string | null
           full_name: string | null
           has_pin: boolean
           id: string
           kyc_level: number
           language: string
+          last_name: string | null
           phone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          account_status?: string
           avatar_url?: string | null
           created_at?: string
+          display_name?: string | null
+          email?: string | null
+          first_name?: string | null
           full_name?: string | null
           has_pin?: boolean
           id?: string
           kyc_level?: number
           language?: string
+          last_name?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          account_status?: string
           avatar_url?: string | null
           created_at?: string
+          display_name?: string | null
+          email?: string | null
+          first_name?: string | null
           full_name?: string | null
           has_pin?: boolean
           id?: string
           kyc_level?: number
           language?: string
+          last_name?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
@@ -1140,6 +1155,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_app_role: {
+        Args: { _role: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1148,6 +1167,8 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_any_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_god_admin: { Args: { _user_id: string }; Returns: boolean }
       log_admin_action: {
         Args: {
           _action: string
@@ -1478,7 +1499,17 @@ export type Database = {
     Enums: {
       admin_role: "super_admin" | "ops_admin" | "finance_admin"
       admin_user_status: "active" | "suspended"
-      app_role: "admin" | "user" | "client" | "driver" | "merchant" | "agent"
+      app_role:
+        | "admin"
+        | "user"
+        | "client"
+        | "driver"
+        | "merchant"
+        | "agent"
+        | "recharge_agent"
+        | "operations_admin"
+        | "finance_admin"
+        | "god_admin"
       approval_status: "pending" | "approved" | "rejected" | "cancelled"
       listing_kind: "merchant" | "community" | "service"
       listing_status: "active" | "sold" | "paused" | "removed"
@@ -1649,7 +1680,18 @@ export const Constants = {
     Enums: {
       admin_role: ["super_admin", "ops_admin", "finance_admin"],
       admin_user_status: ["active", "suspended"],
-      app_role: ["admin", "user", "client", "driver", "merchant", "agent"],
+      app_role: [
+        "admin",
+        "user",
+        "client",
+        "driver",
+        "merchant",
+        "agent",
+        "recharge_agent",
+        "operations_admin",
+        "finance_admin",
+        "god_admin",
+      ],
       approval_status: ["pending", "approved", "rejected", "cancelled"],
       listing_kind: ["merchant", "community", "service"],
       listing_status: ["active", "sold", "paused", "removed"],
