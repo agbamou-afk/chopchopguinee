@@ -92,6 +92,81 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_rate_limits: {
+        Row: {
+          count: number
+          user_id: string
+          window_kind: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          user_id: string
+          window_kind: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          user_id?: string
+          window_kind?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      ai_request_log: {
+        Row: {
+          action: string
+          assistant: Database["public"]["Enums"]["ai_assistant_kind"]
+          created_at: string
+          error_message: string | null
+          id: string
+          input: Json
+          latency_ms: number | null
+          model: string
+          output: Json | null
+          prompt_summary: string | null
+          provider: string
+          status: Database["public"]["Enums"]["ai_request_status"]
+          tokens_input: number | null
+          tokens_output: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          assistant: Database["public"]["Enums"]["ai_assistant_kind"]
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input?: Json
+          latency_ms?: number | null
+          model: string
+          output?: Json | null
+          prompt_summary?: string | null
+          provider: string
+          status?: Database["public"]["Enums"]["ai_request_status"]
+          tokens_input?: number | null
+          tokens_output?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          assistant?: Database["public"]["Enums"]["ai_assistant_kind"]
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input?: Json
+          latency_ms?: number | null
+          model?: string
+          output?: Json | null
+          prompt_summary?: string | null
+          provider?: string
+          status?: Database["public"]["Enums"]["ai_request_status"]
+          tokens_input?: number | null
+          tokens_output?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       approval_requests: {
         Row: {
           action: string
@@ -1680,6 +1755,8 @@ export type Database = {
     Enums: {
       admin_role: "super_admin" | "ops_admin" | "finance_admin"
       admin_user_status: "active" | "suspended"
+      ai_assistant_kind: "admin" | "support" | "marche" | "fraud"
+      ai_request_status: "ok" | "error" | "rate_limited" | "blocked"
       app_role:
         | "admin"
         | "user"
@@ -1869,6 +1946,8 @@ export const Constants = {
     Enums: {
       admin_role: ["super_admin", "ops_admin", "finance_admin"],
       admin_user_status: ["active", "suspended"],
+      ai_assistant_kind: ["admin", "support", "marche", "fraud"],
+      ai_request_status: ["ok", "error", "rate_limited", "blocked"],
       app_role: [
         "admin",
         "user",

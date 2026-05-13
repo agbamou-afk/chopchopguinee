@@ -12,6 +12,7 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
@@ -54,8 +55,14 @@ export const BrandHeader: React.FC = () => (
       <tbody>
         <tr>
           <td align="center" style={logoCell}>
-            <span style={logoMark}>CC</span>
-            <span style={logoWord}>CHOP&nbsp;CHOP</span>
+            <Img
+              src={BRAND.logoUrl}
+              width="72"
+              height="72"
+              alt={BRAND.name}
+              style={logoImg}
+            />
+            <div style={logoWordRow}>CHOP&nbsp;CHOP</div>
           </td>
         </tr>
       </tbody>
@@ -317,30 +324,22 @@ const logoCell: React.CSSProperties = {
   textAlign: 'center',
 }
 
-const logoMark: React.CSSProperties = {
-  display: 'inline-block',
-  width: '36px',
-  height: '36px',
-  lineHeight: '36px',
-  textAlign: 'center',
-  borderRadius: '10px',
-  backgroundColor: COLORS.green,
-  color: '#ffffff',
-  fontWeight: 800,
-  fontSize: '15px',
-  letterSpacing: '0.02em',
-  marginRight: '10px',
-  verticalAlign: 'middle',
-  fontFamily: FONT_STACK,
+const logoImg: React.CSSProperties = {
+  display: 'block',
+  margin: '0 auto 8px',
+  width: '72px',
+  height: '72px',
+  borderRadius: '14px',
+  objectFit: 'contain',
 }
 
-const logoWord: React.CSSProperties = {
-  fontSize: '16px',
+const logoWordRow: React.CSSProperties = {
+  fontSize: '14px',
   fontWeight: 700,
-  letterSpacing: '0.06em',
+  letterSpacing: '0.16em',
   color: COLORS.text,
-  verticalAlign: 'middle',
   fontFamily: FONT_STACK,
+  textAlign: 'center',
 }
 
 const footerSection: React.CSSProperties = {

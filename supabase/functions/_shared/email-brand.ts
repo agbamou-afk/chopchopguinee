@@ -9,6 +9,7 @@ export const BRAND = {
   legalName: "CHOP GUINEE LTD",
   tagline: "L'infrastructure de confiance pour la mobilité et le commerce en Guinée.",
   url: "https://chopchopguinee.com",
+  logoUrl: "https://chopchopguinee.com/favicon.png",
   supportEmail: "support@chopchopguinee.com",
   supportPhone: "+224 621 00 00 00",
   address: "Conakry, République de Guinée",
