@@ -1,4 +1,4 @@
-export type AdminRole = "super_admin" | "ops_admin" | "finance_admin";
+export type AdminRole = "god_admin" | "operations_admin" | "finance_admin";
 
 export type AdminModule =
   | "dashboard"
@@ -28,13 +28,13 @@ export type Capability = "view" | "edit" | "approve" | "export" | "delete";
 const ALL: Capability[] = ["view", "edit", "approve", "export", "delete"];
 
 export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capability[]>>> = {
-  super_admin: {
+  god_admin: {
     dashboard: ALL, live_ops: ALL, users: ALL, drivers: ALL, merchants: ALL,
     vendors: ALL, wallet: ALL, pricing: ALL, orders: ALL, repas: ALL, marche: ALL,
     support: ALL, risk: ALL, notifications: ALL, promotions: ALL, reports: ALL,
     zones: ALL, flags: ALL, settings: ALL, admins: ALL, audit: ALL,
   },
-  ops_admin: {
+  operations_admin: {
     dashboard: ["view"],
     live_ops: ["view", "edit"],
     users: ["view", "edit"],
@@ -99,7 +99,7 @@ export function requiresApproval(action: string): boolean {
 }
 
 export const ROLE_LABELS: Record<AdminRole, string> = {
-  super_admin: "Super Admin",
-  ops_admin: "Operations Admin",
+  god_admin: "GOD Admin",
+  operations_admin: "Operations Admin",
   finance_admin: "Finance Admin",
 };

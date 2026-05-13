@@ -1,66 +1,29 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { AdminRole, AdminModule, Capability, can } from "@/lib/admin/permissions";
 
-interface State {
-  ready: boolean;
-  user: { id: string; email: string | null } | null;
-  role: AdminRole | null;
+/** Map a unified app role onto the legacy AdminRole used by the permissions map. */
+function toAdminRole(roles: AppRole[]): AdminRole | null {
+  if (roles.includes("god_admin")) return "god_admin";
+  if (roles.includes("operations_admin")) return "operations_admin";
+  if (roles.includes("finance_admin")) return "finance_admin";
+  // Backwards compat with legacy admin_users tier names.
+  if (roles.includes("admin")) return "god_admin";
+  return null;
 }
 
+/**
+ * Thin wrapper around the global AuthContext so existing admin code keeps working.
+ * Single source of truth is now `<AuthProvider>`.
+ */
 export function useAdminAuth() {
-  const [state, setState] = useState<State>({ ready: false, user: null, role: null });
-
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      let session: any = null;
-      try {
-        const res = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), 3000)),
-        ]);
-        session = (res as any)?.data?.session ?? null;
-      } catch {
-        session = null;
-      }
-      if (!active) return;
-      if (!session) {
-        setState({ ready: true, user: null, role: null });
-        return;
-      }
-      let role: AdminRole | null = null;
-      try {
-        const queryPromise = supabase
-          .from("admin_users")
-          .select("admin_role,status")
-          .eq("user_id", session.user.id)
-          .eq("status", "active")
-          .maybeSingle();
-        const res: any = await Promise.race([
-          queryPromise,
-          new Promise((resolve) => setTimeout(() => resolve({ data: null }), 4000)),
-        ]);
-        role = (res?.data?.admin_role as AdminRole) ?? null;
-      } catch {
-        role = null;
-      }
-      if (!active) return;
-      setState({
-        ready: true,
-        user: { id: session.user.id, email: session.user.email ?? null },
-        role,
-      });
-    };
-    load();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => load());
-    return () => { active = false; sub.subscription.unsubscribe(); };
-  }, []);
-
+  const { ready, user, roles, isAdmin } = useAuth();
+  const role = toAdminRole(roles);
   return {
-    ...state,
-    isAdmin: !!state.role,
-    isSuperAdmin: state.role === "super_admin",
-    can: (module: AdminModule, cap: Capability = "view") => can(state.role, module, cap),
+    ready,
+    user: user ? { id: user.id, email: user.email ?? null } : null,
+    role,
+    isAdmin,
+    isSuperAdmin: role === "god_admin",
+    can: (module: AdminModule, cap: Capability = "view") => can(role, module, cap),
   };
 }

@@ -1,42 +1,21 @@
-import { useEffect, useState, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
- * Returns auth status and a `requireAuth(fn)` helper.
- * If not signed in, redirects to /auth?next=<current path> instead of running fn.
+ * Returns auth status and a `requireAuth(fn)` helper, backed by the global AuthContext.
+ * Auth gating for transactional flows is currently permissive in preview mode — restore
+ * the redirect block below to enforce sign-in.
  */
 export function useAuthGuard() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    let active = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (active) setIsLoggedIn(!!data.session);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setIsLoggedIn(!!session);
-    });
-    return () => {
-      active = false;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
+  const { isLoggedIn, ready } = useAuth();
 
   const requireAuth = useCallback(
     (fn?: () => void) => {
-      // Auth gating temporarily disabled for preview / edit mode.
-      // Re-enable by restoring the redirect block below.
       fn?.();
       return true;
-      // const next = encodeURIComponent(location.pathname + location.search);
-      // navigate(`/auth?next=${next}`);
-      // return false;
     },
-    [isLoggedIn, navigate, location]
+    [isLoggedIn],
   );
 
-  return { isLoggedIn: !!isLoggedIn, ready: isLoggedIn !== null, requireAuth };
+  return { isLoggedIn, ready, requireAuth };
 }
