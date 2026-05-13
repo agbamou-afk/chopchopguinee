@@ -2,15 +2,26 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { bearingDeg, lerpLatLng, type LatLng } from './geo';
 export interface DriverPosition extends LatLng { heading: number; status: string; }
+
+function isLowData(): boolean {
+  const c: any = (navigator as any)?.connection;
+  if (!c) return false;
+  if (c.saveData) return true;
+  return ['slow-2g', '2g'].includes(c.effectiveType ?? '');
+}
+
 export function useDriverLocation(driverId: string | null) {
   const [pos, setPos] = useState<DriverPosition | null>(null);
   const fromRef = useRef<DriverPosition | null>(null);
   const toRef = useRef<DriverPosition | null>(null);
   const t0Ref = useRef<number>(0);
+  const interpMsRef = useRef<number>(1500);
   const rafRef = useRef<number>(0);
   useEffect(() => {
     if (!driverId) return;
     let alive = true;
+    const lowData = isLowData();
+    interpMsRef.current = lowData ? 2500 : 1500;
     supabase.from('driver_locations').select('*').eq('user_id', driverId).maybeSingle().then(({ data }) => {
       if (!alive || !data) return;
       const p: DriverPosition = { lat: data.lat, lng: data.lng, heading: data.heading ?? 0, status: data.status ?? 'online' };
@@ -33,7 +44,9 @@ export function useDriverLocation(driverId: string | null) {
     const tick = () => {
       const from = fromRef.current, to = toRef.current;
       if (from && to) {
-        const t = Math.min(1, (performance.now() - t0Ref.current) / 1000);
+        const raw = Math.min(1, (performance.now() - t0Ref.current) / interpMsRef.current);
+        // Ease-out cubic for natural deceleration (no teleporting)
+        const t = 1 - Math.pow(1 - raw, 3);
         const interp = lerpLatLng(from, to, t);
         setPos({ ...interp, heading: to.heading, status: to.status });
       }
