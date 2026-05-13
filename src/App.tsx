@@ -12,6 +12,7 @@ import AgentDashboard from "./pages/AgentDashboard";
 import ProfileInfo from "./pages/ProfileInfo";
 import Help from "./pages/Help";
 import Legal from "./pages/Legal";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/profile" element={<ProfileInfo />} />
           <Route path="/help" element={<Help />} />
           <Route path="/legal" element={<Legal />} />
+          <Route path="/notifications" element={<Notifications />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
