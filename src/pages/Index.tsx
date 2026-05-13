@@ -192,6 +192,7 @@ const Index = () => {
               }
               setActiveTrip({ mode: bookingRide, ...trip, holdId, rideId: (ride as { id: string }).id });
               setBookingRide(null);
+              setBookingDestination(undefined);
               notif.push({
                 kind: "ride",
                 title: "Course confirmée",
