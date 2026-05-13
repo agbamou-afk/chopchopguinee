@@ -29,7 +29,7 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
   const right = tabs.slice(2);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 py-2 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-50 shadow-elevated">
       {isDriverMode ? (
         <div className="max-w-md mx-auto grid grid-cols-4 items-center relative">
           {tabs.map((tab) => (
@@ -48,10 +48,10 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
           <div className="flex justify-center">
             <button
               onClick={onScanClick}
-              aria-label="Scanner"
-              className="-mt-8 w-14 h-14 rounded-full gradient-primary shadow-elevated flex items-center justify-center active:scale-95 transition"
+              aria-label="Scanner un QR CHOP CHOP"
+              className="-mt-8 w-16 h-16 rounded-full gradient-primary shadow-elevated ring-4 ring-card flex items-center justify-center active:scale-95 transition"
             >
-              <ScanLine className="w-6 h-6 text-primary-foreground" />
+              <ScanLine className="w-7 h-7 text-primary-foreground" />
             </button>
           </div>
           {right.map((tab) => (
