@@ -103,6 +103,19 @@ export function useWallet(partyType: "client" | "driver" = "client") {
   // Realtime: re-load on wallet or transaction changes for this user
   useEffect(() => {
     if (!userId) return;
+    // Pause realtime when tab is hidden, offline, or low-data mode is on,
+    // to spare metered Guinean mobile data and battery.
+    const lowData = typeof window !== "undefined" && localStorage.getItem("cc:low_data_mode") === "1";
+    const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+    const hidden = typeof document !== "undefined" && document.visibilityState === "hidden";
+    if (lowData || offline || hidden) {
+      // Still do a one-shot load so the UI is fresh; just don't subscribe.
+      const onVisible = () => {
+        if (document.visibilityState === "visible") load(userId);
+      };
+      document.addEventListener("visibilitychange", onVisible);
+      return () => document.removeEventListener("visibilitychange", onVisible);
+    }
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
