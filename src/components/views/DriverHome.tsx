@@ -81,7 +81,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
       return;
     }
     setToggling(true);
-    const { error } = await supabase.rpc("driver_set_status", { p_presence: next });
+    const { error } = await supabase.rpc("driver_set_status", { p_status: next });
     setToggling(false);
     if (error) {
       toast.error(error.message || "Impossible de changer le statut.");
@@ -170,6 +170,8 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
           isDriverMode={true}
           onToggleDriverMode={onToggleDriverMode}
           subtitle="Statut chauffeur"
+          amountLabel="Gains du jour"
+          amountValue={0}
           location="Conakry"
         />
         <div className="px-4 mt-6">
