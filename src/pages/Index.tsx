@@ -17,6 +17,7 @@ import { DriverEarningsView } from "@/components/views/DriverEarningsView";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -36,6 +37,7 @@ const Index = () => {
     rideId?: string | null;
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
+  const { requireAuth } = useAuthGuard();
 
   useEffect(() => {
     const t = setTimeout(() => setShowSplash(false), 4400);
@@ -43,6 +45,9 @@ const Index = () => {
   }, []);
 
   const handleAction = (action: string) => {
+    // "market" = browsing is allowed without account.
+    // Every other action requires authentication.
+    if (action !== "market" && !requireAuth()) return;
     switch (action) {
       case "moto":
         setBookingRide("moto");
@@ -69,6 +74,8 @@ const Index = () => {
   };
 
   const handleTabChange = (tab: string) => {
+    // Home tab is public; every other tab requires an account.
+    if (tab !== "home" && !requireAuth()) return;
     setActiveTab(tab);
     if (tab === "home") setActiveView("home");
     if (tab === "orders") setActiveView("orders");
@@ -102,7 +109,7 @@ const Index = () => {
         return (
           <UserHome
             onActionClick={handleAction}
-            onToggleDriverMode={() => setIsDriverMode(true)}
+            onToggleDriverMode={() => requireAuth(() => setIsDriverMode(true))}
           />
         );
     }
