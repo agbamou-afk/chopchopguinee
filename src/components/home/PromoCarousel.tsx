@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 const promos = [
   {
@@ -23,8 +24,34 @@ const promos = [
 ];
 
 export function PromoCarousel() {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    let paused = false;
+    const onEnter = () => (paused = true);
+    const onLeave = () => (paused = false);
+    el.addEventListener("pointerdown", onEnter);
+    el.addEventListener("pointerup", onLeave);
+    el.addEventListener("pointerleave", onLeave);
+    const id = setInterval(() => {
+      if (paused || !el) return;
+      const max = el.scrollWidth - el.clientWidth;
+      if (max <= 0) return;
+      const next = el.scrollLeft + 280;
+      el.scrollTo({ left: next >= max - 4 ? 0 : next, behavior: "smooth" });
+    }, 4200);
+    return () => {
+      clearInterval(id);
+      el.removeEventListener("pointerdown", onEnter);
+      el.removeEventListener("pointerup", onLeave);
+      el.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
+
   return (
-    <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+    <div ref={scrollerRef} className="overflow-x-auto scrollbar-hide -mx-4 px-4 scroll-smooth">
       <div className="flex gap-3" style={{ width: "max-content" }}>
         {promos.map((promo, index) => (
           <motion.div

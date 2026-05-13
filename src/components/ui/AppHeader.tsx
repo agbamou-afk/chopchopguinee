@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Bell, Menu, Wallet, ChevronRight, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing } from "lucide-react";
+import { Bell, Menu, Wallet, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing, MapPin, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,8 @@ interface AppHeaderProps {
   amountValue: number;
   notificationCount?: number;
   onAmountClick?: () => void;
+  location?: string;
+  onRecharge?: () => void;
 }
 
 export function AppHeader({
@@ -38,6 +40,8 @@ export function AppHeader({
   amountValue,
   notificationCount = 0,
   onAmountClick,
+  location = "Kaloum, Conakry",
+  onRecharge,
 }: AppHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -74,16 +78,9 @@ export function AppHeader({
 
   const formatted = formatGNF(amountValue);
 
-  // Driver mode keeps a distinct accent (gold/secondary tint), client mode stays neutral.
   const cardClass = isDriverMode
-    ? "bg-card rounded-3xl shadow-card px-5 pt-4 pb-5 border-2 border-secondary/40"
-    : "bg-card rounded-3xl shadow-card px-5 pt-4 pb-5";
-
-  const pillClass = isDriverMode
-    ? "flex items-center gap-2 bg-secondary/15 hover:bg-secondary/25 transition-colors rounded-2xl pl-3 pr-2 py-2"
-    : "flex items-center gap-2 bg-primary/10 hover:bg-primary/15 transition-colors rounded-2xl pl-3 pr-2 py-2";
-
-  const pillIconColor = isDriverMode ? "text-secondary" : "text-primary";
+    ? "relative overflow-hidden bg-card rounded-[28px] shadow-soft px-5 pt-4 pb-5 border border-secondary/30"
+    : "relative overflow-hidden bg-card rounded-[28px] shadow-soft px-5 pt-4 pb-5 border border-border/60";
   const avatarColor = isDriverMode ? "text-secondary" : "text-primary";
 
   const menuItems = [
@@ -100,6 +97,10 @@ export function AppHeader({
         animate={{ opacity: 1, y: 0 }}
         className={cardClass}
       >
+        {/* Soft brand wash — anchors the hero without competing with content */}
+        <div className="pointer-events-none absolute -top-24 -right-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -bottom-28 -left-16 w-56 h-56 rounded-full bg-secondary/10 blur-3xl" aria-hidden />
+
         <div className="flex items-center justify-between">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
@@ -188,7 +189,7 @@ export function AppHeader({
             </SheetContent>
           </Sheet>
 
-          <img src={logo} alt="CHOP CHOP" className="h-20 w-auto object-contain" />
+          <img src={logo} alt="CHOP CHOP" className="h-16 w-auto object-contain" />
 
           <button
             className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors relative"
@@ -197,38 +198,67 @@ export function AppHeader({
           >
             <Bell className="w-6 h-6 text-foreground" />
             {totalBadge > 0 && (
-              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-destructive rounded-full text-[10px] font-bold text-destructive-foreground flex items-center justify-center">
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-destructive rounded-full text-[10px] font-bold text-destructive-foreground flex items-center justify-center badge-bounce">
                 {totalBadge > 9 ? "9+" : totalBadge}
               </span>
             )}
           </button>
         </div>
 
-        <div className="mt-4 flex items-center gap-3">
-          <div className={`w-14 h-14 rounded-full bg-muted flex items-center justify-center text-xl font-bold ${avatarColor} shrink-0`}>
+        {/* Greeting row */}
+        <div className="mt-4 flex items-center gap-3 relative">
+          <div className={`w-14 h-14 rounded-2xl bg-muted/70 flex items-center justify-center text-xl font-bold ${avatarColor} shrink-0 ring-1 ring-border/60`}>
             {userInitial}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-base font-bold text-foreground truncate">
-              Bonjour, {userName} ! 👋
+            <p className="text-[15px] font-bold text-foreground truncate leading-tight">
+              Bonjour, {userName} 👋
             </p>
-            <p className="text-sm text-muted-foreground truncate">
-              {subtitle ?? (isDriverMode ? "Prêt à prendre des courses ?" : "Prêt à vous déplacer ?")}
-            </p>
+            <button className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+              <MapPin className="w-3 h-3 text-primary" />
+              <span className="truncate max-w-[160px]">{location}</span>
+            </button>
           </div>
-          <button onClick={onAmountClick} className={pillClass}>
-            <Wallet className={`w-5 h-5 ${pillIconColor}`} />
-            <div className="text-left">
-              <p className="text-sm font-bold text-foreground leading-tight">
-                {formatted}
-              </p>
-              <p className="text-[10px] text-muted-foreground leading-tight">
-                {amountLabel}
-              </p>
-            </div>
-            <ChevronRight className={`w-4 h-4 ${pillIconColor}`} />
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-75 pulse-dot" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
+            </span>
+            <span className="text-[10px] font-medium text-muted-foreground">En ligne</span>
+          </div>
         </div>
+
+        {/* Wallet hero — green gradient, glass CTA, prominent balance */}
+        <motion.button
+          onClick={onAmountClick}
+          whileTap={{ scale: 0.985 }}
+          className="mt-4 w-full text-left rounded-2xl gradient-wallet text-primary-foreground p-4 relative overflow-hidden ring-glow-primary"
+        >
+          <div className="absolute inset-0 opacity-30 pointer-events-none">
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
+          </div>
+          <div className="flex items-center justify-between relative">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 opacity-90">
+                <Wallet className="w-4 h-4" />
+                <span className="text-[11px] uppercase tracking-wider">{amountLabel}</span>
+              </div>
+              <p className="text-2xl font-extrabold mt-1 leading-none truncate">{formatted}</p>
+              <p className="text-[11px] opacity-80 mt-1">Disponible · paiements sécurisés</p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRecharge?.();
+              }}
+              className="shrink-0 inline-flex items-center gap-1.5 glass-surface text-primary-foreground rounded-full pl-2.5 pr-3 py-1.5 text-xs font-semibold hover:bg-white/25 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Recharger
+            </button>
+          </div>
+        </motion.button>
       </motion.header>
     </div>
   );

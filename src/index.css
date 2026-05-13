@@ -178,3 +178,47 @@
     background: var(--gradient-primary);
   }
 }
+
+@layer utilities {
+  /* Hide scrollbars across the app for a premium, native feel */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Global: kill default scrollbar chrome on the page itself */
+  html, body { scrollbar-width: none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+
+  .gradient-wallet {
+    background:
+      radial-gradient(120% 120% at 0% 0%, hsl(138 70% 48% / 0.95) 0%, hsl(145 65% 32%) 60%, hsl(150 60% 22%) 100%);
+  }
+
+  .glass-surface {
+    background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%);
+    backdrop-filter: blur(8px);
+  }
+
+  .ring-glow-primary {
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.10), 0 10px 30px -10px hsl(var(--primary) / 0.45);
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.6); opacity: 0.4; }
+  }
+  .pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
+
+  @keyframes float-soft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+  }
+  .float-soft { animation: float-soft 4s ease-in-out infinite; }
+
+  @keyframes badge-bounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-2px) scale(1.08); }
+  }
+  .badge-bounce { animation: badge-bounce 1.6s ease-in-out infinite; }
+}

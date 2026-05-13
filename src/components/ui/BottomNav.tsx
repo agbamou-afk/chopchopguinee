@@ -49,9 +49,9 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
             <button
               onClick={onScanClick}
               aria-label="Scanner un QR CHOP CHOP"
-              className="-mt-8 w-16 h-16 rounded-full gradient-primary shadow-elevated ring-4 ring-card flex items-center justify-center active:scale-95 transition"
+              className="-mt-7 w-[58px] h-[58px] rounded-full bg-[hsl(145_55%_36%)] shadow-elevated ring-[6px] ring-card flex items-center justify-center active:scale-95 transition hover:shadow-soft"
             >
-              <ScanLine className="w-7 h-7 text-primary-foreground" />
+              <ScanLine className="w-6 h-6 text-primary-foreground" />
             </button>
           </div>
           {right.map((tab) => (
