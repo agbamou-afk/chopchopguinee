@@ -1345,6 +1345,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ride_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          direction: Database["public"]["Enums"]["rating_direction"]
+          id: string
+          ratee_id: string
+          rater_id: string
+          ride_id: string
+          score: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          direction: Database["public"]["Enums"]["rating_direction"]
+          id?: string
+          ratee_id: string
+          rater_id: string
+          ride_id: string
+          score: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          direction?: Database["public"]["Enums"]["rating_direction"]
+          id?: string
+          ratee_id?: string
+          rater_id?: string
+          ride_id?: string
+          score?: number
+        }
+        Relationships: []
+      }
       rides: {
         Row: {
           client_id: string
@@ -2374,6 +2407,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      ride_rate: {
+        Args: {
+          p_comment?: string
+          p_direction?: Database["public"]["Enums"]["rating_direction"]
+          p_ride_id: string
+          p_score: number
+        }
+        Returns: string
+      }
       ride_set_phase: {
         Args: { p_phase: string; p_ride_id: string }
         Returns: {
@@ -2778,6 +2820,7 @@ export type Database = {
         | "suppressed"
         | "skipped"
       party_type: "client" | "driver" | "merchant" | "agent" | "master"
+      rating_direction: "client_to_driver" | "driver_to_client"
       report_status: "open" | "reviewed" | "actioned" | "dismissed"
       ride_mode: "moto" | "toktok" | "food"
       ride_offer_status:
@@ -3011,6 +3054,7 @@ export const Constants = {
         "skipped",
       ],
       party_type: ["client", "driver", "merchant", "agent", "master"],
+      rating_direction: ["client_to_driver", "driver_to_client"],
       report_status: ["open", "reviewed", "actioned", "dismissed"],
       ride_mode: ["moto", "toktok", "food"],
       ride_offer_status: [
