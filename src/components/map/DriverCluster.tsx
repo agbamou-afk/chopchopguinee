@@ -11,8 +11,12 @@ export function DriverCluster({ variant = 'moto' as 'moto' | 'toktok' }) {
       if (alive && data) setRows(data as any);
     };
     load();
-    const channel = supabase.channel('driver-cluster').on('postgres_changes',
-      { event: '*', schema: 'public', table: 'driver_locations' }, load).subscribe();
+    const channel = supabase
+      .channel(`driver-cluster-${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'driver_locations' },
+        load)
+      .subscribe();
     return () => { alive = false; supabase.removeChannel(channel); };
   }, []);
   const data = { type: 'FeatureCollection' as const, features: rows.map(r => ({
