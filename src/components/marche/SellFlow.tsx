@@ -137,7 +137,7 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
   })();
 
   return (
-    <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
+    <div className="fixed inset-0 z-[60] bg-background overflow-y-auto">
       <div className="max-w-md mx-auto pb-28">
         <header className="sticky top-0 z-10 bg-background flex items-center gap-3 p-4 border-b">
           <button onClick={back} className="p-2 -ml-2 rounded-full hover:bg-muted">
@@ -312,7 +312,7 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
           )}
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-background border-t">
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-background border-t z-[70]">
           {step < 8 ? (
             <Button onClick={next} disabled={!canNext} className="w-full">
               Continuer <ChevronRight className="w-4 h-4 ml-1" />
