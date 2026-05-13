@@ -58,6 +58,9 @@ const DriverApply = lazy(() => import("./pages/DriverApply"));
 import PrivacySettings from "./pages/PrivacySettings";
 import OfflinePage from "./pages/Offline";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
+const FieldTestingPanel = lazy(() =>
+  import("./components/devtools/FieldTestingPanel").then(m => ({ default: m.FieldTestingPanel }))
+);
 
 const queryClient = new QueryClient();
 
@@ -93,6 +96,10 @@ const App = () => {
         <ProfileCompletionRedirect />
         <TopupNotificationsMount />
         <InstallPrompt />
+        {(import.meta.env.DEV ||
+          (typeof window !== "undefined" && /[?&]field=1/.test(window.location.search))) && (
+          <Suspense fallback={null}><FieldTestingPanel /></Suspense>
+        )}
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />

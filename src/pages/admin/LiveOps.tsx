@@ -1,8 +1,9 @@
 import { ModulePage } from "@/components/admin/ModulePage";
 import { StatGrid, StatusBadge, FilterChip } from "@/components/admin/AdminMock";
 import { Card } from "@/components/ui/card";
-import { Activity, Bike, Package, Clock, MapPin } from "lucide-react";
+import { Activity, Bike, Package, Clock } from "lucide-react";
 import { useState } from "react";
+import { AdminLiveOpsMap } from "@/components/admin/AdminLiveOpsMap";
 
 const RIDES = [
   { id: "CC-RD-9881", driver: "Amadou D.", from: "Kipé", to: "Kaloum", eta: "8 min", status: "active" },
@@ -22,13 +23,7 @@ export default function LiveOps() {
         { label: "En attente d'accept.", value: "9", icon: Clock, tone: "text-amber-600" },
         { label: "Retards", value: "3", icon: Activity, tone: "text-rose-600" },
       ]} />
-      <Card className="p-0 overflow-hidden h-64 relative bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center">
-        <div className="text-center">
-          <MapPin className="w-10 h-10 text-primary/40 mx-auto" />
-          <p className="text-sm text-muted-foreground mt-2">Carte temps réel — intégration en cours</p>
-          <p className="text-xs text-muted-foreground">342 chauffeurs visibles · Conakry & alentours</p>
-        </div>
-      </Card>
+      <AdminLiveOpsMap variant="moto" />
       <div className="flex gap-2 flex-wrap">
         {["Tous", "Moto", "TokTok", "Envoyer", "Repas", "Retards"].map((x) => (
           <FilterChip key={x} label={x} active={f === x} onClick={() => setF(x)} />

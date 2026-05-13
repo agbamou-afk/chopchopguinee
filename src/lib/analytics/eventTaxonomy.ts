@@ -114,6 +114,14 @@ export const EVENTS = {
   "saved_place.used": "map",
   "saved_place.deleted": "map",
 
+  // --- Day 6 perf + field testing ---
+  "map.perf.fps": "map",
+  "map.perf.degraded": "map",
+  "field.test.started": "map",
+  "field.test.checkpoint": "map",
+  "field.test.note": "map",
+  "field.test.completed": "map",
+
   // --- Agent (top-up vendor) ---
   "agent.topup.created": "agent",
   "agent.topup.confirmed": "agent",
