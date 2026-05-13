@@ -20,7 +20,7 @@ function key(o: LatLng, d: LatLng, mode: string) {
 }
 
 function track(name: string, meta: Record<string, unknown>) {
-  try { Analytics.track(name as any, meta); } catch {}
+  try { Analytics.track(name as any, { metadata: meta }); } catch {}
 }
 
 async function routeWithFallback(
