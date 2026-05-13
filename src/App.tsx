@@ -3,6 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import { SplashScreen } from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -38,11 +41,27 @@ import AuditAdmin from "./pages/admin/AuditAdmin";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return sessionStorage.getItem("cc_splash_shown") !== "1";
+  });
+
+  useEffect(() => {
+    if (!showSplash) return;
+    const t = setTimeout(() => {
+      setShowSplash(false);
+      try { sessionStorage.setItem("cc_splash_shown", "1"); } catch {}
+    }, 4400);
+    return () => clearTimeout(t);
+  }, [showSplash]);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AnimatePresence>{showSplash && <SplashScreen />}</AnimatePresence>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -83,6 +102,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
