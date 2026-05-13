@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Power, BellRing, Radar, Users, Star, TrendingUp, Timer } from "lucide-react";
+import { Power, BellRing, Radar, Users, Star, TrendingUp, Timer, AlertTriangle, Clock, ShieldCheck, FileWarning } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DriverDashboard } from "@/components/driver/DriverDashboard";
 import { IncomingRequestPopup, type IncomingRequest } from "@/components/driver/IncomingRequestPopup";
 import { DriverTripView } from "@/components/driver/DriverTripView";
@@ -10,6 +11,10 @@ import { Button } from "@/components/ui/button";
 import { LiveRidesPanel } from "@/components/driver/LiveRidesPanel";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { useWallet } from "@/hooks/useWallet";
+import { useDriverProfile } from "@/hooks/useDriverProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { formatGNF } from "@/lib/format";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
@@ -52,11 +57,40 @@ const mockOrders: IncomingRequest[] = [
 ];
 
 export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
-  const [isOnline, setIsOnline] = useState(true);
+  const navigate = useNavigate();
+  const { profile, loading: profileLoading, refetch } = useDriverProfile();
+  const [isOnline, setIsOnline] = useState(false);
+  const [toggling, setToggling] = useState(false);
   const [queue, setQueue] = useState<IncomingRequest[]>(mockOrders);
   const [current, setCurrent] = useState<IncomingRequest | null>(null);
   const [activeTrip, setActiveTrip] = useState<IncomingRequest | null>(null);
   const { available: driverBalance, loading: walletLoading } = useWallet("driver");
+
+  // Sync local toggle with persisted presence
+  useEffect(() => {
+    if (profile) setIsOnline(profile.presence !== "offline");
+  }, [profile?.presence]);
+
+  const cashOverLimit = !!profile && profile.cash_debt_gnf >= profile.debt_limit_gnf;
+
+  const handleTogglePresence = async () => {
+    if (!profile || toggling) return;
+    const next = isOnline ? "offline" : "online";
+    if (next === "online" && cashOverLimit) {
+      toast.error("Limite de cash atteinte. Réglez votre commission pour repasser en ligne.");
+      return;
+    }
+    setToggling(true);
+    const { error } = await supabase.rpc("driver_set_status", { p_status: next });
+    setToggling(false);
+    if (error) {
+      toast.error(error.message || "Impossible de changer le statut.");
+      return;
+    }
+    setIsOnline(next === "online");
+    refetch();
+    toast.success(next === "online" ? "Vous êtes en ligne." : "Vous êtes hors ligne.");
+  };
 
   // Auto-pop next request when online and idle
   useEffect(() => {
@@ -91,6 +125,76 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     setQueue((q) => q.slice(1));
   };
 
+  // Application/status gating UI
+  if (!profileLoading && (!profile || profile.status !== "approved")) {
+    const status = profile?.status;
+    const config = !profile
+      ? {
+          icon: ShieldCheck,
+          tone: "text-primary",
+          title: "Devenez chauffeur CHOP CHOP",
+          desc: "Soumettez votre dossier pour commencer à recevoir des courses.",
+          cta: "Commencer ma demande",
+          to: "/driver/apply",
+        }
+      : status === "pending"
+        ? {
+            icon: Clock,
+            tone: "text-amber-600",
+            title: "Demande en cours d'examen",
+            desc: "Notre équipe vérifie vos documents. Vous recevrez une notification dès la décision.",
+            cta: "Voir ma demande",
+            to: "/driver/apply",
+          }
+        : status === "rejected"
+          ? {
+              icon: FileWarning,
+              tone: "text-destructive",
+              title: "Demande refusée",
+              desc: profile?.rejected_reason || "Veuillez corriger votre dossier et réessayer.",
+              cta: "Refaire ma demande",
+              to: "/driver/apply",
+            }
+          : {
+              icon: AlertTriangle,
+              tone: "text-destructive",
+              title: "Compte chauffeur suspendu",
+              desc: profile?.suspended_reason || "Contactez le support pour plus d'informations.",
+              cta: "Contacter le support",
+              to: "/help",
+            };
+    const Icon = config.icon;
+    return (
+      <div className="max-w-md mx-auto">
+        <AppHeader
+          isDriverMode={true}
+          onToggleDriverMode={onToggleDriverMode}
+          subtitle="Statut chauffeur"
+          amountLabel="Gains du jour"
+          amountValue={0}
+          location="Conakry"
+        />
+        <div className="px-4 mt-6">
+          <Card className="p-6 text-center space-y-4">
+            <div className={`w-16 h-16 rounded-full bg-muted mx-auto flex items-center justify-center ${config.tone}`}>
+              <Icon className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-foreground">{config.title}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{config.desc}</p>
+            </div>
+            <Button className="w-full h-11 gradient-primary" onClick={() => navigate(config.to)}>
+              {config.cta}
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={onToggleDriverMode}>
+              Revenir en mode client
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto">
       <AppHeader
@@ -106,19 +210,32 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
 
       {/* Content */}
       <div className="px-4 mt-5 space-y-4">
+        {cashOverLimit && (
+          <Card className="p-4 border-destructive/40 bg-destructive/5 flex gap-3 items-start">
+            <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                Commission cash due : {formatGNF(profile!.cash_debt_gnf)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Vous avez atteint la limite ({formatGNF(profile!.debt_limit_gnf)}). Réglez pour repasser en ligne.
+              </p>
+            </div>
+          </Card>
+        )}
         <LiveStrip
           stats={[
             { icon: Users, label: `${queue.length} demandes proches`, bg: "bg-primary/10", tone: "text-primary" },
             { icon: Timer, label: "Temps moyen 12 min", bg: "bg-secondary/20", tone: "text-foreground" },
-            { icon: Star, label: "Note 4.9", bg: "bg-[hsl(45_90%_55%/0.14)]", tone: "text-[hsl(38_85%_40%)]" },
-            { icon: TrendingUp, label: "+18% cette semaine", bg: "bg-success/10", tone: "text-success" },
+            { icon: Star, label: `Note ${(profile?.rating ?? 0).toFixed(1)}`, bg: "bg-[hsl(45_90%_55%/0.14)]", tone: "text-[hsl(38_85%_40%)]" },
+            { icon: TrendingUp, label: `Acceptation ${Math.round((profile?.accept_rate ?? 0) * 100)}%`, bg: "bg-success/10", tone: "text-success" },
           ]}
         />
         {/* Online toggle — 3 states: Hors ligne / En ligne / Recherche */}
         {(() => {
           const searching = isOnline && !current && !activeTrip;
           const label = !isOnline
-            ? "Hors ligne — appuyez pour commencer"
+            ? toggling ? "Activation…" : "Hors ligne — appuyez pour commencer"
             : searching
               ? "Recherche de courses…"
               : "En ligne — course en cours";
@@ -130,8 +247,9 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
           return (
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={() => setIsOnline(!isOnline)}
-              className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl overflow-hidden ${tone} transition-colors`}
+              onClick={handleTogglePresence}
+              disabled={toggling}
+              className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl overflow-hidden ${tone} transition-colors disabled:opacity-60`}
             >
               {searching && (
                 <motion.span
