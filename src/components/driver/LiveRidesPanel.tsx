@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { formatGNF } from "@/lib/format";
 import { motion } from "framer-motion";
 import { MapPin, Loader2, CheckCircle2, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ type Ride = {
   created_at: string;
 };
 
-const fmt = (n: number) => new Intl.NumberFormat("fr-GN").format(Math.round(n));
+const fmt = (n: number) => formatGNF(Math.round(n));
 const MODE_LABEL: Record<Ride["mode"], string> = { moto: "Moto", toktok: "TokTok", food: "Repas" };
 
 export function LiveRidesPanel() {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { formatGNF } from "@/lib/format";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -241,7 +242,7 @@ export function DriverTripView({ request, onClose }: Props) {
               </div>
               <p className="font-semibold text-foreground">Course terminée</p>
               <p className="text-sm text-muted-foreground mb-4">
-                Gain : {new Intl.NumberFormat("fr-GN").format(request.estimatedPrice)} GNF
+                Gain : {formatGNF(request.estimatedPrice)}
               </p>
               <Button onClick={onClose} className="w-full h-12 gradient-primary">
                 Retour au tableau

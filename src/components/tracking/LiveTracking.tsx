@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { formatGNF } from "@/lib/format";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -161,7 +162,7 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
     return `${m}:${r.toString().padStart(2, "0")}`;
   };
 
-  const fmt = (n: number) => new Intl.NumberFormat("fr-GN").format(Math.round(n));
+  const fmt = (n: number) => formatGNF(Math.round(n));
 
   const handleScanResult = (text: string) => {
     const code = text.trim().toUpperCase();

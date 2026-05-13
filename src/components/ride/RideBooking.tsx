@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { formatGNF } from "@/lib/format";
 import { MapPin, Navigation, X, Bike, Car, Clock, CreditCard, Loader2, LocateFixed, CheckCircle2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -417,7 +418,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
           </div>
           <div className="text-right">
             <p className="text-lg font-bold text-foreground">
-              {new Intl.NumberFormat("fr-GN").format(Math.round(estimatedPrice))} GNF
+              {formatGNF(Math.round(estimatedPrice))} GNF
             </p>
             <p className="text-xs text-muted-foreground">{confirmed ? "Tarif confirmé" : "Estimation"}</p>
           </div>
@@ -448,7 +449,7 @@ export function RideBooking({ type, onClose, onBook }: RideBookingProps) {
             onClick={() => destCoords && onBook({ pickupCoords, destCoords, fare: estimatedPrice })}
             className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
           >
-            Réserver pour {new Intl.NumberFormat("fr-GN").format(Math.round(estimatedPrice))} GNF
+            Réserver pour {formatGNF(Math.round(estimatedPrice))} GNF
           </Button>
         )}
       </motion.div>

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { formatGNF } from "@/lib/format";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -47,7 +48,7 @@ const TX_LABEL: Record<string, string> = {
 };
 
 function formatMoney(amount: number) {
-  return new Intl.NumberFormat("fr-GN").format(Math.abs(amount));
+  return formatGNF(Math.abs(amount));
 }
 
 function formatDate(iso: string) {

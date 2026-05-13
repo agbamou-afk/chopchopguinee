@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatGNF } from "@/lib/format";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import {
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 
-const fmt = (n: number) => new Intl.NumberFormat("fr-GN").format(n);
+const fmt = (n: number) => formatGNF(n);
 
 type AgentInfo = {
   business_name: string;

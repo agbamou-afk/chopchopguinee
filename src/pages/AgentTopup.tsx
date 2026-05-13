@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatGNF } from "@/lib/format";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -30,7 +31,7 @@ type AgentInfo = {
   prepaid_float: number;
 };
 
-const fmt = (n: number) => new Intl.NumberFormat("fr-GN").format(n);
+const fmt = (n: number) => formatGNF(n);
 
 export default function AgentTopup() {
   const navigate = useNavigate();

@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { formatGNF } from "@/lib/format";
 import { MapPin, Navigation, Clock, Star, X, Check, Bike } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -124,7 +125,7 @@ export function IncomingRequestPopup({ request, onAccept, onDecline, timeoutSec 
                 <div className="bg-primary/10 rounded-xl py-2">
                   <p className="text-[10px] text-primary uppercase">Gain</p>
                   <p className="text-sm font-bold text-primary">
-                    {new Intl.NumberFormat("fr-GN").format(request.estimatedPrice)}
+                    {formatGNF(request.estimatedPrice)}
                   </p>
                 </div>
               </div>

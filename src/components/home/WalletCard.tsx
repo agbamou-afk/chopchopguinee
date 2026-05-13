@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { formatGNF } from "@/lib/format";
 import { Eye, EyeOff, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { useState } from "react";
 
@@ -13,7 +14,7 @@ export function WalletCard({ balance, currency = "GNF", onSend, onReceive }: Wal
   const [showBalance, setShowBalance] = useState(true);
 
   const formatBalance = (amount: number) => {
-    return new Intl.NumberFormat("fr-GN").format(amount);
+    return formatGNF(amount);
   };
 
   return (

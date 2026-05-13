@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatGNF } from "@/lib/format";
 import { ArrowLeft, Camera, X, ChevronRight, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -242,7 +243,7 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
                     onChange={(e) => setPrice(e.target.value.replace(/\D/g, ""))}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {price ? new Intl.NumberFormat("fr-GN").format(parseInt(price, 10)) + " GNF" : ""}
+                    {price ? formatGNF(parseInt(price, 10)) : ""}
                   </p>
                 </div>
               )}
@@ -297,7 +298,7 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
                   {priceMode === "free"
                     ? "Gratuit"
                     : price
-                    ? new Intl.NumberFormat("fr-GN").format(parseInt(price, 10)) + " GNF"
+                    ? formatGNF(parseInt(price, 10))
                     : "Prix à discuter"}
                   {priceMode === "negotiable" && <span className="ml-2 text-xs text-muted-foreground">Négociable</span>}
                 </p>

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { formatGNF } from "@/lib/format";
 import { Clock, MapPin, Navigation, Phone, MessageCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -26,7 +27,7 @@ export function DriverOrdersView() {
   });
 
   const formatMoney = (amount: number) =>
-    new Intl.NumberFormat("fr-GN").format(amount);
+    formatGNF(amount);
 
   const handleStatusUpdate = () => {
     if (!activeOrder) return;

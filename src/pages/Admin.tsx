@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatGNF } from "@/lib/format";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -228,7 +229,7 @@ function AgentsPanel({ agents, loading, onChanged }: { agents: AgentRow[]; loadi
   const [commission, setCommission] = useState("0.01");
   const [submitting, setSubmitting] = useState(false);
 
-  const fmt = (n: number) => new Intl.NumberFormat("fr-FR").format(n) + " GNF";
+  const fmt = (n: number) => formatGNF(n);
 
   const create = async () => {
     setSubmitting(true);

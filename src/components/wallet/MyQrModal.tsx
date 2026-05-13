@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatGNF } from "@/lib/format";
 import { QRCodeSVG } from "qrcode.react";
 import { Loader2, ShieldCheck, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -138,7 +139,7 @@ export function MyQrModal({ open, onClose, userId, phone }: MyQrModalProps) {
                 <p className="text-xs text-muted-foreground text-center mb-3">
                   Recharge de{" "}
                   <span className="font-semibold text-foreground">
-                    {new Intl.NumberFormat("fr-GN").format(pending.amount_gnf)} GNF
+                    {formatGNF(pending.amount_gnf)}
                   </span>
                   . Donnez ce code à l'agent <strong>uniquement après</strong> avoir remis
                   l'argent.

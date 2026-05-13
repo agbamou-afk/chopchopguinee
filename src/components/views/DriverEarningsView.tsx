@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { formatGNF } from "@/lib/format";
 import { TrendingUp, Calendar, Download, ChevronRight, Bike, UtensilsCrossed, Package } from "lucide-react";
 
 const weeklyData = [
@@ -54,7 +55,7 @@ const typeIcons = {
 
 export function DriverEarningsView() {
   const formatMoney = (amount: number) =>
-    new Intl.NumberFormat("fr-GN").format(amount);
+    formatGNF(amount);
 
   const totalWeekly = weeklyData.reduce((sum, d) => sum + d.amount, 0);
   const maxAmount = Math.max(...weeklyData.map((d) => d.amount));

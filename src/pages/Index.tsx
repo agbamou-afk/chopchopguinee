@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatGNF } from "@/lib/format";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
 import { UserHome } from "@/components/views/UserHome";
@@ -186,7 +187,7 @@ const Index = () => {
               setBookingRide(null);
               toast({
                 title: "Fonds réservés",
-                description: `${new Intl.NumberFormat("fr-GN").format(holdAmount)} GNF bloqués jusqu'à la fin de course.`,
+                description: `${formatGNF(holdAmount)} bloqués jusqu'à la fin de course.`,
               });
             }}
           />
