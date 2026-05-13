@@ -179,7 +179,15 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
               <h2 className="text-lg font-bold text-foreground">{config.title}</h2>
               <p className="text-sm text-muted-foreground mt-1">{config.desc}</p>
             </div>
-            <Button className="w-full h-11 gradient-primary" onClick={() => navigate(config.to)}>
+            <Button
+              className="w-full h-11 gradient-primary"
+              onClick={() => {
+                if (config.to === "/help") {
+                  Analytics.track("driver.support.opened", { metadata: { from_status: status ?? "none" } });
+                }
+                navigate(config.to);
+              }}
+            >
               {config.cta}
             </Button>
             <Button variant="ghost" className="w-full" onClick={onToggleDriverMode}>
