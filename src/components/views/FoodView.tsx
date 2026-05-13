@@ -1,9 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, Timer, Star, Flame } from "lucide-react";
 import { useMemo, useState } from "react";
 import { FoodCategories } from "@/components/food/FoodCategories";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { RestaurantDetail, type Restaurant } from "@/components/food/RestaurantDetail";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { LiveStrip } from "@/components/ui/LiveStrip";
 
 interface FoodViewProps {
   onBack: () => void;
@@ -105,33 +107,34 @@ export function FoodView({ onBack }: FoodViewProps) {
 
   return (
     <div className="max-w-md mx-auto">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-card px-4 pt-6 pb-4 sticky top-0 z-40"
-      >
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <h1 className="text-xl font-bold text-foreground">Commander un repas</h1>
-        </div>
+      <ScreenHeader
+        title="Commander un repas"
+        subtitle="Restaurants populaires à Conakry"
+        onBack={onBack}
+      />
 
-        {/* Search */}
-        <div className="flex items-center gap-3 bg-muted rounded-xl px-4 py-3 mb-4">
-          <Search className="w-5 h-5 text-muted-foreground" />
+      <div className="px-4 mt-3 space-y-3">
+        {/* Search — premium soft style */}
+        <div className="h-14 flex items-center gap-3 px-4 bg-card rounded-2xl shadow-soft border border-border/60">
+          <div className="w-9 h-9 rounded-xl bg-[hsl(8_78%_55%/0.12)] flex items-center justify-center">
+            <Search className="w-4 h-4 text-[hsl(8_78%_45%)]" />
+          </div>
           <input
             type="text"
-            placeholder="Rechercher un restaurant..."
+            placeholder="Rechercher un restaurant…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 bg-transparent placeholder:text-muted-foreground focus:outline-none text-sm text-foreground"
           />
         </div>
+
+        <LiveStrip
+          stats={[
+            { icon: Timer, label: "Livraison en 15 min", bg: "bg-[hsl(8_78%_55%/0.12)]", tone: "text-[hsl(8_78%_45%)]" },
+            { icon: Flame, label: "Tendance ce soir", bg: "bg-secondary/20", tone: "text-foreground" },
+            { icon: Star, label: "Restaurants notés 4.5+", bg: "bg-primary/10", tone: "text-primary" },
+          ]}
+        />
 
         {/* Categories */}
         <FoodCategories
@@ -140,7 +143,7 @@ export function FoodView({ onBack }: FoodViewProps) {
         />
 
         {/* Sort */}
-        <div className="flex items-center gap-2 mt-3 overflow-x-auto scrollbar-none -mx-4 px-4">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
           <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
             <SlidersHorizontal className="w-3.5 h-3.5" /> Trier :
           </span>
@@ -152,20 +155,20 @@ export function FoodView({ onBack }: FoodViewProps) {
             <button
               key={k}
               onClick={() => setSort(k)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition ${
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                 sort === k
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
+                  ? "gradient-wallet text-primary-foreground"
+                  : "bg-card border border-border text-muted-foreground"
               }`}
             >
               {label}
             </button>
           ))}
         </div>
-      </motion.header>
+      </div>
 
       {/* Restaurant list */}
-      <div className="px-4 pt-2 pb-6">
+      <div className="px-4 pt-4 pb-6">
         <div className="grid grid-cols-2 gap-3">
           {visible.map((restaurant, index) => (
               <motion.div
