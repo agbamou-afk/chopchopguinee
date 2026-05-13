@@ -2,7 +2,7 @@ const BANNERS = [
   { title: "Livraison disponible avec CHOP CHOP", sub: "Faites livrer vos achats partout à Conakry", grad: "from-emerald-500 to-emerald-700" },
   { title: "Trouvez des offres près de vous", sub: "Annonces de votre quartier", grad: "from-amber-500 to-orange-600" },
   { title: "Achetez et faites livrer rapidement", sub: "Pickup + Delivery en un clic", grad: "from-sky-500 to-indigo-600" },
-  { title: "Nouveaux vendeurs vérifiés", sx: "Marchands de confiance", grad: "from-rose-500 to-pink-600" },
+  { title: "Nouveaux vendeurs vérifiés", sub: "Marchands de confiance", grad: "from-rose-500 to-pink-600" },
 ] as const;
 
 export function FeaturedBanners() {
