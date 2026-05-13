@@ -46,8 +46,10 @@ export const MARCHE_CATEGORIES: MarcheCategory[] = [
 export const categoryLabel = (id: string) =>
   MARCHE_CATEGORIES.find((c) => c.id === id)?.label ?? id;
 
+import { formatGNF as fmtGNF } from "@/lib/format";
+
 export const formatGNF = (amount: number | null | undefined) =>
-  amount == null ? "Prix à discuter" : `${new Intl.NumberFormat("fr-GN").format(amount)} GNF`;
+  amount == null ? "Prix à discuter" : fmtGNF(amount);
 
 export const timeAgo = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
