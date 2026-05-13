@@ -12,10 +12,12 @@ export type CommandIntent =
   | "food"
   | "market"
   | "send"
+  | "parcel"
   | "scan"
   | "wallet"
   | "support"
   | "orders"
+  | "admin"
   | "navigate";
 
 export type CommandGroup =
@@ -25,6 +27,7 @@ export type CommandGroup =
   | "repas"
   | "lieux"
   | "aide"
+  | "admin"
   | "compte";
 
 export interface CommandResult {
@@ -65,11 +68,13 @@ const SYNONYMS: Array<{ words: string[]; intent: CommandIntent; weight: number }
   { intent: "moto", weight: 2, words: ["taxi", "course", "trajet", "ride"] },
   { intent: "food", weight: 1, words: ["food", "repas", "manger", "eat", "restaurant", "resto", "diner", "déjeuner", "petit dej", "à manger"] },
   { intent: "market", weight: 1, words: ["market", "marche", "marché", "shopping", "annonce", "annonces", "boutique", "produit", "produits"] },
-  { intent: "send", weight: 1, words: ["send", "envoyer", "envoi", "transfer", "transfert", "virement", "argent", "money"] },
+  { intent: "send", weight: 1, words: ["send", "envoyer", "envoi", "transfer", "transfert", "virement", "argent", "money", "p2p"] },
+  { intent: "parcel", weight: 1, words: ["colis", "parcel", "package", "livrer", "livraison colis", "envoi colis", "paquet", "courrier", "pli"] },
   { intent: "wallet", weight: 1, words: ["wallet", "portefeuille", "solde", "balance", "recharge", "recharger", "topup", "top-up", "top up", "credit", "crédit"] },
   { intent: "scan", weight: 1, words: ["scan", "scanner", "qr", "code"] },
   { intent: "support", weight: 1, words: ["help", "aide", "support", "probleme", "problème", "bug", "plainte", "reclamation", "réclamation", "contact"] },
   { intent: "orders", weight: 1, words: ["order", "orders", "commande", "commandes", "where is", "ou est", "où est", "suivi", "tracking", "livraison"] },
+  { intent: "admin", weight: 1, words: ["admin", "administration", "dashboard", "tableau de bord", "console", "back office", "backoffice", "ops", "operations", "opérations"] },
 ];
 
 function normalize(s: string): string {
@@ -125,6 +130,7 @@ const G = {
   lieux: "Lieux",
   aide: "Aide",
   compte: "Compte",
+  admin: "Administration",
 } as const;
 
 function svc(
@@ -148,14 +154,18 @@ function svc(
 }
 
 /** Default suggestions shown before the user types anything. */
-export function defaultSuggestions(): CommandResult[] {
-  return [
+export function defaultSuggestions(opts: { isAdmin?: boolean } = {}): CommandResult[] {
+  const base: CommandResult[] = [
     svc("moto", "Commander une Moto", "Course rapide en ville", "quick", 0),
-    svc("send", "Envoyer un colis", "Livraison entre quartiers", "quick", 1),
+    svc("parcel", "Envoyer un colis", "Livraison entre quartiers", "quick", 1),
     svc("food", "Commander un repas", "Cuisine locale et restaurants", "quick", 2),
     svc("market", "Rechercher dans Marché", "Annonces et services près de vous", "quick", 3),
     svc("wallet", "Recharger mon portefeuille", "Top-up via agent ou mobile money", "quick", 4),
   ];
+  if (opts.isAdmin) {
+    base.push(svc("admin", "Console Administration", "Tableau de bord, opérations, finances", "admin", 5, "/admin"));
+  }
+  return base;
 }
 
 /**
@@ -163,9 +173,9 @@ export function defaultSuggestions(): CommandResult[] {
  * Returns an empty array when the query doesn't match anything locally —
  * caller may then fall back to the AI router.
  */
-export function routeQuery(rawQuery: string): CommandResult[] {
+export function routeQuery(rawQuery: string, opts: { isAdmin?: boolean } = {}): CommandResult[] {
   const q = normalize(rawQuery);
-  if (!q) return defaultSuggestions();
+  if (!q) return defaultSuggestions(opts);
 
   const loc = detectLocation(q);
   const intents = detectIntents(q);
@@ -233,10 +243,23 @@ export function routeQuery(rawQuery: string): CommandResult[] {
     results.push(
       svc(
         "send",
-        loc ? `Envoyer vers ${loc.label}` : "Envoyer de l'argent ou un colis",
-        "Transferts internes en GNF",
+        loc ? `Envoyer de l'argent vers ${loc.label}` : "Envoyer de l'argent",
+        "Transferts P2P en GNF",
         "compte",
         0,
+        loc?.label,
+      ),
+    );
+  }
+
+  if (seen.has("parcel")) {
+    results.push(
+      svc(
+        "parcel",
+        loc ? `Livrer un colis à ${loc.label}` : "Envoyer un colis",
+        "Coursier moto entre quartiers",
+        "services",
+        2,
         loc?.label,
       ),
     );
@@ -258,6 +281,15 @@ export function routeQuery(rawQuery: string): CommandResult[] {
     results.push(svc("support", "Centre d'aide", "FAQ et contacter l'équipe", "aide", 0));
   }
 
+  // -- Admin shortcuts (only surfaced for users with admin role)
+  if (opts.isAdmin && seen.has("admin")) {
+    results.push(
+      svc("admin", "Console Administration", "Tableau de bord global", "admin", 0, "/admin"),
+      svc("admin", "Portefeuilles & finances", "Recharges, transactions, audit", "admin", 1, "/admin/wallets"),
+      svc("admin", "Utilisateurs", "Comptes, rôles, KYC", "admin", 2, "/admin/users"),
+    );
+  }
+
   // -- Location-only query (no service detected) → propose service options
   if (loc && intents.length === 0) {
     results.push(
@@ -277,7 +309,7 @@ export function routeQuery(rawQuery: string): CommandResult[] {
 }
 
 /** Group results by section, preserving group order. */
-const GROUP_ORDER: CommandGroup[] = ["quick", "services", "repas", "marche", "compte", "lieux", "aide"];
+const GROUP_ORDER: CommandGroup[] = ["quick", "services", "repas", "marche", "compte", "lieux", "admin", "aide"];
 
 export function groupResults(results: CommandResult[]): Array<{ group: CommandGroup; label: string; items: CommandResult[] }> {
   const map = new Map<CommandGroup, CommandResult[]>();

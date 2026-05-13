@@ -81,6 +81,11 @@ const Index = () => {
         setActiveView("wallet");
         setActiveTab("wallet");
         break;
+      case "parcel":
+        // Parcel delivery shares the moto coursier flow for now.
+        setBookingDestination(params?.destination);
+        setBookingRide("moto");
+        break;
       case "scan":
         setShowScanner(true);
         break;
