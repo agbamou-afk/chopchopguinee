@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { notifications as notif } from "@/lib/notifications";
+import { useNavigate } from "react-router-dom";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -28,6 +29,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [activeView, setActiveView] = useState<ActiveView>("home");
   const [bookingRide, setBookingRide] = useState<RideType>(null);
+  const [bookingDestination, setBookingDestination] = useState<string | undefined>(undefined);
   const [activeTrip, setActiveTrip] = useState<{
     mode: TrackingMode;
     pickupCoords: [number, number];
@@ -38,16 +40,19 @@ const Index = () => {
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const { requireAuth } = useAuthGuard();
+  const navigate = useNavigate();
 
-  const handleAction = (action: string) => {
+  const handleAction = (action: string, params?: { destination?: string }) => {
     // "market" = browsing is allowed without account.
     // Every other action requires authentication.
     if (action !== "market" && !requireAuth()) return;
     switch (action) {
       case "moto":
+        setBookingDestination(params?.destination);
         setBookingRide("moto");
         break;
       case "toktok":
+        setBookingDestination(params?.destination);
         setBookingRide("toktok");
         break;
       case "food":
@@ -57,11 +62,19 @@ const Index = () => {
         setActiveView("market");
         break;
       case "send":
+      case "wallet":
         setActiveView("wallet");
         setActiveTab("wallet");
         break;
       case "scan":
         setShowScanner(true);
+        break;
+      case "orders":
+        setActiveView("orders");
+        setActiveTab("orders");
+        break;
+      case "support":
+        navigate("/help");
         break;
       default:
         break;
@@ -140,7 +153,11 @@ const Index = () => {
         {bookingRide && (
           <RideBooking
             type={bookingRide}
-            onClose={() => setBookingRide(null)}
+            initialDestination={bookingDestination}
+            onClose={() => {
+              setBookingRide(null);
+              setBookingDestination(undefined);
+            }}
             onBook={async (trip) => {
               const { data: sess } = await supabase.auth.getSession();
               if (!sess.session) {
