@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Activity, Users, Bike, Store, Wallet, Coins, Tag,
   ClipboardList, UtensilsCrossed, ShoppingBag, LifeBuoy, ShieldAlert,
   MessageSquare, Megaphone, BarChart3, MapPin, ToggleLeft, Settings,
-  UserCog, ScrollText, Sparkles,
+  UserCog, ScrollText, Sparkles, Scale,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -40,6 +40,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
     items: [
       { title: "Agents de recharge", url: "/admin/vendors", icon: Coins, module: "vendors" },
       { title: "Wallet / Ledger", url: "/admin/wallet", icon: Wallet, module: "wallet" },
+      { title: "Réconciliation OM", url: "/admin/wallet/reconciliation", icon: Scale, module: "wallet" },
       { title: "Tarification", url: "/admin/pricing", icon: Tag, module: "pricing" },
       { title: "Rapports", url: "/admin/reports", icon: BarChart3, module: "reports" },
       { title: "Analytique IA", url: "/admin/analytics", icon: Sparkles, module: "analytics" },
