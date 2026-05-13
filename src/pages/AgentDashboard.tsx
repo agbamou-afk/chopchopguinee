@@ -69,7 +69,7 @@ export default function AgentDashboard() {
       balance_gnf: w?.balance_gnf ?? 0,
     });
     const { data: t } = await supabase
-      .from("topup_requests")
+      .from("agent_topup_requests")
       .select("id, reference, amount_gnf, status, created_at, client_user_id")
       .eq("agent_user_id", uid)
       .order("created_at", { ascending: false })

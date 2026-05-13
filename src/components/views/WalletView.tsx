@@ -94,7 +94,7 @@ export function WalletView() {
   }
 
   const available = wallet ? wallet.balance_gnf - wallet.held_gnf : 0;
-  const needsPin = !profile?.pin_hash;
+  const needsPin = !profile?.has_pin;
 
   const onAction = (id: ActionId) => {
     if (id === "scan" || id === "add" || id === "receive") setQrOpen(true);
