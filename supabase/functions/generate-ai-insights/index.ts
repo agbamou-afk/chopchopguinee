@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}))
   const days = Math.min(Math.max(Number(body?.days ?? 7), 1), 30)
 
-  const { data: summary, error: sumErr } = await admin.rpc('analytics_summary', {
+  const { data: summary, error: sumErr } = await userClient.rpc('analytics_summary', {
     p_days: days,
   })
   if (sumErr) return jsonResponse({ error: sumErr.message }, 500)
