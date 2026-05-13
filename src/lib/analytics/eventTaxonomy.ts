@@ -86,6 +86,13 @@ export const EVENTS = {
   "driver.ride.accepted": "driver",
   "driver.ride.declined": "driver",
   "driver.ride.completed": "driver",
+  "driver.application.step": "driver",
+  "driver.application.submitted": "driver",
+  "driver.application.approved": "driver",
+  "driver.application.rejected": "driver",
+  "driver.cash.over_limit": "driver",
+  "driver.cash.settle.requested": "driver",
+  "driver.support.opened": "driver",
 
   // --- Agent (top-up vendor) ---
   "agent.topup.created": "agent",
