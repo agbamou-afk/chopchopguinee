@@ -64,12 +64,14 @@ const GROUPS: { label: string; items: Item[] }[] = [
 ];
 
 export function AdminSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const { can } = useAdminAuth();
   const isActive = (url: string) =>
     url === "/admin" ? pathname === "/admin" : pathname === url || pathname.startsWith(url + "/");
+
+  const handleNav = () => { if (isMobile) setOpenMobile(false); };
 
   return (
     <Sidebar collapsible="icon">
@@ -85,7 +87,7 @@ export function AdminSidebar() {
                   {visible.map((item) => (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                        <NavLink to={item.url} className="flex items-center gap-2">
+                        <NavLink to={item.url} onClick={handleNav} className="flex items-center gap-2">
                           <item.icon className="h-4 w-4" />
                           {!collapsed && <span>{item.title}</span>}
                         </NavLink>

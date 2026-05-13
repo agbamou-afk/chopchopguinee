@@ -42,7 +42,7 @@ export function AdminLayout() {
                 </Button>
               </div>
             </header>
-            <main className="flex-1 p-4 md:p-6 overflow-auto">
+            <main className="flex-1 p-4 md:p-6 overflow-auto scrollbar-hide scroll-smooth">
               <Outlet />
             </main>
           </div>
