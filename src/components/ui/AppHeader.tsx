@@ -150,7 +150,7 @@ export function AppHeader({
               <SheetHeader>
                 <SheetTitle className="sr-only">Menu CHOP CHOP</SheetTitle>
                 <div className="flex flex-col items-center gap-2 pt-2">
-                  <img loading="lazy" decoding="async" src={logo} alt="CHOP CHOP" className="h-24 w-auto object-contain" />
+                  <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="CHOP CHOP" className="h-24 w-auto object-contain" />
                   <p className="text-xs font-medium text-muted-foreground italic">
                     Tout, Part Tout, Pour Tout
                   </p>
@@ -224,7 +224,7 @@ export function AppHeader({
             </SheetContent>
           </Sheet>
 
-          <img loading="lazy" decoding="async" src={logo} alt="CHOP CHOP" className="h-16 w-auto object-contain mix-blend-multiply dark:mix-blend-screen" />
+          <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="CHOP CHOP" className="h-16 w-auto object-contain mix-blend-multiply dark:mix-blend-screen" />
 
           <button
             className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors relative"
