@@ -31,6 +31,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { TopUpOrangeMoney } from "@/components/wallet/TopUpOrangeMoney";
+import { useMemo } from "react";
 
 type ActionId = "send" | "receive" | "scan" | "add";
 
@@ -81,6 +82,20 @@ export function WalletView() {
   const { userId, wallet, transactions, profile, loading } = useWallet();
   const [qrOpen, setQrOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterRange, setFilterRange] = useState<"all" | "7d" | "30d">("all");
+
+  const filteredTransactions = useMemo(() => {
+    const now = Date.now();
+    return transactions.filter((tx) => {
+      if (filterType !== "all" && tx.type !== filterType) return false;
+      if (filterRange !== "all") {
+        const cutoff = filterRange === "7d" ? 7 : 30;
+        if (now - new Date(tx.created_at).getTime() > cutoff * 86400000) return false;
+      }
+      return true;
+    });
+  }, [transactions, filterType, filterRange]);
 
   if (loading) {
     return (
@@ -224,11 +239,55 @@ export function WalletView() {
           </button>
         </div>
 
-        {transactions.length === 0 ? (
+        {/* Filters */}
+        <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide -mx-4 px-4">
+          {[
+            { v: "all", l: "Tous" },
+            { v: "topup", l: "Recharges" },
+            { v: "payment", l: "Paiements" },
+            { v: "refund", l: "Remboursements" },
+            { v: "transfer", l: "Transferts" },
+            { v: "adjustment", l: "Ajustements" },
+          ].map((o) => (
+            <button
+              key={o.v}
+              onClick={() => setFilterType(o.v)}
+              className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition ${
+                filterType === o.v
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-foreground border-border hover:bg-muted"
+              }`}
+            >
+              {o.l}
+            </button>
+          ))}
+          <div className="w-px bg-border mx-1" />
+          {[
+            { v: "all", l: "Tout" },
+            { v: "7d", l: "7j" },
+            { v: "30d", l: "30j" },
+          ].map((o) => (
+            <button
+              key={o.v}
+              onClick={() => setFilterRange(o.v as any)}
+              className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition ${
+                filterRange === o.v
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-foreground border-border hover:bg-muted"
+              }`}
+            >
+              {o.l}
+            </button>
+          ))}
+        </div>
+
+        {filteredTransactions.length === 0 ? (
           <div className="bg-card rounded-2xl p-8 text-center shadow-card">
             <CreditCard className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">
-              Aucune transaction pour le moment
+              {transactions.length === 0
+                ? "Aucune transaction pour le moment"
+                : "Aucune transaction pour ce filtre"}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Rechargez votre portefeuille chez un agent CHOP CHOP
@@ -236,7 +295,7 @@ export function WalletView() {
           </div>
         ) : (
           <div className="space-y-3">
-            {transactions.map((tx, index) => {
+            {filteredTransactions.map((tx, index) => {
               const dir = wallet ? txDirection(tx, wallet.id) : "out";
               return (
                 <motion.div

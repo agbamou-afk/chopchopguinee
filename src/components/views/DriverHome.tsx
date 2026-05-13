@@ -56,7 +56,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   const [queue, setQueue] = useState<IncomingRequest[]>(mockOrders);
   const [current, setCurrent] = useState<IncomingRequest | null>(null);
   const [activeTrip, setActiveTrip] = useState<IncomingRequest | null>(null);
-  const { available: driverBalance } = useWallet("driver");
+  const { available: driverBalance, loading: walletLoading } = useWallet("driver");
 
   // Auto-pop next request when online and idle
   useEffect(() => {
@@ -99,6 +99,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         subtitle="Tableau de bord chauffeur"
         amountLabel="Gains du jour"
         amountValue={driverBalance}
+        amountLoading={walletLoading}
         notificationCount={queue.length + (current ? 1 : 0)}
         location="Conakry, en service"
       />

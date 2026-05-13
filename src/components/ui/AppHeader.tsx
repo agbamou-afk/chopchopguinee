@@ -24,6 +24,7 @@ interface AppHeaderProps {
   subtitle?: string;
   amountLabel: string;
   amountValue: number;
+  amountLoading?: boolean;
   notificationCount?: number;
   onAmountClick?: () => void;
   location?: string;
@@ -38,6 +39,7 @@ export function AppHeader({
   subtitle,
   amountLabel,
   amountValue,
+  amountLoading = false,
   notificationCount = 0,
   onAmountClick,
   location = "Kaloum, Conakry",
@@ -285,7 +287,11 @@ export function AppHeader({
                 <Wallet className="w-4 h-4" />
                 <span className="text-[11px] uppercase tracking-wider">{amountLabel}</span>
               </div>
-              <p className="text-2xl font-extrabold mt-1 leading-none truncate">{formatted}</p>
+              {amountLoading ? (
+                <div className="mt-1 h-7 w-32 rounded bg-white/20 animate-pulse" aria-label="Chargement du solde" />
+              ) : (
+                <p className="text-2xl font-extrabold mt-1 leading-none truncate">{formatted}</p>
+              )}
               <p className="text-[11px] opacity-80 mt-1">Disponible · paiements sécurisés</p>
             </div>
             <button
