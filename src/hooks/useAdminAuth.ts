@@ -29,25 +29,28 @@ export function useAdminAuth() {
         setState({ ready: true, user: null, role: null });
         return;
       }
-      // Mark ready immediately with the user; resolve role afterward so the UI
-      // never gets stuck on the spinner if the role query is slow/blocked.
-      setState({
-        ready: true,
-        user: { id: session.user.id, email: session.user.email ?? null },
-        role: null,
-      });
+      let role: AdminRole | null = null;
       try {
-        const { data } = await supabase
+        const queryPromise = supabase
           .from("admin_users")
           .select("admin_role,status")
           .eq("user_id", session.user.id)
           .eq("status", "active")
           .maybeSingle();
-        if (!active) return;
-        setState((s) => ({ ...s, role: (data?.admin_role as AdminRole) ?? null }));
+        const res: any = await Promise.race([
+          queryPromise,
+          new Promise((resolve) => setTimeout(() => resolve({ data: null }), 4000)),
+        ]);
+        role = (res?.data?.admin_role as AdminRole) ?? null;
       } catch {
-        /* keep role null */
+        role = null;
       }
+      if (!active) return;
+      setState({
+        ready: true,
+        user: { id: session.user.id, email: session.user.email ?? null },
+        role,
+      });
     };
     load();
     const { data: sub } = supabase.auth.onAuthStateChange(() => load());
