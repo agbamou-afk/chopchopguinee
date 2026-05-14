@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Power, BellRing, Radar, Users, Star, TrendingUp, Timer, AlertTriangle, Clock, ShieldCheck, FileWarning } from "lucide-react";
+import { Power, BellRing, Radar, Users, Star, TrendingUp, Timer, AlertTriangle, Clock, ShieldCheck, FileWarning, Wallet, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DriverDashboard } from "@/components/driver/DriverDashboard";
@@ -15,6 +15,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
 import { useDriverPresence } from "@/hooks/useDriverPresence";
 import { useIncomingOffers, type RideOffer } from "@/hooks/useIncomingOffers";
+import { useDriverEarnings } from "@/hooks/useDriverEarnings";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { formatGNF } from "@/lib/format";
@@ -50,6 +51,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   const { available: driverBalance, loading: walletLoading } = useWallet("driver");
   const { offers, refetch: refetchOffers } = useIncomingOffers(isOnline);
   const queue = offers.map(offerToRequest);
+  const e = useDriverEarnings();
 
   useDriverPresence({ enabled: isOnline, onTrip: !!activeTrip });
 
@@ -274,10 +276,11 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         })()}
 
         <DriverDashboard
-          todayEarnings={185000}
-          weeklyEarnings={1250000}
-          completedRides={12}
+          todayEarnings={e.todayGnf}
+          weeklyEarnings={e.weekGnf}
+          completedRides={e.completedToday}
           onlineHours={6}
+          acceptRate={profile?.accept_rate ?? 0.94}
         />
 
         <LiveRidesPanel />

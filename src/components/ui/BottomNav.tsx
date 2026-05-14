@@ -18,7 +18,6 @@ const userTabs = [
 const driverTabs = [
   { id: "home", icon: Home, label: "Tableau" },
   { id: "orders", icon: Car, label: "Courses" },
-  { id: "wallet", icon: Wallet, label: "Gains" },
   { id: "profile", icon: User, label: "Profil" },
 ];
 
@@ -31,7 +30,7 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-50 shadow-elevated">
       {isDriverMode ? (
-        <div className="max-w-md mx-auto grid grid-cols-4 items-center relative">
+        <div className="max-w-md mx-auto grid grid-cols-3 items-center relative">
           {tabs.map((tab) => (
             <div key={tab.id} className="flex justify-center">
               <NavButton tab={tab} active={activeTab === tab.id} onClick={() => onTabChange(tab.id)} />
