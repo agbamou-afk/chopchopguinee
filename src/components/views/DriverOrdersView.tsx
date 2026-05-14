@@ -7,7 +7,10 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { IncomingRequestPopup } from "@/components/driver/IncomingRequestPopup";
 
 export function DriverOrdersView() {
-  const { queue, current, accept, decline, showCurrent, isOnline, activeTrip } = useDriverSession();
+  const { queue, current, currentExpiresAt, accept, decline, showCurrent, isOnline, activeTrip } = useDriverSession();
+  const offerTimeoutSec = currentExpiresAt
+    ? Math.max(1, Math.ceil((new Date(currentExpiresAt).getTime() - Date.now()) / 1000))
+    : 20;
 
   return (
     <div className="max-w-md mx-auto">
@@ -110,7 +113,7 @@ export function DriverOrdersView() {
         request={current}
         onAccept={accept}
         onDecline={decline}
-        timeoutSec={20}
+        timeoutSec={offerTimeoutSec}
       />
     </div>
   );
