@@ -356,6 +356,12 @@ export default function Auth() {
               disabled={busy}
               onClick={async () => {
                 setBusy(true);
+                // Clean any prior session/state so the next demo account starts fresh.
+                try { await supabase.auth.signOut({ scope: "local" }); } catch { /* noop */ }
+                try {
+                  sessionStorage.removeItem("cc_driver_mode");
+                  localStorage.removeItem("cc_realtime_trip");
+                } catch { /* noop */ }
                 const { error } = await supabase.auth.signInWithPassword({
                   email: "demo.client@chopchop.gn",
                   password: "demo1234",
@@ -373,6 +379,11 @@ export default function Auth() {
               disabled={busy}
               onClick={async () => {
                 setBusy(true);
+                try { await supabase.auth.signOut({ scope: "local" }); } catch { /* noop */ }
+                try {
+                  sessionStorage.removeItem("cc_driver_mode");
+                  localStorage.removeItem("cc_realtime_trip");
+                } catch { /* noop */ }
                 const { error } = await supabase.auth.signInWithPassword({
                   email: "demo.driver@chopchop.gn",
                   password: "demo1234",
