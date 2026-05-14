@@ -23,6 +23,7 @@ import { formatGNF } from "@/lib/format";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import QRCode from "react-qr-code";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { RidePhaseChip, deriveRidePhase } from "@/components/ride/RidePhaseChip";
 
 type Phase = "approach" | "arrived" | "on_trip" | "at_destination";
 
@@ -30,13 +31,6 @@ interface Props {
   rideId: string;
   onClose: () => void;
 }
-
-const PHASE_LABEL: Record<Phase, string> = {
-  approach: "En route vers le client",
-  arrived: "Arrivé au point de prise en charge",
-  on_trip: "Course en cours",
-  at_destination: "Arrivé à destination",
-};
 
 /**
  * Driver-side active trip screen.
@@ -238,8 +232,11 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
           className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition">
           <X className="w-5 h-5 text-primary-foreground" />
         </button>
-        <div className="text-primary-foreground text-sm font-semibold">
-          {ride.mode === "moto" ? "Moto" : "TokTok"} · Conducteur
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-primary-foreground text-sm font-semibold truncate">
+            {ride.mode === "moto" ? "Moto" : "TokTok"} · Conducteur
+          </span>
+          <RidePhaseChip phase={deriveRidePhase(ride)} size="sm" />
         </div>
         <Badge variant="secondary" className="text-[10px]">
           {formatGNF(ride.fare_gnf ?? 0)}
@@ -261,8 +258,8 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
 
         <NavigationHud state={nav} muted={muted} onToggleMute={() => setMuted(m => !m)} />
 
-        <div className="absolute left-1/2 bottom-3 -translate-x-1/2 rounded-full bg-card/95 backdrop-blur border border-border px-3 py-1.5 shadow-md">
-          <span className="text-xs font-semibold">{PHASE_LABEL[phase]}</span>
+        <div className="absolute left-1/2 bottom-3 -translate-x-1/2">
+          <RidePhaseChip phase={deriveRidePhase(ride)} />
         </div>
       </div>
 

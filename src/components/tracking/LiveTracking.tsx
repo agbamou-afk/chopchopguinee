@@ -3,6 +3,7 @@ import { formatGNF } from "@/lib/format";
 import { motion, AnimatePresence } from "framer-motion";
 import { Marker } from "react-map-gl";
 import { ChopMap, type ChopMapHandle, MapMarker, RoutePolyline, PinSet } from "@/components/map";
+import { RidePhaseChip, type CanonicalRidePhase } from "@/components/ride/RidePhaseChip";
 import { RoutingService } from "@/lib/maps";
 import QRCode from "react-qr-code";
 import { Loader2, Phone, MessageCircle, Star, ScanLine, CheckCircle2, X, QrCode } from "lucide-react";
@@ -320,7 +321,22 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
         </ChopMap>
 
         {/* Status pill */}
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-card/95 backdrop-blur shadow-elevated rounded-full px-4 py-1.5 text-xs font-semibold text-foreground z-10">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5">
+          <RidePhaseChip
+            phase={(({
+              searching: "searching",
+              assigned: "assigned",
+              enroute: "assigned",
+              arrived: "arrived",
+              startScan: "arrived",
+              inTrip: "in_trip",
+              atDestination: "at_destination",
+              endScan: "at_destination",
+              rating: "completed",
+              completed: "completed",
+            } as Record<string, CanonicalRidePhase>)[phase]) ?? "searching"}
+          />
+          <div className="bg-card/95 backdrop-blur shadow-elevated rounded-full px-4 py-1.5 text-xs font-semibold text-foreground">
           {phase === "searching" && "Recherche du chauffeur le plus proche…"}
           {phase === "assigned" && "Chauffeur trouvé"}
           {phase === "enroute" && `Arrivée dans ${formatEta(etaSec)}`}
@@ -331,6 +347,7 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
           {phase === "endScan" && "Scannez le QR de fin"}
           {phase === "rating" && "Notez votre course"}
           {phase === "completed" && "Course terminée"}
+          </div>
         </div>
       </div>
 
