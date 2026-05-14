@@ -60,7 +60,8 @@ export function DemoTestPanel() {
   const resetActiveRides = () =>
     run("rides", async () => {
       if (!user) return chopToast.warning("Connecte-toi à un compte démo d'abord.");
-      const active = ["requested", "matched", "accepted", "en_route", "arrived", "in_progress"];
+      // ride_status enum: pending | in_progress | completed | cancelled
+      const active = ["pending", "in_progress"];
       const { data, error } = await supabase
         .from("rides")
         .update({ status: "cancelled", updated_at: new Date().toISOString() })
@@ -71,6 +72,12 @@ export function DemoTestPanel() {
         chopToast.error("Reset courses échoué", { description: error.message });
         return;
       }
+      // Also expire any pending offers tied to this user as driver
+      await supabase
+        .from("ride_offers")
+        .update({ status: "expired", responded_at: new Date().toISOString() })
+        .eq("driver_id", user.id)
+        .eq("status", "pending");
       chopToast.success(`Courses annulées : ${data?.length ?? 0}`);
     });
 
