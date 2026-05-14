@@ -70,6 +70,8 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
   const [current, setCurrent] = useState<IncomingRequest | null>(null);
   const [activeTrip, setActiveTrip] = useState<IncomingRequest | null>(null);
   const [activeRideId, setActiveRideId] = useState<string | null>(null);
+  // Guard against duplicate auto-offer creations when state thrashes.
+  const [autoOfferInFlight, setAutoOfferInFlight] = useState(false);
   const { offers, latestOffer, realtimeStatus, refetch: refetchOffers } = useIncomingOffers(isOnline);
   const queue = offers.map(offerToRequest);
   const currentExpiresAt = current
@@ -232,6 +234,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     if (activeTrip || activeRideId) return;
     // Only generate if no pending offer (queue empty) and no visible popup.
     if (queue.length > 0 || current) return;
+    if (autoOfferInFlight) return;
     // If the latest offer is still pending or only just terminal, wait briefly.
     const cooldownMs = latestOffer && latestOffer.status !== "pending"
       ? 4000
@@ -240,6 +243,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       if (cancelled) return;
+      setAutoOfferInFlight(true);
       try {
         const { error } = await supabase.rpc("debug_create_offer_for_current_driver" as never);
         if (error) {
@@ -251,11 +255,13 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
       } catch (e) {
         // eslint-disable-next-line no-console
         console.warn("[demo-auto-offer] exception", e);
+      } finally {
+        setAutoOfferInFlight(false);
       }
     }, cooldownMs);
 
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [demoAutoOffer, isOnline, activeTrip, activeRideId, queue.length, current?.id, latestOffer?.id, latestOffer?.status, refetchOffers]);
+  }, [demoAutoOffer, isOnline, activeTrip, activeRideId, queue.length, current?.id, latestOffer?.id, latestOffer?.status, refetchOffers, autoOfferInFlight]);
 
   const createDebugOfferForCurrentDriver = useCallback(async () => {
     setActiveTrip(null);
