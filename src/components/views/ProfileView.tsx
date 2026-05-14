@@ -24,13 +24,19 @@ interface ProfileViewProps {
   onToggleDriverMode: () => void;
 }
 
-const menuItems = [
-  { icon: User, label: "Informations personnelles", action: "profile" },
+const menuItems: Array<{
+  icon: typeof User;
+  label: string;
+  action: string;
+  badge?: string;
+  to?: string;
+}> = [
+  { icon: User, label: "Informations personnelles", action: "profile", to: "/profile" },
   { icon: Star, label: "Programme de fidélité", action: "loyalty", badge: "200 pts" },
   { icon: Gift, label: "Parrainer un ami", action: "referral" },
-  { icon: Settings, label: "Paramètres", action: "settings" },
-  { icon: Shield, label: "Sécurité et confidentialité", action: "security" },
-  { icon: HelpCircle, label: "Aide et support", action: "help" },
+  { icon: Settings, label: "Paramètres", action: "settings", to: "/settings/notifications" },
+  { icon: Shield, label: "Sécurité et confidentialité", action: "security", to: "/settings/privacy" },
+  { icon: HelpCircle, label: "Aide et support", action: "help", to: "/help" },
 ];
 
 export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewProps) {
@@ -160,6 +166,16 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
+              onClick={() => {
+                if (item.to) {
+                  navigate(item.to);
+                } else {
+                  toast({
+                    title: item.label,
+                    description: "Bientôt disponible.",
+                  });
+                }
+              }}
               className="w-full flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors border-b border-border last:border-b-0"
             >
               <div className="p-2 rounded-xl bg-muted">
