@@ -26,8 +26,8 @@ const COPY: Record<RideLifecycleEvent, Record<Role, { title: string; body: strin
     driver: { title: "Course démarrée", body: "Trajet en cours.", tone: "info" },
   },
   ride_completed: {
-    client: { title: "Arrivé à destination", body: "Merci d'avoir utilisé CHOP CHOP.", tone: "success" },
-    driver: { title: "Course terminée", body: "Le paiement a été enregistré.", tone: "success" },
+    client: { title: "Arrivé à destination", body: "Paiement confirmé. Merci d'avoir utilisé CHOP CHOP.", tone: "success" },
+    driver: { title: "Course terminée", body: "Paiement encaissé et crédité à votre portefeuille.", tone: "success" },
   },
   ride_cancelled: {
     client: { title: "Course annulée", body: "Votre course a été annulée.", tone: "error" },
@@ -69,11 +69,15 @@ export function useRideLifecycleNotifications(
   ride: RideRealtime | null,
   role: Role,
 ) {
+  // `prev` is seeded from the first observed ride snapshot — never null —
+  // so reopening or refreshing a ride mid-flight does NOT re-fire toasts
+  // for transitions that already happened before mount.
   const prev = useRef<{
     status: string | null;
     driverId: string | null;
     arriving: boolean;
-  }>({ status: null, driverId: null, arriving: false });
+    initialized: boolean;
+  }>({ status: null, driverId: null, arriving: false, initialized: false });
 
   useEffect(() => {
     if (!ride) return;
@@ -84,22 +88,33 @@ export function useRideLifecycleNotifications(
     );
     const last = prev.current;
 
-    if (driverId && !last.driverId) {
+    // First observation: snapshot without firing. We only want to notify on
+    // genuine transitions, not on catch-up after refresh/reconnect/restore.
+    if (!last.initialized) {
+      prev.current = { status, driverId, arriving, initialized: true };
+      return;
+    }
+
+    // Terminal states are mutually exclusive — never fire the other one
+    // afterwards even if a stale event sneaks in.
+    const wasTerminal = last.status === "completed" || last.status === "cancelled";
+
+    if (!wasTerminal && driverId && !last.driverId) {
       fire("driver_assigned", role, ride.id);
     }
-    if (arriving && !last.arriving && status !== "in_progress") {
+    if (!wasTerminal && arriving && !last.arriving && status !== "in_progress" && status !== "completed") {
       fire("driver_arriving", role, ride.id);
     }
-    if (status === "in_progress" && last.status !== "in_progress") {
+    if (!wasTerminal && status === "in_progress" && last.status !== "in_progress") {
       fire("ride_started", role, ride.id);
     }
-    if (status === "completed" && last.status !== "completed") {
+    if (status === "completed" && last.status !== "completed" && last.status !== "cancelled") {
       fire("ride_completed", role, ride.id);
     }
-    if (status === "cancelled" && last.status !== "cancelled") {
+    if (status === "cancelled" && last.status !== "cancelled" && last.status !== "completed") {
       fire("ride_cancelled", role, ride.id);
     }
 
-    prev.current = { status, driverId, arriving };
+    prev.current = { status, driverId, arriving, initialized: true };
   }, [ride, role]);
 }
