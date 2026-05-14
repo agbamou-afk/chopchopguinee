@@ -230,7 +230,8 @@ const Index = () => {
         {activeTrip && (
           (typeof window !== "undefined" &&
             (localStorage.getItem("cc_realtime_trip") === "1" ||
-              /[?&]trip=v2/.test(window.location.search))) && activeTrip.rideId
+              /[?&]trip=v2/.test(window.location.search) ||
+              /[?&]demo=1/.test(window.location.search))) && activeTrip.rideId
           ? (
             <RealtimeTripScreen
               key={`v2-${activeTrip.rideId}`}
