@@ -96,5 +96,12 @@ export function useIncomingOffers(enabled: boolean) {
     };
   }, [enabled, user?.id, refetch, low]);
 
+  useEffect(() => {
+    if (!offers.length) return;
+    const nextExpiryMs = Math.min(...offers.map((offer) => new Date(offer.expires_at).getTime()));
+    const id = window.setTimeout(refetch, Math.max(250, nextExpiryMs - Date.now() + 250));
+    return () => window.clearTimeout(id);
+  }, [offers, refetch]);
+
   return { offers, latestOffer, realtimeStatus, refetch };
 }
