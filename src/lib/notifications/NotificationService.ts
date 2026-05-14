@@ -16,6 +16,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { MessageService } from "@/lib/messaging";
 import type { MessageTemplate } from "@/lib/messaging/types";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 export type NotificationChannel =
   | "email"
@@ -90,6 +91,20 @@ async function logAttempt(
     });
   } catch {
     // never let logging break the send path
+  }
+  // Mirror to analytics for reliability dashboards.
+  if (status === "sent" || status === "failed") {
+    Analytics.track(
+      status === "sent" ? "notification.sent" : "notification.failed",
+      {
+        metadata: {
+          channel,
+          template,
+          priority: opts.priority ?? "normal",
+          error: opts.error,
+        },
+      },
+    );
   }
 }
 
