@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface RideRealtime {
@@ -24,6 +24,13 @@ export function useRideRealtime(rideId: string | null) {
   const [ride, setRide] = useState<RideRealtime | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchRide = useCallback(async () => {
+    if (!rideId) return null;
+    const { data } = await supabase.from("rides").select("*").eq("id", rideId).maybeSingle();
+    if (data) setRide(data as unknown as RideRealtime);
+    return data;
+  }, [rideId]);
+
   useEffect(() => {
     if (!rideId) {
       setRide(null);
@@ -33,16 +40,9 @@ export function useRideRealtime(rideId: string | null) {
     let alive = true;
     setLoading(true);
 
-    supabase
-      .from("rides")
-      .select("*")
-      .eq("id", rideId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!alive) return;
-        if (data) setRide(data as unknown as RideRealtime);
-        setLoading(false);
-      });
+    fetchRide().finally(() => {
+      if (alive) setLoading(false);
+    });
 
     const channel = supabase
       .channel(`ride-${rideId}`)
@@ -61,11 +61,21 @@ export function useRideRealtime(rideId: string | null) {
       )
       .subscribe();
 
+    // Resync after the tab becomes visible again or the network comes back.
+    // Realtime auto-reconnects, but events that fired while we were offline
+    // would otherwise be missed.
+    const resync = () => { if (alive) fetchRide(); };
+    const onVisible = () => { if (document.visibilityState === "visible") resync(); };
+    window.addEventListener("online", resync);
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       alive = false;
       supabase.removeChannel(channel);
+      window.removeEventListener("online", resync);
+      document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [rideId]);
+  }, [rideId, fetchRide]);
 
-  return { ride, loading };
+  return { ride, loading, refetch: fetchRide };
 }
