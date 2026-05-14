@@ -245,6 +245,22 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setAutoOfferInFlight(true);
       try {
+        // Linked-demo guard: if a real linked-demo ride is still pending for
+        // this driver, never inject a synthetic offer over it.
+        const { data: linked } = await supabase
+          .from("ride_offers")
+          .select("id, ride_id, rides!inner(metadata,status)")
+          .eq("driver_id", user?.id ?? "")
+          .eq("status", "pending")
+          .limit(5);
+        const hasLinked = (linked ?? []).some((row) => {
+          const meta = ((row as unknown as { rides: { metadata: Record<string, unknown> | null } }).rides?.metadata) ?? {};
+          return meta && (meta as Record<string, unknown>).linked_demo === true;
+        });
+        if (hasLinked) {
+          await refetchOffers();
+          return;
+        }
         const { error } = await supabase.rpc("debug_create_offer_for_current_driver" as never);
         if (error) {
           // eslint-disable-next-line no-console
@@ -261,7 +277,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     }, cooldownMs);
 
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [demoAutoOffer, isOnline, activeTrip, activeRideId, queue.length, current?.id, latestOffer?.id, latestOffer?.status, refetchOffers, autoOfferInFlight]);
+  }, [demoAutoOffer, isOnline, activeTrip, activeRideId, queue.length, current?.id, latestOffer?.id, latestOffer?.status, refetchOffers, autoOfferInFlight, user?.id]);
 
   const createDebugOfferForCurrentDriver = useCallback(async () => {
     setActiveTrip(null);
