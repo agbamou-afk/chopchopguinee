@@ -100,6 +100,13 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     setCurrent(queue[0]);
   }, [isOnline, current, activeTrip, queue]);
 
+  // Drop the current offer if it expired or was cancelled server-side.
+  useEffect(() => {
+    if (!current) return;
+    const stillThere = offers.some((o) => o.id === current.id);
+    if (!stillThere) setCurrent(null);
+  }, [offers, current?.id]);
+
   const accept = useCallback(async (id: string) => {
     const accepted = current;
     setCurrent(null);
