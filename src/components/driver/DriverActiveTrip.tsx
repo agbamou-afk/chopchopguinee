@@ -269,7 +269,7 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
         {phase === "arrived" && pickupCode && (
           <div className="rounded-2xl border border-border bg-muted/30 p-3 flex items-center gap-3">
             <div className="bg-white p-2 rounded-lg shrink-0">
-              <QRCode value={`CHOP-PICKUP-${pickupCode}`} size={72} />
+              <QRCode value={qrValue} size={72} />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
@@ -277,6 +277,12 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
               </p>
               <p className="text-2xl font-bold tracking-[0.2em] tabular-nums">{pickupCode}</p>
               <p className="text-[11px] text-muted-foreground">Faites scanner ce QR ou dictez le code au client.</p>
+              <button
+                onClick={() => setQrOpen(true)}
+                className="mt-1 text-[11px] font-semibold text-primary underline"
+              >
+                Agrandir le QR
+              </button>
             </div>
           </div>
         )}
@@ -334,6 +340,26 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
           </Button>
         )}
       </div>
+
+      <Dialog open={qrOpen} onOpenChange={setQrOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">Faites scanner ce QR au client</DialogTitle>
+          </DialogHeader>
+          {pickupCode && (
+            <div className="flex flex-col items-center gap-3 pb-2">
+              <div className="bg-white p-4 rounded-2xl">
+                <QRCode value={qrValue} size={240} />
+              </div>
+              <p className="text-3xl font-bold tracking-[0.3em] tabular-nums">{pickupCode}</p>
+              <p className="text-xs text-muted-foreground text-center">
+                Le QR se renouvelle automatiquement toutes les 30 secondes ({secondsLeft}s).
+                Le client peut aussi saisir le code à 6 caractères.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
