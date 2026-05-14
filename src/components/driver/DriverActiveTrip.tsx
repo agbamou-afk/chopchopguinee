@@ -15,7 +15,7 @@ import { DriverTripReceipt } from "./DriverTripReceipt";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Phone, Navigation, CheckCircle2, AlertTriangle, X, Loader2, MapPin, Flag, QrCode,
+  Phone, Navigation, CheckCircle2, AlertTriangle, X, Loader2, MapPin, Flag, QrCode, ExternalLink, Crosshair,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -55,6 +55,19 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   const [receiptFare, setReceiptFare] = useState<number>(0);
   const [muted, setMuted] = useState(false);
   const { position: driverPos, request: requestGeo, isReady: geoReady } = useGeolocation({ watch: true });
+
+  // External Google Maps fallback — useful when internal routing fails or
+  // the driver simply prefers their familiar nav app.
+  const openInGoogleMaps = () => {
+    const target = (phase === "on_trip" || phase === "at_destination") ? dropoff : pickup;
+    if (!target) return;
+    const origin = driverPos ? `${driverPos.lat},${driverPos.lng}` : "";
+    const dest = `${target.lat},${target.lng}`;
+    const travel = ride?.mode === "moto" ? "two-wheeler" : "driving";
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=${travel}`;
+    try { Analytics.track("driver.nav.external_open" as any, { metadata: { rideId, phase } }); } catch {}
+    window.open(url, "_blank", "noopener");
+  };
 
   const isDemo =
     import.meta.env.DEV ||
@@ -266,6 +279,24 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
           {busy ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <PrimaryIcon className="w-5 h-5 mr-2" />}
           {primary.label}
         </Button>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={openInGoogleMaps}
+            className="flex-1 gap-1.5">
+            <ExternalLink className="h-4 w-4" /> Ouvrir dans Google Maps
+          </Button>
+          {!geoReady && (
+            <Button variant="outline" size="sm" onClick={requestGeo} className="gap-1.5">
+              <Crosshair className="h-4 w-4" /> Activer GPS
+            </Button>
+          )}
+        </div>
+
+        {!driverPos && (
+          <p className="text-[11px] text-muted-foreground text-center">
+            Position GPS indisponible — utilisez Google Maps pour la navigation détaillée.
+          </p>
+        )}
 
         {phase !== "at_destination" && (
           <Button variant="ghost" size="sm" onClick={cancelTrip} disabled={busy}
