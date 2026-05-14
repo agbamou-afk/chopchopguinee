@@ -2046,6 +2046,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      demo_seed_ride_offer: { Args: never; Returns: Json }
       driver_admin_decide: {
         Args: { p_decision: string; p_reason?: string; p_user_id: string }
         Returns: {
