@@ -22,6 +22,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatGNF } from "@/lib/format";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import QRCode from "react-qr-code";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Phase = "approach" | "arrived" | "on_trip" | "at_destination";
 
@@ -74,6 +75,11 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     (typeof window !== "undefined" && /[?&]demo=1/.test(window.location.search));
   const pickupCode = (ride?.metadata as any)?.pickup_code as string | undefined;
 
+  // Auto-popup QR when driver confirms arrival, with a fresh token every 30s.
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrTick, setQrTick] = useState(() => Math.floor(Date.now() / 30000));
+  const prevPhaseRef = useRef<Phase | null>(null);
+
   useEffect(() => { if (!geoReady) requestGeo(); }, [geoReady, requestGeo]);
 
   const pickup: LatLng | null = ride ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null;
@@ -125,6 +131,29 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     if (pts.length < 2) { mapRef.current.flyTo(pickup.lng, pickup.lat, 15); return; }
     mapRef.current.fitBounds(bboxOf(pts), 80);
   }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]);
+
+  // Open the QR sheet automatically the moment we transition into "arrived"
+  useEffect(() => {
+    const prev = prevPhaseRef.current;
+    prevPhaseRef.current = phase;
+    if (phase === "arrived" && prev !== "arrived" && pickupCode) {
+      setQrOpen(true);
+    }
+    if (phase !== "arrived") setQrOpen(false);
+  }, [phase, pickupCode]);
+
+  // Rotate the QR token every 30 seconds while the popup is visible
+  useEffect(() => {
+    if (!qrOpen) return;
+    const id = window.setInterval(
+      () => setQrTick(Math.floor(Date.now() / 30000)),
+      30000,
+    );
+    return () => window.clearInterval(id);
+  }, [qrOpen]);
+
+  const qrValue = pickupCode ? `CHOP-PICKUP-${pickupCode}-${qrTick}` : "";
+  const secondsLeft = 30 - Math.floor((Date.now() / 1000) % 30);
 
   if (loading || !ride) {
     return (
