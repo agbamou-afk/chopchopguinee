@@ -15,6 +15,8 @@ interface QrScannerProps {
 export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle, expectedHint }: QrScannerProps) {
   const containerId = "qr-reader-region";
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const startedRef = useRef(false);
+  const stoppingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [manual, setManual] = useState(false);
   const [manualVal, setManualVal] = useState("");
@@ -22,6 +24,19 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
 
   useEffect(() => {
     let cancelled = false;
+    const stopSafely = async (s: Html5Qrcode | null) => {
+      if (!s || stoppingRef.current) return;
+      stoppingRef.current = true;
+      try {
+        // @ts-ignore
+        const state = typeof s.getState === "function" ? s.getState() : 0;
+        if (state === 2 || state === 3) {
+          await s.stop();
+        }
+      } catch {}
+      try { s.clear(); } catch {}
+      stoppingRef.current = false;
+    };
     const start = async () => {
       try {
         const html5 = new Html5Qrcode(containerId, { verbose: false });
@@ -35,7 +50,13 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
           },
           () => {},
         );
-        if (!cancelled) setStarting(false);
+        startedRef.current = true;
+        if (cancelled) {
+          // Unmounted while starting — stop now
+          await stopSafely(html5);
+          return;
+        }
+        setStarting(false);
       } catch (e: any) {
         setError(
           e?.message?.includes("Permission") || e?.name === "NotAllowedError"
@@ -48,32 +69,24 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
     start();
     return () => {
       cancelled = true;
+      // Defer cleanup so an in-flight start() can finish first
       const s = scannerRef.current;
-      if (s) {
-        try {
-          // @ts-ignore - getState exists on Html5Qrcode
-          const state = typeof s.getState === "function" ? s.getState() : 2;
-          // 2 = SCANNING, 3 = PAUSED
-          if (state === 2 || state === 3) {
-            s.stop().then(() => { try { s.clear(); } catch {} }).catch(() => {});
-          } else {
-            try { s.clear(); } catch {}
-          }
-        } catch {}
-      }
+      setTimeout(() => { void stopSafely(s); }, 0);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleResult = async (text: string) => {
     const s = scannerRef.current;
-    try {
-      // @ts-ignore
-      const state = s && typeof s.getState === "function" ? s.getState() : 0;
-      if (s && (state === 2 || state === 3)) {
-        await s.stop();
-      }
-    } catch {}
+    if (s && !stoppingRef.current) {
+      stoppingRef.current = true;
+      try {
+        // @ts-ignore
+        const state = typeof s.getState === "function" ? s.getState() : 0;
+        if (state === 2 || state === 3) await s.stop();
+      } catch {}
+      stoppingRef.current = false;
+    }
     onResult(text);
   };
 
