@@ -63,6 +63,13 @@ const Index = () => {
   const { roles, user } = useAuth();
   const isDriver = roles.includes("driver");
   const navigate = useNavigate();
+  // Linked demo mode: demo client account OR explicit ?demo=linked flag.
+  const isLinkedDemo = (() => {
+    const email = (user?.email ?? "").toLowerCase();
+    if (email === "demo.client@chopchop.gn") return true;
+    if (typeof window !== "undefined" && /[?&]demo=linked\b/.test(window.location.search)) return true;
+    return false;
+  })();
   // One-shot guard: only auto-enter driver mode the first time we see this
   // signed-in demo driver. After that, manual toggles win.
   const autoModeAppliedRef = useRef(false);
@@ -330,7 +337,17 @@ const Index = () => {
                 toast({ title: "Erreur", description: rideErr.message });
                 return;
               }
-              setActiveTrip({ mode: bookingRide, ...trip, holdId, rideId: (ride as { id: string }).id });
+              const newRideId = (ride as { id: string }).id;
+              // Linked demo: hand the ride to the demo driver as a real offer.
+              if (isLinkedDemo) {
+                try {
+                  await supabase.rpc("demo_link_ride" as never, { p_ride_id: newRideId } as never);
+                } catch (e) {
+                  // eslint-disable-next-line no-console
+                  console.warn("[demo_link_ride] failed", e);
+                }
+              }
+              setActiveTrip({ mode: bookingRide, ...trip, holdId, rideId: newRideId });
               setBookingRide(null);
               setBookingDestination(undefined);
               notif.push({
@@ -349,7 +366,8 @@ const Index = () => {
           (typeof window !== "undefined" &&
             (localStorage.getItem("cc_realtime_trip") === "1" ||
               /[?&]trip=v2/.test(window.location.search) ||
-              /[?&]demo=1/.test(window.location.search))) && activeTrip.rideId
+              /[?&]demo=1/.test(window.location.search) ||
+              isLinkedDemo)) && activeTrip.rideId
           ? (
             <RealtimeTripScreen
               key={`v2-${activeTrip.rideId}`}

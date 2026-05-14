@@ -1,45 +1,83 @@
-## Why no popups appear
+## Goal
 
-The demo driver is stuck in `presence='on_trip'` because of a stale `in_progress` ride from an earlier session (`d7bf8111…`). Two consequences:
+Make demo client and demo driver participate in the **same real ride** end-to-end, removing the parallel fake-driver simulation.
 
-1. **No new offers are dispatched.** The auto-dispatcher (`public.ride_dispatch`) only looks for drivers with `dp.presence='online'`. With the demo driver pinned to `on_trip`, every ride the demo client books inserts a `rides` row with no matching `ride_offers` row — so the bottom sheet and the global banner have nothing to show.
-2. **The active trip never reappears in the UI.** `DriverSessionContext.activeTrip` is local React state. After a refresh it resets to `null`, so the in-app navigation screen for the still-running ride doesn’t mount, and the driver has no way to complete or cancel it from the UI.
+## Trigger conditions (demo detection)
 
-The fix is to (a) recover from this state automatically, (b) make the demo seed self-healing, and (c) give the demo panel an explicit reset switch.
+- Signed-in email = `demo.client@chopchop.gn` (linked-mode client), OR
+- URL contains `?demo=linked`
+- Server-side: linking RPC also verifies the demo driver exists.
 
-## Changes
+---
 
-### 1. Database migration — self-healing demo + reset helper
+## 1. Database migration (new functions only — no schema changes)
 
-- Update `public.demo_seed_ride_offer()` so it first:
-  - Cancels any non-terminal `rides` rows assigned to the demo driver (`status` set to `cancelled`, reason `demo_reset`).
-  - Expires any pending `ride_offers` for the demo driver.
-  - Forces `driver_profiles.presence='online'` and a corresponding `driver_locations` row near the demo pickup zone (so the dispatcher can find them).
-  - Then inserts the new pending offer (existing behaviour).
-- Add `public.demo_reset_driver()` (SECURITY DEFINER, callable by demo accounts or admins) that performs only the cleanup above without seeding an offer.
+**`get_demo_driver()`** — `SECURITY DEFINER`, returns `uuid` of the demo driver `auth.users` row whose email is `demo.driver@chopchop.gn`. Returns `NULL` if missing.
 
-### 2. `src/contexts/DriverSessionContext.tsx` — restore active ride on boot
+**`demo_link_ride(p_ride_id uuid)`** — `SECURITY DEFINER`:
 
-- On profile load, if `profile.presence === 'on_trip'` and no local `activeTrip`, query `rides` for the latest non-terminal ride where `driver_id = user.id` and seed:
-  - `activeRideId = ride.id`
-  - `activeTrip` from the ride’s pickup/destination zones + fare (mirroring `offerToRequest`).
-- This makes `DriverActiveTrip` mount again so the driver can complete/cancel the stuck trip instead of being stranded.
-- Keep the auto-pop guard (`!activeTrip`) intact so popups don’t fight the recovered trip.
+1. Caller must be authenticated. Resolve caller email from `auth.users`.
+2. Allow only when caller email = `demo.client@chopchop.gn` **or** the caller owns the ride and the ride row's `metadata->>'demo_linked' = 'true'` (set by client param).
+3. Resolve `v_driver := get_demo_driver()`. If null, no-op return.
+4. Expire any other `pending` ride_offers for that driver (keep queue clean).
+5. Insert one `ride_offers` row: `ride_id = p_ride_id`, `driver_id = v_driver`, status `pending`, `expires_at = now() + 90s`, `pickup_zone='Demo pickup'`, `destination_zone='Demo destination'`, `estimated_fare_gnf` and `estimated_earning_gnf` derived from the ride (85% to driver).
+6. Tag `rides.metadata` with `{linked_demo: true, linked_at: now}`.
+7. Return the new offer id.
 
-### 3. `src/components/devtools/DemoTestPanel.tsx` — visible reset action
+The existing `driver_offer_accept` RPC already sets `rides.driver_id` and moves `rides.status='in_progress'` — no changes needed there.
 
-- Add a button **“Réinitialiser le chauffeur démo”** above the existing test-offer button. Wires to the new `demo_reset_driver` RPC and toasts the result.
-- Tweak the existing test-offer toast to mention that any stuck trip is auto-cleared, since the seed RPC now resets first.
+## 2. Client-side wiring (`src/pages/Index.tsx`)
+
+After `ride_create` succeeds in the booking handler:
+- Compute `isLinkedDemo` = (current user's email is demo client) OR `?demo=linked` in URL.
+- If true: `await supabase.rpc('demo_link_ride', { p_ride_id: ride.id })`. Best-effort, log on failure.
+
+Force the `RealtimeTripScreen` path for linked-demo clients (so the screen renders **real** ride state — no `Mamadou Camara`):
+- Update the `activeTrip && …` condition to also enter v2 when `isLinkedDemo`.
+
+## 3. Stop fake driver render in `LiveTracking.tsx`
+
+For the legacy LiveTracking screen (used by non-demo bookings):
+- When `rideId` is provided, subscribe once to that `rides` row. While `driver.driver_id` is null, render a "searching" state (use `DriverSearchOverlay` `phase="searching"`) instead of jumping to the random `DRIVERS[]` card.
+- When DB returns a real `driver_id`, fetch that driver's profile and render the real card.
+- Keep the random fallback only when no `rideId` is provided (defensive — should not happen in current flows).
+
+## 4. Driver auto-offer guard (`DriverSessionContext.tsx`)
+
+The existing `demoAutoOffer` effect already early-returns when `queue.length > 0`, so a real linked offer suppresses synthetic auto-offers. Add one more guard: skip auto-offer creation if the latest pending offer's ride row has `metadata->>'linked_demo' = 'true'` (so we never race a synthetic over a real linked one). Implemented as a quick check before the RPC fires.
+
+## 5. Auth UX clean-up
+
+- **Logout button**: add explicit `aria-label="Se déconnecter"` and a stable `data-testid="logout-button"` on the ProfileView logout `Button`, and ensure no nav FAB lives at the same coordinates that confuses natural-language clicks.
+- **Demo account switch**: in the auth page's "Demo Client" / "Demo Chauffeur" handlers, before signing in, call `supabase.auth.signOut({ scope: 'local' })`, then `sessionStorage.removeItem('cc_driver_mode')` and `localStorage.removeItem('cc_realtime_trip')` so the next account starts clean.
+- **Misleading "Connexion instable" toast**: in the booking screen, only render the unstable-network toast when the fare estimate **fails** to resolve before the user taps Réserver; suppress it once a fare is shown.
+
+## 6. Acceptance verification
+
+After the migration applies, in a single browser:
+1. Demo client books → linked offer auto-created for demo driver.
+2. Switch to demo driver (clean auth) → offer popup shows the **client's actual ride**.
+3. Driver accepts → `rides.driver_id = demo driver`, status `in_progress`.
+4. Client's RealtimeTripScreen reflects the real driver instantly (no Mamadou).
+5. Pickup QR / "Je suis arrivé" / completion flow runs on the same `ride_id`.
+6. After completion both sides see receipts.
+
+## Files to touch
+
+- **New migration** — `get_demo_driver`, `demo_link_ride`.
+- `src/pages/Index.tsx` — call link RPC + force v2 trip screen for linked demo.
+- `src/components/tracking/LiveTracking.tsx` — drive driver card from DB, drop random fake.
+- `src/contexts/DriverSessionContext.tsx` — defensive linked-offer guard for auto-offer.
+- `src/components/views/ProfileView.tsx` — accessible logout label.
+- `src/pages/Auth.tsx` (or wherever the Demo Client / Demo Chauffeur buttons live) — clean session before demo sign-in.
+- `src/components/ride/RideBooking.tsx` — gate the network-unstable toast.
 
 ## Out of scope
 
-- Dispatcher logic itself (already correct: only `online` drivers should receive offers).
-- Realtime/polling plumbing (already in place from the previous turn).
-- Client-side booking flow.
+- No changes to ride lifecycle RPCs (`driver_offer_accept`, `ride_complete`, etc).
+- No changes to the realtime channel setup (already in place).
+- No new tables or RLS policies.
 
-## Acceptance
+---
 
-- Logging into the demo driver with a stuck `in_progress` ride immediately shows the in-app navigation screen for that ride (no more silent dead state).
-- Tapping **Réinitialiser le chauffeur démo** clears the stuck ride and flips presence back to `online`.
-- Tapping **Envoyer une demande test au chauffeur démo** always produces a popup in the Courses tab and a banner on Tableau/Profil, even if the driver was previously stuck.
-- Demo client → demo driver booking flow produces a popup again because the demo driver can be picked by `ride_dispatch`.
+Approve to proceed and I'll ship the migration first, then wire the client code in a follow-up edit.

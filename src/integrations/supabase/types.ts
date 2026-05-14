@@ -2047,6 +2047,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      demo_link_ride: { Args: { p_ride_id: string }; Returns: string }
       demo_reset_driver: { Args: never; Returns: Json }
       demo_seed_ride_offer: { Args: never; Returns: Json }
       driver_admin_decide: {
@@ -2214,6 +2215,7 @@ export type Database = {
         }[]
       }
       gen_topup_reference: { Args: never; Returns: string }
+      get_demo_driver: { Args: never; Returns: string }
       has_admin_role: {
         Args: {
           _role: Database["public"]["Enums"]["admin_role"]

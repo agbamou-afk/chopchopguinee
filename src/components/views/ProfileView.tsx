@@ -200,6 +200,8 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           onClick={handleLogout}
+          aria-label="Se déconnecter"
+          data-testid="logout-button"
           className="w-full flex items-center justify-center gap-2 mt-4 p-4 bg-destructive/10 text-destructive rounded-2xl font-medium hover:bg-destructive/20 transition-colors"
         >
           <LogOut className="w-5 h-5" />
