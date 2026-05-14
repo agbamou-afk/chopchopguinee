@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { DriverSessionProvider } from "@/contexts/DriverSessionContext";
 import { DriverRideAlertBanner } from "@/components/driver/DriverRideAlertBanner";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
+import { DriverOfferDebugPanel } from "@/components/driver/DriverOfferDebugPanel";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -34,8 +35,8 @@ export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "or
  * can read the current offer and surface it from any tab.
  */
 function DriverGlobalAlert({ activeTab, onView }: { activeTab: string; onView: () => void }) {
-  const { current } = useDriverSession();
-  if (!current) return null;
+  const { queue, activeTrip, activeRideId } = useDriverSession();
+  if (queue.length === 0 || activeTrip || activeRideId) return null;
   return <DriverRideAlertBanner activeTab={activeTab} onView={onView} />;
 }
 
@@ -285,6 +286,7 @@ const Index = () => {
                 setActiveView("orders");
               }}
             />
+            <DriverOfferDebugPanel activeTab={activeTab} />
             <BottomNav
               activeTab={activeTab}
               onTabChange={handleTabChange}

@@ -19,18 +19,19 @@ interface Props {
 export function DriverRideAlertBanner({ activeTab, onView }: Props) {
   const { isOnline, current, currentExpiresAt, queue } = useDriverSession();
   const [now, setNow] = useState(Date.now());
+  const displayedRequest = current ?? queue[0] ?? null;
 
   // Tick once per second for the countdown.
   useEffect(() => {
-    if (!current) return;
+    if (!displayedRequest) return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [current?.id]);
+  }, [displayedRequest?.id]);
 
   // Hide on Courses tab — the full bottom sheet handles it there.
   if (activeTab === "orders") return null;
   if (!isOnline) return null;
-  if (!current) return null;
+  if (!displayedRequest) return null;
 
   const remainingSec = currentExpiresAt
     ? Math.max(0, Math.ceil((new Date(currentExpiresAt).getTime() - now) / 1000))
@@ -40,7 +41,7 @@ export function DriverRideAlertBanner({ activeTab, onView }: Props) {
   return (
     <AnimatePresence>
       <motion.button
-        key={current.id}
+        key={displayedRequest.id}
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -80, opacity: 0 }}
@@ -63,9 +64,9 @@ export function DriverRideAlertBanner({ activeTab, onView }: Props) {
           </p>
           <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
             <MapPin className="w-3 h-3 shrink-0" />
-            <span className="truncate">{current.pickup}</span>
+            <span className="truncate">{displayedRequest.pickup}</span>
             <span className="mx-1">·</span>
-            <span className="font-medium text-foreground">{formatGNF(current.estimatedPrice)}</span>
+            <span className="font-medium text-foreground">{formatGNF(displayedRequest.estimatedPrice)}</span>
           </p>
         </div>
         <div className="flex flex-col items-end shrink-0">

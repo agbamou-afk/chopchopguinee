@@ -15,6 +15,8 @@ export interface RideOffer {
   status: string;
 }
 
+export type RealtimeStatus = "disabled" | "connecting" | "SUBSCRIBED" | "CHANNEL_ERROR" | "TIMED_OUT" | "CLOSED";
+
 /**
  * Subscribes to ride_offers for the current driver while `enabled`.
  * Returns currently pending offers (newest first) and helpers to refetch.
@@ -23,21 +25,34 @@ export function useIncomingOffers(enabled: boolean) {
   const { user } = useAuth();
   const { low } = useLowDataMode();
   const [offers, setOffers] = useState<RideOffer[]>([]);
+  const [latestOffer, setLatestOffer] = useState<RideOffer | null>(null);
+  const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>("disabled");
 
   const refetch = useCallback(async () => {
-    if (!user) { setOffers([]); return; }
-    const { data } = await supabase
+    if (!user) { setOffers([]); setLatestOffer(null); return; }
+    const selectCols = "id,ride_id,pickup_zone,destination_zone,estimated_fare_gnf,estimated_earning_gnf,distance_to_pickup_m,expires_at,status";
+    const [{ data }, { data: latest }] = await Promise.all([
+      supabase
       .from("ride_offers")
-      .select("id,ride_id,pickup_zone,destination_zone,estimated_fare_gnf,estimated_earning_gnf,distance_to_pickup_m,expires_at,status")
+      .select(selectCols)
       .eq("driver_id", user.id)
       .eq("status", "pending")
       .gt("expires_at", new Date().toISOString())
-      .order("sent_at", { ascending: false });
+      .order("sent_at", { ascending: false }),
+      supabase
+        .from("ride_offers")
+        .select(selectCols)
+        .eq("driver_id", user.id)
+        .order("sent_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
     setOffers((data as RideOffer[]) || []);
+    setLatestOffer((latest as RideOffer | null) || null);
   }, [user?.id]);
 
   useEffect(() => {
-    if (!enabled || !user) { setOffers([]); return; }
+    if (!enabled || !user) { setOffers([]); setLatestOffer(null); setRealtimeStatus("disabled"); return; }
     refetch();
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -50,11 +65,12 @@ export function useIncomingOffers(enabled: boolean) {
           { event: "*", schema: "public", table: "ride_offers", filter: `driver_id=eq.${user.id}` },
           () => refetch(),
         )
-        .subscribe();
+        .subscribe((status) => setRealtimeStatus(status as RealtimeStatus));
     };
     const unsubscribe = () => {
       if (channel) { supabase.removeChannel(channel); channel = null; }
       if (pollId) { window.clearInterval(pollId); pollId = null; }
+      setRealtimeStatus("disabled");
     };
 
     // Pause subscription when tab hidden / offline to save bandwidth.
@@ -80,5 +96,12 @@ export function useIncomingOffers(enabled: boolean) {
     };
   }, [enabled, user?.id, refetch, low]);
 
-  return { offers, refetch };
+  useEffect(() => {
+    if (!offers.length) return;
+    const nextExpiryMs = Math.min(...offers.map((offer) => new Date(offer.expires_at).getTime()));
+    const id = window.setTimeout(refetch, Math.max(250, nextExpiryMs - Date.now() + 250));
+    return () => window.clearTimeout(id);
+  }, [offers, refetch]);
+
+  return { offers, latestOffer, realtimeStatus, refetch };
 }

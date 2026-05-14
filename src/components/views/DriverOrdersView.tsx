@@ -8,6 +8,7 @@ import { IncomingRequestPopup } from "@/components/driver/IncomingRequestPopup";
 
 export function DriverOrdersView() {
   const { queue, current, currentExpiresAt, accept, decline, showCurrent, isOnline, activeTrip } = useDriverSession();
+  const displayedRequest = !activeTrip ? current ?? queue[0] ?? null : null;
   const offerTimeoutSec = currentExpiresAt
     ? Math.max(1, Math.ceil((new Date(currentExpiresAt).getTime() - Date.now()) / 1000))
     : 20;
@@ -26,7 +27,7 @@ export function DriverOrdersView() {
       </div>
 
       {/* Pending offers banner — only when no popup is currently displayed */}
-      {isOnline && !current && !activeTrip && queue.length > 0 && (
+      {isOnline && !displayedRequest && queue.length > 0 && (
         <div className="px-4 mt-2">
           <button
             onClick={showCurrent}
@@ -110,7 +111,7 @@ export function DriverOrdersView() {
 
       {/* Bottom-sheet popup lives in the Courses tab only */}
       <IncomingRequestPopup
-        request={current}
+        request={displayedRequest}
         onAccept={accept}
         onDecline={decline}
         timeoutSec={offerTimeoutSec}
