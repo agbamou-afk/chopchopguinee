@@ -310,11 +310,7 @@ const Index = () => {
               rideId={activeTrip.rideId}
               mode={activeTrip.mode as "moto" | "toktok"}
               holdId={activeTrip.holdId}
-              onClose={() => {
-                setActiveTrip(null);
-                setActiveView("orders");
-                setActiveTab("orders");
-              }}
+              onClose={() => closeActiveTrip(true)}
             />
           )
           : <LiveTracking
@@ -324,11 +320,7 @@ const Index = () => {
             fare={activeTrip.fare}
             holdId={activeTrip.holdId}
             rideId={activeTrip.rideId}
-            onClose={() => {
-              setActiveTrip(null);
-              setActiveView("orders");
-              setActiveTab("orders");
-            }}
+            onClose={() => closeActiveTrip(true)}
           />
         )}
       </AnimatePresence>
