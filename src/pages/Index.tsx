@@ -337,7 +337,17 @@ const Index = () => {
                 toast({ title: "Erreur", description: rideErr.message });
                 return;
               }
-              setActiveTrip({ mode: bookingRide, ...trip, holdId, rideId: (ride as { id: string }).id });
+              const newRideId = (ride as { id: string }).id;
+              // Linked demo: hand the ride to the demo driver as a real offer.
+              if (isLinkedDemo) {
+                try {
+                  await supabase.rpc("demo_link_ride" as never, { p_ride_id: newRideId } as never);
+                } catch (e) {
+                  // eslint-disable-next-line no-console
+                  console.warn("[demo_link_ride] failed", e);
+                }
+              }
+              setActiveTrip({ mode: bookingRide, ...trip, holdId, rideId: newRideId });
               setBookingRide(null);
               setBookingDestination(undefined);
               notif.push({
