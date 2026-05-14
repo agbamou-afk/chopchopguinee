@@ -41,7 +41,12 @@ function DriverGlobalAlert({ activeTab, onView }: { activeTab: string; onView: (
 }
 
 const Index = () => {
-  const [isDriverMode, setIsDriverMode] = useState(false);
+  // Initialise from sessionStorage so a refresh during a demo keeps the
+  // driver dashboard visible instead of bouncing back to client home.
+  const [isDriverMode, setIsDriverMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("cc_driver_mode") === "1";
+  });
   const [activeTab, setActiveTab] = useState("home");
   const [activeView, setActiveView] = useState<ActiveView>("home");
   const [bookingRide, setBookingRide] = useState<RideType>(null);
@@ -59,6 +64,42 @@ const Index = () => {
   const { roles, user } = useAuth();
   const isDriver = roles.includes("driver");
   const navigate = useNavigate();
+  // One-shot guard: only auto-enter driver mode the first time we see this
+  // signed-in demo driver. After that, manual toggles win.
+  const autoModeAppliedRef = useRef(false);
+
+  // Persist mode for the session and clear on logout.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!user) {
+      sessionStorage.removeItem("cc_driver_mode");
+      autoModeAppliedRef.current = false;
+      if (isDriverMode) setIsDriverMode(false);
+      return;
+    }
+    sessionStorage.setItem("cc_driver_mode", isDriverMode ? "1" : "0");
+  }, [user?.id, isDriverMode]);
+
+  // Auto-enter driver mode for the demo driver account or explicit
+  // ?demo=driver. Runs once per signed-in session — toggling back to client
+  // afterwards is preserved.
+  useEffect(() => {
+    if (!user || autoModeAppliedRef.current) return;
+    const email = (user.email ?? "").toLowerCase();
+    const isDemoDriverAccount = email === "demo.driver@chopchop.gn";
+    const isExplicitDriverDemo =
+      typeof window !== "undefined" && /[?&]demo=driver\b/.test(window.location.search);
+    if (!isDemoDriverAccount && !isExplicitDriverDemo) {
+      // Mark as resolved so we don't re-evaluate every render for normal users.
+      autoModeAppliedRef.current = true;
+      return;
+    }
+    autoModeAppliedRef.current = true;
+    setIsDriverMode(true);
+    setActiveTab("home");
+    setActiveView("home");
+  }, [user?.id, user?.email]);
+
   // Rides the user has actively dismissed this session — never re-restore them.
   const dismissedRidesRef = useRef<Set<string>>(new Set());
   // Only attempt the auto-restore once per mount; closing the trip should not
