@@ -60,6 +60,9 @@ import { Analytics } from "@/lib/analytics/AnalyticsService";
 const FieldTestingPanel = lazy(() =>
   import("./components/devtools/FieldTestingPanel").then(m => ({ default: m.FieldTestingPanel }))
 );
+const DemoTestPanel = lazy(() =>
+  import("./components/devtools/DemoTestPanel").then(m => ({ default: m.DemoTestPanel }))
+);
 
 const queryClient = new QueryClient();
 
@@ -97,6 +100,10 @@ const App = () => {
         {(import.meta.env.DEV ||
           (typeof window !== "undefined" && /[?&]field=1/.test(window.location.search))) && (
           <Suspense fallback={null}><FieldTestingPanel /></Suspense>
+        )}
+        {(import.meta.env.DEV ||
+          (typeof window !== "undefined" && /[?&](demo|field)=1/.test(window.location.search))) && (
+          <Suspense fallback={null}><DemoTestPanel /></Suspense>
         )}
         <Routes>
           <Route path="/" element={<Index />} />
