@@ -158,7 +158,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
       </div>
 
       {/* Menu */}
-      <div className="px-4 pb-28">
+      <div className="px-4 pb-44">
         <div className="bg-card rounded-2xl shadow-card border border-border/60 overflow-hidden">
           {menuItems.map((item, index) => (
             <motion.button
@@ -194,15 +194,15 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
           ))}
         </div>
 
-        {/* Logout */}
+        {/* Logout — extra bottom padding above keeps this clear of the floating scanner FAB. */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           onClick={handleLogout}
-          aria-label="Se déconnecter"
+          aria-label="Se déconnecter de mon compte"
           data-testid="logout-button"
-          className="w-full flex items-center justify-center gap-2 mt-4 p-4 bg-destructive/10 text-destructive rounded-2xl font-medium hover:bg-destructive/20 transition-colors"
+          className="relative z-10 w-full flex items-center justify-center gap-2 mt-6 px-4 py-5 min-h-[56px] bg-destructive/10 text-destructive rounded-2xl font-semibold text-base hover:bg-destructive/20 transition-colors"
         >
           <LogOut className="w-5 h-5" />
           Se déconnecter
