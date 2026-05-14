@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Source, Layer } from 'react-map-gl';
 import { decodePolyline } from '@/lib/maps/geo';
 
@@ -13,12 +13,18 @@ const COLOR: Record<RouteState, string> = {
 export function RoutePolyline({
   encoded, id = 'chop-route', state = 'active', animated = true,
 }: { encoded: string; id?: string; state?: RouteState; animated?: boolean }) {
+  // Retain the last good polyline while parents refetch — prevents the line
+  // from disappearing for a frame and flickering back in.
+  const lastEncodedRef = useRef<string>('');
+  if (encoded) lastEncodedRef.current = encoded;
+  const effective = encoded || lastEncodedRef.current;
+
   const geojson = useMemo(() => {
-    if (!encoded) return { type: 'FeatureCollection' as const, features: [] };
-    const coords = decodePolyline(encoded).map(p => [p.lng, p.lat]);
+    if (!effective) return { type: 'FeatureCollection' as const, features: [] };
+    const coords = decodePolyline(effective).map(p => [p.lng, p.lat]);
     if (coords.length < 2) return { type: 'FeatureCollection' as const, features: [] };
     return { type: 'FeatureCollection' as const, features: [{ type: 'Feature' as const, properties: {}, geometry: { type: 'LineString' as const, coordinates: coords } }] };
-  }, [encoded]);
+  }, [effective]);
   const color = COLOR[state];
   const dash = state === 'approach' ? [2, 2] : undefined;
   return (
