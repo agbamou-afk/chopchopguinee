@@ -2,7 +2,28 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatGNF } from "@/lib/format";
 import { MapPin, Navigation, Clock, Star, X, Check, Bike } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+// --- Placeholders: replace with real implementations later ---
+function useRequestSound(active: boolean) {
+  // Placeholder for ride-offer alert sound. Wire to <audio> or Web Audio API later.
+  useEffect(() => {
+    if (!active) return;
+    // e.g. const a = new Audio("/sounds/incoming.mp3"); a.loop = true; a.play().catch(()=>{});
+    // return () => { a.pause(); };
+  }, [active]);
+}
+
+function triggerVibration(pattern: number | number[]) {
+  // Placeholder for haptic feedback. Native bridge can override later.
+  try {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      (navigator as Navigator).vibrate(pattern);
+    }
+  } catch {
+    /* noop */
+  }
+}
 
 export interface IncomingRequest {
   id: string;
@@ -27,10 +48,18 @@ const TYPE_LABEL = { ride: "Course Moto", delivery: "Livraison", food: "Repas" }
 
 export function IncomingRequestPopup({ request, onAccept, onDecline, timeoutSec = 20 }: Props) {
   const [remaining, setRemaining] = useState(timeoutSec);
+  const vibratedRef = useRef<string | null>(null);
+
+  useRequestSound(!!request);
 
   useEffect(() => {
     if (!request) return;
     setRemaining(timeoutSec);
+    // Vibrate once per incoming request (urgent attention pattern).
+    if (vibratedRef.current !== request.id) {
+      vibratedRef.current = request.id;
+      triggerVibration([400, 120, 400, 120, 600]);
+    }
     const id = setInterval(() => {
       setRemaining((r) => {
         if (r <= 1) {
@@ -38,11 +67,15 @@ export function IncomingRequestPopup({ request, onAccept, onDecline, timeoutSec 
           onDecline(request.id);
           return 0;
         }
+        // Re-pulse haptics in the final 5 seconds.
+        if (r - 1 <= 5) triggerVibration(200);
         return r - 1;
       });
     }, 1000);
     return () => clearInterval(id);
   }, [request, timeoutSec, onDecline]);
+
+  const urgent = remaining <= 5;
 
   return (
     <AnimatePresence>
@@ -61,13 +94,13 @@ export function IncomingRequestPopup({ request, onAccept, onDecline, timeoutSec 
             className="w-full max-w-md bg-card rounded-3xl shadow-elevated overflow-hidden"
           >
             {/* Countdown */}
-            <div className="h-1.5 bg-muted">
+            <div className="h-2 bg-muted">
               <motion.div
                 key={request.id}
                 initial={{ width: "100%" }}
                 animate={{ width: "0%" }}
                 transition={{ duration: timeoutSec, ease: "linear" }}
-                className="h-full gradient-primary"
+                className={`h-full ${urgent ? "bg-destructive" : "gradient-primary"}`}
               />
             </div>
 
@@ -76,10 +109,20 @@ export function IncomingRequestPopup({ request, onAccept, onDecline, timeoutSec 
                 <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                   Nouvelle {TYPE_LABEL[request.type]}
                 </span>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span className="font-medium">{remaining}s</span>
-                </div>
+                <motion.div
+                  key={remaining}
+                  initial={{ scale: urgent ? 1.25 : 1.05, opacity: 0.6 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.25 }}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full font-bold tabular-nums ${
+                    urgent
+                      ? "bg-destructive/15 text-destructive text-sm"
+                      : "bg-muted text-foreground text-xs"
+                  }`}
+                >
+                  <Clock className={urgent ? "w-4 h-4" : "w-3.5 h-3.5"} />
+                  <span>{remaining}s</span>
+                </motion.div>
               </div>
 
               {/* Mini route preview */}
@@ -141,20 +184,26 @@ export function IncomingRequestPopup({ request, onAccept, onDecline, timeoutSec 
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-stretch">
                 <Button
                   variant="outline"
                   onClick={() => onDecline(request.id)}
-                  className="flex-1 h-12 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  className="w-24 h-14 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 >
                   <X className="w-5 h-5 mr-1" /> Refuser
                 </Button>
-                <Button
-                  onClick={() => onAccept(request.id)}
-                  className="flex-1 h-12 gradient-primary"
+                <motion.div
+                  className="flex-1"
+                  animate={{ scale: [1, 1.03, 1] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <Check className="w-5 h-5 mr-1" /> Accepter
-                </Button>
+                  <Button
+                    onClick={() => onAccept(request.id)}
+                    className="w-full h-14 gradient-primary text-base font-bold shadow-elevated ring-2 ring-primary/40 ring-offset-2 ring-offset-card"
+                  >
+                    <Check className="w-6 h-6 mr-2" /> Accepter
+                  </Button>
+                </motion.div>
               </div>
             </div>
           </motion.div>
