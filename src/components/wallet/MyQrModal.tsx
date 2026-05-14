@@ -27,8 +27,14 @@ export function MyQrModal({ open, onClose, userId, phone }: MyQrModalProps) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      // Avoid flashing a stale confirmation code the next time the modal opens.
+      setPending(null);
+      return;
+    }
     let active = true;
+    // Reset before fetching so a previous session's code never lingers visibly.
+    setPending(null);
 
     const fetchPending = async () => {
       setLoading(true);
