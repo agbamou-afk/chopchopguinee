@@ -22,6 +22,7 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { notifications as notif } from "@/lib/notifications";
 import { useNavigate } from "react-router-dom";
+import { DriverSessionProvider } from "@/contexts/DriverSessionContext";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
