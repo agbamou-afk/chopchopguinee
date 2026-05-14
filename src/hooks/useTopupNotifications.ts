@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { notifications } from "@/lib/notifications";
+import { notifyWalletEvent } from "@/lib/notifications/walletNotifier";
 import { formatGNF } from "@/lib/format";
 
 /**
@@ -39,34 +39,38 @@ export function useTopupNotifications() {
             if (!after || before === after) return;
             const amount = Number(payload.new?.amount_gnf ?? 0);
             const ref = payload.new?.reference ?? "";
-            let title = "";
-            let body = "";
-            switch (after) {
-              case "credited":
-              case "confirmed":
-                title = "Recharge créditée";
-                body = `${formatGNF(amount)} ajoutés à votre portefeuille (${ref}).`;
-                toast.success(title, { description: body });
-                break;
-              case "needs_review":
-                title = "Recharge en vérification";
-                body = `Votre recharge ${ref} est en cours de vérification par notre équipe.`;
-                toast.message(title, { description: body });
-                break;
-              case "expired":
-                title = "Recharge expirée";
-                body = `La recharge ${ref} a expiré sans réception du paiement.`;
-                toast.error(title, { description: body });
-                break;
-              case "cancelled":
-                title = "Recharge annulée";
-                body = `La recharge ${ref} a été annulée.`;
-                toast(title, { description: body });
-                break;
-              default:
-                return;
+            const id = payload.new?.id ?? ref;
+
+            // Standardized dedup'd wallet event flow.
+            if (after === "credited" || after === "confirmed") {
+              void notifyWalletEvent({
+                eventId: `topup:${id}:credited`,
+                event: "topup_credited",
+                amountGnf: amount,
+                reference: ref,
+                userId: uid,
+              });
+              return;
             }
-            notifications.push({ kind: "wallet", title, body });
+
+            // Other status transitions stay as a single toast (no fan-out).
+            if (after === "needs_review") {
+              toast.message("Recharge en vérification", {
+                description: `Votre recharge ${ref} est en cours de vérification.`,
+                id: `topup:${id}:needs_review`,
+              });
+            } else if (after === "expired") {
+              toast.error("Recharge expirée", {
+                description: `La recharge ${ref} a expiré.`,
+                id: `topup:${id}:expired`,
+              });
+            } else if (after === "cancelled") {
+              toast("Recharge annulée", {
+                description: `La recharge ${ref} a été annulée.`,
+                id: `topup:${id}:cancelled`,
+              });
+            }
+            void formatGNF; // keep import used
           },
         )
         .subscribe();
