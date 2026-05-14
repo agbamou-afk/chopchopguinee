@@ -7,6 +7,7 @@ import {
   bbox as bboxOf, formatDuration, formatDistance, type LatLng,
 } from "@/lib/maps";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
+import { useRideLifecycleNotifications } from "@/hooks/useRideLifecycleNotifications";
 import { useTurnByTurn } from "@/hooks/useTurnByTurn";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { NavigationHud } from "./NavigationHud";
@@ -44,6 +45,7 @@ const PHASE_LABEL: Record<Phase, string> = {
  */
 export function DriverActiveTrip({ rideId, onClose }: Props) {
   const { ride, loading } = useRideRealtime(rideId);
+  useRideLifecycleNotifications(ride, "driver");
   const mapRef = useRef<ChopMapHandle>(null);
   const [busy, setBusy] = useState(false);
   const [clientPhone, setClientPhone] = useState<string | null>(null);

@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { ActiveTripMap } from "./ActiveTripMap";
 import { ClientTripReceipt } from "./ClientTripReceipt";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
+import { useRideLifecycleNotifications } from "@/hooks/useRideLifecycleNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState } from "react";
@@ -29,6 +30,7 @@ const TITLES: Record<Props["mode"], string> = {
 export function RealtimeTripScreen({ rideId, mode, holdId, onClose }: Props) {
   const settled = useRef(false);
   const { ride } = useRideRealtime(rideId);
+  useRideLifecycleNotifications(ride, "client");
   const [driverName, setDriverName] = useState<string | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
 
