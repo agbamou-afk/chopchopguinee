@@ -55,7 +55,7 @@ export function useRideRealtime(rideId: string | null) {
     });
 
     const channel = supabase
-      .channel(`ride-${rideId}`)
+      .channel(`ride-${rideId}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         {
