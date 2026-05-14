@@ -123,9 +123,9 @@ export function ActiveTripMap({
     mapRef.current.fitBounds(b, 80);
   }, [pickup, dropoff, driverPos?.lat, driverPos?.lng]);
 
-  if (loading || !ride) {
+  if (!ride) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground animate-pulse">
         Chargement du trajet…
       </div>
     );

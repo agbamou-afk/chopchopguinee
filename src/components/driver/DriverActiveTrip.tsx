@@ -176,7 +176,9 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   const qrValue = pickupCode ? `CHOP-PICKUP-${pickupCode}-${qrTick}` : "";
   const secondsLeft = 30 - Math.floor((Date.now() / 1000) % 30);
 
-  if (loading || !ride) {
+  // Stale-while-revalidate: only show the spinner when we truly have nothing.
+  // Re-renders during refetch keep the previous ride visible.
+  if (!ride) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
