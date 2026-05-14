@@ -22,7 +22,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatGNF } from "@/lib/format";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import QRCode from "react-qr-code";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 type Phase = "approach" | "arrived" | "on_trip" | "at_destination";
 
@@ -136,10 +136,10 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   useEffect(() => {
     const prev = prevPhaseRef.current;
     prevPhaseRef.current = phase;
-    if (phase === "arrived" && prev !== "arrived" && pickupCode) {
+    if (phase === "arrived" && prev !== "arrived") {
       setQrOpen(true);
     }
-    if (phase !== "arrived") setQrOpen(false);
+    if (phase === "on_trip" || phase === "at_destination") setQrOpen(false);
   }, [phase, pickupCode]);
 
   // Rotate the QR token every 30 seconds while the popup is visible
@@ -168,6 +168,7 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     const { error } = await supabase.rpc("ride_set_phase", { p_ride_id: rideId, p_phase: p });
     setBusy(false);
     if (error) { toast({ title: "Erreur", description: error.message }); return false; }
+    if (p === "arrived") setQrOpen(true);
     try { Analytics.track("driver.ride.completed" as any, { metadata: { phase: p, rideId } }); } catch {}
     return true;
   };
