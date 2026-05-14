@@ -2,7 +2,7 @@ import { ModulePage } from "@/components/admin/ModulePage";
 import { StatGrid, FilterChip } from "@/components/admin/AdminMock";
 import { Card } from "@/components/ui/card";
 import {
-  Activity, Bike, Package, Clock, AlertTriangle, WifiOff, Hourglass, CheckCircle2, Search, Navigation, MapPin, Flag,
+  Bike, AlertTriangle, WifiOff, Hourglass, CheckCircle2, Search, Navigation, MapPin, Flag,
 } from "lucide-react";
 import { useState } from "react";
 import { AdminLiveOpsMap } from "@/components/admin/AdminLiveOpsMap";
