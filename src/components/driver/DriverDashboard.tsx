@@ -7,6 +7,7 @@ interface DriverDashboardProps {
   weeklyEarnings: number;
   completedRides: number;
   onlineHours: number;
+  acceptRate?: number;
 }
 
 export function DriverDashboard({
