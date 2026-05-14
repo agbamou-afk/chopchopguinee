@@ -1,72 +1,13 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Clock, Navigation, Phone, MessageCircle, CheckCircle, Users, Timer, BellRing } from "lucide-react";
+import { Clock, Users, Timer, BellRing } from "lucide-react";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { toast } from "sonner";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { IncomingRequestPopup } from "@/components/driver/IncomingRequestPopup";
 
-interface ActiveOrder {
-  id: string;
-  customerName: string;
-  customerPhone: string;
-  pickup: string;
-  destination: string;
-  estimatedPrice: number;
-  status: "pickup" | "in_transit" | "arrived";
-}
-
 export function DriverOrdersView() {
   const { queue, current, accept, decline, showCurrent, isOnline, activeTrip } = useDriverSession();
-
-  const [activeOrder, setActiveOrder] = useState<ActiveOrder | null>({
-    id: "CHO-2024-001",
-    customerName: "Amadou Diallo",
-    customerPhone: "+224 622 123 456",
-    pickup: "Marché Madina, Conakry",
-    destination: "Aéroport International Ahmed Sékou Touré",
-    estimatedPrice: 45000,
-    status: "pickup",
-  });
-
-  const formatMoney = (amount: number) =>
-    formatGNF(amount);
-
-  const handleStatusUpdate = () => {
-    if (!activeOrder) return;
-
-    if (activeOrder.status === "pickup") {
-      setActiveOrder({ ...activeOrder, status: "in_transit" });
-      toast.success("Client récupéré ! En route vers la destination.");
-    } else if (activeOrder.status === "in_transit") {
-      setActiveOrder({ ...activeOrder, status: "arrived" });
-      toast.success("Arrivé à destination !");
-    } else {
-      setActiveOrder(null);
-      toast.success("Course terminée ! Gains ajoutés.");
-    }
-  };
-
-  const statusInfo = {
-    pickup: {
-      label: "En route pour récupérer",
-      action: "Client récupéré",
-      color: "bg-primary",
-    },
-    in_transit: {
-      label: "En route vers destination",
-      action: "Arrivé à destination",
-      color: "bg-secondary",
-    },
-    arrived: {
-      label: "À destination",
-      action: "Terminer la course",
-      color: "bg-success",
-    },
-  };
 
   return (
     <div className="max-w-md mx-auto">
