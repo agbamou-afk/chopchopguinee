@@ -50,15 +50,29 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
       cancelled = true;
       const s = scannerRef.current;
       if (s) {
-        s.stop().then(() => s.clear()).catch(() => {});
+        try {
+          // @ts-ignore - getState exists on Html5Qrcode
+          const state = typeof s.getState === "function" ? s.getState() : 2;
+          // 2 = SCANNING, 3 = PAUSED
+          if (state === 2 || state === 3) {
+            s.stop().then(() => { try { s.clear(); } catch {} }).catch(() => {});
+          } else {
+            try { s.clear(); } catch {}
+          }
+        } catch {}
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleResult = async (text: string) => {
+    const s = scannerRef.current;
     try {
-      await scannerRef.current?.stop();
+      // @ts-ignore
+      const state = s && typeof s.getState === "function" ? s.getState() : 0;
+      if (s && (state === 2 || state === 3)) {
+        await s.stop();
+      }
     } catch {}
     onResult(text);
   };
