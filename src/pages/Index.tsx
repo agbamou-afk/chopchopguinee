@@ -263,15 +263,27 @@ const Index = () => {
       </AnimatePresence>
 
       {!bookingRide && !activeTrip && (
-        <>
-          {isDriverMode ? renderDriverView() : renderUserView()}
-          <BottomNav
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            isDriverMode={isDriverMode}
-            onScanClick={() => handleAction("scan")}
-          />
-        </>
+        isDriverMode ? (
+          <DriverSessionProvider>
+            {renderDriverView()}
+            <BottomNav
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              isDriverMode={isDriverMode}
+              onScanClick={() => handleAction("scan")}
+            />
+          </DriverSessionProvider>
+        ) : (
+          <>
+            {renderUserView()}
+            <BottomNav
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              isDriverMode={isDriverMode}
+              onScanClick={() => handleAction("scan")}
+            />
+          </>
+        )
       )}
 
       {showScanner && (
