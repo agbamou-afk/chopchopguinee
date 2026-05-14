@@ -1,11 +1,13 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Clock, Navigation, Phone, MessageCircle, CheckCircle, Users, Timer } from "lucide-react";
+import { Clock, Navigation, Phone, MessageCircle, CheckCircle, Users, Timer, BellRing } from "lucide-react";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
+import { IncomingRequestPopup } from "@/components/driver/IncomingRequestPopup";
 
 interface ActiveOrder {
   id: string;
@@ -18,6 +20,8 @@ interface ActiveOrder {
 }
 
 export function DriverOrdersView() {
+  const { queue, current, accept, decline, showCurrent, isOnline, activeTrip } = useDriverSession();
+
   const [activeOrder, setActiveOrder] = useState<ActiveOrder | null>({
     id: "CHO-2024-001",
     customerName: "Amadou Diallo",
@@ -66,16 +70,36 @@ export function DriverOrdersView() {
 
   return (
     <div className="max-w-md mx-auto">
-      <ScreenHeader title="Mes courses" subtitle="Gérez vos courses en cours" />
+      <ScreenHeader title="Mes courses" subtitle="Demandes entrantes et course active" />
 
       <div className="mt-4 mb-2">
         <LiveStrip
           stats={[
-            { icon: Users, label: "Demandes proches", bg: "bg-primary/10", tone: "text-primary" },
-            { icon: Timer, label: "Navigation en direct", bg: "bg-secondary/20", tone: "text-foreground" },
+            { icon: Users, label: `${queue.length} demande${queue.length > 1 ? "s" : ""} proche${queue.length > 1 ? "s" : ""}`, bg: "bg-primary/10", tone: "text-primary" },
+            { icon: Timer, label: isOnline ? "En ligne" : "Hors ligne", bg: "bg-secondary/20", tone: "text-foreground" },
           ]}
         />
       </div>
+
+      {/* Pending offers banner — only when no popup is currently displayed */}
+      {isOnline && !current && !activeTrip && queue.length > 0 && (
+        <div className="px-4 mt-2">
+          <button
+            onClick={showCurrent}
+            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-primary/5 border border-primary/30 text-left hover:bg-primary/10 transition"
+          >
+            <div className="p-2 rounded-xl bg-primary/15">
+              <BellRing className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                {queue.length} demande{queue.length > 1 ? "s" : ""} en attente
+              </p>
+              <p className="text-xs text-muted-foreground">Touchez pour voir la suivante</p>
+            </div>
+          </button>
+        </div>
+      )}
 
       {activeOrder ? (
         <div className="px-4 pb-28">
@@ -179,6 +203,14 @@ export function DriverOrdersView() {
           </p>
         </motion.div>
       )}
+
+      {/* Bottom-sheet popup lives in the Courses tab only */}
+      <IncomingRequestPopup
+        request={current}
+        onAccept={accept}
+        onDecline={decline}
+        timeoutSec={20}
+      />
     </div>
   );
 }

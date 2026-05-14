@@ -1,121 +1,29 @@
 import { motion } from "framer-motion";
 import { Power, Radar, Users, AlertTriangle, Clock, ShieldCheck, FileWarning, Wallet, MapPin, Navigation } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IncomingRequestPopup, type IncomingRequest } from "@/components/driver/IncomingRequestPopup";
-import { DriverTripView } from "@/components/driver/DriverTripView";
-import { DriverActiveTrip } from "@/components/driver/DriverActiveTrip";
 import { AppHeader } from "@/components/ui/AppHeader";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/hooks/useWallet";
-import { useDriverProfile } from "@/hooks/useDriverProfile";
-import { useDriverPresence } from "@/hooks/useDriverPresence";
-import { useIncomingOffers, type RideOffer } from "@/hooks/useIncomingOffers";
 import { useDriverEarnings } from "@/hooks/useDriverEarnings";
-import { supabase } from "@/integrations/supabase/client";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { Card } from "@/components/ui/card";
 import { formatGNF } from "@/lib/format";
-import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { ChopMap, HeatmapLayer } from "@/components/map";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
 }
 
-function offerToRequest(o: RideOffer): IncomingRequest {
-  const distKm = o.distance_to_pickup_m ? (o.distance_to_pickup_m / 1000).toFixed(1) : "—";
-  return {
-    id: o.id,
-    type: "ride",
-    pickup: o.pickup_zone || "Point de départ",
-    destination: o.destination_zone || "Destination",
-    customerName: "Client",
-    customerRating: 5,
-    estimatedPrice: o.estimated_earning_gnf ?? o.estimated_fare_gnf ?? 0,
-    distance: distKm === "—" ? "—" : `${distKm} km`,
-    eta: "—",
-  };
-}
-
 export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   const navigate = useNavigate();
-  const { profile, loading: profileLoading, refetch } = useDriverProfile();
-  const [isOnline, setIsOnline] = useState(false);
-  const [toggling, setToggling] = useState(false);
-  const [current, setCurrent] = useState<IncomingRequest | null>(null);
-  const [activeTrip, setActiveTrip] = useState<IncomingRequest | null>(null);
-  const [activeRideId, setActiveRideId] = useState<string | null>(null);
+  const {
+    profile, profileLoading,
+    isOnline, toggling, togglePresence, cashOverLimit,
+    queue, current, activeTrip,
+  } = useDriverSession();
   const { available: driverBalance, loading: walletLoading } = useWallet("driver");
-  const { offers, refetch: refetchOffers } = useIncomingOffers(isOnline);
-  const queue = offers.map(offerToRequest);
   const e = useDriverEarnings();
-
-  useDriverPresence({ enabled: isOnline, onTrip: !!activeTrip });
-
-  // Sync local toggle with persisted presence
-  useEffect(() => {
-    if (profile) setIsOnline(profile.presence !== "offline");
-  }, [profile?.presence]);
-
-  const cashOverLimit = !!profile && profile.cash_debt_gnf >= profile.debt_limit_gnf;
-
-  const handleTogglePresence = async () => {
-    if (!profile || toggling) return;
-    const next = isOnline ? "offline" : "online";
-    if (next === "online" && cashOverLimit) {
-      toast.error("Limite de cash atteinte. Réglez votre commission pour repasser en ligne.");
-      Analytics.track("driver.cash.over_limit", { metadata: { cash_debt_gnf: profile.cash_debt_gnf } });
-      return;
-    }
-    setToggling(true);
-    const { error } = await supabase.rpc("driver_set_status", { p_status: next });
-    setToggling(false);
-    if (error) {
-      toast.error(error.message || "Impossible de changer le statut.");
-      return;
-    }
-    setIsOnline(next === "online");
-    refetch();
-    Analytics.track(next === "online" ? "driver.online" : "driver.offline", {
-      metadata: { vehicle_type: profile.vehicle_type },
-    });
-    toast.success(next === "online" ? "Vous êtes en ligne." : "Vous êtes hors ligne.");
-  };
-
-  // Auto-pop next offer when online and idle
-  useEffect(() => {
-    if (!isOnline || current || activeTrip || queue.length === 0) return;
-    setCurrent(queue[0]);
-  }, [isOnline, current, activeTrip, queue]);
-
-  const handleAccept = async (id: string) => {
-    const accepted = current;
-    setCurrent(null);
-    const { data, error } = await supabase.rpc("driver_offer_accept", { p_offer_id: id });
-    if (error) {
-      toast.error(error.message || "Impossible d'accepter cette course.");
-      refetchOffers();
-      return;
-    }
-    if (accepted) {
-      setActiveTrip(accepted);
-      const rideId = (data as any)?.ride_id as string | undefined;
-      if (rideId) setActiveRideId(rideId);
-      toast.success("Course acceptée — direction le client.");
-    }
-    Analytics.track("driver.ride.accepted", { metadata: { offer_id: id, fare_gnf: accepted?.estimatedPrice } });
-    refetchOffers();
-  };
-
-  const handleDecline = async (id: string) => {
-    setCurrent(null);
-    const { error } = await supabase.rpc("driver_offer_decline", { p_offer_id: id });
-    if (error) toast.error(error.message);
-    else toast.info("Course refusée");
-    Analytics.track("driver.ride.declined", { metadata: { offer_id: id } });
-    refetchOffers();
-  };
 
   // Application/status gating UI
   if (!profileLoading && (!profile || profile.status !== "approved")) {
@@ -239,7 +147,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
           return (
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={handleTogglePresence}
+              onClick={togglePresence}
               disabled={toggling}
               className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl overflow-hidden ${tone} transition-colors disabled:opacity-60`}
             >
@@ -340,28 +248,6 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         )}
       </div>
 
-      <IncomingRequestPopup
-        request={current}
-        onAccept={handleAccept}
-        onDecline={handleDecline}
-        timeoutSec={20}
-      />
-
-      {activeTrip && (
-        activeRideId &&
-        (typeof window !== "undefined" &&
-          (localStorage.getItem("cc_realtime_trip") === "1" ||
-            /[?&]trip=v2/.test(window.location.search)))
-          ? (
-            <DriverActiveTrip
-              rideId={activeRideId}
-              onClose={() => { setActiveTrip(null); setActiveRideId(null); }}
-            />
-          )
-          : (
-            <DriverTripView request={activeTrip} onClose={() => { setActiveTrip(null); setActiveRideId(null); }} />
-          )
-      )}
     </div>
   );
 }
