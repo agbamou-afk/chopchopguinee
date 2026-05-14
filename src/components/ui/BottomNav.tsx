@@ -1,6 +1,10 @@
-import { Home, ShoppingBag, Wallet, User, ScanLine } from "lucide-react";
+import { Home, ShoppingBag, Wallet, User, ScanLine, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { SteeringWheel } from "@/components/icons/SteeringWheel";
+import type { ComponentType, SVGProps } from "react";
+
+type IconType = LucideIcon | ComponentType<SVGProps<SVGSVGElement> & { size?: number | string }>;
+type Tab = { id: string; icon: IconType; label: string };
 
 interface BottomNavProps {
   activeTab: string;
@@ -9,14 +13,14 @@ interface BottomNavProps {
   onScanClick?: () => void;
 }
 
-const userTabs = [
+const userTabs: Tab[] = [
   { id: "home", icon: Home, label: "Accueil" },
   { id: "orders", icon: ShoppingBag, label: "Activité" },
   { id: "wallet", icon: Wallet, label: "Portefeuille" },
   { id: "profile", icon: User, label: "Compte" },
 ];
 
-const driverTabs = [
+const driverTabs: Tab[] = [
   { id: "home", icon: Home, label: "Tableau" },
   { id: "orders", icon: SteeringWheel, label: "Courses" },
   { id: "profile", icon: User, label: "Profil" },
@@ -70,7 +74,7 @@ function NavButton({
   active,
   onClick,
 }: {
-  tab: { id: string; icon: typeof Home; label: string };
+  tab: Tab;
   active: boolean;
   onClick: () => void;
 }) {
