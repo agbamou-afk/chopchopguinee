@@ -42,6 +42,9 @@ export function useDriverLocation(driverId: string | null) {
   const lastFixAtRef = useRef<number>(0);
   const lastFixPosRef = useRef<LatLng | null>(null);
   const rafRef = useRef<number>(0);
+  // Mirror of the currently displayed marker — readable from event handlers
+  // without going through stale React state closures.
+  const visualRef = useRef<{ lat: number; lng: number; heading: number } | null>(null);
 
   useEffect(() => {
     if (!driverId) return;
@@ -63,6 +66,7 @@ export function useDriverLocation(driverId: string | null) {
         headingToRef.current = h;
         headingT0Ref.current = now;
         statusRef.current = raw.status ?? 'online';
+        visualRef.current = { ...incoming, heading: h };
         setPos({ ...incoming, heading: h, status: statusRef.current });
         return;
       }
@@ -85,7 +89,8 @@ export function useDriverLocation(driverId: string | null) {
       // 3) Continuous interpolation — start the new segment from where the
       // marker visually IS right now, not from the previous target. This
       // prevents back-and-forth jumps when fixes arrive mid-animation.
-      const currentVisual = pos ? { lat: pos.lat, lng: pos.lng } : (toRef.current ?? incoming);
+      const v = visualRef.current;
+      const currentVisual = v ? { lat: v.lat, lng: v.lng } : (toRef.current ?? incoming);
       fromRef.current = currentVisual;
       toRef.current = incoming;
       tStartRef.current = now;
@@ -103,7 +108,7 @@ export function useDriverLocation(driverId: string | null) {
         nextHeading = raw.heading ?? bearingDeg(last, incoming);
       }
       // Start heading animation from the currently displayed heading.
-      headingFromRef.current = pos?.heading ?? headingToRef.current;
+      headingFromRef.current = visualRef.current?.heading ?? headingToRef.current;
       headingToRef.current = nextHeading;
       headingT0Ref.current = now;
 
@@ -148,6 +153,7 @@ export function useDriverLocation(driverId: string | null) {
         const tH = 1 - Math.pow(1 - rawH, 3);
         const heading = lerpHeading(headingFromRef.current, headingToRef.current, tH);
 
+        visualRef.current = { lat: interp.lat, lng: interp.lng, heading };
         setPos({ ...interp, heading, status: statusRef.current });
       }
       rafRef.current = requestAnimationFrame(tick);
