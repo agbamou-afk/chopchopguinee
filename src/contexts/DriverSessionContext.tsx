@@ -141,15 +141,14 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     activeTrip, activeRideId,
   };
 
-  const useV2 = typeof window !== "undefined" &&
-    (localStorage.getItem("cc_realtime_trip") === "1" ||
-      /[?&]trip=v2/.test(window.location.search));
-
+  // Always prefer the in-app navigation screen (DriverActiveTrip) when we
+  // have a real ride id. Fall back to the legacy preview screen only when
+  // the offer didn't return one (defensive — should not happen in prod).
   return (
     <DriverSessionContext.Provider value={value}>
       {children}
       {activeTrip && (
-        activeRideId && useV2
+        activeRideId
           ? <DriverActiveTrip rideId={activeRideId} onClose={closeTrip} />
           : <DriverTripView request={activeTrip} onClose={closeTrip} />
       )}
