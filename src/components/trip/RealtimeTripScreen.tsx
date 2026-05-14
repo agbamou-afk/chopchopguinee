@@ -8,6 +8,7 @@ import { useRideLifecycleNotifications } from "@/hooks/useRideLifecycleNotificat
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState } from "react";
+import { RidePhaseChip, deriveRidePhase } from "@/components/ride/RidePhaseChip";
 
 interface Props {
   rideId: string;
@@ -103,7 +104,10 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose }: Props) {
         >
           <X className="w-5 h-5 text-primary-foreground" />
         </button>
-        <div className="text-primary-foreground text-sm font-semibold">{TITLES[mode]}</div>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-primary-foreground text-sm font-semibold truncate">{TITLES[mode]}</span>
+          {ride && <RidePhaseChip phase={deriveRidePhase(ride)} size="sm" />}
+        </div>
         <div className="w-9" />
       </div>
 
