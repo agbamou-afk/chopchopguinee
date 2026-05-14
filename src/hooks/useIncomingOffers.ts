@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLowDataMode } from "@/hooks/useLowDataMode";
 
 export interface RideOffer {
   id: string;
@@ -20,6 +21,7 @@ export interface RideOffer {
  */
 export function useIncomingOffers(enabled: boolean) {
   const { user } = useAuth();
+  const { low } = useLowDataMode();
   const [offers, setOffers] = useState<RideOffer[]>([]);
 
   const refetch = useCallback(async () => {
@@ -39,6 +41,7 @@ export function useIncomingOffers(enabled: boolean) {
     refetch();
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let pollId: number | null = null;
     const subscribe = () => {
       channel = supabase
         .channel(`ride_offers:${user.id}`)
@@ -51,12 +54,14 @@ export function useIncomingOffers(enabled: boolean) {
     };
     const unsubscribe = () => {
       if (channel) { supabase.removeChannel(channel); channel = null; }
+      if (pollId) { window.clearInterval(pollId); pollId = null; }
     };
 
     // Pause subscription when tab hidden / offline to save bandwidth.
     const onVisibility = () => {
       if (document.visibilityState === "visible" && navigator.onLine) {
         if (!channel) subscribe();
+        if (!pollId) pollId = window.setInterval(refetch, low ? 15000 : 5000);
         refetch();
       } else {
         unsubscribe();
@@ -73,7 +78,7 @@ export function useIncomingOffers(enabled: boolean) {
       window.removeEventListener("offline", onVisibility);
       unsubscribe();
     };
-  }, [enabled, user?.id, refetch]);
+  }, [enabled, user?.id, refetch, low]);
 
   return { offers, refetch };
 }
