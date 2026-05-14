@@ -84,15 +84,22 @@ export function IncomingRequestPopup({ request, onAccept, onDecline, timeoutSec 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] bg-foreground/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+          className="fixed inset-x-0 bottom-0 z-[60] pointer-events-none"
+          aria-live="polite"
         >
           <motion.div
-            initial={{ y: 80, opacity: 0, scale: 0.95 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 80, opacity: 0, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="w-full max-w-md bg-card rounded-3xl shadow-elevated overflow-hidden"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+            className="pointer-events-auto mx-auto w-full max-w-md bg-card rounded-t-3xl shadow-elevated overflow-hidden border-t border-border/60 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+            role="dialog"
+            aria-label="Nouvelle demande de course"
           >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-2 pb-1">
+              <div className="w-10 h-1.5 rounded-full bg-muted-foreground/25" />
+            </div>
             {/* Countdown */}
             <div className="h-2 bg-muted">
               <motion.div
