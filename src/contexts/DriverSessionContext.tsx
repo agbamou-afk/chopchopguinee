@@ -8,6 +8,7 @@ import type { IncomingRequest } from "@/components/driver/IncomingRequestPopup";
 import { DriverActiveTrip } from "@/components/driver/DriverActiveTrip";
 import { DriverTripView } from "@/components/driver/DriverTripView";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
+import { useAuth } from "@/contexts/AuthContext";
 
 function offerToRequest(o: RideOffer): IncomingRequest {
   const distKm = o.distance_to_pickup_m ? (o.distance_to_pickup_m / 1000).toFixed(1) : "—";
@@ -51,6 +52,7 @@ export function useDriverSession() {
 }
 
 export function DriverSessionProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const { profile, loading: profileLoading, refetch } = useDriverProfile();
   const [isOnline, setIsOnline] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -68,6 +70,52 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (profile) setIsOnline(profile.presence !== "offline");
   }, [profile?.presence]);
+
+  // If the driver refreshes while already on a ride, rebuild local trip state
+  // from the database so the navigation screen is available again.
+  useEffect(() => {
+    if (!user || profile?.presence !== "on_trip" || activeTrip || activeRideId) return;
+
+    let cancelled = false;
+    const restoreActiveRide = async () => {
+      const { data: ride } = await supabase
+        .from("rides")
+        .select("id,fare_gnf")
+        .eq("driver_id", user.id)
+        .not("status", "in", "(completed,cancelled)")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!ride || cancelled) return;
+
+      const { data: offer } = await supabase
+        .from("ride_offers")
+        .select("id,pickup_zone,destination_zone,estimated_fare_gnf,estimated_earning_gnf,distance_to_pickup_m")
+        .eq("ride_id", ride.id)
+        .eq("driver_id", user.id)
+        .order("sent_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (cancelled) return;
+      setActiveRideId(ride.id);
+      setActiveTrip(offerToRequest({
+        id: offer?.id ?? ride.id,
+        ride_id: ride.id,
+        pickup_zone: offer?.pickup_zone ?? "Point de départ",
+        destination_zone: offer?.destination_zone ?? "Destination",
+        estimated_fare_gnf: offer?.estimated_fare_gnf ?? ride.fare_gnf ?? 0,
+        estimated_earning_gnf: offer?.estimated_earning_gnf ?? ride.fare_gnf ?? 0,
+        distance_to_pickup_m: offer?.distance_to_pickup_m ?? null,
+        expires_at: new Date(Date.now() + 30_000).toISOString(),
+        status: "accepted",
+      }));
+    };
+
+    restoreActiveRide();
+    return () => { cancelled = true; };
+  }, [user?.id, profile?.presence, activeTrip, activeRideId]);
 
   const cashOverLimit = !!profile && profile.cash_debt_gnf >= profile.debt_limit_gnf;
 
