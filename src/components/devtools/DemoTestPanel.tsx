@@ -126,12 +126,23 @@ export function DemoTestPanel() {
       if (!ride) return chopToast.warning("Aucune course terminée à vérifier.");
       const { data, error } = await supabase.rpc("ride_integrity_check", { p_ride_id: ride.id });
       if (error) return chopToast.error("Vérification échouée", { description: error.message });
-      const report = data as { ok: boolean; checks?: Array<{ name: string; ok: boolean }> } | null;
+      const report = data as {
+        ok: boolean;
+        is_demo?: boolean;
+        financial_check?: string;
+        message?: string;
+        checks?: Array<{ name: string; ok: boolean }>;
+      } | null;
       const failed = (report?.checks ?? []).filter((c) => !c.ok).map((c) => c.name);
-      // Console dump for full audit trail
       // eslint-disable-next-line no-console
       console.log("[ride_integrity_check]", report);
-      if (report?.ok) {
+      if (report?.ok && report?.is_demo && report?.financial_check === "skipped_demo_no_hold") {
+        chopToast.success("Cycle démo OK · règlement ignoré", {
+          description:
+            report.message ??
+            `Course démo ${ride.id.slice(0, 8)} terminée. Aucun hold wallet, règlement financier ignoré.`,
+        });
+      } else if (report?.ok) {
         chopToast.success("Wallet OK", {
           description: `Course ${ride.id.slice(0, 8)} • toutes les vérifications passent.`,
         });
