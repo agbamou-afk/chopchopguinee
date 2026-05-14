@@ -67,7 +67,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
   const queue = offers.map(offerToRequest);
   const currentExpiresAt = current
     ? offers.find((o) => o.id === current.id)?.expires_at ?? null
-    : null;
+    : offers[0]?.expires_at ?? null;
 
   useDriverPresence({ enabled: isOnline, onTrip: !!activeTrip });
 
@@ -179,7 +179,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
   }, [offers, current?.id]);
 
   const accept = useCallback(async (id: string) => {
-    const accepted = current;
+    const accepted = current?.id === id ? current : queue.find((request) => request.id === id) ?? null;
     setCurrent(null);
     const { data, error } = await supabase.rpc("driver_offer_accept", { p_offer_id: id });
     if (error) {
@@ -195,7 +195,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     }
     Analytics.track("driver.ride.accepted", { metadata: { offer_id: id, fare_gnf: accepted?.estimatedPrice } });
     refetchOffers();
-  }, [current, refetchOffers]);
+  }, [current, queue, refetchOffers]);
 
   const decline = useCallback(async (id: string) => {
     setCurrent(null);
