@@ -22,6 +22,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatGNF } from "@/lib/format";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import QRCode from "react-qr-code";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Phase = "approach" | "arrived" | "on_trip" | "at_destination";
 
@@ -74,6 +75,11 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     (typeof window !== "undefined" && /[?&]demo=1/.test(window.location.search));
   const pickupCode = (ride?.metadata as any)?.pickup_code as string | undefined;
 
+  // Auto-popup QR when driver confirms arrival, with a fresh token every 30s.
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrTick, setQrTick] = useState(() => Math.floor(Date.now() / 30000));
+  const prevPhaseRef = useRef<Phase | null>(null);
+
   useEffect(() => { if (!geoReady) requestGeo(); }, [geoReady, requestGeo]);
 
   const pickup: LatLng | null = ride ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null;
@@ -125,6 +131,29 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     if (pts.length < 2) { mapRef.current.flyTo(pickup.lng, pickup.lat, 15); return; }
     mapRef.current.fitBounds(bboxOf(pts), 80);
   }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]);
+
+  // Open the QR sheet automatically the moment we transition into "arrived"
+  useEffect(() => {
+    const prev = prevPhaseRef.current;
+    prevPhaseRef.current = phase;
+    if (phase === "arrived" && prev !== "arrived" && pickupCode) {
+      setQrOpen(true);
+    }
+    if (phase !== "arrived") setQrOpen(false);
+  }, [phase, pickupCode]);
+
+  // Rotate the QR token every 30 seconds while the popup is visible
+  useEffect(() => {
+    if (!qrOpen) return;
+    const id = window.setInterval(
+      () => setQrTick(Math.floor(Date.now() / 30000)),
+      30000,
+    );
+    return () => window.clearInterval(id);
+  }, [qrOpen]);
+
+  const qrValue = pickupCode ? `CHOP-PICKUP-${pickupCode}-${qrTick}` : "";
+  const secondsLeft = 30 - Math.floor((Date.now() / 1000) % 30);
 
   if (loading || !ride) {
     return (
@@ -240,7 +269,7 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
         {phase === "arrived" && pickupCode && (
           <div className="rounded-2xl border border-border bg-muted/30 p-3 flex items-center gap-3">
             <div className="bg-white p-2 rounded-lg shrink-0">
-              <QRCode value={`CHOP-PICKUP-${pickupCode}`} size={72} />
+              <QRCode value={qrValue} size={72} />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
@@ -248,6 +277,12 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
               </p>
               <p className="text-2xl font-bold tracking-[0.2em] tabular-nums">{pickupCode}</p>
               <p className="text-[11px] text-muted-foreground">Faites scanner ce QR ou dictez le code au client.</p>
+              <button
+                onClick={() => setQrOpen(true)}
+                className="mt-1 text-[11px] font-semibold text-primary underline"
+              >
+                Agrandir le QR
+              </button>
             </div>
           </div>
         )}
@@ -305,6 +340,26 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
           </Button>
         )}
       </div>
+
+      <Dialog open={qrOpen} onOpenChange={setQrOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">Faites scanner ce QR au client</DialogTitle>
+          </DialogHeader>
+          {pickupCode && (
+            <div className="flex flex-col items-center gap-3 pb-2">
+              <div className="bg-white p-4 rounded-2xl">
+                <QRCode value={qrValue} size={240} />
+              </div>
+              <p className="text-3xl font-bold tracking-[0.3em] tabular-nums">{pickupCode}</p>
+              <p className="text-xs text-muted-foreground text-center">
+                Le QR se renouvelle automatiquement toutes les 30 secondes ({secondsLeft}s).
+                Le client peut aussi saisir le code à 6 caractères.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
