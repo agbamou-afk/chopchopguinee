@@ -1,16 +1,13 @@
 import { motion } from "framer-motion";
-import { Power, BellRing, Radar, Users, Star, TrendingUp, Timer, AlertTriangle, Clock, ShieldCheck, FileWarning, Wallet, ChevronRight } from "lucide-react";
+import { Power, Radar, Users, AlertTriangle, Clock, ShieldCheck, FileWarning, Wallet, MapPin, Navigation } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DriverDashboard } from "@/components/driver/DriverDashboard";
 import { IncomingRequestPopup, type IncomingRequest } from "@/components/driver/IncomingRequestPopup";
 import { DriverTripView } from "@/components/driver/DriverTripView";
 import { DriverActiveTrip } from "@/components/driver/DriverActiveTrip";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { LiveRidesPanel } from "@/components/driver/LiveRidesPanel";
-import { LiveStrip } from "@/components/ui/LiveStrip";
 import { useWallet } from "@/hooks/useWallet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
 import { useDriverPresence } from "@/hooks/useDriverPresence";
@@ -20,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { formatGNF } from "@/lib/format";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
+import { ChopMap, HeatmapLayer } from "@/components/map";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
