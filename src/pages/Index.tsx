@@ -160,6 +160,30 @@ const Index = () => {
     const trip = activeTrip;
     if (trip?.rideId) {
       dismissedRidesRef.current.add(trip.rideId);
+      // Linked demo: never cancel server-side on close. The demo driver still
+      // needs to be able to accept the same ride_id after the operator
+      // switches accounts. Just dismiss locally for this session.
+      if (alsoCancel && isLinkedDemo) {
+        try {
+          const { data: row } = await supabase
+            .from("rides")
+            .select("metadata,status")
+            .eq("id", trip.rideId)
+            .maybeSingle();
+          const meta = (row?.metadata ?? {}) as { linked_demo?: boolean };
+          const stillLive = row?.status === "pending" || row?.status === "in_progress";
+          if (meta.linked_demo === true && stillLive) {
+            toast({
+              title: "Démo masquée",
+              description: "La course reste active pour le chauffeur.",
+            });
+            setActiveTrip(null);
+            setActiveView("orders");
+            setActiveTab("orders");
+            return;
+          }
+        } catch { /* fall through to default cancel */ }
+      }
       // If the user closes a still-pending (un-matched) ride, cancel it
       // server-side so it does not stay around as an orphan.
       if (alsoCancel) {
