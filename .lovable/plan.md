@@ -1,78 +1,45 @@
-# Day 5 — Driver System & Operational Flow
+## Why no popups appear
 
-Goal: turn driver mode into a real operational tool — role-gated, onboarded, approvable, live-trackable, with trip lifecycle, earnings, cash-commission tracking, support, and live admin oversight. No design overhaul, no auth/wallet rewrites.
+The demo driver is stuck in `presence='on_trip'` because of a stale `in_progress` ride from an earlier session (`d7bf8111…`). Two consequences:
 
-## Current state (from earlier days)
-- `driver_locations` table exists with RLS (drivers upsert own; clients see assigned driver; admins see all).
-- `rides` table + `ride_create / ride_accept / ride_complete / ride_cancel` RPCs already wired.
-- Wallet + commission split already happen inside `ride_complete` (1500 bps to master).
-- `useAuth.isAdmin` + `can_manage_operations(_user_id)` already exist.
-- `DriverHome` exists but is mostly mock; no application flow, no incoming-request popup, no trip lifecycle, no earnings page beyond a stub.
-- No `driver_profiles`, `driver_applications`, `driver_cash_ledger`, `ride_offers` tables yet.
+1. **No new offers are dispatched.** The auto-dispatcher (`public.ride_dispatch`) only looks for drivers with `dp.presence='online'`. With the demo driver pinned to `on_trip`, every ride the demo client books inserts a `rides` row with no matching `ride_offers` row — so the bottom sheet and the global banner have nothing to show.
+2. **The active trip never reappears in the UI.** `DriverSessionContext.activeTrip` is local React state. After a refresh it resets to `null`, so the in-app navigation screen for the still-running ride doesn’t mount, and the driver has no way to complete or cancel it from the UI.
 
-## Phases (each phase is one approval gate)
+The fix is to (a) recover from this state automatically, (b) make the demo seed self-healing, and (c) give the demo panel an explicit reset switch.
 
-### Phase 1 — Database foundations (single migration)
-- `app_role` already has `driver`. Add new tables:
-  - `driver_profiles` (user_id PK, status enum: pending/approved/rejected/suspended, vehicle_type enum: moto/toktok/livraison, plate, photo_url, id_doc_url, vehicle_photo_url, zones text[], rating numeric, accept_rate numeric, cash_debt_gnf bigint, debt_limit_gnf bigint, last_seen_at, approved_at, approved_by, rejected_reason, suspended_reason).
-  - `driver_applications` (history of submissions; one driver can re-apply).
-  - `ride_offers` (ride_id, driver_id, status enum: pending/accepted/declined/missed/expired, sent_at, responded_at, expires_at) — for incoming-request flow + accept/decline telemetry.
-  - `driver_cash_ledger` (driver_id, ride_id, cash_collected_gnf, commission_owed_gnf, settled_at).
-- RPCs:
-  - `driver_apply(payload jsonb)` — creates/updates pending application + driver_profiles row with status=pending.
-  - `driver_admin_decide(p_user_id, p_decision, p_reason)` — approve/reject/suspend; on approve grants `driver` role + creates driver wallet via `wallet_ensure('driver')`. Restricted to `god_admin` / `operations_admin`.
-  - `driver_set_status(p_status)` — driver toggles online/offline; gates on approved + not suspended + cash_debt < limit.
-  - `driver_offer_accept(p_offer_id)` / `driver_offer_decline(p_offer_id, p_reason)` — wraps `ride_accept` and updates offer row.
-  - `driver_cash_settle(p_driver_id, p_amount_gnf)` — admin-only, decrements cash_debt and posts wallet entry.
-- RLS: drivers RW their own row; admins (ops/god) full; clients only read approved+online location through existing policy.
+## Changes
 
-### Phase 2 — Driver onboarding flow (frontend)
-- New `/driver/apply` route with 6-step wizard: personal info → vehicle type → vehicle details → docs upload (Storage bucket `driver-docs` private) → zones → review/submit.
-- Calls `driver_apply` RPC.
-- Reusable `useDriverProfile()` hook returning {status, profile, refetch}.
-- `BecomeDriverCTA` shown on profile + driver-mode toggle when no driver role.
-- Status banner: "Votre demande est en cours de vérification." / rejected reason / suspended.
+### 1. Database migration — self-healing demo + reset helper
 
-### Phase 3 — Driver mode gating + DriverHome rebuild
-- Replace toggle in `AppHeader` so switching to driver mode requires `useDriverProfile().status === 'approved'`. If not, route to `/driver/apply`.
-- `DriverHome` sections:
-  - Status header (online/offline switch, daily earnings, wallet balance).
-  - KPI grid (Aujourd'hui / Courses / Heures / Acceptation / Note).
-  - Quick actions (Mes courses, Mes revenus, Support, Profil chauffeur).
-  - Application-status card if not approved.
-- Skeleton + empty + error states everywhere.
+- Update `public.demo_seed_ride_offer()` so it first:
+  - Cancels any non-terminal `rides` rows assigned to the demo driver (`status` set to `cancelled`, reason `demo_reset`).
+  - Expires any pending `ride_offers` for the demo driver.
+  - Forces `driver_profiles.presence='online'` and a corresponding `driver_locations` row near the demo pickup zone (so the dispatcher can find them).
+  - Then inserts the new pending offer (existing behaviour).
+- Add `public.demo_reset_driver()` (SECURITY DEFINER, callable by demo accounts or admins) that performs only the cleanup above without seeding an offer.
 
-### Phase 4 — Online lifecycle + location updates + incoming requests
-- `useDriverPresence()` hook:
-  - Throttled `navigator.geolocation.watchPosition` (every 8 s, or 3 s on active trip).
-  - Pauses on `document.hidden`, offline, or low-data mode (unless on_trip).
-  - Upserts `driver_locations` and updates `driver_profiles.last_seen_at`.
-- Realtime subscription on `ride_offers` filtered by `driver_id = me`.
-- `IncomingRequestPopup`: service type, pickup/dest zone, fare estimate, driver earning (fare × (1-1500bps)), distance, 20 s countdown, big Accept / Decline.
-  - Accept → `driver_offer_accept` → `DriverTripView`.
-  - Decline → `driver_offer_decline`.
-  - Timeout → marks `missed`.
+### 2. `src/contexts/DriverSessionContext.tsx` — restore active ride on boot
 
-### Phase 5 — Trip lifecycle + earnings + cash commission
-- `DriverTripView` with state machine for moto and livraison (call client, open route via `geo:` URL, report issue, cancel-with-reason).
-- `useDriverEarnings()` aggregates today/week from `wallet_transactions` + `rides` + `driver_cash_ledger`.
-- `DriverEarningsView` shows today / week / wallet / cash collected / commission owed / payouts pending / completed rides.
-- Cash-commission gate in `driver_set_status`: if `cash_debt_gnf >= debt_limit_gnf`, refuse going online and show warning toast.
+- On profile load, if `profile.presence === 'on_trip'` and no local `activeTrip`, query `rides` for the latest non-terminal ride where `driver_id = user.id` and seed:
+  - `activeRideId = ride.id`
+  - `activeTrip` from the ride’s pickup/destination zones + fare (mirroring `offerToRequest`).
+- This makes `DriverActiveTrip` mount again so the driver can complete/cancel the stuck trip instead of being stranded.
+- Keep the auto-pop guard (`!activeTrip`) intact so popups don’t fight the recovered trip.
 
-### Phase 6 — Admin tools, notifications, analytics, mobile QA
-- `Admin → Drivers`:
-  - Tabs: Pending applications / Approved / Suspended / All.
-  - Live operations panel: online / on_trip / offline counts, last-seen timestamps, cash debt column, suspend/reactivate actions, manual assign (later — out of scope, just wire the button to a stub).
-- Notifications: insert into existing `notification_log` for application submitted / approved / rejected / suspended / missed request / commission warning. WhatsApp + push deferred (just rows in log).
-- Analytics: register all `driver.*` events in `eventTaxonomy.ts` and emit from the relevant components.
-- Driver support: pre-fills `support_messages` with tag in metadata `{ category: 'driver_support', kind }`.
-- Mobile QA at 390×844: online toggle thumb-reachable, IncomingRequestPopup buttons ≥ 56 px, trip view padding-bottom 28, no horizontal overflow.
+### 3. `src/components/devtools/DemoTestPanel.tsx` — visible reset action
 
-## Out of scope (explicit, to keep scope honest)
-- WhatsApp / push delivery infra (just notification_log entries for now).
-- "Auto" vehicle type (column accepts it but UI does not show it).
-- Manual ride reassignment from admin (UI shell only).
-- Driver document OCR / KYC integration.
+- Add a button **“Réinitialiser le chauffeur démo”** above the existing test-offer button. Wires to the new `demo_reset_driver` RPC and toasts the result.
+- Tweak the existing test-offer toast to mention that any stuck trip is auto-cleared, since the seed RPC now resets first.
 
-## Approval ask
-This plan touches DB structure (Phase 1) and a lot of frontend. Please confirm and I'll proceed phase by phase, pausing after each migration / major UI surface for a quick check.
+## Out of scope
+
+- Dispatcher logic itself (already correct: only `online` drivers should receive offers).
+- Realtime/polling plumbing (already in place from the previous turn).
+- Client-side booking flow.
+
+## Acceptance
+
+- Logging into the demo driver with a stuck `in_progress` ride immediately shows the in-app navigation screen for that ride (no more silent dead state).
+- Tapping **Réinitialiser le chauffeur démo** clears the stuck ride and flips presence back to `online`.
+- Tapping **Envoyer une demande test au chauffeur démo** always produces a popup in the Courses tab and a banner on Tableau/Profil, even if the driver was previously stuck.
+- Demo client → demo driver booking flow produces a popup again because the demo driver can be picked by `ride_dispatch`.

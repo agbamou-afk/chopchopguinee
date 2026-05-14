@@ -151,7 +151,20 @@ export function DemoTestPanel() {
       }
       const id = (data as { offer_id?: string } | null)?.offer_id;
       chopToast.success("Demande test envoyée au chauffeur démo", {
-        description: id ? `Offer ${id.slice(0, 8)} • expire dans 20 s` : undefined,
+        description: id ? `Offer ${id.slice(0, 8)} • chauffeur réinitialisé • expire dans 30 s` : undefined,
+      });
+    });
+
+  const resetDemoDriver = () =>
+    run("reset-demo-driver", async () => {
+      const { data, error } = await supabase.rpc("demo_reset_driver" as never);
+      if (error) {
+        chopToast.error("Réinitialisation chauffeur échouée", { description: error.message });
+        return;
+      }
+      const result = data as { cancelled_rides?: number; expired_offers?: number } | null;
+      chopToast.success("Chauffeur démo remis en ligne", {
+        description: `${result?.cancelled_rides ?? 0} course(s) nettoyée(s) • ${result?.expired_offers ?? 0} offre(s) expirée(s)`,
       });
     });
 
@@ -313,6 +326,16 @@ export function DemoTestPanel() {
               size="sm"
               variant="outline"
               disabled={!!busy || !user}
+              onClick={resetDemoDriver}
+              className="w-full justify-start gap-2 mb-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              {busy === "reset-demo-driver" ? "Réinitialisation…" : "Réinitialiser le chauffeur démo"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!!busy || !user}
               onClick={sendTestOfferToDemoDriver}
               className="w-full justify-start gap-2"
             >
@@ -320,7 +343,7 @@ export function DemoTestPanel() {
               {busy === "test-offer" ? "Envoi…" : "Envoyer une demande test au chauffeur démo"}
             </Button>
             <p className="text-[11px] text-muted-foreground mt-1.5">
-              Crée une offre pending de 20 s ciblée sur demo.driver — déclenche le banner global et le bottom sheet.
+              Nettoie les courses bloquées, crée une offre pending ciblée sur demo.driver — déclenche le banner global et le bottom sheet.
             </p>
           </div>
 
