@@ -58,6 +58,13 @@ export function useDriverSession() {
 export function DriverSessionProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { profile, loading: profileLoading, refetch } = useDriverProfile();
+  const isDemoDriver = (user?.email ?? "").toLowerCase() === "demo.driver@chopchop.gn";
+  const demoModeOn = typeof window !== "undefined" && (
+    import.meta.env.DEV ||
+    /[?&](demo|debug)=1/.test(window.location.search) ||
+    window.location.hostname.includes("lovable")
+  );
+  const demoAutoOffer = isDemoDriver && demoModeOn;
   const [isOnline, setIsOnline] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [current, setCurrent] = useState<IncomingRequest | null>(null);
@@ -215,6 +222,39 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
   }, [queue]);
 
   const closeTrip = () => { setActiveTrip(null); setActiveRideId(null); };
+
+  // Demo-only: auto-generate ride offer popups so the demo driver flow
+  // is reliably testable end-to-end without manual admin action.
+  useEffect(() => {
+    if (!demoAutoOffer) return;
+    if (!isOnline) return;
+    if (activeTrip || activeRideId) return;
+    // Only generate if no pending offer (queue empty) and no visible popup.
+    if (queue.length > 0 || current) return;
+    // If the latest offer is still pending or only just terminal, wait briefly.
+    const cooldownMs = latestOffer && latestOffer.status !== "pending"
+      ? 4000
+      : 6000 + Math.floor(Math.random() * 4000); // 6–10s
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      if (cancelled) return;
+      try {
+        const { error } = await supabase.rpc("debug_create_offer_for_current_driver" as never);
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.warn("[demo-auto-offer] failed", error);
+          return;
+        }
+        await refetchOffers();
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("[demo-auto-offer] exception", e);
+      }
+    }, cooldownMs);
+
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [demoAutoOffer, isOnline, activeTrip, activeRideId, queue.length, current?.id, latestOffer?.id, latestOffer?.status, refetchOffers]);
 
   const createDebugOfferForCurrentDriver = useCallback(async () => {
     setActiveTrip(null);
