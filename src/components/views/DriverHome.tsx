@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 import { Power, Radar, Users, AlertTriangle, Clock, ShieldCheck, FileWarning, Wallet, MapPin, Navigation, Flame, TrendingUp } from "lucide-react";
 import { Marker } from "react-map-gl";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +37,27 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   } = useDriverSession();
   const { available: driverBalance, loading: walletLoading } = useWallet("driver");
   const e = useDriverEarnings();
+
+  // Rotating activity hints shown while the driver is online and idle.
+  // Reassures that the system is actively scanning for nearby demand.
+  const ACTIVITY_HINTS = [
+    "Analyse des demandes autour de vous…",
+    "Conducteurs proches : surveillance de la zone…",
+    "Synchronisation avec le réseau CHOP CHOP…",
+    "Optimisation des trajets disponibles…",
+    "Détection de courses à proximité…",
+  ];
+  const [hintIdx, setHintIdx] = useState(0);
+  const searching = isOnline && !current && !activeTrip;
+  useEffect(() => {
+    if (!searching) return;
+    const id = window.setInterval(
+      () => setHintIdx((i) => (i + 1) % ACTIVITY_HINTS.length),
+      3500,
+    );
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searching]);
 
   // Application/status gating UI
   if (!profileLoading && (!profile || profile.status !== "approved")) {
@@ -143,13 +165,12 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
             </div>
           </Card>
         )}
-        {/* Online toggle — 3 states: Hors ligne / En ligne / Recherche */}
+        {/* Online toggle — 3 states: Hors ligne / Recherche / En course */}
         {(() => {
-          const searching = isOnline && !current && !activeTrip;
           const label = !isOnline
             ? toggling ? "Activation…" : "Hors ligne — appuyez pour commencer"
             : searching
-              ? "Recherche de courses…"
+              ? "Recherche de courses"
               : "En ligne — course en cours";
           const tone = !isOnline
             ? "bg-card border border-border text-foreground shadow-card"
@@ -157,23 +178,80 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
               ? "gradient-wallet text-primary-foreground ring-glow-primary"
               : "bg-secondary text-secondary-foreground shadow-card";
           return (
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={togglePresence}
-              disabled={toggling}
-              className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl overflow-hidden ${tone} transition-colors disabled:opacity-60`}
-            >
-              {searching && (
-                <motion.span
-                  aria-hidden
-                  className="absolute inset-0 bg-white/10"
-                  animate={{ opacity: [0.05, 0.25, 0.05] }}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                />
-              )}
-              {isOnline ? <Radar className="w-5 h-5 relative" /> : <Power className="w-5 h-5 relative" />}
-              <span className="font-bold relative">{label}</span>
-            </motion.button>
+            <div className="space-y-2">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={togglePresence}
+                disabled={toggling}
+                className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl overflow-hidden ${tone} transition-colors disabled:opacity-60`}
+              >
+                {/* Subtle outward pulse halo while actively searching */}
+                {searching && (
+                  <>
+                    <motion.span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-white/40"
+                      animate={{ scale: [1, 1.04, 1], opacity: [0.5, 0, 0.5] }}
+                      transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
+                    />
+                    <motion.span
+                      aria-hidden
+                      className="absolute inset-0 bg-white/10"
+                      animate={{ opacity: [0.05, 0.25, 0.05] }}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  </>
+                )}
+                {isOnline ? (
+                  <span className="relative inline-flex">
+                    {searching && (
+                      <motion.span
+                        aria-hidden
+                        className="absolute inset-0 rounded-full bg-white/30"
+                        animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
+                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+                      />
+                    )}
+                    <Radar className="w-5 h-5 relative" />
+                  </span>
+                ) : (
+                  <Power className="w-5 h-5 relative" />
+                )}
+                <span className="font-bold relative inline-flex items-center">
+                  {label}
+                  {searching && (
+                    <motion.span
+                      aria-hidden
+                      className="ml-1 inline-flex"
+                      animate={{ opacity: [0.4, 1, 0.4] }}
+                      transition={{ duration: 1.4, repeat: Infinity }}
+                    >
+                      …
+                    </motion.span>
+                  )}
+                </span>
+              </motion.button>
+
+              {/* Lightweight rotating activity hint — proves the app is alive */}
+              <AnimatePresence mode="wait">
+                {searching && (
+                  <motion.div
+                    key={hintIdx}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.35 }}
+                    className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground"
+                  >
+                    <span className="relative inline-flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/70" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                    </span>
+                    {ACTIVITY_HINTS[hintIdx]}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           );
         })()}
 
@@ -188,14 +266,22 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
               <p className="text-sm font-bold text-foreground truncate">{formatGNF(e.todayGnf)}</p>
             </div>
           </Card>
-          <Card className="p-3 flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-success/10">
+          <Card className="p-3 flex items-center gap-3 relative overflow-hidden">
+            <div className="p-2 rounded-xl bg-success/10 relative">
               <Users className="w-4 h-4 text-success" />
+              {isOnline && (
+                <span className="absolute -top-0.5 -right-0.5 inline-flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/70" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+                </span>
+              )}
             </div>
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Demandes</p>
               <p className="text-sm font-bold text-foreground truncate">
-                {queue.length} {queue.length > 1 ? "proches" : "proche"}
+                {queue.length > 0
+                  ? `${queue.length} ${queue.length > 1 ? "proches" : "proche"}`
+                  : isOnline ? "À l'écoute…" : "Hors ligne"}
               </p>
             </div>
           </Card>
