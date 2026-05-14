@@ -13,12 +13,11 @@ export type NotificationKind =
   | "support"
   | "system";
 
-// Lazy import to avoid a hard dependency cycle if analytics imports notifications.
+import { Analytics } from "@/lib/analytics/AnalyticsService";
+
 function track(name: string, metadata: Record<string, unknown>) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const mod = require("@/lib/analytics/AnalyticsService");
-    mod?.Analytics?.track?.(name, { metadata });
+    Analytics.track(name as never, { metadata });
   } catch {
     /* analytics must never break the notification path */
   }
