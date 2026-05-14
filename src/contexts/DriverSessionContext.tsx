@@ -83,17 +83,18 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
   }, [profile?.presence]);
 
   // If the driver refreshes while already on a ride, rebuild local trip state
-  // from the database so the navigation screen is available again.
+  // from the database so the navigation screen is available again. We do not
+  // require presence='on_trip' here — the source of truth is the rides table.
   useEffect(() => {
-    if (!user || profile?.presence !== "on_trip" || activeTrip || activeRideId) return;
+    if (!user || profileLoading || activeTrip || activeRideId) return;
 
     let cancelled = false;
     const restoreActiveRide = async () => {
       const { data: ride } = await supabase
         .from("rides")
-        .select("id,fare_gnf")
+        .select("id,fare_gnf,status")
         .eq("driver_id", user.id)
-        .not("status", "in", "(completed,cancelled)")
+        .in("status", ["pending", "in_progress"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -126,7 +127,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
 
     restoreActiveRide();
     return () => { cancelled = true; };
-  }, [user?.id, profile?.presence, activeTrip, activeRideId]);
+  }, [user?.id, profileLoading, activeTrip, activeRideId]);
 
   const cashOverLimit = !!profile && profile.cash_debt_gnf >= profile.debt_limit_gnf;
   const blockingReason = activeTrip || activeRideId
