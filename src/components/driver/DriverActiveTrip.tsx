@@ -32,13 +32,6 @@ interface Props {
   onClose: () => void;
 }
 
-const PHASE_LABEL: Record<Phase, string> = {
-  approach: "En route vers le client",
-  arrived: "Arrivé au point de prise en charge",
-  on_trip: "Course en cours",
-  at_destination: "Arrivé à destination",
-};
-
 /**
  * Driver-side active trip screen.
  * - Live map (pickup, dropoff, dynamic route via RoutingService)
