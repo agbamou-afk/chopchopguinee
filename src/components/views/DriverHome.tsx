@@ -147,7 +147,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
           return (
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={handleTogglePresence}
+              onClick={togglePresence}
               disabled={toggling}
               className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl overflow-hidden ${tone} transition-colors disabled:opacity-60`}
             >
