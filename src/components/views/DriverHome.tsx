@@ -276,10 +276,11 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         })()}
 
         <DriverDashboard
-          todayEarnings={185000}
-          weeklyEarnings={1250000}
-          completedRides={12}
+          todayEarnings={e.todayGnf}
+          weeklyEarnings={e.weekGnf}
+          completedRides={e.completedToday}
           onlineHours={6}
+          acceptRate={profile?.accept_rate ?? 0.94}
         />
 
         <LiveRidesPanel />
