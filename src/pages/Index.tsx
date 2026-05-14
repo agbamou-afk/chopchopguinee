@@ -41,12 +41,11 @@ function DriverGlobalAlert({ activeTab, onView }: { activeTab: string; onView: (
 }
 
 const Index = () => {
-  // Initialise from sessionStorage so a refresh during a demo keeps the
-  // driver dashboard visible instead of bouncing back to client home.
-  const [isDriverMode, setIsDriverMode] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem("cc_driver_mode") === "1";
-  });
+  // Always start in client mode; we only flip to driver once `user` is loaded
+  // and we've confirmed the demo driver account or an explicit flag.
+  // (Initialising from sessionStorage before auth resolves caused
+  // DriverHome to render outside a ready provider on first paint.)
+  const [isDriverMode, setIsDriverMode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState("home");
   const [activeView, setActiveView] = useState<ActiveView>("home");
   const [bookingRide, setBookingRide] = useState<RideType>(null);
@@ -68,36 +67,42 @@ const Index = () => {
   // signed-in demo driver. After that, manual toggles win.
   const autoModeAppliedRef = useRef(false);
 
-  // Persist mode for the session and clear on logout.
+  // Logout: clear persisted mode and reset.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!user) {
       sessionStorage.removeItem("cc_driver_mode");
       autoModeAppliedRef.current = false;
       if (isDriverMode) setIsDriverMode(false);
-      return;
     }
+  }, [user?.id, isDriverMode]);
+
+  // Persist mode changes once a user is signed in.
+  useEffect(() => {
+    if (typeof window === "undefined" || !user) return;
     sessionStorage.setItem("cc_driver_mode", isDriverMode ? "1" : "0");
   }, [user?.id, isDriverMode]);
 
-  // Auto-enter driver mode for the demo driver account or explicit
-  // ?demo=driver. Runs once per signed-in session — toggling back to client
-  // afterwards is preserved.
+  // After auth resolves, decide initial mode for this session: auto-enter
+  // driver mode for the demo driver account or explicit `?demo=driver`,
+  // otherwise restore whatever mode was persisted earlier this session.
+  // Runs once per signed-in session — manual toggles afterwards win.
   useEffect(() => {
     if (!user || autoModeAppliedRef.current) return;
+    autoModeAppliedRef.current = true;
     const email = (user.email ?? "").toLowerCase();
     const isDemoDriverAccount = email === "demo.driver@chopchop.gn";
     const isExplicitDriverDemo =
       typeof window !== "undefined" && /[?&]demo=driver\b/.test(window.location.search);
-    if (!isDemoDriverAccount && !isExplicitDriverDemo) {
-      // Mark as resolved so we don't re-evaluate every render for normal users.
-      autoModeAppliedRef.current = true;
+    if (isDemoDriverAccount || isExplicitDriverDemo) {
+      setIsDriverMode(true);
+      setActiveTab("home");
+      setActiveView("home");
       return;
     }
-    autoModeAppliedRef.current = true;
-    setIsDriverMode(true);
-    setActiveTab("home");
-    setActiveView("home");
+    if (typeof window !== "undefined" && sessionStorage.getItem("cc_driver_mode") === "1") {
+      setIsDriverMode(true);
+    }
   }, [user?.id, user?.email]);
 
   // Rides the user has actively dismissed this session — never re-restore them.
