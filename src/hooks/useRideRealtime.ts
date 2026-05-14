@@ -38,7 +38,11 @@ export function useRideRealtime(rideId: string | null) {
       return;
     }
     let alive = true;
-    setLoading(true);
+    // Stale-while-revalidate: only flip into a "loading" state when we have
+    // nothing to show yet. Switching between rides (or refetching after a
+    // reconnect) keeps the previous ride visible to avoid skeleton flashes.
+    setRide((prev) => (prev && prev.id === rideId ? prev : prev));
+    setLoading((prevLoading) => (ride && ride.id === rideId ? false : true));
 
     fetchRide().finally(() => {
       if (alive) setLoading(false);
@@ -75,6 +79,8 @@ export function useRideRealtime(rideId: string | null) {
       window.removeEventListener("online", resync);
       document.removeEventListener("visibilitychange", onVisible);
     };
+    // Intentionally omit `ride` to avoid re-subscribing on every update.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rideId, fetchRide]);
 
   return { ride, loading, refetch: fetchRide };
