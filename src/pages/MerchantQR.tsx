@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   Plus,
   Edit2,
+  BadgeCheck,
+  MapPin,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { formatGNF } from "@/lib/format";
 import { buildChopPayPayload } from "@/lib/choppay";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
-import { TrustCues } from "@/components/trust/TrustCues";
+import { TrustCues, SecuredByChopPay } from "@/components/trust/TrustCues";
 import { Seo } from "@/components/Seo";
 import { toast } from "sonner";
 
@@ -235,14 +237,32 @@ export default function MerchantQR() {
           <>
             {/* Merchant identity */}
             <div className="rounded-2xl border border-border/60 bg-card p-4 flex items-start gap-3 shadow-card">
-              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Store className="w-5 h-5 text-primary" />
+              <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-soft shrink-0">
+                <span className="text-sm font-bold text-primary-foreground tracking-wide">
+                  {merchant.name
+                    .trim()
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((p) => p[0]?.toUpperCase() ?? "")
+                    .join("") || "M"}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground truncate">{merchant.name}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="font-semibold text-foreground truncate">{merchant.name}</p>
+                  {merchant.status === "active" && (
+                    <BadgeCheck className="w-4 h-4 text-primary shrink-0" aria-label="Marchand vérifié" />
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground truncate">
                   {[merchant.category, merchant.city].filter(Boolean).join(" · ")}
                 </p>
+                {merchant.address && (
+                  <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5 inline-flex items-center gap-1">
+                    <MapPin className="w-3 h-3" aria-hidden />
+                    {merchant.address}
+                  </p>
+                )}
               </div>
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-success/30 bg-success/10 text-success">
                 <CheckCircle2 className="w-3 h-3" />
@@ -305,7 +325,14 @@ export default function MerchantQR() {
               </div>
             </motion.div>
 
-            <TrustCues cues={["choppay", "live"]} compact className="justify-center" />
+            <TrustCues
+              cues={["choppay", "merchant_verified", "instant_credit"]}
+              compact
+              className="justify-center"
+            />
+            <div className="flex justify-center">
+              <SecuredByChopPay />
+            </div>
 
             {/* Recent payments */}
             <section>
