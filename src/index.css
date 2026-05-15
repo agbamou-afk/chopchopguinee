@@ -6,75 +6,79 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 7%;
+    /* CHOP CHOP — warm modern African urbanism palette */
+    --background: 36 30% 98%;          /* cream off-white */
+    --foreground: 160 18% 12%;          /* warm slate ink */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
+    --card-foreground: 160 18% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
+    --popover-foreground: 160 18% 12%;
 
-    --primary: 138 64% 39%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 152 58% 34%;             /* deep CHOP green */
+    --primary-foreground: 36 30% 98%;
 
-    --secondary: 45 90% 62%;
-    --secondary-foreground: 0 0% 12%;
+    --secondary: 38 92% 58%;            /* warm saffron gold */
+    --secondary-foreground: 160 22% 14%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 38 25% 95%;                /* warm sand */
+    --muted-foreground: 160 10% 38%;
 
-    --accent: 45 90% 62%;
-    --accent-foreground: 0 0% 12%;
+    --accent: 38 92% 58%;
+    --accent-foreground: 160 22% 14%;
 
-    --destructive: 2 75% 56%;
+    --destructive: 12 78% 56%;          /* soft ember */
     --destructive-foreground: 0 0% 100%;
 
-    --success: 138 64% 39%;
+    --success: 152 58% 34%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 45 90% 62%;
-    --warning-foreground: 0 0% 12%;
+    --warning: 38 92% 58%;
+    --warning-foreground: 160 22% 14%;
 
-    /* Service accents (HSL only) — used by service screens */
-    --accent-moto: 138 64% 39%;
-    --accent-moto-foreground: 0 0% 100%;
-    --accent-toktok: 45 90% 55%;
-    --accent-toktok-foreground: 0 0% 12%;
-    --accent-repas: 8 78% 55%;
+    /* Service accents (HSL only) — warmed for ecosystem feel */
+    --accent-moto: 152 58% 34%;
+    --accent-moto-foreground: 36 30% 98%;
+    --accent-toktok: 38 92% 56%;
+    --accent-toktok-foreground: 160 22% 14%;
+    --accent-repas: 14 76% 54%;
     --accent-repas-foreground: 0 0% 100%;
-    --accent-marche: 142 55% 38%;
-    --accent-marche-foreground: 0 0% 100%;
-    --accent-envoyer: 38 95% 52%;
-    --accent-envoyer-foreground: 0 0% 12%;
-    --accent-scanner: 0 0% 12%;
-    --accent-scanner-foreground: 138 64% 55%;
+    --accent-marche: 152 50% 38%;
+    --accent-marche-foreground: 36 30% 98%;
+    --accent-envoyer: 32 92% 52%;
+    --accent-envoyer-foreground: 160 22% 14%;
+    --accent-scanner: 160 22% 14%;
+    --accent-scanner-foreground: 152 58% 50%;
 
-    --border: 0 0% 92%;
-    --input: 0 0% 92%;
-    --ring: 138 64% 39%;
+    --border: 38 18% 90%;
+    --input: 38 18% 90%;
+    --ring: 152 58% 34%;
 
     /* CHOP CHOP brand muted variants & neutrals */
-    --brand-green: 138 64% 39%;
-    --brand-yellow: 45 90% 62%;
-    --brand-red: 2 75% 56%;
-    --brand-black: 0 0% 7%;
-    --brand-white: 0 0% 100%;
-    --brand-gray: 0 0% 96%;
-    --brand-green-muted: 138 35% 92%;
-    --brand-yellow-muted: 45 85% 92%;
-    --brand-red-muted: 2 70% 94%;
+    --brand-green: 152 58% 34%;
+    --brand-yellow: 38 92% 58%;
+    --brand-red: 12 78% 56%;
+    --brand-black: 160 22% 10%;
+    --brand-white: 36 30% 98%;
+    --brand-gray: 38 25% 95%;
+    --brand-green-muted: 152 35% 92%;
+    --brand-yellow-muted: 38 85% 93%;
+    --brand-red-muted: 12 70% 95%;
 
     --radius: 1.25rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(138, 64%, 42%) 0%, hsl(145, 60%, 36%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(45, 90%, 62%) 0%, hsl(38, 85%, 55%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(138, 64%, 42%) 0%, hsl(145, 60%, 32%) 100%);
-    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(152 58% 38%) 0%, hsl(160 55% 28%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(42 95% 62%) 0%, hsl(32 90% 54%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(152 58% 36%) 0%, hsl(162 55% 22%) 100%);
+    --gradient-ember: linear-gradient(135deg, hsl(18 82% 58%) 0%, hsl(8 75% 50%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 100%);
+    --gradient-map-overlay: linear-gradient(180deg, hsl(152 40% 92% / 0) 0%, hsl(152 40% 88% / 0.35) 100%);
 
-    --shadow-soft: 0 6px 24px -8px hsl(0 0% 0% / 0.08);
-    --shadow-card: 0 2px 10px -2px hsl(0 0% 0% / 0.05);
-    --shadow-elevated: 0 12px 32px -8px hsl(0 0% 0% / 0.10);
+    --shadow-soft: 0 6px 24px -10px hsl(160 30% 12% / 0.08);
+    --shadow-card: 0 2px 12px -4px hsl(160 30% 12% / 0.06);
+    --shadow-elevated: 0 16px 40px -12px hsl(160 30% 12% / 0.14);
+    --shadow-glow-primary: 0 8px 28px -10px hsl(152 58% 34% / 0.45);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 160 30% 10%;
@@ -192,7 +196,7 @@
 
   .gradient-wallet {
     background:
-      radial-gradient(120% 120% at 0% 0%, hsl(138 70% 48% / 0.95) 0%, hsl(145 65% 32%) 60%, hsl(150 60% 22%) 100%);
+      radial-gradient(120% 120% at 0% 0%, hsl(152 62% 44% / 0.96) 0%, hsl(158 58% 28%) 55%, hsl(165 55% 18%) 100%);
   }
 
   .glass-surface {
