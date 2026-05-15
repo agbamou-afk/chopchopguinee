@@ -125,6 +125,13 @@ export const EVENTS = {
   "merchant.repeat_interaction": "wallet",
   "wallet.balance_updated_after_payment": "wallet",
 
+  // --- Unified activity timeline ---
+  "activity.item_opened": "session",
+  "activity.timeline_scrolled": "session",
+  "receipt.opened": "session",
+  "ecosystem.return_visit": "session",
+  "recent_activity_interaction": "session",
+
   // --- Maps / routing / location (Day 6) ---
   "map.loaded": "map",
   "map.load.failed": "map",
