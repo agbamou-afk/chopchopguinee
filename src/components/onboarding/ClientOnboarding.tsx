@@ -32,7 +32,8 @@ const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
 
 function RideScene({ animated }: { animated: boolean }) {
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/15 via-muted to-secondary/15 border border-border/60">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
       {/* fake map grid */}
       <div className="absolute inset-0 opacity-40"
         style={{
@@ -83,7 +84,8 @@ function RideScene({ animated }: { animated: boolean }) {
 function MarcheScene({ animated }: { animated: boolean }) {
   const items = [0, 1, 2, 3];
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-card border border-border/60 p-4">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm p-4">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
       <div className="grid grid-cols-2 gap-3">
         {items.map((i) => (
           <motion.div
@@ -113,14 +115,15 @@ function MarcheScene({ animated }: { animated: boolean }) {
 
 function RepasScene({ animated }: { animated: boolean }) {
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-card border border-border/60 p-4 space-y-3">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm p-4 space-y-3">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border/60"
       >
-        <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center">
-          <UtensilsCrossed className="w-6 h-6 text-secondary-foreground" />
+        <div className="w-12 h-12 halo-conakry shadow-card flex items-center justify-center relative">
+          <UtensilsCrossed className="w-6 h-6 text-primary relative z-10" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground">Le Damier</p>
@@ -165,19 +168,21 @@ function RepasScene({ animated }: { animated: boolean }) {
 
 function WalletScene({ animated }: { animated: boolean }) {
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-card border border-border/60 p-4 space-y-3">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm p-4 space-y-3">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl gradient-wallet p-4 text-primary-foreground shadow-card"
+        className="rounded-2xl gradient-wallet p-4 text-primary-foreground shadow-wallet relative overflow-hidden"
       >
-        <p className="text-[11px] opacity-80">Solde CHOPWallet</p>
+        <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" aria-hidden />
+        <p className="text-[10px] uppercase tracking-[0.22em] font-bold opacity-90">Solde CHOPWallet</p>
         <p className="text-2xl font-extrabold tracking-tight">125 000 GNF</p>
         <div className="flex items-center gap-2 mt-2">
-          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/15 text-[11px] font-semibold">
+          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/15 ring-1 ring-white/15 text-[11px] font-semibold">
             <Plus className="w-3 h-3" /> Recharger
           </div>
-          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/15 text-[11px] font-semibold">
+          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-secondary/90 text-secondary-foreground text-[11px] font-bold">
             <Wallet className="w-3 h-3" /> Payer · CHOPPay
           </div>
         </div>
@@ -186,7 +191,7 @@ function WalletScene({ animated }: { animated: boolean }) {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: animated ? 0.5 : 0 }}
-        className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border/60"
+        className="flex items-center gap-3 p-3 rounded-2xl surface-money"
       >
         <div className="w-9 h-9 rounded-xl bg-success/15 flex items-center justify-center">
           <Receipt className="w-5 h-5 text-success" />
@@ -205,7 +210,7 @@ function FinalScene() {
     <div className="relative w-full h-56 rounded-3xl overflow-hidden gradient-wallet text-primary-foreground border border-primary/30 flex flex-col items-center justify-center text-center px-6 ring-glow-primary">
       <div className="pointer-events-none absolute -top-12 -right-10 w-44 h-44 rounded-full bg-secondary/30 blur-3xl" aria-hidden />
       <div className="pointer-events-none absolute -bottom-12 -left-10 w-40 h-40 rounded-full bg-white/10 blur-3xl" aria-hidden />
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" aria-hidden />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] kente-stripe" aria-hidden />
       <motion.img
         initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -273,11 +278,12 @@ export function ClientOnboarding({ onDone }: Props) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[80] surface-warm flex flex-col touch-none"
+      className="fixed inset-0 z-[80] bg-app-conakry flex flex-col touch-none relative"
       role="dialog"
       aria-modal="true"
       aria-label="Bienvenue sur CHOP CHOP"
     >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] kente-stripe z-10" aria-hidden />
       <div className="flex items-center justify-end px-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <button
           onClick={skip}
@@ -333,6 +339,9 @@ export function ClientOnboarding({ onDone }: Props) {
         >
           {isLast ? "Explorer CHOP CHOP" : (<>Suivant <ChevronRight className="w-5 h-5" /></>)}
         </button>
+        <p className="text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground/80">
+          CHOP CHOP · Conakry
+        </p>
       </div>
     </motion.div>
   );
