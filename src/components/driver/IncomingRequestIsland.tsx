@@ -97,17 +97,22 @@ export function IncomingRequestIsland({
             aria-hidden={false}
           >
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
+            key={request.id}
+            initial={{ opacity: 0, scale: 0.94, y: 8 }}
             animate={
-              breathe
-                ? { opacity: [1, 0.92, 1], scale: 1 }
-                : { opacity: 1, scale: 1 }
+              urgent && !low
+                ? { opacity: 1, scale: 1, y: 0, x: [0, -6, 6, -5, 5, -3, 3, 0] }
+                : breathe
+                  ? { opacity: [1, 0.94, 1], scale: 1, y: 0, x: 0 }
+                  : { opacity: 1, scale: 1, y: 0, x: 0 }
             }
-            exit={{ opacity: 0, scale: 0.96 }}
+            exit={{ opacity: 0, scale: 0.94, y: 8 }}
             transition={
-              breathe
-                ? { duration: 3.6, repeat: Infinity, ease: "easeInOut" }
-                : { duration: 0.18, ease: "easeOut" }
+              urgent && !low
+                ? { x: { duration: 0.55, repeat: Infinity, ease: "easeInOut" }, opacity: { duration: 0.35, ease: "easeOut" }, scale: { duration: 0.35, ease: [0.22, 1, 0.36, 1] }, y: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } }
+                : breathe
+                  ? { opacity: { duration: 3.6, repeat: Infinity, ease: "easeInOut" }, scale: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }, y: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
+                  : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
             }
             role="dialog"
             aria-label="Nouvelle demande de course"
