@@ -91,9 +91,9 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
       />
 
       {/* Content */}
-      <div className="px-4 mt-4 space-y-5">
+      <div className="px-4 mt-4 space-y-6">
         {welcomeBack && (
-          <div className="rounded-2xl border border-primary/15 bg-primary/[0.06] px-3 py-2 text-[12px] text-foreground/80 flex items-center gap-2">
+          <div className="rounded-2xl card-warm px-3 py-2 text-[12px] text-foreground/80 flex items-center gap-2">
             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
             Bon retour sur CHOP CHOP — vos services sont prêts à {userLocation}.
           </div>
@@ -119,27 +119,27 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
 
         {/* 4 — Services secondaires */}
         <section>
-          <div className="flex items-end justify-between mb-3">
-            <div>
-              <h2 className="text-base font-bold text-foreground leading-tight">Plus de services</h2>
-              <p className="text-xs text-muted-foreground">Près de vous à {userLocation}</p>
-            </div>
+          <div className="flex items-center justify-between mb-2 px-0.5">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Plus de services
+            </h2>
+            <span className="text-[11px] text-muted-foreground">À {userLocation}</span>
           </div>
-          <div className="bg-card rounded-3xl shadow-card p-4 border border-border/60">
+          <div className="card-warm rounded-3xl p-4 relative overflow-hidden">
+            <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam opacity-70" aria-hidden />
             <QuickActions onActionClick={onActionClick} />
           </div>
         </section>
 
         {/* Nearby drivers — live map preview */}
         <section>
-          <div className="flex items-end justify-between mb-3">
-            <div>
-              <h2 className="text-lg font-bold text-foreground leading-tight">Chauffeurs près de vous</h2>
-              <p className="text-xs text-muted-foreground">Mis à jour en temps réel</p>
-            </div>
+          <div className="flex items-center justify-between mb-2 px-0.5">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Chauffeurs près de vous
+            </h2>
             <button
               onClick={() => onActionClick("moto")}
-              className="text-sm font-semibold text-primary"
+              className="text-xs font-semibold text-primary"
             >
               Réserver
             </button>
@@ -172,13 +172,15 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
 
         {/* Recent destinations */}
         <section>
-          <h2 className="text-lg font-bold text-foreground mb-3">Récents</h2>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2 px-0.5">
+            Récents
+          </h2>
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
             {recents.map((r) => (
               <button
                 key={r.label}
                 onClick={() => onActionClick("moto")}
-                className="shrink-0 flex items-center gap-2 px-3 py-2.5 bg-card rounded-2xl shadow-card hover:bg-muted/50 transition-colors"
+                className="shrink-0 flex items-center gap-2 px-3 py-2.5 card-warm rounded-2xl hover:bg-muted/30 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <r.icon className="w-4 h-4 text-primary" />
@@ -194,26 +196,24 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
 
         {/* Promos */}
         <section>
-          <div className="flex items-end justify-between mb-3">
-            <h2 className="text-lg font-bold text-foreground leading-tight">Offres spéciales</h2>
-            <span className="text-[11px] text-muted-foreground">Mises à jour en direct</span>
+          <div className="flex items-center justify-between mb-2 px-0.5">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Offres spéciales
+            </h2>
+            <span className="text-[10px] text-muted-foreground">En direct</span>
           </div>
           <PromoCarousel />
         </section>
 
         {/* Popular restaurants */}
         <section className="pb-28">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-foreground leading-tight">Populaire à {userLocation}</h2>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                <MapPin className="w-3 h-3 text-primary" />
-                <span>Livraison rapide aujourd'hui · près de vous</span>
-              </div>
-            </div>
+          <div className="flex items-center justify-between mb-2 px-0.5">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Populaire à {userLocation}
+            </h2>
             <button 
               onClick={() => onActionClick("food")}
-              className="text-sm font-semibold text-primary"
+              className="text-xs font-semibold text-primary"
             >
               Voir tout
             </button>
@@ -229,9 +229,10 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               ))}
             </div>
           ) : (
-            <div className="rounded-3xl border border-dashed border-border/70 bg-card/50 p-6 text-center">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
-                <UtensilsCrossed className="w-5 h-5 text-primary" />
+            <div className="rounded-3xl card-warm p-6 text-center relative overflow-hidden">
+              <div className="pointer-events-none absolute inset-x-8 top-0 h-px saffron-seam opacity-70" aria-hidden />
+              <div className="w-14 h-14 mx-auto halo-conakry shadow-card flex items-center justify-center mb-3 relative">
+                <UtensilsCrossed className="w-5 h-5 text-primary relative z-10" />
               </div>
               <p className="text-sm font-semibold text-foreground">
                 Bientôt disponible à {userLocation}
@@ -247,8 +248,8 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               </button>
             </div>
           )}
-          <p className="text-center text-[11px] text-muted-foreground mt-5">
-            CHOP CHOP · Partout à Conakry, services près de vous
+          <p className="text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground/80 mt-6">
+            CHOP CHOP · Conakry
           </p>
         </section>
       </div>
