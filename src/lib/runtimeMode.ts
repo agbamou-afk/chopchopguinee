@@ -36,7 +36,14 @@ export function isSandboxMode(): boolean {
 /** Demo mode — used for the linked two-account presentation flow. */
 export function isDemoMode(email?: string | null): boolean {
   if (email && DEMO_EMAILS.has(email.toLowerCase())) return true;
-  if (urlMatches(/[?&]demo=(1|linked)/)) return true;
+  if (urlMatches(/[?&]demo=(1|linked|driver)/)) return true;
+  return false;
+}
+
+/** Driver demo flavour — used to force the chauffeur first-run path. */
+export function isDemoDriverMode(email?: string | null): boolean {
+  if (email?.toLowerCase() === "demo.driver@chopchop.gn") return true;
+  if (urlMatches(/[?&]demo=driver\b/)) return true;
   return false;
 }
 

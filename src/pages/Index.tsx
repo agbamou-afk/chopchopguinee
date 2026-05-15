@@ -32,8 +32,11 @@ import {
   DRIVER_ONBOARDING_DONE_KEY,
   DRIVER_ONBOARDING_REPLAY_EVENT,
 } from "@/components/onboarding/DriverOnboarding";
-import { useDriverProfile } from "@/hooks/useDriverProfile";
-import { isAdminUser, isLiveUser } from "@/lib/runtimeMode";
+import { isAdminUser, isDemoDriverMode, isDemoMode, isLiveUser } from "@/lib/runtimeMode";
+import {
+  demoScopedKey,
+  resetDemoState,
+} from "@/lib/demoState";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -48,55 +51,6 @@ function DriverGlobalAlert({ activeTab, onView }: { activeTab: string; onView: (
   // Courses tab already shows the floating island popup — avoid duplicate alerts.
   if (activeTab === "orders") return null;
   return <DriverRideAlertBanner activeTab={activeTab} onView={onView} />;
-}
-
-/**
- * First-entry driver onboarding gate. Lives inside DriverSessionProvider so it
- * can suppress itself during any active operation (offer popup, accepted trip,
- * QR/pickup waiting state). Sandbox/debug flows skip onboarding entirely.
- */
-function DriverOnboardingGate() {
-  const { user } = useAuth();
-  const { profile } = useDriverProfile();
-  const { queue, current, activeTrip, activeRideId } = useDriverSession();
-  const [show, setShow] = useState(false);
-
-  const sandboxOn = typeof window !== "undefined" && (
-    /[?&]sandbox=1/.test(window.location.search) ||
-    /[?&]debug=1/.test(window.location.search)
-  );
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !user || !profile) return;
-    if (profile.status !== "approved") return;
-    if (sandboxOn) return;
-    const key = `${DRIVER_ONBOARDING_DONE_KEY}:${user.id}`;
-    if (localStorage.getItem(key) === "1") return;
-    setShow(true);
-  }, [user?.id, profile?.status, sandboxOn]);
-
-  useEffect(() => {
-    const handler = () => setShow(true);
-    window.addEventListener(DRIVER_ONBOARDING_REPLAY_EVENT, handler);
-    return () => window.removeEventListener(DRIVER_ONBOARDING_REPLAY_EVENT, handler);
-  }, []);
-
-  // Never interrupt active driver operations.
-  const busy = !!activeTrip || !!activeRideId || !!current || queue.length > 0;
-  if (!show || busy) return null;
-
-  const finish = () => {
-    setShow(false);
-    if (user) {
-      try { localStorage.setItem(`${DRIVER_ONBOARDING_DONE_KEY}:${user.id}`, "1"); } catch { /* noop */ }
-    }
-  };
-
-  return (
-    <AnimatePresence>
-      <DriverOnboarding key="driver-onboarding" onDone={finish} />
-    </AnimatePresence>
-  );
 }
 
 const Index = () => {
@@ -127,12 +81,15 @@ const Index = () => {
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showDriverOnboarding, setShowDriverOnboarding] = useState(false);
   const { requireAuth } = useAuthGuard();
-  const { roles, user } = useAuth();
+  const { ready, roles, user } = useAuth();
   const isDriver = roles.includes("driver");
   const navigate = useNavigate();
   const adminUser = isAdminUser(user, roles);
   const liveUser = isLiveUser(user, roles);
+  const demoUser = isDemoMode(user?.email ?? null);
+  const demoDriver = isDemoDriverMode(user?.email ?? null);
 
   // Admins (god_admin / operations_admin / finance_admin) default to the
   // admin dashboard. They can still navigate back to "/" manually, but
@@ -153,22 +110,50 @@ const Index = () => {
   //   never waits on a real driver. Used for solo presentations.
   const isLinkedDemo = typeof window !== "undefined"
     && /[?&]demo=linked\b/.test(window.location.search);
-  const isDemoAny = isLinkedDemo;
+  const isDemoAny = demoUser;
+  const clientOnboardingPending = ready && !isDriverMode && !demoDriver && !liveUser && !adminUser
+    && typeof window !== "undefined"
+    && window.localStorage.getItem(demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny)) !== "1";
+  const driverOnboardingPending = ready && demoDriver
+    && typeof window !== "undefined"
+    && window.localStorage.getItem(demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, true)) !== "1";
+  const onboardingBlocksApp = !ready || showOnboarding || showDriverOnboarding || clientOnboardingPending || driverOnboardingPending;
+  const resetRequested = typeof window !== "undefined"
+    && /[?&](resetDemo|demoReset|reset_demo)=1\b/.test(window.location.search);
   // One-shot guard: only auto-enter driver mode the first time we see this
   // signed-in demo driver. After that, manual toggles win.
   const autoModeAppliedRef = useRef(false);
 
   // First-login client onboarding: show once per user. Replay via Profile menu.
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!ready || typeof window === "undefined") return;
     if (isDriverMode) return;
+    if (demoDriver) return;
     // Real authenticated non-demo users and admins should not see the demo
     // onboarding unless they explicitly replay it from the Profile menu.
     if (liveUser || adminUser) return;
     // Show onboarding to first-time visitors as well as first-time signed-in users.
-    const key = `${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`;
+    const key = demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny);
     if (localStorage.getItem(key) !== "1") setShowOnboarding(true);
-  }, [user?.id, isDriverMode, liveUser, adminUser]);
+  }, [ready, user?.id, isDriverMode, liveUser, adminUser, isDemoAny, demoDriver]);
+
+  useEffect(() => {
+    if (!ready || typeof window === "undefined") return;
+    if (!isDemoAny || !resetRequested) return;
+    resetDemoState(user?.id ?? null);
+    setBookingRide(null);
+    setActiveTrip(null);
+    setShowScanner(false);
+    setShowOnboarding(!demoDriver);
+    setShowDriverOnboarding(demoDriver);
+  }, [ready, user?.id, isDemoAny, demoDriver, resetRequested]);
+
+  useEffect(() => {
+    if (!ready || typeof window === "undefined") return;
+    if (!demoDriver) return;
+    const key = demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, true);
+    setShowDriverOnboarding(localStorage.getItem(key) !== "1");
+  }, [ready, user?.id, demoDriver]);
 
   useEffect(() => {
     const handler = () => setShowOnboarding(true);
@@ -180,10 +165,26 @@ const Index = () => {
     setShowOnboarding(false);
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
+        localStorage.setItem(demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny), "1");
       } catch { /* noop */ }
     }
   };
+
+  const finishDriverOnboarding = () => {
+    setShowDriverOnboarding(false);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, demoDriver), "1");
+      } catch { /* noop */ }
+    }
+  };
+
+  useEffect(() => {
+    if (!onboardingBlocksApp) return;
+    setBookingRide(null);
+    setActiveTrip(null);
+    setShowScanner(false);
+  }, [onboardingBlocksApp]);
 
   // Logout: clear persisted mode and reset.
   useEffect(() => {
@@ -206,12 +207,13 @@ const Index = () => {
   // otherwise restore whatever mode was persisted earlier this session.
   // Runs once per signed-in session — manual toggles afterwards win.
   useEffect(() => {
-    if (!user || autoModeAppliedRef.current) return;
-    autoModeAppliedRef.current = true;
-    const email = (user.email ?? "").toLowerCase();
-    const isDemoDriverAccount = email === "demo.driver@chopchop.gn";
+    if (autoModeAppliedRef.current) return;
     const isExplicitDriverDemo =
       typeof window !== "undefined" && /[?&]demo=driver\b/.test(window.location.search);
+    if (!user && !isExplicitDriverDemo) return;
+    autoModeAppliedRef.current = true;
+    const email = (user?.email ?? "").toLowerCase();
+    const isDemoDriverAccount = email === "demo.driver@chopchop.gn";
     if (isDemoDriverAccount || isExplicitDriverDemo) {
       setIsDriverMode(true);
       setActiveTab("home");
@@ -234,7 +236,7 @@ const Index = () => {
   // rides — orphan pending rides (no driver assigned, older than 30 min) are
   // ignored so they never trap the user on the tracking screen.
   useEffect(() => {
-    if (!user || isDriverMode || activeTrip || restoreAttemptedRef.current) return;
+    if (!user || isDriverMode || activeTrip || restoreAttemptedRef.current || onboardingBlocksApp) return;
     // Demo mode = calm guided showroom: never auto-restore an in-flight ride
     // on the client. The user must intentionally tap a dashboard action.
     if (isDemoAny) { restoreAttemptedRef.current = true; return; }
@@ -268,7 +270,7 @@ const Index = () => {
       });
     })();
     return () => { cancelled = true; };
-  }, [user?.id, isDriverMode, activeTrip]);
+  }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp, isDemoAny]);
 
   const closeActiveTrip = async (alsoCancel: boolean) => {
     const trip = activeTrip;
@@ -437,7 +439,7 @@ const Index = () => {
       />
       <h1 className="sr-only">CHOP CHOP — Vos services de transport, livraison et paiements en Guinée</h1>
       <AnimatePresence mode="wait">
-        {bookingRide && (
+        {!onboardingBlocksApp && bookingRide && (
           <RideBooking
             type={bookingRide}
             initialDestination={bookingDestination}
@@ -508,7 +510,7 @@ const Index = () => {
             }}
           />
         )}
-        {activeTrip && (
+        {!onboardingBlocksApp && activeTrip && (
           (typeof window !== "undefined" &&
             (localStorage.getItem("cc_realtime_trip") === "1" ||
               /[?&]trip=v2/.test(window.location.search) ||
@@ -535,7 +537,7 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {!bookingRide && !activeTrip && (
+      {!onboardingBlocksApp && !bookingRide && !activeTrip && (
         isDriverMode ? (
           <DriverSessionProvider>
             {renderDriverView()}
@@ -547,7 +549,6 @@ const Index = () => {
               }}
             />
             <DriverOfferDebugPanel activeTab={activeTab} />
-            <DriverOnboardingGate />
             <BottomNav
               activeTab={activeTab}
               onTabChange={handleTabChange}
@@ -568,7 +569,7 @@ const Index = () => {
         )
       )}
 
-      {showScanner && (
+      {!onboardingBlocksApp && showScanner && (
         <QrScanner
           title="Scanner un QR CHOP CHOP"
           subtitle="Course, paiement ou code marchand"
@@ -581,8 +582,11 @@ const Index = () => {
       )}
 
       <AnimatePresence>
-        {showOnboarding && !isDriverMode && (
+        {(showOnboarding || clientOnboardingPending) && !isDriverMode && (
           <ClientOnboarding key="client-onboarding" onDone={finishOnboarding} />
+        )}
+        {(showDriverOnboarding || driverOnboardingPending) && (
+          <DriverOnboarding key="driver-onboarding" onDone={finishDriverOnboarding} />
         )}
       </AnimatePresence>
     </div>
