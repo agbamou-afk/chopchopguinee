@@ -94,9 +94,9 @@ export function DriverOrdersView() {
             <Marker key={h.name} longitude={h.lng} latitude={h.lat} anchor="bottom">
               <div className="relative flex flex-col items-center pointer-events-none">
                 <div
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide ${
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide tabular-nums ${
                     i === 0
-                      ? "bg-destructive/90 text-destructive-foreground"
+                      ? "bg-secondary text-secondary-foreground ring-1 ring-secondary/40"
                       : "bg-card/90 text-foreground border border-border/60"
                   }`}
                 >
@@ -106,14 +106,14 @@ export function DriverOrdersView() {
                   {animateHotspots && (
                     <span
                       className={`absolute inset-0 rounded-full animate-ping ${
-                        i === 0 ? "bg-destructive/50" : "bg-foreground/30"
+                        i === 0 ? "bg-secondary/50" : "bg-primary/30"
                       }`}
-                      style={{ animationDuration: `${2.4 + i * 0.6}s` }}
+                      style={{ animationDuration: `${2.8 + i * 0.6}s` }}
                     />
                   )}
                   <div
                     className={`relative w-2 h-2 rounded-full ${
-                      i === 0 ? "bg-destructive" : "bg-foreground/70"
+                      i === 0 ? "bg-secondary" : "bg-primary/70"
                     }`}
                   />
                 </div>
@@ -166,18 +166,30 @@ export function DriverOrdersView() {
         className="absolute left-0 right-0 px-4 z-10"
         style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
       >
-        <div className="max-w-md mx-auto flex items-center gap-3">
+        <div className="max-w-md mx-auto flex items-center gap-2">
           <MenuButton floating />
           <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-extrabold text-foreground leading-tight">Mes courses</h1>
-            <p className="text-[11px] text-muted-foreground">Zones actives · Conakry</p>
+            <h1 className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-muted-foreground leading-tight">
+              Dispatch · Conakry
+            </h1>
+            <p className="text-sm font-extrabold text-foreground leading-tight tabular-nums">
+              {queue.length > 0
+                ? `${queue.length} demande${queue.length > 1 ? "s" : ""}`
+                : isOnline ? "À l'écoute" : "Hors ligne"}
+            </p>
           </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-card/85 backdrop-blur px-2.5 py-1 border border-border/60">
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-full backdrop-blur px-2.5 py-1 border ${
+              isOnline
+                ? "bg-primary/15 border-primary/30 text-primary"
+                : "bg-card/85 border-border/60 text-muted-foreground"
+            }`}
+          >
             <span className="relative flex h-1.5 w-1.5">
               <span
                 className={`absolute inline-flex h-full w-full rounded-full ${
-                  isOnline ? "bg-success/70" : "bg-muted-foreground/40"
-                } ${isOnline ? "animate-ping" : ""}`}
+                  isOnline ? "bg-success/70 animate-ping" : "bg-muted-foreground/40"
+                }`}
               />
               <span
                 className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
@@ -185,9 +197,8 @@ export function DriverOrdersView() {
                 }`}
               />
             </span>
-            <Timer className="w-3 h-3 text-foreground" />
-            <span className="text-[11px] font-medium text-foreground">
-              {isOnline ? "En ligne" : "Hors ligne"}
+            <span className="text-[10.5px] font-bold uppercase tracking-wider">
+              {isOnline ? "Live" : "Off"}
             </span>
           </div>
         </div>
@@ -265,14 +276,14 @@ export function DriverOrdersView() {
                 <div className="p-1.5 rounded-lg bg-primary/10">
                   <Users className="w-3.5 h-3.5 text-primary" />
                 </div>
-                <p className="text-[12px] font-medium text-foreground flex-1 truncate">
+                <p className="text-[12px] font-semibold text-foreground flex-1 truncate tabular-nums">
                   {isOnline
                     ? queue.length === 0
                       ? "Aucune demande proche · à l'écoute"
                       : `${queue.length} demande${queue.length > 1 ? "s" : ""} proche${queue.length > 1 ? "s" : ""}`
                     : "Hors ligne — passez en ligne pour recevoir des courses"}
                 </p>
-                <div className="inline-flex items-center gap-1 text-[11px] font-bold text-destructive whitespace-nowrap">
+                <div className="inline-flex items-center gap-1 text-[11px] font-bold text-secondary-foreground bg-secondary/90 px-2 py-0.5 rounded-full whitespace-nowrap">
                   <Flame className="w-3 h-3" />
                   {top.name}
                 </div>
