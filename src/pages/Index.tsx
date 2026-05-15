@@ -449,7 +449,8 @@ const Index = () => {
                 return;
               }
               const newRideId = (ride as { id: string }).id;
-              // Linked demo: hand the ride to the demo driver as a real offer.
+              // Linked demo (sandbox E2E): hand the ride to the demo driver
+              // as a real offer. Walkthrough demo never links.
               if (isLinkedDemo) {
                 try {
                   await supabase.rpc("demo_link_ride" as never, { p_ride_id: newRideId } as never);
@@ -474,7 +475,15 @@ const Index = () => {
           />
         )}
         {activeTrip && (
-          (typeof window !== "undefined" &&
+          isWalkthroughDemo ? (
+            <DemoRideWalkthrough
+              key={`walkthrough-${activeTrip.rideId ?? "demo"}`}
+              mode={activeTrip.mode as "moto" | "toktok"}
+              fare={activeTrip.fare}
+              rideId={activeTrip.rideId}
+              onClose={() => closeActiveTrip(true)}
+            />
+          ) : (typeof window !== "undefined" &&
             (localStorage.getItem("cc_realtime_trip") === "1" ||
               /[?&]trip=v2/.test(window.location.search) ||
               /[?&]demo=1/.test(window.location.search) ||
