@@ -7,13 +7,15 @@ import { cn } from "@/lib/utils";
  * Use a focused subset per surface (don't stack all 4 everywhere).
  */
 
-export type TrustCueKey = "verified" | "choppay" | "live" | "support";
+export type TrustCueKey = "verified" | "choppay" | "live" | "support" | "merchant_verified" | "instant_credit";
 
 const SPECS: Record<TrustCueKey, { icon: typeof ShieldCheck; label: string }> = {
   verified: { icon: BadgeCheck, label: "Chauffeur vérifié" },
   choppay: { icon: Lock, label: "Paiement sécurisé · CHOPPay" },
   live: { icon: Radio, label: "Course suivie en direct" },
   support: { icon: LifeBuoy, label: "Support 24/7" },
+  merchant_verified: { icon: BadgeCheck, label: "Marchand vérifié" },
+  instant_credit: { icon: Radio, label: "Crédité instantanément" },
 };
 
 interface Props {
