@@ -15,6 +15,7 @@ import {
   type NotificationGroup,
 } from "@/lib/notifications";
 import { Seo } from "@/components/Seo";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 const KIND_ICON: Record<NotificationKind, typeof Bell> = {
   wallet: Wallet,
@@ -215,7 +216,15 @@ const NotificationsPage = () => {
                     return (
                       <li
                         key={n.id}
-                        onClick={() => notifications.markRead(n.id)}
+                        onClick={() => {
+                          notifications.markRead(n.id);
+                          if (n.link) {
+                            Analytics.track("notification.deep_link.followed", {
+                              metadata: { kind: n.kind, link: n.link },
+                            });
+                            navigate(n.link);
+                          }
+                        }}
                         className={`flex gap-3 p-3 rounded-2xl cursor-pointer transition ${
                           n.read
                             ? "bg-card"
