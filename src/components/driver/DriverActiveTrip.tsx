@@ -27,6 +27,7 @@ import { RidePhaseChip, deriveRidePhase } from "@/components/ride/RidePhaseChip"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getRuntimeMode } from "@/lib/runtimeMode";
 import { useAuth } from "@/contexts/AuthContext";
+import { playArrivedAtPickup, playRideCompleted } from "@/lib/sound/driverSounds";
 
 type Phase = "approach" | "arrived" | "on_trip" | "at_destination";
 
@@ -144,6 +145,7 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
           (navigator as any).vibrate?.([30, 40, 30]);
         }
       } catch {}
+      if (!muted) playArrivedAtPickup();
       try {
         if (!muted && typeof window !== "undefined" && "AudioContext" in window) {
           const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -223,6 +225,7 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     setBusy(false);
     if (error) { toast({ title: "Erreur", description: error.message }); return; }
     try { Analytics.track("driver.ride.completed" as any, { metadata: { rideId } }); } catch {}
+    playRideCompleted();
     setReceiptFare(ride.fare_gnf ?? 0);
     setShowReceipt(true);
   };
