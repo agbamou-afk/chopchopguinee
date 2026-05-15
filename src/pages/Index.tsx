@@ -32,7 +32,6 @@ import {
   DRIVER_ONBOARDING_DONE_KEY,
   DRIVER_ONBOARDING_REPLAY_EVENT,
 } from "@/components/onboarding/DriverOnboarding";
-import { useDriverProfile } from "@/hooks/useDriverProfile";
 import { isAdminUser, isDemoDriverMode, isDemoMode, isLiveUser } from "@/lib/runtimeMode";
 import {
   demoScopedKey,
@@ -52,55 +51,6 @@ function DriverGlobalAlert({ activeTab, onView }: { activeTab: string; onView: (
   // Courses tab already shows the floating island popup — avoid duplicate alerts.
   if (activeTab === "orders") return null;
   return <DriverRideAlertBanner activeTab={activeTab} onView={onView} />;
-}
-
-/**
- * First-entry driver onboarding gate. Lives inside DriverSessionProvider so it
- * can suppress itself during any active operation (offer popup, accepted trip,
- * QR/pickup waiting state). Sandbox/debug flows skip onboarding entirely.
- */
-function DriverOnboardingGate() {
-  const { user } = useAuth();
-  const { profile } = useDriverProfile();
-  const { queue, current, activeTrip, activeRideId } = useDriverSession();
-  const [show, setShow] = useState(false);
-
-  const sandboxOn = typeof window !== "undefined" && (
-    /[?&]sandbox=1/.test(window.location.search) ||
-    /[?&]debug=1/.test(window.location.search)
-  );
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !user || !profile) return;
-    if (profile.status !== "approved") return;
-    if (sandboxOn) return;
-    const key = `${DRIVER_ONBOARDING_DONE_KEY}:${user.id}`;
-    if (localStorage.getItem(key) === "1") return;
-    setShow(true);
-  }, [user?.id, profile?.status, sandboxOn]);
-
-  useEffect(() => {
-    const handler = () => setShow(true);
-    window.addEventListener(DRIVER_ONBOARDING_REPLAY_EVENT, handler);
-    return () => window.removeEventListener(DRIVER_ONBOARDING_REPLAY_EVENT, handler);
-  }, []);
-
-  // Never interrupt active driver operations.
-  const busy = !!activeTrip || !!activeRideId || !!current || queue.length > 0;
-  if (!show || busy) return null;
-
-  const finish = () => {
-    setShow(false);
-    if (user) {
-      try { localStorage.setItem(`${DRIVER_ONBOARDING_DONE_KEY}:${user.id}`, "1"); } catch { /* noop */ }
-    }
-  };
-
-  return (
-    <AnimatePresence>
-      <DriverOnboarding key="driver-onboarding" onDone={finish} />
-    </AnimatePresence>
-  );
 }
 
 const Index = () => {
