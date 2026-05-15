@@ -59,22 +59,23 @@ const ACTIONS: Array<{
 
 export function PrimaryActionGrid({ onAction }: Props) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-3.5">
       {ACTIONS.map(({ id, label, subtitle, Icon, surface, halo, iconClass }) => (
         <motion.button
           key={id}
-          whileTap={{ scale: 0.98 }}
+          whileTap={{ scale: 0.985 }}
           onClick={() => onAction(id)}
           aria-label={label}
-          className={`relative overflow-hidden flex flex-col items-start gap-2 rounded-2xl border ${surface} p-4 min-h-[100px] text-left shadow-card active:shadow-soft transition-shadow`}
+          className={`relative overflow-hidden flex flex-col items-start gap-2.5 rounded-[22px] border ${surface} p-4 min-h-[112px] text-left surface-card-elevated active:shadow-soft transition-shadow`}
         >
-          <div className={`w-11 h-11 rounded-2xl ${halo} flex items-center justify-center`}>
-            <Icon className={`w-5 h-5 ${iconClass}`} strokeWidth={2} />
+          <div className={`w-11 h-11 rounded-[14px] ${halo} flex items-center justify-center`}>
+            <Icon className={`w-[19px] h-[19px] ${iconClass}`} strokeWidth={1.85} />
           </div>
-          <div className="space-y-0.5">
-            <p className="text-sm font-bold text-foreground leading-tight">{label}</p>
+          <div className="space-y-1">
+            <p className="text-[14px] font-bold text-foreground leading-tight tracking-tight">{label}</p>
             <p className="text-[11px] text-muted-foreground leading-snug">{subtitle}</p>
           </div>
+          <span className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" aria-hidden />
         </motion.button>
       ))}
     </div>
