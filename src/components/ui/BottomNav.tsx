@@ -33,7 +33,7 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
   const right = tabs.slice(2);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-50 shadow-elevated">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border/70 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-50 shadow-soft">
       {isDriverMode ? (
         <div className="max-w-md mx-auto grid grid-cols-3 items-center relative">
           {tabs.map((tab) => (
@@ -53,7 +53,7 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
             <button
               onClick={onScanClick}
               aria-label="Scanner un QR CHOP CHOP"
-              className="-mt-7 w-[58px] h-[58px] rounded-full bg-[hsl(145_55%_36%)] shadow-elevated ring-[6px] ring-card flex items-center justify-center active:scale-95 transition hover:shadow-soft"
+              className="-mt-7 w-[58px] h-[58px] rounded-full gradient-cta ring-[6px] ring-card flex items-center justify-center active:scale-95 transition-transform hover:scale-[1.03]"
             >
               <ScanLine className="w-6 h-6 text-primary-foreground" />
             </button>
@@ -81,23 +81,24 @@ function NavButton({
   return (
     <button
       onClick={onClick}
-      className="relative flex flex-col items-center py-2 px-3 min-w-[60px]"
+      className="relative flex flex-col items-center py-2 px-3 min-w-[60px] transition-colors"
     >
       {active && (
         <motion.div
           layoutId="activeTab"
-          className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/12 to-primary/5 ring-1 ring-primary/15"
-          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.35 }}
+          className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/14 via-primary/6 to-transparent ring-1 ring-primary/12"
+          style={{ boxShadow: "0 6px 18px -10px hsl(var(--primary) / 0.35)" }}
+          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.32 }}
         />
       )}
       <tab.icon
-        className={`w-5 h-5 relative z-10 transition-colors ${
+        className={`w-[22px] h-[22px] relative z-10 transition-colors ${
           active ? "text-primary" : "text-muted-foreground"
         }`}
       />
       <span
-        className={`text-xs mt-1 relative z-10 transition-colors ${
-          active ? "text-primary font-medium" : "text-muted-foreground"
+        className={`text-[11px] mt-0.5 relative z-10 transition-colors tracking-wide ${
+          active ? "text-primary font-semibold" : "text-muted-foreground"
         }`}
       >
         {tab.label}
