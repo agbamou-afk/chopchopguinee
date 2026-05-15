@@ -8,8 +8,25 @@ export function HeatmapLayer({ points }: { points: Array<LatLng & { weight?: num
   })) };
   return (
     <Source id="heat" type="geojson" data={data}>
-      <Layer id="heat-layer" type="heatmap"
-        paint={{ 'heatmap-weight': ['get', 'mag'], 'heatmap-intensity': 1, 'heatmap-radius': 30, 'heatmap-opacity': 0.7 }} />
+      <Layer
+        id="heat-layer"
+        type="heatmap"
+        paint={{
+          'heatmap-weight': ['get', 'mag'],
+          'heatmap-intensity': 0.9,
+          'heatmap-radius': 34,
+          'heatmap-opacity': 0.55,
+          // Brand ramp: cool emerald → mint → saffron → ember (operational, not "alarm")
+          'heatmap-color': [
+            'interpolate', ['linear'], ['heatmap-density'],
+            0,    'rgba(13, 122, 95, 0)',
+            0.25, 'rgba(13, 122, 95, 0.35)',
+            0.5,  'rgba(92, 189, 185, 0.55)',
+            0.75, 'rgba(232, 184, 74, 0.75)',
+            1,    'rgba(232, 93, 58, 0.9)',
+          ],
+        }}
+      />
     </Source>
   );
 }
