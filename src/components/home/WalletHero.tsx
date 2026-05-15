@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Plus, History, Wallet, AlertTriangle, Lock } from "lucide-react";
+import { Eye, EyeOff, Plus, History, Wallet, AlertTriangle, Lock, QrCode } from "lucide-react";
 import { useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,68 +20,86 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="gradient-wallet rounded-3xl p-5 text-primary-foreground relative overflow-hidden ring-glow-primary"
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className="gradient-wallet-premium rounded-[28px] p-5 text-primary-foreground relative overflow-hidden shadow-wallet"
       aria-label="Solde CHOPWallet"
     >
-      <div className="pointer-events-none absolute -top-14 -right-10 w-48 h-48 rounded-full bg-white/12 blur-2xl" aria-hidden />
-      <div className="pointer-events-none absolute -bottom-16 -left-10 w-40 h-40 rounded-full bg-secondary/25 blur-3xl" aria-hidden />
-      <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-secondary/60 to-transparent" aria-hidden />
+      {/* Layered ambient highlights — restrained, no neon */}
+      <div className="pointer-events-none absolute -top-20 -right-12 w-56 h-56 rounded-full bg-white/10 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-20 -left-14 w-48 h-48 rounded-full bg-secondary/20 blur-3xl" aria-hidden />
+      {/* Inner light edge */}
+      <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-inset ring-white/10" aria-hidden />
+      {/* Saffron flow seam */}
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary/55 to-transparent" aria-hidden />
 
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2 opacity-90">
-          <Wallet className="w-4 h-4" strokeWidth={2} />
-          <p className="text-[11px] uppercase tracking-[0.18em] font-semibold">CHOPWallet</p>
+      <div className="flex items-start justify-between mb-4 relative">
+        <div className="flex items-center gap-2.5 opacity-95">
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-white/12 ring-1 ring-white/15">
+            <Wallet className="w-3.5 h-3.5" strokeWidth={2} />
+          </span>
+          <div className="leading-tight">
+            <p className="text-[10.5px] uppercase tracking-[0.22em] font-semibold">CHOPWallet</p>
+            <p className="text-[10px] opacity-70 tracking-wide">CHOPPay · GNF</p>
+          </div>
         </div>
         <button
           onClick={() => setShown((s) => !s)}
-          className="p-1.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
+          className="p-2 rounded-full bg-white/12 ring-1 ring-white/12 hover:bg-white/20 transition-colors"
           aria-label={shown ? "Masquer le solde" : "Afficher le solde"}
         >
-          {shown ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          {shown ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
         </button>
       </div>
 
-      <div className="mb-4 min-h-[40px]">
+      <div className="mb-5 min-h-[44px] relative">
         {loading ? (
-          <Skeleton className="h-9 w-40 rounded-md bg-white/20" />
+          <Skeleton className="h-10 w-44 rounded-lg bg-white/15" />
         ) : error ? (
           <p className="text-sm font-medium inline-flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" /> Solde indisponible
           </p>
         ) : (
-          <h2 className="text-[34px] font-extrabold leading-none tracking-tight">
+          <h2 className="text-[36px] font-extrabold leading-none tracking-tight tabular-nums">
             {shown ? formatGNF(balance) : "••••••••"}
           </h2>
         )}
-        <p className="text-[11px] opacity-85 mt-1.5">
+        <p className="text-[11px] opacity-80 mt-2">
           {frozen
             ? status === "frozen"
               ? "CHOPWallet gelé — contactez le support"
               : "CHOPWallet restreint — vérifiez votre profil"
             : zero
             ? "Rechargez pour payer avec CHOPPay"
-            : "Disponible · CHOPPay sécurisé · GNF"}
+            : "Disponible · CHOPPay sécurisé"}
         </p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 relative">
         <motion.button
-          whileTap={{ scale: 0.98 }}
+          whileTap={{ scale: 0.985 }}
           onClick={onTopUp}
           disabled={frozen}
-          className="flex-1 flex items-center justify-center gap-2 py-3 bg-white text-primary rounded-2xl font-semibold text-sm shadow-card disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 py-3 bg-white text-primary rounded-2xl font-semibold text-sm shadow-card hover:shadow-soft transition-shadow disabled:opacity-50"
         >
           {frozen ? <Lock className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           Recharger
         </motion.button>
         <motion.button
-          whileTap={{ scale: 0.98 }}
+          whileTap={{ scale: 0.985 }}
           onClick={onHistory}
-          className="flex-1 flex items-center justify-center gap-2 py-3 glass-surface hover:bg-white/25 rounded-2xl font-medium text-sm ring-1 ring-white/15"
+          className="flex-1 flex items-center justify-center gap-2 py-3 glass-surface hover:bg-white/22 rounded-2xl font-medium text-sm ring-1 ring-white/15"
         >
           <History className="w-4 h-4" /> Historique
+        </motion.button>
+        <motion.button
+          whileTap={{ scale: 0.985 }}
+          onClick={onHistory}
+          aria-label="Mon QR CHOPPay"
+          className="w-12 flex items-center justify-center py-3 rounded-2xl bg-secondary/90 text-secondary-foreground ring-1 ring-secondary/40 shadow-card"
+        >
+          <QrCode className="w-4 h-4" />
         </motion.button>
       </div>
     </motion.section>
