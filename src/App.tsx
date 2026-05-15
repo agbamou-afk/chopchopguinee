@@ -11,7 +11,7 @@ import { useTopupNotifications } from "@/hooks/useTopupNotifications";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
-import { isSandboxMode, isNonLiveMode } from "@/lib/runtimeMode";
+import { isSandboxMode } from "@/lib/runtimeMode";
 
 function TopupNotificationsMount() {
   useTopupNotifications();
