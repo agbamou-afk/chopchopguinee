@@ -23,7 +23,7 @@ export function AppShell({
     <div
       className={cn(
         "min-h-screen w-full",
-        background === "muted" ? "bg-muted/40" : "bg-background",
+        background === "muted" ? "bg-muted/40" : "bg-app-conakry",
       )}
     >
       <div
