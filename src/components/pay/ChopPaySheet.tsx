@@ -101,6 +101,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
   }, [open, payload]);
 
   const insufficient = amount > 0 && amount > available;
+  const isProcessing: boolean = step === "processing";
   const canPay = step === "confirm" && !!merchant && amount > 0 && !insufficient && !!userId;
 
   const onCancel = () => {
@@ -286,10 +287,10 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
                 <div className="space-y-2 pt-1">
                   <Button
                     className="w-full h-12 gradient-primary text-primary-foreground"
-                    disabled={!canPay || step === "processing"}
+                    disabled={!canPay || isProcessing}
                     onClick={onPay}
                   >
-                    {step === "processing" ? (
+                    {isProcessing ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Paiement en cours…
@@ -305,7 +306,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
                     variant="ghost"
                     className="w-full h-10"
                     onClick={onCancel}
-                    disabled={step === "processing"}
+                    disabled={isProcessing}
                   >
                     Annuler
                   </Button>
