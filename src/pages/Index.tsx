@@ -111,7 +111,13 @@ const Index = () => {
   const isLinkedDemo = typeof window !== "undefined"
     && /[?&]demo=linked\b/.test(window.location.search);
   const isDemoAny = demoUser;
-  const onboardingBlocksApp = showOnboarding || showDriverOnboarding;
+  const clientOnboardingPending = ready && !isDriverMode && !demoDriver && !liveUser && !adminUser
+    && typeof window !== "undefined"
+    && window.localStorage.getItem(demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny)) !== "1";
+  const driverOnboardingPending = ready && demoDriver
+    && typeof window !== "undefined"
+    && window.localStorage.getItem(demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, true)) !== "1";
+  const onboardingBlocksApp = !ready || showOnboarding || showDriverOnboarding || clientOnboardingPending || driverOnboardingPending;
   const resetRequested = typeof window !== "undefined"
     && /[?&](resetDemo|demoReset|reset_demo)=1\b/.test(window.location.search);
   // One-shot guard: only auto-enter driver mode the first time we see this
@@ -576,10 +582,10 @@ const Index = () => {
       )}
 
       <AnimatePresence>
-        {showOnboarding && !isDriverMode && (
+        {(showOnboarding || clientOnboardingPending) && !isDriverMode && (
           <ClientOnboarding key="client-onboarding" onDone={finishOnboarding} />
         )}
-        {showDriverOnboarding && (
+        {(showDriverOnboarding || driverOnboardingPending) && (
           <DriverOnboarding key="driver-onboarding" onDone={finishDriverOnboarding} />
         )}
       </AnimatePresence>
