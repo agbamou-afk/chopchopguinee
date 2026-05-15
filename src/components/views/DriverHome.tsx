@@ -285,17 +285,17 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
 
         {/* Operational chips: today earnings + nearby demand */}
         <div className="grid grid-cols-2 gap-3">
-          <Card className="p-3 flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/10">
+          <Card className="p-3.5 flex items-center gap-3 border-border/50 shadow-card">
+            <div className="p-2.5 rounded-2xl bg-primary/10 ring-1 ring-primary/15">
               <Wallet className="w-4 h-4 text-primary" />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Aujourd'hui</p>
-              <p className="text-sm font-bold text-foreground truncate">{formatGNF(e.todayGnf)}</p>
+              <p className="text-sm font-bold text-foreground truncate tabular-nums">{formatGNF(e.todayGnf)}</p>
             </div>
           </Card>
-          <Card className="p-3 flex items-center gap-3 relative overflow-hidden">
-            <div className="p-2 rounded-xl bg-success/10 relative">
+          <Card className="p-3.5 flex items-center gap-3 relative overflow-hidden border-border/50 shadow-card">
+            <div className="p-2.5 rounded-2xl bg-success/10 ring-1 ring-success/15 relative">
               <Users className="w-4 h-4 text-success" />
               {isOnline && (
                 <span className="absolute -top-0.5 -right-0.5 inline-flex h-2 w-2">
