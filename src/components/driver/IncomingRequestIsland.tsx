@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Navigation, Clock, X, Check } from "lucide-react";
 import { formatGNF } from "@/lib/format";
@@ -77,58 +77,43 @@ export function IncomingRequestIsland({
     <AnimatePresence>
       {request && (
         <>
-          {/* Subtle focus-mode backdrop: ~8% dim + tiny blur, fades smoothly. */}
+          {/* Lightweight translucent overlay (no blur) for focus. */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="fixed inset-0 z-[55] pointer-events-none bg-background/[0.08] backdrop-blur-[1.5px]"
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="fixed inset-0 z-[55] pointer-events-none bg-background/15"
             aria-hidden
           />
-          <div
-            className="fixed inset-0 z-[60] flex items-center justify-center px-3 pointer-events-none"
-            role="dialog"
-            aria-label="Nouvelle demande de course"
-            onPointerDownCapture={() => setInteracted(true)}
-          >
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={
               breathe
-                ? { opacity: 1, y: 0, scale: [1, 1.012, 1] }
-                : { opacity: 1, y: 0, scale: 1 }
+                ? { opacity: [1, 0.92, 1], scale: 1 }
+                : { opacity: 1, scale: 1 }
             }
-            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            exit={{ opacity: 0, scale: 0.96 }}
             transition={
               breathe
                 ? { duration: 3.6, repeat: Infinity, ease: "easeInOut" }
-                : { type: "spring", stiffness: 320, damping: 28 }
+                : { duration: 0.18, ease: "easeOut" }
             }
-            className="w-full max-w-[340px]"
+            role="dialog"
+            aria-label="Nouvelle demande de course"
+            onPointerDownCapture={() => setInteracted(true)}
+            className="fixed left-1/2 top-1/2 z-[60] w-[min(340px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 will-change-transform"
           >
-          <div className="pointer-events-auto rounded-3xl bg-card/85 backdrop-blur-xl border border-border/60 shadow-elevated overflow-hidden">
+          <div className="pointer-events-auto rounded-3xl bg-card/95 border border-border/60 shadow-elevated overflow-hidden">
             {/* Countdown */}
-            <div className="h-1 bg-muted/60">
-              <motion.div
-                key={request.id}
-                initial={{ width: "100%" }}
-                animate={{ width: "0%" }}
-                transition={{ duration: timeoutSec, ease: "linear" }}
-                className={`h-full ${urgent ? "bg-destructive" : "gradient-primary"}`}
-              />
-            </div>
+            <CountdownBar id={request.id} duration={timeoutSec} urgent={urgent} />
 
             <div className="p-3.5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10.5px] font-medium uppercase tracking-[0.14em] text-primary/90">
                   Nouvelle course
                 </span>
-                <motion.div
-                  key={remaining}
-                  initial={{ scale: 1.15, opacity: 0.7 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.2 }}
+                <div
                   className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-medium tabular-nums text-[11px] ${
                     urgent
                       ? "bg-destructive/15 text-destructive"
@@ -137,7 +122,7 @@ export function IncomingRequestIsland({
                 >
                   <Clock className="w-3 h-3" />
                   {remaining}s
-                </motion.div>
+                </div>
               </div>
 
               <div className="space-y-1.5">
@@ -195,9 +180,30 @@ export function IncomingRequestIsland({
             </div>
           </div>
           </motion.div>
-          </div>
         </>
       )}
     </AnimatePresence>
   );
 }
+
+const CountdownBar = memo(function CountdownBar({
+  id,
+  duration,
+  urgent,
+}: {
+  id: string;
+  duration: number;
+  urgent: boolean;
+}) {
+  return (
+    <div className="h-1 bg-muted/60">
+      <motion.div
+        key={id}
+        initial={{ width: "100%" }}
+        animate={{ width: "0%" }}
+        transition={{ duration, ease: "linear" }}
+        className={`h-full ${urgent ? "bg-destructive" : "gradient-primary"}`}
+      />
+    </div>
+  );
+});
