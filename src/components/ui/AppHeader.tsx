@@ -152,7 +152,7 @@ export function AppHeader({
                 <Menu className="w-6 h-6 text-foreground" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-80 drawer-warm relative">
+            <SheetContent side="left" className="w-80 drawer-warm overflow-hidden">
               <div className="kente-stripe pointer-events-none absolute inset-x-0 top-0 h-[3px] opacity-80" aria-hidden />
               <SheetHeader>
                 <SheetTitle className="sr-only">Menu CHOP CHOP</SheetTitle>
