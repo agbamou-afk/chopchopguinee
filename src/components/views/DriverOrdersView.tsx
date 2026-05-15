@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
+import { useRef } from "react";
 import { Marker } from "react-map-gl";
 import { formatGNF } from "@/lib/format";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
-import { Users, Timer, BellRing, Flame, Navigation } from "lucide-react";
+import { Users, Timer, BellRing, Flame, Navigation, Plus, Minus, LocateFixed } from "lucide-react";
 import { IncomingRequestIsland } from "@/components/driver/IncomingRequestIsland";
 import { MenuButton } from "@/components/ui/MainMenuSheet";
-import { ChopMap, HeatmapLayer } from "@/components/map";
+import { ChopMap, HeatmapLayer, type ChopMapHandle } from "@/components/map";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { toast } from "sonner";
 
 const CONAKRY_HOTSPOTS = [
   { name: "Kaloum", lng: -13.7100, lat: 9.5100, weight: 1.0 },
@@ -19,6 +22,8 @@ const CONAKRY_HOTSPOTS = [
 export function DriverOrdersView() {
   const { queue, current, currentExpiresAt, accept, decline, showCurrent, isOnline, activeTrip } =
     useDriverSession();
+  const mapRef = useRef<ChopMapHandle>(null);
+  const geo = useGeolocation();
   const displayedRequest = !activeTrip ? current ?? queue[0] ?? null : null;
   const offerTimeoutSec = currentExpiresAt
     ? Math.max(1, Math.ceil((new Date(currentExpiresAt).getTime() - Date.now()) / 1000))
@@ -27,13 +32,39 @@ export function DriverOrdersView() {
   const sorted = [...CONAKRY_HOTSPOTS].sort((a, b) => b.weight - a.weight);
   const top = sorted[0];
 
+  const zoomBy = (delta: number) => {
+    const m = mapRef.current?.getMap();
+    if (!m) return;
+    const z = m.getZoom();
+    m.easeTo({ zoom: z + delta, duration: 250 });
+  };
+  const recenter = () => {
+    const m = mapRef.current?.getMap();
+    if (!m) return;
+    if (geo.position) {
+      m.flyTo({
+        center: [geo.position.lng, geo.position.lat],
+        zoom: 15.5,
+        bearing: 0,
+        essential: true,
+        duration: 800,
+      });
+    } else if (!geo.isReady) {
+      geo.request();
+      toast("Position chauffeur indisponible.");
+    } else {
+      toast("Position chauffeur indisponible.");
+    }
+  };
+
   return (
     <div className="fixed inset-0 overflow-hidden">
       {/* Full-bleed map background */}
       <div className="absolute inset-0">
         <ChopMap
+          ref={mapRef}
           className="absolute inset-0 w-full h-full"
-          interactive={false}
+          interactive={true}
           initialView={{ longitude: -13.6773, latitude: 9.5900, zoom: 11.4 }}
         >
           <HeatmapLayer
