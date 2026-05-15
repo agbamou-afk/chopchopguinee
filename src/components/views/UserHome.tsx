@@ -1,5 +1,5 @@
 import { QuickActions } from "@/components/home/QuickActions";
-import { MapPin, Home as HomeIcon, Briefcase, Clock, Bike, UtensilsCrossed } from "lucide-react";
+import { Home as HomeIcon, Briefcase, Clock, Bike, UtensilsCrossed } from "lucide-react";
 import { PromoCarousel } from "@/components/home/PromoCarousel";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
