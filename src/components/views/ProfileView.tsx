@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppEnv } from "@/contexts/AppEnvContext";
 import { toast } from "@/hooks/use-toast";
+import { MenuButton } from "@/components/ui/MainMenuSheet";
 import { ONBOARDING_DONE_KEY, ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/ClientOnboarding";
 import { DRIVER_ONBOARDING_DONE_KEY, DRIVER_ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/DriverOnboarding";
 
@@ -93,8 +94,19 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
 
   return (
     <div className="max-w-md mx-auto">
+      {/* Top-left persistent menu, matching other tabs */}
+      <div
+        className="px-4 pt-4 flex items-center"
+        style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
+      >
+        <MenuButton
+          floating
+          isDriverMode={isDriverMode}
+          onToggleDriverMode={onToggleDriverMode}
+        />
+      </div>
       {/* Unified profile hero */}
-      <div className="px-4 pt-4">
+      <div className="px-4 pt-3">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
