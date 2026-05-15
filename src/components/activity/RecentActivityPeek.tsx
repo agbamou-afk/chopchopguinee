@@ -28,11 +28,10 @@ export function RecentActivityPeek({ onSeeAll }: RecentActivityPeekProps) {
 
   return (
     <section aria-label="Dernière activité">
-      <div className="flex items-end justify-between mb-2">
-        <div>
-          <h2 className="text-base font-bold text-foreground leading-tight">Dernière activité</h2>
-          <p className="text-[11px] text-muted-foreground">Votre fil CHOP CHOP en continu</p>
-        </div>
+      <div className="flex items-center justify-between mb-2 px-0.5">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Dernière activité
+        </h2>
         <button
           type="button"
           onClick={() => {
@@ -44,7 +43,8 @@ export function RecentActivityPeek({ onSeeAll }: RecentActivityPeekProps) {
           Tout voir <ChevronRight className="w-3 h-3" />
         </button>
       </div>
-      <div className="rounded-3xl bg-card shadow-card border border-border/60 p-1">
+      <div className="rounded-3xl card-warm p-1 relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam opacity-70" aria-hidden />
         <ActivityRow
           item={last}
           compact
