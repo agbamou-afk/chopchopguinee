@@ -17,7 +17,6 @@ import {
   XCircle,
   Sparkles,
   ScanLine,
-  Store,
 } from "lucide-react";
 import { WalletCard } from "@/components/home/WalletCard";
 import { useWallet, type WalletTransaction } from "@/hooks/useWallet";
