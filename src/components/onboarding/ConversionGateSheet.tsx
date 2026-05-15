@@ -1,7 +1,7 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Bike, LogIn, UserPlus, SteeringWheel as SteeringIcon } from "lucide-react";
+import { Bike, LogIn, UserPlus, Car as SteeringIcon } from "lucide-react";
 
 export type ConversionIntent = "client" | "driver" | "wallet" | "ride" | "order" | "message" | "pay";
 
