@@ -441,6 +441,21 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
                     <p className="text-xs text-muted-foreground text-center">
                       Renouvellement dans {secondsLeft}s · le client peut aussi saisir le code à 6 caractères.
                     </p>
+                    {isDemo && (
+                      <div className="w-full pt-2 space-y-2">
+                        <Button
+                          onClick={async () => { setQrOpen(false); await startTrip(); }}
+                          disabled={busy}
+                          className="w-full h-12 gradient-primary text-base font-semibold"
+                        >
+                          {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ArrowRight className="w-5 h-5 mr-2" />}
+                          Continuer la course démo
+                        </Button>
+                        <p className="text-[11px] text-muted-foreground text-center">
+                          Mode démo — pas besoin que le client scanne.
+                        </p>
+                      </div>
+                    )}
                   </motion.div>
                 ) : (
                   <div className="flex flex-col items-center gap-3 py-8">
