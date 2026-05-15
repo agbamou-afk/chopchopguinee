@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAppEnv } from "@/contexts/AppEnvContext";
 import { toast } from "@/hooks/use-toast";
 import { ONBOARDING_DONE_KEY, ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/ClientOnboarding";
+import { DRIVER_ONBOARDING_DONE_KEY, DRIVER_ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/DriverOnboarding";
 
 interface ProfileViewProps {
   isDriverMode: boolean;
@@ -69,6 +70,14 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
       try { localStorage.removeItem(`${ONBOARDING_DONE_KEY}:${user.id}`); } catch { /* noop */ }
     }
     window.dispatchEvent(new CustomEvent(ONBOARDING_REPLAY_EVENT));
+  };
+
+  const handleReplayDriverOnboarding = () => {
+    if (typeof window === "undefined") return;
+    if (user) {
+      try { localStorage.removeItem(`${DRIVER_ONBOARDING_DONE_KEY}:${user.id}`); } catch { /* noop */ }
+    }
+    window.dispatchEvent(new CustomEvent(DRIVER_ONBOARDING_REPLAY_EVENT));
   };
 
   const handleDriverToggle = () => {
@@ -212,6 +221,20 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
               </div>
               <span className="flex-1 text-left font-medium text-foreground">
                 Revoir le guide
+              </span>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+          )}
+          {isDriverMode && (
+            <button
+              onClick={handleReplayDriverOnboarding}
+              className="w-full flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors border-t border-border"
+            >
+              <div className="p-2 rounded-xl bg-primary/10">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <span className="flex-1 text-left font-medium text-foreground">
+                Revoir le guide chauffeur
               </span>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>

@@ -1,0 +1,296 @@
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Power, Bell, MapPin, Flag, Flame, ChevronRight, X, Wallet, QrCode, Check,
+} from "lucide-react";
+import logo from "@/assets/logo.png";
+import { useLowDataMode } from "@/hooks/useLowDataMode";
+
+interface Props {
+  onDone: () => void;
+}
+
+type SceneKey = "online" | "accept" | "pickup" | "complete" | "heatmap" | "final";
+
+const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
+  { key: "online",   title: "Passez en ligne", caption: "Activez votre statut pour recevoir des courses." },
+  { key: "accept",   title: "Accepter une course", caption: "Une demande arrive — acceptez en un tap." },
+  { key: "pickup",   title: "Prise en charge",  caption: "Confirmez le pickup avec le client." },
+  { key: "complete", title: "Terminer",         caption: "Finissez la course et suivez vos gains." },
+  { key: "heatmap",  title: "Zones actives",    caption: "Placez-vous là où la demande est la plus forte." },
+  { key: "final",    title: "Prêt à conduire",  caption: "Conduisez mieux. Gagnez mieux." },
+];
+
+function OnlineScene({ animated }: { animated: boolean }) {
+  return (
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-card border border-border/60 flex items-center justify-center">
+      <motion.div
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: animated ? 0.6 : 0, type: "spring", stiffness: 180 }}
+        className="relative flex flex-col items-center gap-3"
+      >
+        <div className="relative">
+          <span className="absolute inset-0 rounded-full bg-success/30 animate-ping" />
+          <div className="relative w-20 h-20 rounded-full bg-success text-white flex items-center justify-center shadow-lg">
+            <Power className="w-9 h-9" />
+          </div>
+        </div>
+        <span className="px-3 py-1 rounded-full bg-success/15 text-success text-xs font-bold uppercase tracking-wide">
+          En ligne
+        </span>
+      </motion.div>
+    </div>
+  );
+}
+
+function AcceptScene({ animated }: { animated: boolean }) {
+  return (
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/10 via-card to-secondary/10 border border-border/60">
+      <motion.div
+        initial={{ y: 200, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: animated ? 0.6 : 0, delay: animated ? 0.15 : 0, type: "spring", stiffness: 160 }}
+        className="absolute left-3 right-3 bottom-3 rounded-2xl bg-card border border-border shadow-lg p-3 space-y-2"
+      >
+        <div className="flex items-center gap-2">
+          <Bell className="w-4 h-4 text-primary" />
+          <p className="text-[11px] uppercase tracking-wide font-bold text-primary">Nouvelle course</p>
+        </div>
+        <p className="text-sm font-bold text-foreground">Ratoma → Kaloum · 8 500 GNF</p>
+        <motion.div
+          animate={animated ? { scale: [1, 1.04, 1] } : {}}
+          transition={{ duration: 1.4, repeat: Infinity }}
+          className="w-full text-center py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow"
+        >
+          Accepter
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+function PickupScene({ animated }: { animated: boolean }) {
+  return (
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/15 via-muted to-secondary/15 border border-border/60">
+      <div className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+        }} />
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 320 220" preserveAspectRatio="none">
+        <motion.path
+          d="M30,180 C100,180 160,90 290,70"
+          stroke="hsl(var(--primary))"
+          strokeWidth="4"
+          strokeLinecap="round"
+          fill="none"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: animated ? 1.2 : 0 }}
+        />
+      </svg>
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: animated ? 1 : 0, type: "spring", stiffness: 200 }}
+        className="absolute right-3 top-3 bg-card border border-border rounded-2xl p-2 shadow-lg flex items-center gap-2"
+      >
+        <div className="w-10 h-10 rounded-lg bg-white border border-border flex items-center justify-center">
+          <QrCode className="w-6 h-6 text-foreground" />
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Code</p>
+          <p className="text-sm font-bold tabular-nums tracking-[0.2em]">A1B2C3</p>
+        </div>
+      </motion.div>
+      <motion.div
+        initial={{ left: "8%", top: "78%" }}
+        animate={{ left: "82%", top: "26%" }}
+        transition={{ duration: animated ? 1.6 : 0, ease: "easeInOut" }}
+        className="absolute"
+      >
+        <div className="w-9 h-9 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center shadow-lg">
+          <MapPin className="w-5 h-5" />
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function CompleteScene({ animated }: { animated: boolean }) {
+  return (
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-card border border-border/60 p-4 flex flex-col items-center justify-center gap-3">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: animated ? 0.1 : 0, type: "spring", stiffness: 220 }}
+        className="w-14 h-14 rounded-full bg-success/15 text-success flex items-center justify-center"
+      >
+        <Check className="w-8 h-8" />
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: animated ? 0.4 : 0 }}
+        className="rounded-2xl gradient-wallet text-primary-foreground px-5 py-3 shadow-card flex items-center gap-3"
+      >
+        <Wallet className="w-5 h-5" />
+        <div className="text-left">
+          <p className="text-[10px] uppercase tracking-wide opacity-80">Gains</p>
+          <p className="text-xl font-extrabold">+ 7 225 GNF</p>
+        </div>
+      </motion.div>
+      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+        <Flag className="w-3 h-3" /> Course terminée
+      </p>
+    </div>
+  );
+}
+
+function HeatmapScene({ animated }: { animated: boolean }) {
+  const blobs = [
+    { x: "20%", y: "30%", s: 90, c: "hsl(var(--destructive))" },
+    { x: "60%", y: "55%", s: 110, c: "hsl(var(--secondary))" },
+    { x: "75%", y: "20%", s: 70, c: "hsl(var(--primary))" },
+  ];
+  return (
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-muted border border-border/60">
+      <div className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }} />
+      {blobs.map((b, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={animated ? { opacity: [0.4, 0.75, 0.4], scale: [1, 1.15, 1] } : { opacity: 0.6, scale: 1 }}
+          transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.3 }}
+          className="absolute rounded-full blur-2xl"
+          style={{ left: b.x, top: b.y, width: b.s, height: b.s, background: b.c }}
+        />
+      ))}
+      <div className="absolute left-3 bottom-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/90 border border-border text-xs font-semibold">
+        <Flame className="w-4 h-4 text-destructive" /> Forte demande à Kaloum
+      </div>
+    </div>
+  );
+}
+
+function FinalScene() {
+  return (
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/15 via-card to-secondary/15 border border-border/60 flex flex-col items-center justify-center text-center px-6">
+      <motion.img
+        initial={{ scale: 0.7, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 180 }}
+        src={logo}
+        alt="CHOP CHOP"
+        className="w-20 h-20 rounded-2xl shadow-card mb-3"
+      />
+      <p className="text-lg font-extrabold text-foreground">CHOP CHOP — Chauffeur</p>
+      <p className="text-sm text-muted-foreground mt-1">Conduisez mieux. Gagnez mieux.</p>
+    </div>
+  );
+}
+
+function Scene({ scene, animated }: { scene: SceneKey; animated: boolean }) {
+  switch (scene) {
+    case "online":   return <OnlineScene animated={animated} />;
+    case "accept":   return <AcceptScene animated={animated} />;
+    case "pickup":   return <PickupScene animated={animated} />;
+    case "complete": return <CompleteScene animated={animated} />;
+    case "heatmap":  return <HeatmapScene animated={animated} />;
+    case "final":    return <FinalScene />;
+  }
+}
+
+export function DriverOnboarding({ onDone }: Props) {
+  const [index, setIndex] = useState(0);
+  const { low } = useLowDataMode();
+  const animated = !low;
+  const scene = SCENES[index];
+  const isLast = index === SCENES.length - 1;
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const next = () => {
+    if (isLast) onDone();
+    else setIndex((i) => i + 1);
+  };
+
+  const dots = useMemo(() => SCENES.map((_, i) => i), []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-sm flex flex-col"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Bienvenue chauffeur CHOP CHOP"
+    >
+      <div className="flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
+        <div className="flex items-center gap-2">
+          <img src={logo} alt="" className="w-7 h-7 rounded-lg" />
+          <span className="text-sm font-bold text-foreground">CHOP CHOP · Chauffeur</span>
+        </div>
+        <button
+          onClick={onDone}
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          aria-label="Passer le guide chauffeur"
+        >
+          Passer <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="flex-1 flex flex-col justify-center max-w-md w-full mx-auto px-5">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={scene.key}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
+          >
+            <Scene scene={scene.key} animated={animated} />
+            <div className="text-center mt-5">
+              <p className="text-[11px] uppercase tracking-widest font-bold text-primary">{scene.title}</p>
+              <p className="text-lg font-extrabold text-foreground mt-1">{scene.caption}</p>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 max-w-md w-full mx-auto">
+        <div className="flex items-center justify-center gap-1.5">
+          {dots.map((i) => (
+            <span
+              key={i}
+              className={`h-1.5 rounded-full transition-all ${
+                i === index ? "w-6 bg-primary" : "w-1.5 bg-border"
+              }`}
+            />
+          ))}
+        </div>
+        <button
+          onClick={next}
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-4 min-h-[56px] rounded-2xl bg-primary text-primary-foreground font-bold text-base shadow-card hover:opacity-95 transition-opacity"
+        >
+          {isLast ? "Commencer" : (<>Suivant <ChevronRight className="w-5 h-5" /></>)}
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+export const DRIVER_ONBOARDING_DONE_KEY = "cc_driver_onboarding_done";
+export const DRIVER_ONBOARDING_REPLAY_EVENT = "cc:replay-driver-onboarding";
