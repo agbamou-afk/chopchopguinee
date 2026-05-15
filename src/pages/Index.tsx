@@ -116,14 +116,7 @@ const Index = () => {
   const isLinkedDemo = typeof window !== "undefined"
     && /[?&]demo=linked\b/.test(window.location.search);
   const isDemoAny = demoUser;
-  // For public + demo modes, onboarding is part of the script — always show
-  // it on launch and ignore any persisted "done" flag. For real live users we
-  // honour the per-user localStorage flag so we never re-show.
-  const liveClientOnboardingPending = ready && liveUser && !isDriverMode
-    && typeof window !== "undefined"
-    && window.localStorage.getItem(demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, false)) !== "1"
-    // Live users: opt-in only via Profile replay. Never auto-block.
-    && false;
+  // Public/demo onboarding always shows on launch; live users never auto-show.
   const onboardingBlocksApp = !ready || showOnboarding || showDriverOnboarding;
   const resetRequested = typeof window !== "undefined"
     && /[?&](resetDemo|demoReset|reset_demo)=1\b/.test(window.location.search);
