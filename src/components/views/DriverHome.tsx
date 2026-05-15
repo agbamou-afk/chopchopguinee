@@ -56,14 +56,11 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     }
   };
 
-  // Rotating activity hints shown while the driver is online and idle.
-  // Reassures that the system is actively scanning for nearby demand.
+  // Rotating activity hints — short, operational, glanceable.
   const ACTIVITY_HINTS = [
-    "Analyse des demandes autour de vous…",
-    "Conducteurs proches : surveillance de la zone…",
-    "Synchronisation avec le réseau CHOP CHOP…",
-    "Optimisation des trajets disponibles…",
-    "Détection de courses à proximité…",
+    "Analyse de la zone…",
+    "Réseau CHOP CHOP synchronisé",
+    "Détection des courses proches…",
   ];
   const [hintIdx, setHintIdx] = useState(0);
   const searching = isOnline && !current && !activeTrip;
@@ -196,10 +193,10 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         {/* Online toggle — 3 states: Hors ligne / Recherche / En course */}
         {(() => {
           const label = !isOnline
-            ? toggling ? "Activation…" : "Hors ligne — appuyez pour démarrer"
+            ? toggling ? "Activation…" : "Hors ligne · appuyez pour démarrer"
             : searching
-              ? "En ligne · à l'écoute des courses"
-              : "En course — concentrez-vous sur la conduite";
+              ? "En ligne · à l'écoute"
+              : "En course";
           const tone = !isOnline
             ? "bg-card border border-border text-foreground shadow-card"
             : searching
@@ -213,31 +210,13 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
                 disabled={toggling}
                 className={`w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl overflow-hidden ${tone} transition-colors disabled:opacity-60`}
               >
-                {/* Subtle outward pulse halo while actively searching */}
-                {searching && (
-                  <>
-                    <motion.span
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-white/40"
-                      animate={{ scale: [1, 1.04, 1], opacity: [0.5, 0, 0.5] }}
-                      transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
-                    />
-                    <motion.span
-                      aria-hidden
-                      className="absolute inset-0 bg-white/10"
-                      animate={{ opacity: [0.05, 0.25, 0.05] }}
-                      transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                  </>
-                )}
                 {isOnline ? (
                   <span className="relative inline-flex">
                     {searching && (
-                      <motion.span
+                      <span
                         aria-hidden
-                        className="absolute inset-0 rounded-full bg-white/30"
-                        animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
-                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+                        className="absolute inset-0 rounded-full bg-white/30 animate-ping"
+                        style={{ animationDuration: "2.4s" }}
                       />
                     )}
                     <Radar className="w-5 h-5 relative" />
@@ -247,16 +226,6 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
                 )}
                 <span className="font-bold relative inline-flex items-center">
                   {label}
-                  {searching && (
-                    <motion.span
-                      aria-hidden
-                      className="ml-1 inline-flex"
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.4, repeat: Infinity }}
-                    >
-                      …
-                    </motion.span>
-                  )}
                 </span>
               </motion.button>
 
@@ -284,50 +253,47 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         })()}
 
         {/* Operational chips: today earnings + nearby demand */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="p-3.5 flex items-center gap-3 border-border/50 shadow-card">
-            <div className="p-2.5 rounded-2xl bg-primary/10 ring-1 ring-primary/15">
-              <Wallet className="w-4 h-4 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Aujourd'hui</p>
-              <p className="text-sm font-bold text-foreground truncate tabular-nums">{formatGNF(e.todayGnf)}</p>
-            </div>
-          </Card>
-          <Card className="p-3.5 flex items-center gap-3 relative overflow-hidden border-border/50 shadow-card">
-            <div className="p-2.5 rounded-2xl bg-success/10 ring-1 ring-success/15 relative">
-              <Users className="w-4 h-4 text-success" />
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-2xl bg-card border border-border/50 shadow-card px-3 py-2.5">
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground inline-flex items-center gap-1.5">
+              <Wallet className="w-3 h-3 text-primary" /> Aujourd'hui
+            </p>
+            <p className="text-base font-extrabold text-foreground tabular-nums leading-tight mt-0.5 truncate">
+              {formatGNF(e.todayGnf)}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-card border border-border/50 shadow-card px-3 py-2.5 relative">
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground inline-flex items-center gap-1.5">
+              <Users className="w-3 h-3 text-success" /> Demandes
               {isOnline && (
-                <span className="absolute -top-0.5 -right-0.5 inline-flex h-2 w-2">
+                <span className="relative inline-flex h-1.5 w-1.5 ml-0.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/70" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
                 </span>
               )}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Demandes</p>
-              <p className="text-sm font-bold text-foreground truncate">
-                {queue.length > 0
-                  ? `${queue.length} ${queue.length > 1 ? "proches" : "proche"}`
-                  : isOnline ? "À l'écoute…" : "Hors ligne"}
-              </p>
-            </div>
-          </Card>
+            </p>
+            <p className="text-base font-extrabold text-foreground tabular-nums leading-tight mt-0.5 truncate">
+              {queue.length > 0
+                ? `${queue.length} ${queue.length > 1 ? "proches" : "proche"}`
+                : isOnline ? "À l'écoute" : "—"}
+            </p>
+          </div>
         </div>
 
         {/* Active ride card OR demand heatmap */}
         {activeTrip && (
-          <Card className="p-4 border-primary/40 bg-primary/5">
+          <Card className="p-3.5 border-primary/40 bg-primary/5 relative overflow-hidden">
+            <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" aria-hidden />
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-xl bg-primary/15 mt-0.5">
                 <Navigation className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] uppercase tracking-wide text-primary font-semibold">Course en cours</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Course en cours</p>
                 <p className="text-sm font-bold text-foreground truncate mt-0.5">
                   {activeTrip.pickup} → {activeTrip.destination}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
                   {formatGNF(activeTrip.estimatedPrice)} · {activeTrip.distance}
                 </p>
               </div>

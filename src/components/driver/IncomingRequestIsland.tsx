@@ -40,6 +40,7 @@ export function IncomingRequestIsland({
   timeoutSec = 20,
 }: Props) {
   const [remaining, setRemaining] = useState(timeoutSec);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [interacted, setInteracted] = useState(false);
   const vibratedRef = useRef<string | null>(null);
   const soundedRef = useRef<string | null>(null);
@@ -77,7 +78,6 @@ export function IncomingRequestIsland({
   }, [request, timeoutSec, onDecline]);
 
   const urgent = remaining <= 5;
-  const breathe = !interacted && !low;
 
   return (
     <AnimatePresence>
@@ -104,26 +104,16 @@ export function IncomingRequestIsland({
           >
           <motion.div
             key={request.id}
-            initial={{ opacity: 0, scale: 0.94, y: 8 }}
-            animate={
-              urgent && !low
-                ? { opacity: 1, scale: 1, y: 0, x: [0, -6, 6, -5, 5, -3, 3, 0] }
-                : breathe
-                  ? { opacity: [1, 0.94, 1], scale: 1, y: 0, x: 0 }
-                  : { opacity: 1, scale: 1, y: 0, x: 0 }
-            }
-            exit={{ opacity: 0, scale: 0.94, y: 8 }}
-            transition={
-              urgent && !low
-                ? { x: { duration: 0.55, repeat: Infinity, ease: "easeInOut" }, opacity: { duration: 0.35, ease: "easeOut" }, scale: { duration: 0.35, ease: [0.22, 1, 0.36, 1] }, y: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } }
-                : breathe
-                  ? { opacity: { duration: 3.6, repeat: Infinity, ease: "easeInOut" }, scale: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }, y: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
-                  : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
-            }
+            initial={{ opacity: 0, scale: 0.96, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 6 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             role="dialog"
             aria-label="Nouvelle demande de course"
             onPointerDownCapture={() => setInteracted(true)}
-            className="w-[min(348px,100%)] will-change-transform pointer-events-auto rounded-2xl bg-card/97 backdrop-blur-md border border-primary/12 overflow-hidden shadow-island"
+            className={`w-[min(348px,100%)] will-change-transform pointer-events-auto rounded-2xl bg-card/97 backdrop-blur-md overflow-hidden shadow-island border ${
+              urgent ? "border-destructive/50 ring-2 ring-destructive/25" : "border-primary/15"
+            } transition-colors duration-200`}
           >
             {/* Brand seam — saffron→ember directional flow */}
             <div className="pointer-events-none h-[2px] bg-gradient-to-r from-primary/70 via-secondary to-primary/70" aria-hidden />
