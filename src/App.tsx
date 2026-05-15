@@ -55,6 +55,7 @@ const AdminsAdmin = lazy(() => import("./pages/admin/AdminsAdmin"));
 const AuditAdmin = lazy(() => import("./pages/admin/AuditAdmin"));
 const AnalyticsAdmin = lazy(() => import("./pages/admin/AnalyticsAdmin"));
 const DriverApply = lazy(() => import("./pages/DriverApply"));
+const MerchantQR = lazy(() => import("./pages/MerchantQR"));
 import PrivacySettings from "./pages/PrivacySettings";
 import OfflinePage from "./pages/Offline";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
@@ -147,6 +148,7 @@ const App = () => {
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/offline" element={<OfflinePage />} />
           <Route path="/driver/apply" element={<Suspense fallback={null}><DriverApply /></Suspense>} />
+          <Route path="/merchant" element={<Suspense fallback={null}><MerchantQR /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
