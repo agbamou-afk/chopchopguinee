@@ -32,8 +32,12 @@ import {
   DRIVER_ONBOARDING_DONE_KEY,
   DRIVER_ONBOARDING_REPLAY_EVENT,
 } from "@/components/onboarding/DriverOnboarding";
-import { useDriverProfile } from "@/hooks/useDriverProfile";
-import { isAdminUser, isLiveUser } from "@/lib/runtimeMode";
+import { isAdminUser, isDemoDriverMode, isDemoMode, isLiveUser } from "@/lib/runtimeMode";
+import {
+  DEMO_CLIENT_ONBOARDING_DONE_KEY,
+  DEMO_DRIVER_ONBOARDING_DONE_KEY,
+  demoScopedKey,
+} from "@/lib/demoState";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
