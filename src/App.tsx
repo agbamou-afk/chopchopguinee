@@ -11,6 +11,7 @@ import { useTopupNotifications } from "@/hooks/useTopupNotifications";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
+import { isSandboxMode, isNonLiveMode } from "@/lib/runtimeMode";
 
 function TopupNotificationsMount() {
   useTopupNotifications();
@@ -97,12 +98,12 @@ const App = () => {
         <ProfileCompletionRedirect />
         <TopupNotificationsMount />
         <InstallPrompt />
-        {(import.meta.env.DEV ||
+        {(isSandboxMode() ||
           (typeof window !== "undefined" && /[?&]field=1/.test(window.location.search))) && (
           <Suspense fallback={null}><FieldTestingPanel /></Suspense>
         )}
-        {(import.meta.env.DEV ||
-          (typeof window !== "undefined" && /[?&](demo|field)=1/.test(window.location.search))) && (
+        {(isSandboxMode() ||
+          (typeof window !== "undefined" && /[?&]field=1/.test(window.location.search))) && (
           <Suspense fallback={null}><DemoTestPanel /></Suspense>
         )}
         <Routes>
