@@ -105,8 +105,16 @@ const Index = () => {
   // (Initialising from sessionStorage before auth resolves caused
   // DriverHome to render outside a ready provider on first paint.)
   const [isDriverMode, setIsDriverMode] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState("home");
-  const [activeView, setActiveView] = useState<ActiveView>("home");
+  // Initial tab/view honour `?tab=` so notification deep-links can land
+  // directly on the activity timeline, wallet, or profile.
+  const initialTab = (() => {
+    if (typeof window === "undefined") return "home";
+    const m = /[?&]tab=(home|orders|wallet|profile)\b/.exec(window.location.search);
+    return m?.[1] ?? "home";
+  })();
+  const initialView: ActiveView = (initialTab as ActiveView) ?? "home";
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeView, setActiveView] = useState<ActiveView>(initialView);
   const [bookingRide, setBookingRide] = useState<RideType>(null);
   const [bookingDestination, setBookingDestination] = useState<string | undefined>(undefined);
   const [activeTrip, setActiveTrip] = useState<{
