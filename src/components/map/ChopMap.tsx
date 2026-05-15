@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import Map, { type MapRef, NavigationControl, type ViewState } from 'react-map-gl';
+import Map, { type MapRef, type ViewState } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapConfig } from '@/lib/maps';
 import { Skeleton } from '@/components/ui/skeleton';
