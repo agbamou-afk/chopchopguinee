@@ -274,8 +274,9 @@ export default function MerchantQR() {
             <motion.div
               animate={pulse ? { scale: [1, 1.02, 1] } : { scale: 1 }}
               transition={{ duration: 0.6 }}
-              className="relative rounded-3xl bg-card p-5 shadow-elevated border border-border/60 overflow-hidden"
+              className="relative rounded-3xl surface-money p-5 shadow-elevated overflow-hidden"
             >
+              <div className="pointer-events-none absolute inset-x-10 top-0 h-px saffron-seam" aria-hidden />
               <div
                 aria-hidden
                 className="absolute -top-16 -right-16 w-44 h-44 rounded-full bg-primary/8 blur-3xl"
@@ -289,7 +290,7 @@ export default function MerchantQR() {
                   <span className="text-[10px] text-muted-foreground">CHOPPay</span>
                 </div>
 
-                <div className="mx-auto w-fit p-4 rounded-2xl bg-white shadow-soft ring-1 ring-border/40">
+                <div className="mx-auto w-fit p-4 rounded-2xl bg-white shadow-soft ring-1 ring-[hsl(162_30%_82%)]">
                   {qrPayload ? (
                     <QRCodeSVG value={qrPayload} size={208} level="M" includeMargin={false} />
                   ) : (
@@ -438,10 +439,10 @@ function RecentPayments({ payments }: { payments: Payment[] }) {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="rounded-2xl bg-card border border-border/60 shadow-card p-3 flex items-center gap-3"
+            className="rounded-2xl surface-money p-3 flex items-center gap-3"
           >
-            <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4 text-success" />
+            <div className="w-9 h-9 rounded-xl tx-halo-in flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
@@ -452,7 +453,7 @@ function RecentPayments({ payments }: { payments: Payment[] }) {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-semibold text-success">+ {formatGNF(p.amount_gnf)}</p>
+              <p className="text-sm font-semibold text-foreground tabular-nums">+ {formatGNF(p.amount_gnf)}</p>
               <p className="text-[11px] text-muted-foreground">{formatTime(p.created_at)}</p>
             </div>
           </motion.li>
