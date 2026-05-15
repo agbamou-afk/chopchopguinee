@@ -1,18 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Wallet,
-  MapPin,
-  Truck,
-  Plus,
-  Receipt,
-  ChevronRight,
-  X,
-} from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import logo from "@/assets/logo.png";
-import motoIcon from "@/assets/icons/moto.png";
-import marcheIcon from "@/assets/icons/marche.png";
-import repasIcon from "@/assets/icons/repas.png";
 import sceneMoto from "@/assets/onboarding/scene-moto.png";
 import sceneMarche from "@/assets/onboarding/scene-marche.png";
 import sceneRepas from "@/assets/onboarding/scene-repas.png";
