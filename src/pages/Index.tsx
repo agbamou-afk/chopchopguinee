@@ -113,22 +113,43 @@ const Index = () => {
   //   never waits on a real driver. Used for solo presentations.
   const isLinkedDemo = typeof window !== "undefined"
     && /[?&]demo=linked\b/.test(window.location.search);
-  const isDemoAny = isLinkedDemo;
+  const isDemoAny = demoUser;
+  const onboardingBlocksApp = showOnboarding || showDriverOnboarding;
+  const resetRequested = typeof window !== "undefined"
+    && /[?&](resetDemo|demoReset|reset_demo)=1\b/.test(window.location.search);
   // One-shot guard: only auto-enter driver mode the first time we see this
   // signed-in demo driver. After that, manual toggles win.
   const autoModeAppliedRef = useRef(false);
 
   // First-login client onboarding: show once per user. Replay via Profile menu.
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!ready || typeof window === "undefined") return;
     if (isDriverMode) return;
     // Real authenticated non-demo users and admins should not see the demo
     // onboarding unless they explicitly replay it from the Profile menu.
     if (liveUser || adminUser) return;
     // Show onboarding to first-time visitors as well as first-time signed-in users.
-    const key = `${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`;
+    const key = demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny);
     if (localStorage.getItem(key) !== "1") setShowOnboarding(true);
-  }, [user?.id, isDriverMode, liveUser, adminUser]);
+  }, [ready, user?.id, isDriverMode, liveUser, adminUser, isDemoAny]);
+
+  useEffect(() => {
+    if (!ready || typeof window === "undefined") return;
+    if (!isDemoAny || !resetRequested) return;
+    resetDemoState(user?.id ?? null);
+    setBookingRide(null);
+    setActiveTrip(null);
+    setShowScanner(false);
+    setShowOnboarding(!demoDriver);
+    setShowDriverOnboarding(demoDriver);
+  }, [ready, user?.id, isDemoAny, demoDriver, resetRequested]);
+
+  useEffect(() => {
+    if (!ready || typeof window === "undefined") return;
+    if (!demoDriver) return;
+    const key = demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, true);
+    setShowDriverOnboarding(localStorage.getItem(key) !== "1");
+  }, [ready, user?.id, demoDriver]);
 
   useEffect(() => {
     const handler = () => setShowOnboarding(true);
@@ -140,7 +161,16 @@ const Index = () => {
     setShowOnboarding(false);
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
+        localStorage.setItem(demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny), "1");
+      } catch { /* noop */ }
+    }
+  };
+
+  const finishDriverOnboarding = () => {
+    setShowDriverOnboarding(false);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, demoDriver), "1");
       } catch { /* noop */ }
     }
   };
