@@ -6,6 +6,10 @@ import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { RestaurantDetail, type Restaurant } from "@/components/food/RestaurantDetail";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { UtensilsCrossed } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { isLiveUser } from "@/lib/runtimeMode";
 
 interface FoodViewProps {
   onBack: () => void;
@@ -92,6 +96,11 @@ export function FoodView({ onBack }: FoodViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("rating");
   const [active, setActive] = useState<Restaurant | null>(null);
+  const { user, roles } = useAuth();
+  // Real authenticated non-demo users see real data only. Until a live
+  // restaurant feed is wired in, render a calm empty state for them instead
+  // of the showroom restaurants used for guests/demo accounts.
+  const liveUser = isLiveUser(user, roles);
 
   const visible = useMemo(() => {
     const filtered = allRestaurants.filter((r) =>
@@ -169,8 +178,15 @@ export function FoodView({ onBack }: FoodViewProps) {
 
       {/* Restaurant list */}
       <div className="px-4 pt-4 pb-28">
-        <div className="grid grid-cols-2 gap-3">
-          {visible.map((restaurant, index) => (
+        {liveUser ? (
+          <EmptyState
+            icon={UtensilsCrossed}
+            title="Repas bientôt disponible"
+            description="Les restaurants partenaires de votre zone seront affichés ici dès leur ouverture."
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {visible.map((restaurant, index) => (
               <motion.div
                 key={restaurant.name}
                 initial={{ opacity: 0, y: 20 }}
@@ -180,7 +196,8 @@ export function FoodView({ onBack }: FoodViewProps) {
                 <RestaurantCard {...restaurant} onClick={() => setActive(restaurant)} />
               </motion.div>
             ))}
-        </div>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

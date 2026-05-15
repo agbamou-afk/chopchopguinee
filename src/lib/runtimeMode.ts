@@ -59,3 +59,49 @@ export function isLiveMode(email?: string | null): boolean {
 export function isNonLiveMode(email?: string | null): boolean {
   return getRuntimeMode(email) !== "live";
 }
+
+/**
+ * Lightweight role/user helpers used by Index/AppShell to decide what kind
+ * of content is appropriate for the current session.
+ *
+ *  - PUBLIC : not signed in. Showroom placeholders allowed.
+ *  - DEMO   : demo client/driver account or `?demo=` flag. Demo placeholders allowed.
+ *  - LIVE   : signed-in non-demo human. Real data or empty states only.
+ *  - ADMIN  : signed-in admin. Default landing is /admin.
+ */
+const ADMIN_ROLE_NAMES = new Set([
+  "admin",
+  "operations_admin",
+  "finance_admin",
+  "god_admin",
+]);
+
+export function isAdminRole(roles: readonly string[] | null | undefined): boolean {
+  if (!roles) return false;
+  return roles.some((r) => ADMIN_ROLE_NAMES.has(r));
+}
+
+export function isPublicMode(user: { email?: string | null } | null | undefined): boolean {
+  return !user;
+}
+
+export function isDemoUser(user: { email?: string | null } | null | undefined): boolean {
+  return isDemoMode(user?.email ?? null);
+}
+
+export function isLiveUser(
+  user: { email?: string | null } | null | undefined,
+  roles?: readonly string[] | null,
+): boolean {
+  if (!user) return false;
+  if (isDemoUser(user)) return false;
+  if (isAdminRole(roles)) return false;
+  return true;
+}
+
+export function isAdminUser(
+  user: { email?: string | null } | null | undefined,
+  roles?: readonly string[] | null,
+): boolean {
+  return !!user && isAdminRole(roles);
+}
