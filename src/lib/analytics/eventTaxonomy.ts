@@ -117,8 +117,13 @@ export const EVENTS = {
   "qr.payment_cancelled": "wallet",
   "qr.payment_failed": "wallet",
   "qr.scan_invalid": "wallet",
+  "qr.scan_success": "wallet",
   "merchant.qr_viewed": "wallet",
   "receipt.qr_payment_viewed": "wallet",
+  "merchant.payment_completed": "wallet",
+  "merchant.receipt_viewed": "wallet",
+  "merchant.repeat_interaction": "wallet",
+  "wallet.balance_updated_after_payment": "wallet",
 
   // --- Maps / routing / location (Day 6) ---
   "map.loaded": "map",
