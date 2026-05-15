@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -34,7 +34,6 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { TopUpOrangeMoney } from "@/components/wallet/TopUpOrangeMoney";
-import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 
