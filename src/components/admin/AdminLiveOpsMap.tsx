@@ -2,8 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChopMap, type ChopMapHandle, DriverCluster } from '@/components/map';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Activity, Bike, Loader2, RefreshCw, Wifi } from 'lucide-react';
 import { useMapPerfMonitor } from '@/hooks/useMapPerfMonitor';
 import { useLowDataMode } from '@/hooks/useLowDataMode';
