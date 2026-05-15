@@ -183,7 +183,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
                 </div>
                 <button
                   onClick={onCancel}
-                  disabled={step === "processing"}
+                  disabled={isProcessing}
                   className="p-1.5 rounded-lg hover:bg-muted disabled:opacity-40"
                   aria-label="Fermer"
                 >
