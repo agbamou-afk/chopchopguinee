@@ -77,21 +77,29 @@ export function AdminSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent>
+      <SidebarContent className="gap-1 py-2">
         {GROUPS.map((group) => {
           const visible = group.items.filter((i) => can(i.module));
           if (!visible.length) return null;
           return (
-            <SidebarGroup key={group.label}>
-              {!collapsed && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
+            <SidebarGroup key={group.label} className="py-1">
+              {!collapsed && (
+                <SidebarGroupLabel className="font-mono text-[10px] tracking-[0.16em] uppercase text-muted-foreground/70 px-2 h-6">
+                  {group.label}
+                </SidebarGroupLabel>
+              )}
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-0.5">
                   {visible.map((item) => (
                     <SidebarMenuItem key={item.url}>
-                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive(item.url)}
+                        className="h-7 text-[12.5px] data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-medium"
+                      >
                         <NavLink to={item.url} onClick={handleNav} className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && <span>{item.title}</span>}
+                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          {!collapsed && <span className="truncate">{item.title}</span>}
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
