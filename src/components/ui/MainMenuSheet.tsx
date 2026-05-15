@@ -78,7 +78,8 @@ export function MenuButton({
           <Menu className="w-5 h-5" />
         </button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-80">
+      <SheetContent side="left" className="w-80 drawer-warm relative">
+        <div className="kente-stripe pointer-events-none absolute inset-x-0 top-0 h-[3px] opacity-80" aria-hidden />
         <SheetHeader>
           <SheetTitle className="sr-only">Menu CHOP CHOP</SheetTitle>
           <div className="flex flex-col items-center gap-2 pt-2">

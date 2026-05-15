@@ -116,8 +116,8 @@ export function AppHeader({
     userInitial ?? (displayName ? displayName.charAt(0).toUpperCase() : "?");
 
   const cardClass = isDriverMode
-    ? "relative overflow-hidden bg-gradient-to-b from-card via-card to-secondary/4 rounded-[28px] shadow-card px-5 pt-4 pb-5 border border-secondary/20"
-    : "relative overflow-hidden bg-gradient-to-b from-card via-card to-primary/4 rounded-[28px] shadow-card px-5 pt-4 pb-5 border border-border/50";
+    ? "relative overflow-hidden card-warm rounded-[28px] px-5 pt-4 pb-5 border-secondary/25"
+    : "relative overflow-hidden card-warm rounded-[28px] px-5 pt-4 pb-5";
   const avatarColor = isDriverMode ? "text-secondary" : "text-primary";
 
   const menuItems = [
@@ -134,6 +134,8 @@ export function AppHeader({
         animate={{ opacity: 1, y: 0 }}
         className={cardClass}
       >
+        {/* Kente accent — emerald · gold · ember hairline along the top */}
+        <div className="kente-stripe pointer-events-none absolute inset-x-0 top-0 h-[3px] opacity-80" aria-hidden />
         {/* Soft brand wash — anchors the hero without competing with content */}
         <div className="pointer-events-none absolute -top-28 -right-24 w-64 h-64 rounded-full bg-primary/8 blur-3xl" aria-hidden />
         <div className="pointer-events-none absolute -bottom-32 -left-20 w-56 h-56 rounded-full bg-secondary/10 blur-3xl" aria-hidden />

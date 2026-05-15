@@ -24,8 +24,8 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="relative w-16 h-16 rounded-2xl bg-primary/8 ring-1 ring-primary/15 flex items-center justify-center">
-        <Icon className="w-6 h-6 text-primary" strokeWidth={1.75} />
+      <div className="relative w-16 h-16 rounded-2xl halo-conakry ring-1 ring-primary/15 flex items-center justify-center shadow-card">
+        <Icon className="w-6 h-6 text-primary relative z-10" strokeWidth={1.75} />
       </div>
       <div className="space-y-1.5">
         <h3 className="text-base font-bold text-foreground tracking-tight">{title}</h3>

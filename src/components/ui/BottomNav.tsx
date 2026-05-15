@@ -33,7 +33,9 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
   const right = tabs.slice(2);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border/70 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-50 shadow-soft">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card/92 backdrop-blur-md border-t border-border/70 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-50 shadow-soft">
+      {/* Kente hairline — subtle brand seam at the very top edge */}
+      <div className="kente-stripe pointer-events-none absolute inset-x-0 top-0 h-[2px] opacity-70" aria-hidden />
       {isDriverMode ? (
         <div className="max-w-md mx-auto grid grid-cols-3 items-center relative">
           {tabs.map((tab) => (
