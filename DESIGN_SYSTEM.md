@@ -1,5 +1,5 @@
 # CHOP CHOP — Design System
-## Conakry Contemporary · v1 (locked)
+## Conakry Contemporary · v1.1 (storyboard-anchored)
 
 > Conakry Contemporary is the visual identity of the CHOP CHOP super-app.
 > Warm modern African urbanism: lagoon emerald, saffron gold, ember red,
@@ -7,7 +7,10 @@
 > Do **not** use neon, crypto, cyberpunk, generic fintech blue, or
 > Uber black/white.
 >
-> **Lock:** This document is the source of truth for v1. Any change must be
+> **Lock:** This document is the source of truth. v1.1 re-anchors the palette
+> to the Storyboard v2 hex set (`#178A43 / #F2821B / #E4483C / #1F2328 /
+> #F7F2E8 / #ECE9E2 / #D9F1E2`) and formalises the **Kinetic Utility** icon
+> language and the **Urban Flow** motion language. Any change must be
 > proposed against a new minor version (`v1.x`) and reflected here in the
 > same commit. Tag the lock as `conakry-contemporary-v1`.
 
@@ -32,20 +35,20 @@ All colors live in `src/index.css` as HSL. Components reference Tailwind
 semantic classes (`bg-primary`, `text-foreground`) — **never hex, never
 arbitrary `bg-emerald-600`**.
 
-| Token | HSL | Use |
-|---|---|---|
-| `--primary` (CHOP green) | `152 58% 34%` | Primary CTA, ride confirm, CHOPWallet, CHOPPay, earnings |
-| `--primary-foreground` | `0 0% 100%` | Ink on primary |
-| `--secondary` (saffron) | `38 92% 58%` | Highlights, demand pulses, onboarding accents |
-| `--destructive` (ember) | `12 78% 56%` | Urgency, destructive, live-ops alerts |
-| `--background` (cream) | `36 30% 98%` | Page surface — never cold white |
-| `--foreground` (warm slate) | `160 18% 12%` | Ink — never pure black |
-| `--muted` / `--muted-foreground` | `38 25% 95%` / `160 10% 38%` | Sand surfaces, helper text |
-| `--border` / `--input` | `38 18% 90%` | Subtle warm outlines |
-| `--brand-green-muted` | `152 35% 92%` | Soft green chips |
-| `--brand-yellow-muted` | `38 85% 93%` | Soft gold chips |
-| `--brand-red-muted` | `12 70% 95%` | Soft ember chips |
-| Service accents | `--accent-{moto,toktok,repas,marche,envoyer,scanner}` | Service tile washes |
+| Token | HSL | Hex anchor | Use |
+|---|---|---|---|
+| `--primary` (CHOP green) | `142 71% 32%` | `#178A43` | Primary CTA, ride confirm, CHOPWallet, CHOPPay, earnings |
+| `--primary-foreground` | `40 53% 96%` | cream | Ink on primary |
+| `--secondary` (saffron) | `28 89% 53%` | `#F2821B` | Highlights, demand pulses, onboarding accents |
+| `--destructive` (ember) | `4 76% 56%` | `#E4483C` | Urgency, destructive, live-ops alerts |
+| `--background` (cream) | `40 53% 94%` | `#F7F2E8` | Page surface — never cold white |
+| `--foreground` (graphite) | `213 13% 14%` | `#1F2328` | Ink — never pure black |
+| `--muted` / `--muted-foreground` | `42 22% 90%` / `213 10% 38%` | `#ECE9E2` | Sand surfaces, helper text |
+| `--border` / `--input` | `42 22% 88%` | — | Subtle warm outlines |
+| `--brand-green-muted` | `141 50% 90%` | `#D9F1E2` | Soft green chips, money halos |
+| `--brand-yellow-muted` | `32 90% 92%` | — | Soft gold chips |
+| `--brand-red-muted` | `4 75% 94%` | — | Soft ember chips |
+| Service accents | `--accent-{moto,toktok,repas,marche,envoyer,scanner}` | drawn only from green / saffron / ember / graphite | Service tile washes |
 
 ### 2.1 · Color usage rules
 
@@ -132,6 +135,11 @@ Never stack two shadows. Never use `shadow-2xl`.
 Eight services share one authored family:
 **Moto · TokTok · Repas · Marché · Envoyer · Scanner · CHOPWallet · CHOPPay**
 
+**Language:** *Kinetic Utility* — rounded geometry, low detail, warm cast,
+highly legible at 24–88 px, slight forward motion DNA from the logo. Never
+cartoon, never glossy fintech, never emoji, never rainbow gradient. Only
+CHOP green / saffron / ember / graphite / cream may appear inside an icon.
+
 - All eight live as PNGs in `src/assets/icons/`.
 - Same visual size (square 1:1, equal padding).
 - Same perspective (3⁄4 isometric front).
@@ -152,10 +160,18 @@ Eight services share one authored family:
 - Color: `currentColor` only — never hex on an icon.
 - Map markers: emerald primary; saffron for hotspots; ember for alerts.
   See `src/lib/maps/markerIcons.ts`.
+- **Service-glyph rule:** any surface that *names* a CHOP service (Moto,
+  TokTok, Repas, Marché, Envoyer, Scanner, CHOPWallet, CHOPPay) MUST use the
+  PNG family — never a Lucide stand-in. Lucide is for utility (chevrons,
+  status, ops controls) only.
 
 ---
 
 ## 6 · Motion rules
+
+**Language:** *Urban Flow* — calm inertia, soft acceleration, minimal bounce,
+continuity-first, low-friction transitions. Never gaming springs, never
+parallax on small screens, never decorative video.
 
 - **Library:** Framer Motion (consumer) — CSS transitions (admin, low-cost).
 - **Single canonical easing:** `var(--ease-flow)` =
@@ -329,7 +345,8 @@ Always via `formatGNF(amount)` from `src/lib/format.ts` →
 
 ## 12 · Versioning & lock
 
-- **Version:** Conakry Contemporary v1.
+- **Version:** Conakry Contemporary v1.1 (palette re-anchor + icon/motion
+  language naming). Behaviour and architecture unchanged from v1.
 - **Tag:** `conakry-contemporary-v1` (apply via Lovable's GitHub integration —
   the agent sandbox cannot run `git tag`).
 - **Change policy:** every change to color tokens, gradients, motion easings,

@@ -6,65 +6,67 @@
 
 @layer base {
   :root {
-    /* CHOP CHOP — warm modern African urbanism palette */
-    --background: 36 30% 98%;          /* cream off-white */
-    --foreground: 160 18% 12%;          /* warm slate ink */
+    /* CHOP CHOP — Conakry Contemporary v1.1 (storyboard-anchored) */
+    /* Hex anchors: #178A43 green · #F2821B saffron · #E4483C ember
+       #1F2328 graphite · #F7F2E8 cream · #ECE9E2 sand · #D9F1E2 mint */
+    --background: 40 53% 94%;           /* #F7F2E8 cream */
+    --foreground: 213 13% 14%;          /* #1F2328 graphite */
 
     --card: 0 0% 100%;
-    --card-foreground: 160 18% 12%;
+    --card-foreground: 213 13% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 160 18% 12%;
+    --popover-foreground: 213 13% 14%;
 
-    --primary: 152 58% 34%;             /* deep CHOP green */
-    --primary-foreground: 36 30% 98%;
+    --primary: 142 71% 32%;             /* #178A43 CHOP green */
+    --primary-foreground: 40 53% 96%;
 
-    --secondary: 38 92% 58%;            /* warm saffron gold */
-    --secondary-foreground: 160 22% 14%;
+    --secondary: 28 89% 53%;            /* #F2821B saffron */
+    --secondary-foreground: 213 13% 14%;
 
-    --muted: 38 25% 95%;                /* warm sand */
-    --muted-foreground: 160 10% 38%;
+    --muted: 42 22% 90%;                /* #ECE9E2 warm sand */
+    --muted-foreground: 213 10% 38%;
 
-    --accent: 38 92% 58%;
-    --accent-foreground: 160 22% 14%;
+    --accent: 28 89% 53%;
+    --accent-foreground: 213 13% 14%;
 
-    --destructive: 12 78% 56%;          /* soft ember */
+    --destructive: 4 76% 56%;           /* #E4483C ember */
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 58% 34%;
+    --success: 142 71% 32%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 58%;
-    --warning-foreground: 160 22% 14%;
+    --warning: 28 89% 53%;
+    --warning-foreground: 213 13% 14%;
 
-    /* Service accents (HSL only) — warmed for ecosystem feel */
-    --accent-moto: 152 58% 34%;
-    --accent-moto-foreground: 36 30% 98%;
-    --accent-toktok: 38 92% 56%;
-    --accent-toktok-foreground: 160 22% 14%;
-    --accent-repas: 14 76% 54%;
+    /* Service accents — drawn ONLY from CHOP green / saffron / ember / graphite */
+    --accent-moto: 142 71% 32%;
+    --accent-moto-foreground: 40 53% 96%;
+    --accent-toktok: 28 89% 53%;
+    --accent-toktok-foreground: 213 13% 14%;
+    --accent-repas: 4 76% 56%;
     --accent-repas-foreground: 0 0% 100%;
-    --accent-marche: 152 50% 38%;
-    --accent-marche-foreground: 36 30% 98%;
-    --accent-envoyer: 32 92% 52%;
-    --accent-envoyer-foreground: 160 22% 14%;
-    --accent-scanner: 160 22% 14%;
-    --accent-scanner-foreground: 152 58% 50%;
+    --accent-marche: 142 60% 36%;
+    --accent-marche-foreground: 40 53% 96%;
+    --accent-envoyer: 28 89% 50%;
+    --accent-envoyer-foreground: 213 13% 14%;
+    --accent-scanner: 213 13% 14%;
+    --accent-scanner-foreground: 142 71% 42%;
 
-    --border: 38 18% 90%;
-    --input: 38 18% 90%;
-    --ring: 152 58% 34%;
+    --border: 42 22% 88%;
+    --input: 42 22% 88%;
+    --ring: 142 71% 32%;
 
     /* CHOP CHOP brand muted variants & neutrals */
-    --brand-green: 152 58% 34%;
-    --brand-yellow: 38 92% 58%;
-    --brand-red: 12 78% 56%;
-    --brand-black: 160 22% 10%;
-    --brand-white: 36 30% 98%;
-    --brand-gray: 38 25% 95%;
-    --brand-green-muted: 152 35% 92%;
-    --brand-yellow-muted: 38 85% 93%;
-    --brand-red-muted: 12 70% 95%;
+    --brand-green: 142 71% 32%;
+    --brand-yellow: 28 89% 53%;
+    --brand-red: 4 76% 56%;
+    --brand-black: 213 13% 12%;
+    --brand-white: 40 53% 96%;
+    --brand-gray: 42 22% 90%;
+    --brand-green-muted: 141 50% 90%;   /* #D9F1E2 */
+    --brand-yellow-muted: 32 90% 92%;
+    --brand-red-muted: 4 75% 94%;
 
     --radius: 1.25rem;
 
@@ -76,24 +78,24 @@
        2) cta (vertical emerald) — primary CTAs
        3) ambient (subtle warm wash) — backgrounds & section wash
        Plus map-overlay scrim. Avoid introducing more. */
-    --gradient-primary: linear-gradient(180deg, hsl(152 60% 38%) 0%, hsl(158 58% 28%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(42 95% 62%) 0%, hsl(32 90% 54%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(152 60% 38%) 0%, hsl(158 58% 28%) 100%);
-    --gradient-ember: linear-gradient(135deg, hsl(18 82% 58%) 0%, hsl(8 75% 50%) 100%);
+    --gradient-primary: linear-gradient(180deg, hsl(142 65% 36%) 0%, hsl(146 72% 26%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(32 92% 60%) 0%, hsl(24 88% 48%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(142 65% 36%) 0%, hsl(146 72% 26%) 100%);
+    --gradient-ember: linear-gradient(135deg, hsl(8 78% 58%) 0%, hsl(2 74% 50%) 100%);
     --gradient-glass: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.04) 100%);
-    --gradient-map-overlay: linear-gradient(180deg, hsl(152 40% 92% / 0) 0%, hsl(152 40% 88% / 0.35) 100%);
-    --gradient-ambient: linear-gradient(180deg, hsl(36 30% 99%) 0%, hsl(38 25% 96%) 100%);
+    --gradient-map-overlay: linear-gradient(180deg, hsl(142 40% 92% / 0) 0%, hsl(142 40% 88% / 0.35) 100%);
+    --gradient-ambient: linear-gradient(180deg, hsl(40 53% 96%) 0%, hsl(42 22% 92%) 100%);
 
     /* Elevation system — 4 levels, warm-tinted, never harsh */
     --shadow-flat: none;
-    --shadow-card: 0 2px 10px -4px hsl(160 30% 12% / 0.05);
-    --shadow-soft: 0 6px 22px -12px hsl(160 30% 12% / 0.07);
-    --shadow-elevated: 0 14px 36px -16px hsl(160 30% 12% / 0.12);
-    --shadow-island: 0 0 0 6px hsl(var(--primary) / 0.05), 0 22px 50px -22px hsl(160 50% 16% / 0.32);
-    --shadow-glow-primary: 0 8px 24px -12px hsl(152 58% 34% / 0.38);
-    --shadow-inset-soft: inset 0 1px 0 hsl(0 0% 100% / 0.5), inset 0 -1px 0 hsl(160 30% 12% / 0.03);
-    --shadow-wallet: 0 22px 56px -24px hsl(160 55% 16% / 0.5), 0 6px 16px -10px hsl(152 58% 26% / 0.28);
-    --shadow-press: 0 1px 0 hsl(160 30% 12% / 0.04);
+    --shadow-card: 0 2px 10px -4px hsl(213 25% 10% / 0.05);
+    --shadow-soft: 0 6px 22px -12px hsl(213 25% 10% / 0.07);
+    --shadow-elevated: 0 14px 36px -16px hsl(213 25% 10% / 0.12);
+    --shadow-island: 0 0 0 6px hsl(var(--primary) / 0.05), 0 22px 50px -22px hsl(146 50% 14% / 0.32);
+    --shadow-glow-primary: 0 8px 24px -12px hsl(142 71% 32% / 0.38);
+    --shadow-inset-soft: inset 0 1px 0 hsl(0 0% 100% / 0.5), inset 0 -1px 0 hsl(213 25% 10% / 0.03);
+    --shadow-wallet: 0 22px 56px -24px hsl(146 55% 14% / 0.5), 0 6px 16px -10px hsl(142 70% 22% / 0.28);
+    --shadow-press: 0 1px 0 hsl(213 25% 10% / 0.04);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 160 30% 10%;

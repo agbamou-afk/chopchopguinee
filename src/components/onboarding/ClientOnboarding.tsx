@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Bike,
-  ShoppingBag,
-  UtensilsCrossed,
   Wallet,
   MapPin,
   Truck,
@@ -13,6 +10,9 @@ import {
   X,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
+import motoIcon from "@/assets/icons/moto.png";
+import marcheIcon from "@/assets/icons/marche.png";
+import repasIcon from "@/assets/icons/repas.png";
 import { useLowDataMode } from "@/hooks/useLowDataMode";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 
@@ -73,8 +73,8 @@ function RideScene({ animated }: { animated: boolean }) {
         transition={{ duration: animated ? 1.6 : 0, ease: "easeInOut", delay: animated ? 0.4 : 0 }}
         className="absolute top-[calc(60px/220*100%-14px)]"
       >
-        <div className="w-9 h-9 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center shadow-lg">
-          <Bike className="w-5 h-5" />
+        <div className="w-10 h-10 rounded-full bg-card ring-1 ring-border/60 flex items-center justify-center shadow-lg overflow-hidden">
+          <img src={motoIcon} alt="" className="w-9 h-9 object-contain" />
         </div>
       </motion.div>
     </div>
@@ -95,7 +95,7 @@ function MarcheScene({ animated }: { animated: boolean }) {
             transition={{ delay: animated ? 0.05 * i : 0 }}
             className={`relative h-20 rounded-2xl border ${i === 1 ? "border-primary ring-2 ring-primary/40" : "border-border/60"} bg-muted/40 flex items-center justify-center`}
           >
-            <ShoppingBag className="w-6 h-6 text-muted-foreground" />
+            <img src={marcheIcon} alt="" className="w-9 h-9 object-contain opacity-90" />
             {i === 1 && (
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
@@ -123,7 +123,7 @@ function RepasScene({ animated }: { animated: boolean }) {
         className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border/60"
       >
         <div className="w-12 h-12 halo-conakry shadow-card flex items-center justify-center relative">
-          <UtensilsCrossed className="w-6 h-6 text-primary relative z-10" />
+          <img src={repasIcon} alt="" className="w-9 h-9 object-contain relative z-10" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground">Le Damier</p>
@@ -157,8 +157,8 @@ function RepasScene({ animated }: { animated: boolean }) {
           transition={{ duration: animated ? 1.4 : 0, delay: animated ? 0.4 : 0, ease: "easeInOut" }}
           className="absolute top-2"
         >
-          <div className="w-9 h-9 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center shadow-lg">
-            <Bike className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-full bg-card ring-1 ring-border/60 flex items-center justify-center shadow-lg overflow-hidden">
+            <img src={motoIcon} alt="" className="w-9 h-9 object-contain" />
           </div>
         </motion.div>
       </div>
