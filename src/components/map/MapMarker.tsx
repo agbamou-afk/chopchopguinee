@@ -37,7 +37,7 @@ export function MapMarker({
       )}
       <span
         className={cn(
-          'relative flex items-center justify-center rounded-full shadow-lg ring-2 ring-white',
+          'relative flex items-center justify-center rounded-full shadow-island ring-2 ring-white',
           isPin && 'rounded-b-full',
         )}
         style={{
@@ -45,6 +45,8 @@ export function MapMarker({
           height: size,
           backgroundColor: color,
           transform: isPin ? undefined : `rotate(${rotation}deg)`,
+          boxShadow:
+            '0 0 0 1px hsl(var(--secondary) / 0.55), 0 6px 14px -6px hsl(160 50% 18% / 0.45)',
         }}
       >
         <svg
