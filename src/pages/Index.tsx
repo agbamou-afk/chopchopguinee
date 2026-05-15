@@ -201,12 +201,13 @@ const Index = () => {
   // otherwise restore whatever mode was persisted earlier this session.
   // Runs once per signed-in session — manual toggles afterwards win.
   useEffect(() => {
-    if (!user || autoModeAppliedRef.current) return;
+    if (autoModeAppliedRef.current) return;
+    const isExplicitDriverDemo =
+      typeof window !== "undefined" && /[?&]demo=driver\b/.test(window.location.search);
+    if (!user && !isExplicitDriverDemo) return;
     autoModeAppliedRef.current = true;
     const email = (user.email ?? "").toLowerCase();
     const isDemoDriverAccount = email === "demo.driver@chopchop.gn";
-    const isExplicitDriverDemo =
-      typeof window !== "undefined" && /[?&]demo=driver\b/.test(window.location.search);
     if (isDemoDriverAccount || isExplicitDriverDemo) {
       setIsDriverMode(true);
       setActiveTab("home");
@@ -229,7 +230,7 @@ const Index = () => {
   // rides — orphan pending rides (no driver assigned, older than 30 min) are
   // ignored so they never trap the user on the tracking screen.
   useEffect(() => {
-    if (!user || isDriverMode || activeTrip || restoreAttemptedRef.current) return;
+    if (!user || isDriverMode || activeTrip || restoreAttemptedRef.current || onboardingBlocksApp) return;
     // Demo mode = calm guided showroom: never auto-restore an in-flight ride
     // on the client. The user must intentionally tap a dashboard action.
     if (isDemoAny) { restoreAttemptedRef.current = true; return; }
@@ -263,7 +264,7 @@ const Index = () => {
       });
     })();
     return () => { cancelled = true; };
-  }, [user?.id, isDriverMode, activeTrip]);
+  }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp, isDemoAny]);
 
   const closeActiveTrip = async (alsoCancel: boolean) => {
     const trip = activeTrip;
