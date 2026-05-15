@@ -51,6 +51,13 @@ export interface AppNotification {
   body: string;
   createdAt: string; // ISO
   read: boolean;
+  /**
+   * Optional in-app deep-link path (e.g. "/?tab=orders", "/help").
+   * When set, tapping the notification navigates here in addition to
+   * marking the row as read. Lets wallet/ride/merchant alerts open the
+   * matching activity row in the timeline.
+   */
+  link?: string;
 }
 
 const KEY = "chopchop:notifications";

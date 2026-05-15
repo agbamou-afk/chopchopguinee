@@ -174,7 +174,11 @@ export const EVENTS = {
   "notification.failed": "notification",
   "notification.opened": "notification",
   "notification.queued_offline": "notification",
+  "notification.deep_link.followed": "notification",
   "whatsapp.fallback.used": "notification",
+
+  // --- Driver activity (timeline phase 2) ---
+  "driver.activity.viewed": "driver",
 
   // --- Risk (always-on, not gated by basic_analytics consent) ---
   "risk.signal.detected": "risk",

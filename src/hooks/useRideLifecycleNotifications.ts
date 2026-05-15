@@ -56,7 +56,14 @@ function fire(event: RideLifecycleEvent, role: Role, rideId: string) {
   if (c.tone === "success") toast.success(c.title, { description: c.body, id: eventId });
   else if (c.tone === "error") toast.error(c.title, { description: c.body, id: eventId });
   else toast(c.title, { description: c.body, id: eventId });
-  notifications.push({ kind: "ride", title: c.title, body: c.body });
+  notifications.push({
+    kind: "ride",
+    title: c.title,
+    body: c.body,
+    // Deep-link the ride alert into the timeline so the user lands on the
+    // matching ride entry (and can open the receipt) in one tap.
+    link: "/?tab=orders",
+  });
 }
 
 /**

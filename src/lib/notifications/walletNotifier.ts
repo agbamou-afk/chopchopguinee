@@ -152,7 +152,14 @@ export async function notifyWalletEvent(p: WalletEventPayload): Promise<boolean>
 
   const c = copy(p);
   fireToast(c);
-  notifications.push({ kind: "wallet", title: c.title, body: c.body });
+  notifications.push({
+    kind: "wallet",
+    title: c.title,
+    body: c.body,
+    // Deep-link to the unified activity timeline so the user can find the
+    // matching CHOPWallet row (recharge, payment, payout) in one tap.
+    link: "/?tab=orders",
+  });
   void queueExternal(p, c);
   return true;
 }
