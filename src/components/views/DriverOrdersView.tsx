@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Clock, Users, Timer, BellRing } from "lucide-react";
+import { Users, Timer, BellRing } from "lucide-react";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { IncomingRequestPopup } from "@/components/driver/IncomingRequestPopup";
+import { DriverHotspotsCard } from "@/components/driver/DriverHotspotsCard";
 
 export function DriverOrdersView() {
   const { queue, current, currentExpiresAt, accept, decline, showCurrent, isOnline, activeTrip } = useDriverSession();
@@ -95,17 +96,10 @@ export function DriverOrdersView() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="px-4 py-12 text-center"
+          className="px-4 mt-3 pb-28 flex flex-col"
+          style={{ minHeight: "calc(100dvh - 220px)" }}
         >
-          <div className="w-20 h-20 rounded-full bg-muted mx-auto flex items-center justify-center mb-4">
-            <Clock className="w-10 h-10 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Aucune course active
-          </h3>
-          <p className="text-muted-foreground text-sm">
-            Acceptez une nouvelle demande pour commencer
-          </p>
+          <DriverHotspotsCard isOnline={isOnline} full />
         </motion.div>
       )}
 
