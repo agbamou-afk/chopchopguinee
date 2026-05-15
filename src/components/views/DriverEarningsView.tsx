@@ -1,28 +1,32 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatGNF } from "@/lib/format";
-import { TrendingUp, Calendar, Download, ChevronRight, Bike, UtensilsCrossed, Package, Wallet, ShieldCheck, AlertTriangle, Loader2 } from "lucide-react";
+import { TrendingUp, Calendar, Download, ChevronRight, Bike, Wallet, ShieldCheck, AlertTriangle } from "lucide-react";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { useDriverEarnings } from "@/hooks/useDriverEarnings";
 import { useWallet } from "@/hooks/useWallet";
 import { toast } from "sonner";
-
-const MODE_ICON: Record<string, typeof Bike> = {
-  moto: Bike,
-  toktok: Bike,
-  livraison: Package,
-  food: UtensilsCrossed,
-};
-
-function formatTime(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-}
+import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
+import { useActivityFeed } from "@/lib/activity/useActivityFeed";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 export function DriverEarningsView() {
   const e = useDriverEarnings();
   const { available: walletBalance } = useWallet("driver");
+  // Driver-perspective activity: completed rides (with earning amounts),
+  // CHOPWallet credits, payouts, refunds. Replaces the legacy "Courses
+  // récentes" list with the unified ecosystem timeline.
+  const driverFeed = useActivityFeed("driver");
+  useEffect(() => {
+    if (!driverFeed.loading) {
+      Analytics.track("driver.activity.viewed", {
+        metadata: { count: driverFeed.items.length },
+      });
+    }
+    // Only fire once per mount when the feed first resolves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [driverFeed.loading]);
   const [_settling] = useState(false);
   void _settling;
   const formatMoney = formatGNF;
@@ -157,50 +161,11 @@ export function DriverEarningsView() {
         </div>
       </div>
 
-      {/* Recent rides */}
-      <div className="px-4 pb-28">
-        <h2 className="text-lg font-bold text-foreground mb-4">Courses récentes</h2>
-        {e.loading ? (
-          <div className="flex items-center justify-center py-10 text-muted-foreground">
-            <Loader2 className="w-5 h-5 animate-spin" />
-          </div>
-        ) : e.recent.length === 0 ? (
-          <div className="bg-card rounded-2xl p-6 text-center text-sm text-muted-foreground border border-border/60">
-            Aucune course terminée cette semaine.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {e.recent.map((r, index) => {
-              const Icon = MODE_ICON[r.mode] ?? Bike;
-              return (
-                <motion.div
-                  key={r.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="bg-card rounded-2xl p-4 shadow-card flex items-center gap-3"
-                >
-                  <div className="p-2 rounded-xl bg-primary/10">
-                    <Icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm capitalize">
-                      Course {r.mode}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatTime(r.completed_at)} · prix {formatMoney(r.fare_gnf)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-success">
-                      +{formatMoney(r.driver_earning_gnf)}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
+      {/* Unified driver activity — completed rides with earnings, wallet
+          credits, payouts. One operational history instead of a siloed list. */}
+      <div className="px-3 pb-28">
+        <h2 className="text-lg font-bold text-foreground mb-3 px-1">Activité opérationnelle</h2>
+        <ActivityTimeline items={driverFeed.items} loading={driverFeed.loading} />
       </div>
     </div>
   );
