@@ -4,7 +4,7 @@ import { PromoCarousel } from "@/components/home/PromoCarousel";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { SmartSearchBar } from "@/components/ui/SmartSearchBar";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAppEnv } from "@/contexts/AppEnvContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,6 +46,23 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
     Analytics.track("home.viewed", { metadata: { location: userLocation } });
   }, []);
 
+  // Calm "welcome back" reassurance line — shows once per day, only after the
+  // user has returned (>6h since last seen). No streaks, no gamification.
+  const [welcomeBack, setWelcomeBack] = useState(false);
+  useEffect(() => {
+    try {
+      const KEY = "cc:last-home-seen";
+      const last = Number(localStorage.getItem(KEY) ?? "0");
+      const now = Date.now();
+      if (last && now - last > 6 * 3600_000) {
+        setWelcomeBack(true);
+        Analytics.track("home.welcome_back.viewed", { metadata: { hours_since: Math.round((now - last) / 3600_000) } });
+        window.setTimeout(() => setWelcomeBack(false), 6000);
+      }
+      localStorage.setItem(KEY, String(now));
+    } catch {}
+  }, []);
+
   const walletStatus: "active" | "frozen" | "restricted" =
     wallet?.status === "frozen" ? "frozen" : wallet?.status === "restricted" ? "restricted" : "active";
 
@@ -74,6 +91,12 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
 
       {/* Content */}
       <div className="px-4 mt-4 space-y-5">
+        {welcomeBack && (
+          <div className="rounded-2xl border border-primary/15 bg-primary/[0.06] px-3 py-2 text-[12px] text-foreground/80 flex items-center gap-2">
+            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+            Bon retour sur CHOP CHOP — vos services sont prêts à {userLocation}.
+          </div>
+        )}
         {/* 1 — Wallet hero (trust anchor) */}
         <WalletHero
           balance={walletBalance}
