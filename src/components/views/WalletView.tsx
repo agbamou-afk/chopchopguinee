@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -13,6 +13,9 @@ import {
   LogIn,
   ShieldCheck,
   AlertTriangle,
+  Clock,
+  XCircle,
+  Sparkles,
 } from "lucide-react";
 import { WalletCard } from "@/components/home/WalletCard";
 import { useWallet, type WalletTransaction } from "@/hooks/useWallet";
@@ -33,6 +36,7 @@ import {
 import { TopUpOrangeMoney } from "@/components/wallet/TopUpOrangeMoney";
 import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 type ActionId = "send" | "receive" | "scan" | "add";
 
@@ -49,16 +53,25 @@ const quickActions: {
 ];
 
 const TX_LABEL: Record<string, string> = {
-  topup: "Recharge",
-  payment: "Paiement",
+  topup: "Recharge reçue",
+  payment: "Paiement CHOPPay",
   refund: "Remboursement",
-  commission: "Commission",
-  payout: "Versement",
-  hold: "Réservation",
-  capture: "Débit",
-  release: "Libération",
+  commission: "Commission course",
+  payout: "Versement chauffeur",
+  hold: "Fonds réservés",
+  capture: "Course payée",
+  release: "Fonds libérés",
   transfer: "Transfert",
   adjustment: "Ajustement",
+};
+
+// Calm, plain-French status copy. We avoid banking jargon ("Pending",
+// "Authorized", "Settled") in favor of confidence-building phrasing.
+const TX_STATUS_BADGE: Record<string, { label: string; tone: string; Icon: React.ComponentType<{ className?: string }> }> = {
+  pending:   { label: "En attente",  tone: "bg-secondary/15 text-secondary-foreground border-secondary/30", Icon: Clock },
+  failed:    { label: "Échoué",      tone: "bg-destructive/10 text-destructive border-destructive/30",     Icon: XCircle },
+  cancelled: { label: "Annulé",      tone: "bg-muted text-muted-foreground border-border",                  Icon: XCircle },
+  reversed:  { label: "Annulé",      tone: "bg-muted text-muted-foreground border-border",                  Icon: XCircle },
 };
 
 function formatMoney(amount: number) {
@@ -67,12 +80,14 @@ function formatMoney(amount: number) {
 
 function formatDate(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const yest = new Date(now); yest.setDate(now.getDate() - 1);
+  const isYesterday = d.toDateString() === yest.toDateString();
+  const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  if (sameDay) return `Aujourd'hui · ${time}`;
+  if (isYesterday) return `Hier · ${time}`;
+  return d.toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function txDirection(tx: WalletTransaction, walletId: string): "in" | "out" {
@@ -86,6 +101,11 @@ export function WalletView() {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterRange, setFilterRange] = useState<"all" | "7d" | "30d">("all");
 
+  useEffect(() => {
+    if (userId) Analytics.track("wallet.history.viewed", { metadata: { count: transactions.length } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
   const filteredTransactions = useMemo(() => {
     const now = Date.now();
     return transactions.filter((tx) => {
@@ -97,6 +117,19 @@ export function WalletView() {
       return true;
     });
   }, [transactions, filterType, filterRange]);
+
+  // Lightweight retention metric — total inflow over the last 30 days
+  // surfaced as "Vous économisez avec CHOPWallet". No casino mechanics.
+  const inflowLast30 = useMemo(() => {
+    if (!wallet) return 0;
+    const cutoff = Date.now() - 30 * 86400000;
+    return transactions.reduce((sum, tx) => {
+      if (tx.status !== "completed" && tx.status !== "captured") return sum;
+      if (new Date(tx.created_at).getTime() < cutoff) return sum;
+      if (txDirection(tx, wallet.id) !== "in") return sum;
+      return sum + Math.abs(tx.amount_gnf);
+    }, 0);
+  }, [transactions, wallet]);
 
   if (loading) {
     return (
@@ -156,6 +189,14 @@ export function WalletView() {
           <p className="text-xs text-muted-foreground mt-2 text-center">
             {formatMoney(wallet.held_gnf)} en attente
           </p>
+        )}
+        {inflowLast30 > 0 && (
+          <div className="mt-3 mx-auto max-w-[22rem] flex items-center gap-2 rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+            <p className="text-[11px] text-foreground/80">
+              <span className="font-semibold">{formatMoney(inflowLast30)}</span> reçus sur 30 jours via CHOPWallet
+            </p>
+          </div>
         )}
       </div>
 
@@ -289,28 +330,24 @@ export function WalletView() {
         </div>
 
         {filteredTransactions.length === 0 ? (
-          <div className="bg-card rounded-2xl p-8 text-center shadow-card">
-            <CreditCard className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">
-              {transactions.length === 0
-                ? "Aucune transaction pour le moment"
-                : "Aucune transaction pour ce filtre"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Rechargez votre portefeuille chez un agent CHOP CHOP
-            </p>
-          </div>
+          <EmptyHistory
+            empty={transactions.length === 0}
+            onTopUp={() => setTopUpOpen(true)}
+          />
         ) : (
           <div className="space-y-3">
             {filteredTransactions.map((tx, index) => {
               const dir = wallet ? txDirection(tx, wallet.id) : "out";
+              const statusBadge =
+                tx.status && TX_STATUS_BADGE[tx.status] ? TX_STATUS_BADGE[tx.status] : null;
+              const dimmed = tx.status === "failed" || tx.status === "cancelled" || tx.status === "reversed";
               return (
                 <motion.div
                   key={tx.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  className="bg-card rounded-2xl p-4 shadow-card flex items-center gap-3"
+                  className={`bg-card rounded-2xl p-4 shadow-card flex items-center gap-3 ${dimmed ? "opacity-70" : ""}`}
                 >
                   <div
                     className={`p-2 rounded-xl ${
@@ -324,9 +361,17 @@ export function WalletView() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm">
-                      {TX_LABEL[tx.type] ?? tx.type}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground text-sm truncate">
+                        {TX_LABEL[tx.type] ?? tx.type}
+                      </p>
+                      {statusBadge && (
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${statusBadge.tone}`}>
+                          <statusBadge.Icon className="w-2.5 h-2.5" />
+                          {statusBadge.label}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {tx.description ?? tx.reference}
                     </p>
@@ -334,7 +379,7 @@ export function WalletView() {
                   <div className="text-right">
                     <p
                       className={`font-semibold text-sm ${
-                        dir === "in" ? "text-success" : "text-foreground"
+                        dimmed ? "text-muted-foreground line-through" : dir === "in" ? "text-success" : "text-foreground"
                       }`}
                     >
                       {dir === "in" ? "+" : "-"}
@@ -371,6 +416,33 @@ export function WalletView() {
           </div>
         </SheetContent>
       </Sheet>
+    </div>
+  );
+}
+
+function EmptyHistory({ empty, onTopUp }: { empty: boolean; onTopUp: () => void }) {
+  useEffect(() => {
+    if (empty) Analytics.track("wallet.empty_state.viewed");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empty]);
+  return (
+    <div className="bg-card rounded-2xl p-8 text-center shadow-card border border-border/60">
+      <div className="w-12 h-12 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+        <CreditCard className="w-5 h-5 text-primary" />
+      </div>
+      <p className="text-sm font-semibold text-foreground">
+        {empty ? "Bienvenue dans CHOPWallet" : "Aucune transaction pour ce filtre"}
+      </p>
+      <p className="text-xs text-muted-foreground mt-1 max-w-[16rem] mx-auto">
+        {empty
+          ? "Rechargez chez un agent CHOP CHOP pour commencer à payer vos courses et vos repas avec CHOPPay."
+          : "Essayez un autre filtre pour voir vos paiements."}
+      </p>
+      {empty && (
+        <Button size="sm" className="mt-4 gradient-primary" onClick={onTopUp}>
+          Recharger maintenant
+        </Button>
+      )}
     </div>
   );
 }
