@@ -61,15 +61,18 @@ export function IncomingRequestIsland({
   return (
     <AnimatePresence>
       {request && (
-        <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 24, scale: 0.96 }}
-          transition={{ type: "spring", stiffness: 320, damping: 28 }}
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[60] px-3 w-full max-w-[340px] pointer-events-none"
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center px-3 pointer-events-none"
           role="dialog"
           aria-label="Nouvelle demande de course"
         >
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            className="w-full max-w-[340px]"
+          >
           <div className="pointer-events-auto rounded-3xl bg-card/85 backdrop-blur-xl border border-border/60 shadow-elevated overflow-hidden">
             {/* Countdown */}
             <div className="h-1 bg-muted/60">
@@ -150,7 +153,8 @@ export function IncomingRequestIsland({
               </div>
             </div>
           </div>
-        </motion.div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
