@@ -116,8 +116,8 @@ export function AppHeader({
     userInitial ?? (displayName ? displayName.charAt(0).toUpperCase() : "?");
 
   const cardClass = isDriverMode
-    ? "relative overflow-hidden bg-gradient-to-b from-card to-secondary/5 rounded-[28px] shadow-soft px-5 pt-4 pb-5 border border-secondary/30"
-    : "relative overflow-hidden bg-gradient-to-b from-card to-primary/5 rounded-[28px] shadow-soft px-5 pt-4 pb-5 border border-border/60";
+    ? "relative overflow-hidden bg-gradient-to-b from-card via-card to-secondary/4 rounded-[28px] shadow-card px-5 pt-4 pb-5 border border-secondary/20"
+    : "relative overflow-hidden bg-gradient-to-b from-card via-card to-primary/4 rounded-[28px] shadow-card px-5 pt-4 pb-5 border border-border/50";
   const avatarColor = isDriverMode ? "text-secondary" : "text-primary";
 
   const menuItems = [
@@ -135,10 +135,10 @@ export function AppHeader({
         className={cardClass}
       >
         {/* Soft brand wash — anchors the hero without competing with content */}
-        <div className="pointer-events-none absolute -top-24 -right-20 w-64 h-64 rounded-full bg-primary/12 blur-3xl" aria-hidden />
-        <div className="pointer-events-none absolute -bottom-28 -left-16 w-56 h-56 rounded-full bg-secondary/14 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -top-28 -right-24 w-64 h-64 rounded-full bg-primary/8 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -bottom-32 -left-20 w-56 h-56 rounded-full bg-secondary/10 blur-3xl" aria-hidden />
         {/* Saffron flow seam — echoes the logo's directional movement */}
-        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary/50 to-transparent" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-secondary/40 to-transparent" aria-hidden />
 
         <div className="flex items-center justify-between">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -228,7 +228,7 @@ export function AppHeader({
             </SheetContent>
           </Sheet>
 
-          <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="CHOP CHOP" className="h-16 w-auto object-contain mix-blend-multiply dark:mix-blend-screen" />
+          <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="CHOP CHOP" className="h-14 w-auto object-contain mix-blend-multiply dark:mix-blend-screen" />
 
           <button
             className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors relative"
@@ -252,11 +252,11 @@ export function AppHeader({
             className="flex-1 min-w-0 flex items-center gap-3 -m-1 p-1 rounded-2xl hover:bg-muted/40 active:scale-[0.99] transition text-left"
             aria-label={isLoggedIn ? "Voir mon profil" : "Se connecter"}
           >
-            <div className={`w-14 h-14 rounded-2xl bg-muted/70 flex items-center justify-center text-xl font-bold ${avatarColor} shrink-0 ring-1 ring-border/60`}>
+            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br from-muted to-muted/40 flex items-center justify-center text-lg font-bold ${avatarColor} shrink-0 ring-1 ring-border/50 shadow-inset-soft`}>
               {displayInitial}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-bold text-foreground truncate leading-tight">
+              <p className="text-[15px] font-bold text-foreground truncate leading-tight tracking-tight">
                 {isLoggedIn
                   ? `Bonjour, ${displayName || "vous"} 👋`
                   : "Bonjour, invité 👋"}
