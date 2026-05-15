@@ -16,6 +16,7 @@ import {
   Clock,
   XCircle,
   Sparkles,
+  ScanLine,
 } from "lucide-react";
 import { WalletCard } from "@/components/home/WalletCard";
 import { useWallet, type WalletTransaction } from "@/hooks/useWallet";
@@ -36,8 +37,9 @@ import {
 import { TopUpOrangeMoney } from "@/components/wallet/TopUpOrangeMoney";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
+import { ChopPayLauncher } from "@/components/pay/ChopPayLauncher";
 
-type ActionId = "send" | "receive" | "scan" | "add";
+type ActionId = "pay" | "receive" | "scan" | "add";
 
 const quickActions: {
   id: ActionId;
@@ -45,7 +47,7 @@ const quickActions: {
   label: string;
   color: string;
 }[] = [
-  { id: "send", icon: ArrowUpRight, label: "Envoyer", color: "gradient-primary" },
+  { id: "pay", icon: ScanLine, label: "Payer", color: "gradient-primary" },
   { id: "receive", icon: ArrowDownLeft, label: "Recevoir", color: "gradient-secondary" },
   { id: "scan", icon: QrCode, label: "Mon QR", color: "bg-foreground" },
   { id: "add", icon: Plus, label: "Recharger", color: "bg-primary" },
@@ -97,6 +99,7 @@ export function WalletView() {
   const { userId, wallet, transactions, profile, loading } = useWallet();
   const [qrOpen, setQrOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterRange, setFilterRange] = useState<"all" | "7d" | "30d">("all");
 
@@ -168,6 +171,7 @@ export function WalletView() {
   const onAction = (id: ActionId) => {
     if (id === "add") setTopUpOpen(true);
     else if (id === "scan" || id === "receive") setQrOpen(true);
+    else if (id === "pay") setPayOpen(true);
     else toast("Bientôt disponible");
   };
 
@@ -401,6 +405,8 @@ export function WalletView() {
         userId={userId}
         phone={profile?.phone ?? null}
       />
+
+      <ChopPayLauncher open={payOpen} onClose={() => setPayOpen(false)} />
 
       <Sheet open={topUpOpen} onOpenChange={setTopUpOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto">
