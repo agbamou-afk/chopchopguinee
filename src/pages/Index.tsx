@@ -33,6 +33,7 @@ import {
   DRIVER_ONBOARDING_REPLAY_EVENT,
 } from "@/components/onboarding/DriverOnboarding";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
+import { isAdminUser, isLiveUser, isDemoUser } from "@/lib/runtimeMode";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -122,6 +123,22 @@ const Index = () => {
   const { roles, user } = useAuth();
   const isDriver = roles.includes("driver");
   const navigate = useNavigate();
+  const adminUser = isAdminUser(user, roles);
+  const liveUser = isLiveUser(user, roles);
+  const demoUser = isDemoUser(user);
+
+  // Admins (god_admin / operations_admin / finance_admin) default to the
+  // admin dashboard. They can still navigate back to "/" manually, but
+  // their first landing on "/" after auth bounces them to /admin.
+  const adminRedirectedRef = useRef(false);
+  useEffect(() => {
+    if (!adminUser || adminRedirectedRef.current) return;
+    if (typeof window === "undefined") return;
+    // Allow opt-out: ?public=1 lets an admin browse the public app.
+    if (/[?&]public=1\b/.test(window.location.search)) return;
+    adminRedirectedRef.current = true;
+    navigate("/admin", { replace: true });
+  }, [adminUser, navigate]);
   // Demo mode flavours:
   // - linked E2E (sandbox): explicit `?demo=linked` — hands the ride to the
   //   real demo driver account. Used for two-account presentations.
@@ -138,10 +155,13 @@ const Index = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isDriverMode) return;
+    // Real authenticated non-demo users and admins should not see the demo
+    // onboarding unless they explicitly replay it from the Profile menu.
+    if (liveUser || adminUser) return;
     // Show onboarding to first-time visitors as well as first-time signed-in users.
     const key = `${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`;
     if (localStorage.getItem(key) !== "1") setShowOnboarding(true);
-  }, [user?.id, isDriverMode]);
+  }, [user?.id, isDriverMode, liveUser, adminUser]);
 
   useEffect(() => {
     const handler = () => setShowOnboarding(true);
