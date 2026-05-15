@@ -206,7 +206,7 @@ const Index = () => {
       typeof window !== "undefined" && /[?&]demo=driver\b/.test(window.location.search);
     if (!user && !isExplicitDriverDemo) return;
     autoModeAppliedRef.current = true;
-    const email = (user.email ?? "").toLowerCase();
+    const email = (user?.email ?? "").toLowerCase();
     const isDemoDriverAccount = email === "demo.driver@chopchop.gn";
     if (isDemoDriverAccount || isExplicitDriverDemo) {
       setIsDriverMode(true);
@@ -433,7 +433,7 @@ const Index = () => {
       />
       <h1 className="sr-only">CHOP CHOP — Vos services de transport, livraison et paiements en Guinée</h1>
       <AnimatePresence mode="wait">
-        {bookingRide && (
+        {!onboardingBlocksApp && bookingRide && (
           <RideBooking
             type={bookingRide}
             initialDestination={bookingDestination}
@@ -504,7 +504,7 @@ const Index = () => {
             }}
           />
         )}
-        {activeTrip && (
+        {!onboardingBlocksApp && activeTrip && (
           (typeof window !== "undefined" &&
             (localStorage.getItem("cc_realtime_trip") === "1" ||
               /[?&]trip=v2/.test(window.location.search) ||
@@ -531,7 +531,7 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {!bookingRide && !activeTrip && (
+      {!onboardingBlocksApp && !bookingRide && !activeTrip && (
         isDriverMode ? (
           <DriverSessionProvider>
             {renderDriverView()}
@@ -543,7 +543,6 @@ const Index = () => {
               }}
             />
             <DriverOfferDebugPanel activeTab={activeTab} />
-            <DriverOnboardingGate />
             <BottomNav
               activeTab={activeTab}
               onTabChange={handleTabChange}
@@ -564,7 +563,7 @@ const Index = () => {
         )
       )}
 
-      {showScanner && (
+      {!onboardingBlocksApp && showScanner && (
         <QrScanner
           title="Scanner un QR CHOP CHOP"
           subtitle="Course, paiement ou code marchand"
@@ -579,6 +578,9 @@ const Index = () => {
       <AnimatePresence>
         {showOnboarding && !isDriverMode && (
           <ClientOnboarding key="client-onboarding" onDone={finishOnboarding} />
+        )}
+        {showDriverOnboarding && (
+          <DriverOnboarding key="driver-onboarding" onDone={finishDriverOnboarding} />
         )}
       </AnimatePresence>
     </div>
