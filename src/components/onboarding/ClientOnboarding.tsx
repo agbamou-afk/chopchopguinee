@@ -278,11 +278,12 @@ export function ClientOnboarding({ onDone }: Props) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[80] surface-warm flex flex-col touch-none"
+      className="fixed inset-0 z-[80] bg-app-conakry flex flex-col touch-none relative"
       role="dialog"
       aria-modal="true"
       aria-label="Bienvenue sur CHOP CHOP"
     >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] kente-stripe z-10" aria-hidden />
       <div className="flex items-center justify-end px-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <button
           onClick={skip}
@@ -338,6 +339,9 @@ export function ClientOnboarding({ onDone }: Props) {
         >
           {isLast ? "Explorer CHOP CHOP" : (<>Suivant <ChevronRight className="w-5 h-5" /></>)}
         </button>
+        <p className="text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground/80">
+          CHOP CHOP · Conakry
+        </p>
       </div>
     </motion.div>
   );
