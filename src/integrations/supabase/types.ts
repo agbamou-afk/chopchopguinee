@@ -1010,6 +1010,48 @@ export type Database = {
         }
         Relationships: []
       }
+      merchants: {
+        Row: {
+          address: string | null
+          category: string | null
+          city: string
+          created_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          name: string
+          owner_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          city?: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name: string
+          owner_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          city?: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          owner_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       message_log: {
         Row: {
           body: string
@@ -2249,6 +2291,10 @@ export type Database = {
         }
         Returns: string
       }
+      merchant_ensure_wallet: {
+        Args: { p_merchant_id: string }
+        Returns: string
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -2608,6 +2654,34 @@ export type Database = {
           p_from_user_id: string
           p_to_party_type: string
           p_to_user_id: string
+        }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wallet_pay_merchant: {
+        Args: {
+          p_amount_gnf: number
+          p_description?: string
+          p_merchant_id: string
         }
         Returns: {
           amount_gnf: number
