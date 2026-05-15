@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { useDriverEarnings } from "@/hooks/useDriverEarnings";
+import { SecuredByChopPay } from "@/components/trust/TrustCues";
 
 interface Props {
   rideId: string;
@@ -42,6 +43,11 @@ export function DriverTripReceipt({
   // is reflected in the "today" total.
   useEffect(() => {
     refetchEarnings().catch(() => {});
+    try {
+      Analytics.track("receipt.viewed" as any, {
+        metadata: { role: "driver", rideId, payment: paymentLabel },
+      });
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -81,7 +87,7 @@ export function DriverTripReceipt({
         >
           <CheckCircle2 className="w-12 h-12 mx-auto mb-2" />
         </motion.div>
-        <p className="text-sm opacity-90">Course terminée</p>
+        <p className="text-sm opacity-90">Course terminée · gain ajouté à CHOPWallet</p>
         <motion.p
           key={earning}
           initial={{ y: 8, opacity: 0 }}
@@ -91,7 +97,7 @@ export function DriverTripReceipt({
         >
           +{formatGNF(earning)}
         </motion.p>
-        <p className="text-xs opacity-80 mt-1">Net encaissé · {paymentLabel}</p>
+        <p className="text-xs opacity-80 mt-1">Net crédité · {paymentLabel}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -127,6 +133,7 @@ export function DriverTripReceipt({
           <div className="border-t border-border pt-2 mt-1">
             <Row icon={Wallet} label="Vos gains" value={formatGNF(earning)} bold />
           </div>
+          <SecuredByChopPay className="pt-1" />
         </section>
 
         <section className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -168,7 +175,7 @@ export function DriverTripReceipt({
           ) : (
             <Power className="w-4 h-4" />
           )}
-          {isOnline ? "Continuer en ligne" : "Retour en ligne"}
+          {isOnline ? "Rester en ligne · prêt pour la prochaine course" : "Repasser en ligne"}
         </Button>
         <Button onClick={onClose} variant="ghost" className="w-full h-10 text-muted-foreground">
           Fermer
