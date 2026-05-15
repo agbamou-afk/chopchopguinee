@@ -8,6 +8,9 @@ import { toast } from "@/hooks/use-toast";
 import { QrScanner } from "@/components/scanner/QrScanner";
 import { getRuntimeMode } from "@/lib/runtimeMode";
 import { useAuth } from "@/contexts/AuthContext";
+import { TrustCues } from "@/components/trust/TrustCues";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
+import { useEffect } from "react";
 
 interface Props {
   rideId: string;
@@ -31,6 +34,14 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
   const isDemo = mode === "demo";
   const isSandbox = mode === "sandbox";
 
+  useEffect(() => {
+    try {
+      Analytics.track("ride.trust_message_viewed" as any, {
+        metadata: { surface: "pickup_confirm" },
+      });
+    } catch {}
+  }, []);
+
   const submit = async (raw: string) => {
     const value = raw.trim();
     if (!value) return;
@@ -47,7 +58,10 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
     setScanning(false);
     setManualOpen(false);
     setCode("");
-    toast({ title: "Course démarrée", description: "Bon voyage !" });
+    toast({
+      title: "Pickup confirmé",
+      description: "Course démarrée — bon voyage avec CHOP CHOP.",
+    });
   };
 
   return (
@@ -67,14 +81,19 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
       >
         <div>
           <p className="text-[10px] uppercase tracking-wide text-primary font-semibold">
-            Chauffeur arrivé
+            Chauffeur arrivé · prêt à partir
           </p>
           <p className="text-base font-semibold">
             {driverName ? `${driverName} vous attend` : "Votre chauffeur vous attend"}
           </p>
           <p className="text-xs text-muted-foreground">
-            Confirmez la prise en charge pour démarrer la course.
+            Confirmez la prise en charge pour sécuriser le départ.
           </p>
+          <TrustCues
+            cues={["verified", "choppay"]}
+            className="mt-2"
+            compact
+          />
         </div>
 
         {isDemo && pickupCode && (
