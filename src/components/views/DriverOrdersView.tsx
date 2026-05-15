@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Marker } from "react-map-gl";
 import { formatGNF } from "@/lib/format";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
@@ -28,12 +28,22 @@ export function DriverOrdersView() {
   const geo = useGeolocation();
   const { low } = useLowDataMode();
   const displayedRequest = !activeTrip ? current ?? queue[0] ?? null : null;
+  const hasIncoming = !!displayedRequest;
   const offerTimeoutSec = currentExpiresAt
     ? Math.max(1, Math.ceil((new Date(currentExpiresAt).getTime() - Date.now()) / 1000))
     : 20;
 
-  const sorted = [...CONAKRY_HOTSPOTS].sort((a, b) => b.weight - a.weight);
+  const sorted = useMemo(
+    () => [...CONAKRY_HOTSPOTS].sort((a, b) => b.weight - a.weight),
+    [],
+  );
   const top = sorted[0];
+  const heatPoints = useMemo(
+    () => CONAKRY_HOTSPOTS.map((h) => ({ lng: h.lng, lat: h.lat, weight: h.weight })),
+    [],
+  );
+  // Suppress ambient marker pulses while an offer is shown or in low-data mode.
+  const animateHotspots = !low && !hasIncoming;
 
   const zoomBy = (delta: number) => {
     unlockDriverSounds();
@@ -79,9 +89,7 @@ export function DriverOrdersView() {
           interactive={true}
           initialView={{ longitude: -13.6773, latitude: 9.5900, zoom: 11.4 }}
         >
-          <HeatmapLayer
-            points={CONAKRY_HOTSPOTS.map((h) => ({ lng: h.lng, lat: h.lat, weight: h.weight }))}
-          />
+          <HeatmapLayer points={heatPoints} />
           {sorted.slice(0, 3).map((h, i) => (
             <Marker key={h.name} longitude={h.lng} latitude={h.lat} anchor="bottom">
               <div className="relative flex flex-col items-center pointer-events-none">
@@ -95,7 +103,7 @@ export function DriverOrdersView() {
                   {h.name}
                 </div>
                 <div className="relative mt-0.5">
-                  {!low && (
+                  {animateHotspots && (
                     <span
                       className={`absolute inset-0 rounded-full animate-ping ${
                         i === 0 ? "bg-destructive/50" : "bg-foreground/30"
