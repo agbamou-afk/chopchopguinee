@@ -4,6 +4,7 @@ import { X, Search, CheckCircle2, Car, MapPin, Navigation, Phone, User, Sparkles
 import { Button } from "@/components/ui/button";
 import { ClientTripReceipt } from "./ClientTripReceipt";
 import { formatGNF } from "@/lib/format";
+import { ChopMap } from "@/components/map/ChopMap";
 
 type Phase =
   | "searching"
@@ -92,16 +93,10 @@ export function DemoRideWalkthrough({ mode, fare, rideId, onClose }: Props) {
         <div className="w-9" />
       </div>
 
-      {/* Faux map background */}
+      {/* Live map background (demo, non-interactive) */}
       <div className="flex-1 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-muted to-secondary/15" />
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 30% 30%, hsl(var(--primary)/0.25) 0, transparent 40%), radial-gradient(circle at 70% 70%, hsl(var(--secondary)/0.25) 0, transparent 40%)",
-          }}
-        />
+        <ChopMap className="absolute inset-0" interactive={false} />
+        <div className="absolute inset-0 bg-background/10 pointer-events-none" />
         <PhaseBadge phase={phase} />
 
         {/* Pickup confirmation overlay */}
