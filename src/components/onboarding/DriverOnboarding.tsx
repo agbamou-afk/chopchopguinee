@@ -23,7 +23,8 @@ const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
 
 function OnlineScene({ animated }: { animated: boolean }) {
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-card border border-border/60 flex items-center justify-center">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm flex items-center justify-center">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
       <motion.div
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
@@ -46,7 +47,8 @@ function OnlineScene({ animated }: { animated: boolean }) {
 
 function AcceptScene({ animated }: { animated: boolean }) {
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/10 via-card to-secondary/10 border border-border/60">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
       <motion.div
         initial={{ y: 200, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -72,7 +74,8 @@ function AcceptScene({ animated }: { animated: boolean }) {
 
 function PickupScene({ animated }: { animated: boolean }) {
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/15 via-muted to-secondary/15 border border-border/60">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
       <div className="absolute inset-0 opacity-40"
         style={{
           backgroundImage:
@@ -121,24 +124,26 @@ function PickupScene({ animated }: { animated: boolean }) {
 
 function CompleteScene({ animated }: { animated: boolean }) {
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-card border border-border/60 p-4 flex flex-col items-center justify-center gap-3">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm p-4 flex flex-col items-center justify-center gap-3">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: animated ? 0.1 : 0, type: "spring", stiffness: 220 }}
-        className="w-14 h-14 rounded-full bg-success/15 text-success flex items-center justify-center"
+        className="w-14 h-14 halo-conakry shadow-card flex items-center justify-center relative"
       >
-        <Check className="w-8 h-8" />
+        <Check className="w-8 h-8 text-success relative z-10" />
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: animated ? 0.4 : 0 }}
-        className="rounded-2xl gradient-wallet text-primary-foreground px-5 py-3 shadow-card flex items-center gap-3"
+        className="rounded-2xl gradient-wallet text-primary-foreground px-5 py-3 shadow-wallet flex items-center gap-3 relative overflow-hidden"
       >
+        <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" aria-hidden />
         <Wallet className="w-5 h-5" />
         <div className="text-left">
-          <p className="text-[10px] uppercase tracking-wide opacity-80">Gains</p>
+          <p className="text-[10px] uppercase tracking-[0.22em] opacity-90 font-bold">Gains · CHOPPay</p>
           <p className="text-xl font-extrabold">+ 7 225 GNF</p>
         </div>
       </motion.div>
@@ -151,12 +156,13 @@ function CompleteScene({ animated }: { animated: boolean }) {
 
 function HeatmapScene({ animated }: { animated: boolean }) {
   const blobs = [
-    { x: "20%", y: "30%", s: 90, c: "hsl(var(--destructive))" },
-    { x: "60%", y: "55%", s: 110, c: "hsl(var(--secondary))" },
-    { x: "75%", y: "20%", s: 70, c: "hsl(var(--primary))" },
+    { x: "20%", y: "30%", s: 90,  c: "hsl(var(--secondary))" },
+    { x: "60%", y: "55%", s: 110, c: "hsl(var(--primary))" },
+    { x: "75%", y: "20%", s: 70,  c: "hsl(var(--destructive))" },
   ];
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-muted border border-border/60">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
       <div className="absolute inset-0 opacity-40"
         style={{
           backgroundImage:
@@ -173,8 +179,8 @@ function HeatmapScene({ animated }: { animated: boolean }) {
           style={{ left: b.x, top: b.y, width: b.s, height: b.s, background: b.c }}
         />
       ))}
-      <div className="absolute left-3 bottom-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/90 border border-border text-xs font-semibold">
-        <Flame className="w-4 h-4 text-destructive" /> Forte demande à Kaloum
+      <div className="absolute left-3 bottom-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/95 text-secondary-foreground text-xs font-bold shadow-card">
+        <Flame className="w-4 h-4" /> Forte demande à Kaloum
       </div>
     </div>
   );
@@ -182,17 +188,20 @@ function HeatmapScene({ animated }: { animated: boolean }) {
 
 function FinalScene() {
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/15 via-card to-secondary/15 border border-border/60 flex flex-col items-center justify-center text-center px-6">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden gradient-wallet text-primary-foreground border border-primary/30 flex flex-col items-center justify-center text-center px-6 ring-glow-primary">
+      <div className="pointer-events-none absolute -top-12 -right-10 w-44 h-44 rounded-full bg-secondary/30 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-12 -left-10 w-40 h-40 rounded-full bg-white/10 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] kente-stripe" aria-hidden />
       <motion.img
         initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 180 }}
         src={logo}
         alt="CHOP CHOP"
-        className="w-20 h-20 rounded-2xl shadow-card mb-3"
+        className="w-20 h-20 rounded-2xl shadow-elevated mb-3 bg-white/95 p-2"
       />
-      <p className="text-lg font-extrabold text-foreground">CHOP CHOP — Chauffeur</p>
-      <p className="text-sm text-muted-foreground mt-1">Conduisez mieux. Gagnez mieux.</p>
+      <p className="text-lg font-extrabold tracking-tight">CHOP CHOP · Chauffeur</p>
+      <p className="text-sm opacity-90 mt-1">Conduisez mieux. Gagnez mieux.</p>
     </div>
   );
 }
@@ -234,11 +243,12 @@ export function DriverOnboarding({ onDone }: Props) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[80] surface-warm flex flex-col touch-none"
+      className="fixed inset-0 z-[80] bg-app-conakry flex flex-col touch-none relative"
       role="dialog"
       aria-modal="true"
       aria-label="Bienvenue chauffeur CHOP CHOP"
     >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] kente-stripe z-10" aria-hidden />
       <div className="flex items-center justify-end px-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <button
           onClick={onDone}
@@ -294,6 +304,9 @@ export function DriverOnboarding({ onDone }: Props) {
         >
           {isLast ? "Entrer dans la démo" : (<>Suivant <ChevronRight className="w-5 h-5" /></>)}
         </button>
+        <p className="text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground/80">
+          CHOP CHOP · Chauffeur · Conakry
+        </p>
       </div>
     </motion.div>
   );
