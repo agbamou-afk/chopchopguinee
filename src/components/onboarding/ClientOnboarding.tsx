@@ -13,6 +13,10 @@ import logo from "@/assets/logo.png";
 import motoIcon from "@/assets/icons/moto.png";
 import marcheIcon from "@/assets/icons/marche.png";
 import repasIcon from "@/assets/icons/repas.png";
+import sceneMoto from "@/assets/onboarding/scene-moto.png";
+import sceneMarche from "@/assets/onboarding/scene-marche.png";
+import sceneRepas from "@/assets/onboarding/scene-repas.png";
+import sceneWallet from "@/assets/onboarding/scene-wallet.png";
 import { useLowDataMode } from "@/hooks/useLowDataMode";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 
@@ -30,179 +34,44 @@ const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
   { key: "final", title: "Bienvenue", caption: "Tout. Partout. Pour Tous." },
 ];
 
-function RideScene({ animated }: { animated: boolean }) {
+function EditorialScene({ src, alt, animated }: { src: string; alt: string; animated: boolean }) {
   return (
     <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm">
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
-      {/* fake map grid */}
-      <div className="absolute inset-0 opacity-40"
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam z-10" aria-hidden />
+      <motion.img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        width={1024}
+        height={768}
+        className="absolute inset-0 w-full h-full object-cover"
+        initial={{ scale: animated ? 1.04 : 1, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: animated ? 0.6 : 0, ease: [0.22, 1, 0.36, 1] }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
         style={{
-          backgroundImage:
-            "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }} />
-      {/* route line */}
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 320 220" preserveAspectRatio="none">
-        <motion.path
-          d="M40,170 C100,170 140,80 280,60"
-          stroke="hsl(var(--primary))"
-          strokeWidth="4"
-          strokeLinecap="round"
-          fill="none"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: animated ? 1 : 1 }}
-          transition={{ duration: animated ? 1.4 : 0, ease: "easeInOut" }}
-        />
-      </svg>
-      {/* pickup pin */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: animated ? 0.1 : 0 }}
-        className="absolute"
-        style={{ left: "calc(40px / 320 * 100%)", top: "calc(170px / 220 * 100% - 28px)" }}
-      >
-        <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
-          <MapPin className="w-4 h-4" />
-        </div>
-      </motion.div>
-      {/* driver moto moving */}
-      <motion.div
-        initial={{ left: "82%" }}
-        animate={{ left: animated ? "20%" : "20%" }}
-        transition={{ duration: animated ? 1.6 : 0, ease: "easeInOut", delay: animated ? 0.4 : 0 }}
-        className="absolute top-[calc(60px/220*100%-14px)]"
-      >
-        <div className="w-10 h-10 rounded-full bg-card ring-1 ring-border/60 flex items-center justify-center shadow-lg overflow-hidden">
-          <img src={motoIcon} alt="" className="w-9 h-9 object-contain" />
-        </div>
-      </motion.div>
+          background:
+            "linear-gradient(180deg, transparent 55%, hsl(var(--background) / 0.55) 100%)",
+        }}
+      />
     </div>
   );
 }
 
+function RideScene({ animated }: { animated: boolean }) {
+  return <EditorialScene src={sceneMoto} alt="Course en moto à Conakry" animated={animated} />;
+}
 function MarcheScene({ animated }: { animated: boolean }) {
-  const items = [0, 1, 2, 3];
-  return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm p-4">
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
-      <div className="grid grid-cols-2 gap-3">
-        {items.map((i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: animated ? 0.05 * i : 0 }}
-            className={`relative h-20 rounded-2xl border ${i === 1 ? "border-primary ring-2 ring-primary/40" : "border-border/60"} bg-muted/40 flex items-center justify-center`}
-          >
-            <img src={marcheIcon} alt="" className="w-9 h-9 object-contain opacity-90" />
-            {i === 1 && (
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: animated ? 0.6 : 0, type: "spring", stiffness: 220 }}
-                className="absolute -top-2 -right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold shadow"
-              >
-                <Truck className="w-3 h-3" /> Livraison
-              </motion.div>
-            )}
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
+  return <EditorialScene src={sceneMarche} alt="Marché de Conakry" animated={animated} />;
 }
-
 function RepasScene({ animated }: { animated: boolean }) {
-  return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm p-4 space-y-3">
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border/60"
-      >
-        <div className="w-12 h-12 halo-conakry shadow-card flex items-center justify-center relative">
-          <img src={repasIcon} alt="" className="w-9 h-9 object-contain relative z-10" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground">Le Damier</p>
-          <p className="text-[11px] text-muted-foreground">Riz gras · 25 min</p>
-        </div>
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: animated ? 0.5 : 0, type: "spring", stiffness: 240 }}
-          className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow"
-        >
-          <Plus className="w-4 h-4" />
-        </motion.div>
-      </motion.div>
-      <div className="relative h-24 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 overflow-hidden">
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 320 96" preserveAspectRatio="none">
-          <motion.path
-            d="M20,76 C90,76 140,20 300,20"
-            stroke="hsl(var(--primary))"
-            strokeWidth="3"
-            strokeDasharray="6 6"
-            fill="none"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: animated ? 1.2 : 0, delay: animated ? 0.3 : 0 }}
-          />
-        </svg>
-        <motion.div
-          initial={{ left: "5%" }}
-          animate={{ left: animated ? "85%" : "85%" }}
-          transition={{ duration: animated ? 1.4 : 0, delay: animated ? 0.4 : 0, ease: "easeInOut" }}
-          className="absolute top-2"
-        >
-          <div className="w-10 h-10 rounded-full bg-card ring-1 ring-border/60 flex items-center justify-center shadow-lg overflow-hidden">
-            <img src={motoIcon} alt="" className="w-9 h-9 object-contain" />
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
+  return <EditorialScene src={sceneRepas} alt="Repas livré" animated={animated} />;
 }
-
 function WalletScene({ animated }: { animated: boolean }) {
-  return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden card-warm p-4 space-y-3">
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl gradient-wallet p-4 text-primary-foreground shadow-wallet relative overflow-hidden"
-      >
-        <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" aria-hidden />
-        <p className="text-[10px] uppercase tracking-[0.22em] font-bold opacity-90">Solde CHOPWallet</p>
-        <p className="text-2xl font-extrabold tracking-tight">125 000 GNF</p>
-        <div className="flex items-center gap-2 mt-2">
-          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/15 ring-1 ring-white/15 text-[11px] font-semibold">
-            <Plus className="w-3 h-3" /> Recharger
-          </div>
-          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-secondary/90 text-secondary-foreground text-[11px] font-bold">
-            <Wallet className="w-3 h-3" /> Payer · CHOPPay
-          </div>
-        </div>
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: animated ? 0.5 : 0 }}
-        className="flex items-center gap-3 p-3 rounded-2xl surface-money"
-      >
-        <div className="w-9 h-9 rounded-xl bg-success/15 flex items-center justify-center">
-          <Receipt className="w-5 h-5 text-success" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground">Recharge Orange Money</p>
-          <p className="text-[11px] text-muted-foreground">+50 000 GNF · à l'instant</p>
-        </div>
-      </motion.div>
-    </div>
-  );
+  return <EditorialScene src={sceneWallet} alt="CHOPWallet et CHOPPay" animated={animated} />;
 }
 
 function FinalScene() {

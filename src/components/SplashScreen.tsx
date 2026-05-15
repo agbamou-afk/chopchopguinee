@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import logo from "@/assets/logo.png";
+import skyline from "@/assets/splash-skyline.png";
 
 interface SplashScreenProps {
   onFinish?: () => void;
@@ -19,8 +20,40 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8 }}
-      className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-between py-16 px-6 overflow-hidden"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-between py-16 px-6 overflow-hidden"
+      style={{
+        background:
+          "radial-gradient(120% 80% at 50% 0%, hsl(38 60% 95%) 0%, hsl(36 40% 92%) 45%, hsl(36 30% 88%) 100%)",
+      }}
     >
+      {/* Atmospheric warm haze */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
+        style={{
+          background:
+            "radial-gradient(60% 40% at 20% 20%, hsl(var(--secondary) / 0.10), transparent 70%), radial-gradient(50% 35% at 85% 30%, hsl(var(--primary) / 0.08), transparent 70%)",
+        }}
+      />
+      {/* Subtle Conakry silhouette band */}
+      <svg
+        className="pointer-events-none absolute inset-x-0 bottom-24 w-full h-24 opacity-[0.10]"
+        viewBox="0 0 400 80"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
+        <path
+          d="M0,80 L0,55 L18,55 L22,42 L26,55 L48,55 L48,38 L62,38 L62,55 L78,55 L82,28 L86,55 L110,55 L110,46 L128,46 L128,32 L134,32 L134,46 L150,46 L150,55 L172,55 L176,40 L180,55 L210,55 L210,34 L228,34 L228,55 L252,55 L256,22 L260,55 L286,55 L286,44 L304,44 L304,55 L330,55 L334,36 L338,55 L362,55 L362,48 L382,48 L382,55 L400,55 L400,80 Z"
+          fill="hsl(var(--foreground))"
+        />
+      </svg>
+      {/* Decorative palm at edge */}
+      <img
+        src={skyline}
+        alt=""
+        aria-hidden
+        className="pointer-events-none absolute -right-10 bottom-16 w-72 opacity-25 select-none"
+      />
       {/* Spacer */}
       <div className="flex-1 relative" />
 
