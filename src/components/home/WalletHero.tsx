@@ -22,15 +22,17 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="gradient-wallet rounded-3xl p-5 text-primary-foreground shadow-soft ring-glow-primary relative overflow-hidden"
-      aria-label="Solde CHOP CHOP"
+      className="gradient-wallet rounded-3xl p-5 text-primary-foreground relative overflow-hidden ring-glow-primary"
+      aria-label="Solde CHOPWallet"
     >
-      <div className="pointer-events-none absolute -top-12 -right-10 w-44 h-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
+      <div className="pointer-events-none absolute -top-14 -right-10 w-48 h-48 rounded-full bg-white/12 blur-2xl" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-16 -left-10 w-40 h-40 rounded-full bg-secondary/25 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-secondary/60 to-transparent" aria-hidden />
 
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2 opacity-90">
-          <Wallet className="w-4 h-4" />
-          <p className="text-[11px] uppercase tracking-wider">Solde CHOP CHOP</p>
+          <Wallet className="w-4 h-4" strokeWidth={2} />
+          <p className="text-[11px] uppercase tracking-[0.18em] font-semibold">CHOPWallet</p>
         </div>
         <button
           onClick={() => setShown((s) => !s)}
@@ -49,35 +51,35 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
             <AlertTriangle className="w-4 h-4" /> Solde indisponible
           </p>
         ) : (
-          <h2 className="text-3xl font-extrabold leading-none">
+          <h2 className="text-[34px] font-extrabold leading-none tracking-tight">
             {shown ? formatGNF(balance) : "••••••••"}
           </h2>
         )}
-        <p className="text-[11px] opacity-80 mt-1">
+        <p className="text-[11px] opacity-85 mt-1.5">
           {frozen
             ? status === "frozen"
               ? "CHOPWallet gelé — contactez le support"
               : "CHOPWallet restreint — vérifiez votre profil"
             : zero
-            ? "Rechargez pour commencer à payer en GNF"
-            : "Paiements sécurisés · GNF"}
+            ? "Rechargez pour payer avec CHOPPay"
+            : "Disponible · CHOPPay sécurisé · GNF"}
         </p>
       </div>
 
       <div className="flex gap-2">
         <motion.button
-          whileTap={{ scale: 0.97 }}
+          whileTap={{ scale: 0.98 }}
           onClick={onTopUp}
           disabled={frozen}
-          className="flex-1 flex items-center justify-center gap-2 py-3 bg-white text-primary rounded-2xl font-semibold text-sm disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 py-3 bg-white text-primary rounded-2xl font-semibold text-sm shadow-card disabled:opacity-50"
         >
           {frozen ? <Lock className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           Recharger
         </motion.button>
         <motion.button
-          whileTap={{ scale: 0.97 }}
+          whileTap={{ scale: 0.98 }}
           onClick={onHistory}
-          className="flex-1 flex items-center justify-center gap-2 py-3 glass-surface hover:bg-white/25 rounded-2xl font-medium text-sm"
+          className="flex-1 flex items-center justify-center gap-2 py-3 glass-surface hover:bg-white/25 rounded-2xl font-medium text-sm ring-1 ring-white/15"
         >
           <History className="w-4 h-4" /> Historique
         </motion.button>
