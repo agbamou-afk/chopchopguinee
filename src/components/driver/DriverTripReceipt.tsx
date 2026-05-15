@@ -79,25 +79,21 @@ export function DriverTripReceipt({
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-background flex flex-col"
     >
-      <div className="gradient-primary px-4 py-6 text-primary-foreground text-center shrink-0">
-        <motion.div
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 320, damping: 18 }}
-        >
-          <CheckCircle2 className="w-12 h-12 mx-auto mb-2" />
-        </motion.div>
-        <p className="text-sm opacity-90">Course terminée · gain ajouté à CHOPWallet</p>
-        <motion.p
-          key={earning}
-          initial={{ y: 8, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="text-3xl font-bold tabular-nums mt-1"
-        >
-          +{formatGNF(earning)}
-        </motion.p>
-        <p className="text-xs opacity-80 mt-1">Net crédité · {paymentLabel}</p>
+      <div className="gradient-wallet px-4 py-4 text-primary-foreground shrink-0 relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" aria-hidden />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/15 ring-1 ring-white/20 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] opacity-90">
+              Course terminée · {paymentLabel}
+            </p>
+            <p className="text-2xl font-extrabold tabular-nums leading-tight mt-0.5">
+              +{formatGNF(earning)}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
