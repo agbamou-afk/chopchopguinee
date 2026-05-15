@@ -10,6 +10,7 @@ import { useAppEnv } from "@/contexts/AppEnvContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PrimaryActionGrid, type PrimaryAction } from "@/components/home/PrimaryActionGrid";
 import { WalletHero } from "@/components/home/WalletHero";
+import { RecentActivityPeek } from "@/components/activity/RecentActivityPeek";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 const NearbyDriversMap = lazy(() => import("@/components/home/NearbyDriversMap"));
@@ -109,6 +110,9 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
 
         {/* 2 — Four primary actions, visible above the fold */}
         <PrimaryActionGrid onAction={handlePrimary} />
+
+        {/* Ecosystem continuity — last operational event */}
+        <RecentActivityPeek onSeeAll={() => onActionClick("orders")} />
 
         {/* 3 — Smart command bar */}
         <SmartSearchBar onAction={onActionClick} location={`${userLocation}, Conakry`} />
