@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Bike, X, RotateCcw, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
+import { TrustCues } from "@/components/trust/TrustCues";
 
 export type SearchPhase = "searching" | "matched" | "no_driver" | "error";
 
@@ -30,10 +31,10 @@ interface Props {
  * driver card or a "no driver available" state with retry.
  */
 const REASSURANCE: string[] = [
-  "Recherche de chauffeurs proches…",
-  "Analyse des motos disponibles autour de vous…",
+  "Recherche du chauffeur le plus proche…",
+  "Vérification des chauffeurs disponibles…",
   "Priorité aux chauffeurs les mieux notés…",
-  "Optimisation du temps d'arrivée…",
+  "Optimisation de votre temps d'arrivée…",
 ];
 
 export function DriverSearchOverlay({
@@ -92,6 +93,11 @@ export function DriverSearchOverlay({
           metadata: { service_type: serviceType },
         });
       } catch {}
+      try {
+        Analytics.track("ride.trust_message_viewed" as any, {
+          metadata: { surface: "driver_search", service_type: serviceType },
+        });
+      } catch {}
     } else if (phase === "matched") {
       try {
         Analytics.track("driver.search.matched" as any, {
@@ -117,8 +123,8 @@ export function DriverSearchOverlay({
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col">
       <div className="flex items-center justify-between p-4 border-b border-border">
         <p className="text-sm font-semibold">
-          {phase === "searching" && "Recherche de chauffeurs…"}
-          {phase === "matched" && "Chauffeur trouvé"}
+          {phase === "searching" && "Recherche d'un chauffeur"}
+          {phase === "matched" && "Chauffeur confirmé"}
           {phase === "no_driver" && "Aucun chauffeur"}
           {phase === "error" && "Erreur"}
         </p>
@@ -156,6 +162,10 @@ export function DriverSearchOverlay({
                 Plus de chauffeurs arrivent dans votre zone — merci de patienter quelques instants.
               </p>
             )}
+            <TrustCues
+              cues={["verified", "choppay", "live"]}
+              className="mt-5 justify-center"
+            />
           </>
         )}
 
@@ -195,6 +205,11 @@ export function DriverSearchOverlay({
                 Voir le trajet
               </Button>
             </div>
+              <TrustCues
+                cues={["verified", "choppay"]}
+                className="mt-4 justify-center"
+                compact
+              />
           </>
         )}
 
