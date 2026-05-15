@@ -37,6 +37,7 @@ import {
   demoScopedKey,
   resetDemoState,
 } from "@/lib/demoState";
+import { ConversionGateSheet, type ConversionIntent } from "@/components/onboarding/ConversionGateSheet";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -82,6 +83,7 @@ const Index = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showDriverOnboarding, setShowDriverOnboarding] = useState(false);
+  const [conversionGate, setConversionGate] = useState<{ open: boolean; intent?: ConversionIntent }>({ open: false });
   const { requireAuth } = useAuthGuard();
   const { ready, roles, user } = useAuth();
   const isDriver = roles.includes("driver");
@@ -90,6 +92,9 @@ const Index = () => {
   const liveUser = isLiveUser(user, roles);
   const demoUser = isDemoMode(user?.email ?? null);
   const demoDriver = isDemoDriverMode(user?.email ?? null);
+  // PUBLIC = logged-out visitor. Treated like a demo client showroom for the
+  // first-launch experience: onboarding always opens first.
+  const publicUser = ready && !user;
 
   // Admins (god_admin / operations_admin / finance_admin) default to the
   // admin dashboard. They can still navigate back to "/" manually, but
@@ -111,70 +116,81 @@ const Index = () => {
   const isLinkedDemo = typeof window !== "undefined"
     && /[?&]demo=linked\b/.test(window.location.search);
   const isDemoAny = demoUser;
-  const clientOnboardingPending = ready && !isDriverMode && !demoDriver && !liveUser && !adminUser
-    && typeof window !== "undefined"
-    && window.localStorage.getItem(demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny)) !== "1";
-  const driverOnboardingPending = ready && demoDriver
-    && typeof window !== "undefined"
-    && window.localStorage.getItem(demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, true)) !== "1";
-  const onboardingBlocksApp = !ready || showOnboarding || showDriverOnboarding || clientOnboardingPending || driverOnboardingPending;
+  // Public/demo onboarding always shows on launch; live users never auto-show.
+  const onboardingBlocksApp = !ready || showOnboarding || showDriverOnboarding;
   const resetRequested = typeof window !== "undefined"
     && /[?&](resetDemo|demoReset|reset_demo)=1\b/.test(window.location.search);
   // One-shot guard: only auto-enter driver mode the first time we see this
   // signed-in demo driver. After that, manual toggles win.
   const autoModeAppliedRef = useRef(false);
 
-  // First-login client onboarding: show once per user. Replay via Profile menu.
+  // Onboarding rules:
+  //   - admin / live user → never auto-show.
+  //   - demo driver       → driver onboarding (always, every session).
+  //   - demo client / public (logged-out) → client onboarding (always).
+  // localStorage is intentionally NOT consulted for public/demo so the
+  // showroom story plays back fresh on every launch.
+  const onboardingDecidedRef = useRef(false);
   useEffect(() => {
-    if (!ready || typeof window === "undefined") return;
-    if (isDriverMode) return;
-    if (demoDriver) return;
-    // Real authenticated non-demo users and admins should not see the demo
-    // onboarding unless they explicitly replay it from the Profile menu.
-    if (liveUser || adminUser) return;
-    // Show onboarding to first-time visitors as well as first-time signed-in users.
-    const key = demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny);
-    if (localStorage.getItem(key) !== "1") setShowOnboarding(true);
-  }, [ready, user?.id, isDriverMode, liveUser, adminUser, isDemoAny, demoDriver]);
+    if (!ready) return;
+    if (onboardingDecidedRef.current) return;
+    if (adminUser) { onboardingDecidedRef.current = true; return; }
+    if (liveUser) { onboardingDecidedRef.current = true; return; }
+    if (demoDriver) {
+      onboardingDecidedRef.current = true;
+      setShowDriverOnboarding(true);
+      return;
+    }
+    // demo client OR public visitor
+    if (demoUser || publicUser) {
+      onboardingDecidedRef.current = true;
+      setShowOnboarding(true);
+    }
+  }, [ready, adminUser, liveUser, demoDriver, demoUser, publicUser]);
+
+  // If the session changes (login/logout), re-evaluate.
+  useEffect(() => {
+    onboardingDecidedRef.current = false;
+  }, [user?.id]);
 
   useEffect(() => {
     if (!ready || typeof window === "undefined") return;
-    if (!isDemoAny || !resetRequested) return;
+    if (!resetRequested) return;
     resetDemoState(user?.id ?? null);
     setBookingRide(null);
     setActiveTrip(null);
     setShowScanner(false);
     setShowOnboarding(!demoDriver);
     setShowDriverOnboarding(demoDriver);
-  }, [ready, user?.id, isDemoAny, demoDriver, resetRequested]);
-
-  useEffect(() => {
-    if (!ready || typeof window === "undefined") return;
-    if (!demoDriver) return;
-    const key = demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, true);
-    setShowDriverOnboarding(localStorage.getItem(key) !== "1");
-  }, [ready, user?.id, demoDriver]);
+  }, [ready, user?.id, demoDriver, resetRequested]);
 
   useEffect(() => {
     const handler = () => setShowOnboarding(true);
     window.addEventListener(ONBOARDING_REPLAY_EVENT, handler);
     return () => window.removeEventListener(ONBOARDING_REPLAY_EVENT, handler);
   }, []);
+  useEffect(() => {
+    const handler = () => setShowDriverOnboarding(true);
+    window.addEventListener(DRIVER_ONBOARDING_REPLAY_EVENT, handler);
+    return () => window.removeEventListener(DRIVER_ONBOARDING_REPLAY_EVENT, handler);
+  }, []);
 
   const finishOnboarding = () => {
     setShowOnboarding(false);
-    if (typeof window !== "undefined") {
+    // Only persist completion for real live users. Public/demo onboarding
+    // is part of the showroom script and must replay every session.
+    if (typeof window !== "undefined" && liveUser) {
       try {
-        localStorage.setItem(demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny), "1");
+        localStorage.setItem(demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, false), "1");
       } catch { /* noop */ }
     }
   };
 
   const finishDriverOnboarding = () => {
     setShowDriverOnboarding(false);
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && liveUser) {
       try {
-        localStorage.setItem(demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, demoDriver), "1");
+        localStorage.setItem(demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, false), "1");
       } catch { /* noop */ }
     }
   };
@@ -327,8 +343,17 @@ const Index = () => {
   const handleAction = (action: string, params?: { destination?: string }) => {
     // Public exploration: ride booking, food and market browsing are allowed
     // without an account. Signup is enforced later at commitment points
-    // (real wallet hold / real ride creation).
+    // (real wallet hold / real ride creation) via the conversion gate.
     const publicActions = new Set(["market", "food", "moto", "toktok", "parcel", "scan", "support"]);
+    const commitmentMap: Record<string, ConversionIntent> = {
+      send: "wallet",
+      wallet: "wallet",
+      orders: "order",
+    };
+    if (!publicActions.has(action) && !user) {
+      setConversionGate({ open: true, intent: commitmentMap[action] ?? "client" });
+      return;
+    }
     if (!publicActions.has(action) && !requireAuth()) return;
     switch (action) {
       case "moto":
@@ -582,13 +607,24 @@ const Index = () => {
       )}
 
       <AnimatePresence>
-        {(showOnboarding || clientOnboardingPending) && !isDriverMode && (
+        {showOnboarding && !isDriverMode && (
           <ClientOnboarding key="client-onboarding" onDone={finishOnboarding} />
         )}
-        {(showDriverOnboarding || driverOnboardingPending) && (
+        {showDriverOnboarding && (
           <DriverOnboarding key="driver-onboarding" onDone={finishDriverOnboarding} />
         )}
       </AnimatePresence>
+      <ConversionGateSheet
+        open={conversionGate.open}
+        intent={conversionGate.intent}
+        onOpenChange={(open) => setConversionGate((s) => ({ ...s, open }))}
+        onExploreDriverDemo={() => {
+          setConversionGate({ open: false });
+          // Surface the driver onboarding showroom for curious public visitors.
+          setShowOnboarding(false);
+          setShowDriverOnboarding(true);
+        }}
+      />
     </div>
   );
 };
