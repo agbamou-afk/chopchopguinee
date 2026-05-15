@@ -251,26 +251,25 @@ export function ClientOnboarding({ onDone }: Props) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-sm flex flex-col"
+      className="fixed inset-0 z-[80] bg-background flex flex-col touch-none"
       role="dialog"
       aria-modal="true"
       aria-label="Bienvenue sur CHOP CHOP"
     >
-      <div className="flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
-        <div className="flex items-center gap-2">
-          <img src={logo} alt="" className="w-7 h-7 rounded-lg" />
-          <span className="text-sm font-bold text-foreground">CHOP CHOP</span>
-        </div>
+      <div className="flex items-center justify-end px-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <button
           onClick={onDone}
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-          aria-label="Passer le guide"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          aria-label="Fermer"
         >
-          Passer <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center max-w-md w-full mx-auto px-5">
+      <div
+        className="flex-1 flex flex-col justify-center max-w-md w-full mx-auto px-5"
+        onClick={(e) => e.stopPropagation()}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={scene.key}
@@ -288,7 +287,7 @@ export function ClientOnboarding({ onDone }: Props) {
         </AnimatePresence>
       </div>
 
-      <div className="px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 max-w-md w-full mx-auto">
+      <div className="px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3 max-w-md w-full mx-auto">
         <div className="flex items-center justify-center gap-1.5">
           {dots.map((i) => (
             <span
@@ -304,6 +303,12 @@ export function ClientOnboarding({ onDone }: Props) {
           className="w-full inline-flex items-center justify-center gap-2 px-4 py-4 min-h-[56px] rounded-2xl bg-primary text-primary-foreground font-bold text-base shadow-card hover:opacity-95 transition-opacity"
         >
           {isLast ? "Commencer" : (<>Suivant <ChevronRight className="w-5 h-5" /></>)}
+        </button>
+        <button
+          onClick={onDone}
+          className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Passer
         </button>
       </div>
     </motion.div>
