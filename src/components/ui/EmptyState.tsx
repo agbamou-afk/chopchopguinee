@@ -24,8 +24,7 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary/12 via-secondary/10 to-primary/4 ring-1 ring-primary/10 flex items-center justify-center">
-        <span className="absolute inset-0 rounded-[20px] ring-1 ring-inset ring-white/40" aria-hidden />
+      <div className="relative w-16 h-16 rounded-2xl bg-primary/8 ring-1 ring-primary/15 flex items-center justify-center">
         <Icon className="w-6 h-6 text-primary" strokeWidth={1.75} />
       </div>
       <div className="space-y-1.5">

@@ -117,8 +117,7 @@ export function IncomingRequestIsland({
             role="dialog"
             aria-label="Nouvelle demande de course"
             onPointerDownCapture={() => setInteracted(true)}
-            className="w-[min(348px,100%)] will-change-transform pointer-events-auto rounded-[26px] bg-card/97 backdrop-blur-md border border-primary/15 overflow-hidden"
-            style={{ boxShadow: "0 0 0 6px hsl(var(--primary) / 0.06), 0 24px 60px -22px hsl(160 55% 16% / 0.45)" }}
+            className="w-[min(348px,100%)] will-change-transform pointer-events-auto rounded-2xl bg-card/97 backdrop-blur-md border border-primary/12 overflow-hidden shadow-island"
           >
             {/* Brand seam — saffron→ember directional flow */}
             <div className="pointer-events-none h-[2px] bg-gradient-to-r from-primary/70 via-secondary to-primary/70" aria-hidden />

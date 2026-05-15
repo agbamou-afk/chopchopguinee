@@ -25,18 +25,29 @@ Defined in `src/index.css`. Always reference via Tailwind classes (`bg-primary`,
 | `--brand-red-muted` | `12 70% 95%` | Soft ember chips |
 
 ### Gradients
-- `--gradient-primary` — deep CHOP green, used on primary CTAs and badges
-- `--gradient-secondary` — saffron→amber, demand & highlight pulses
-- `--gradient-hero` — vertical green for hero/wallet backdrops
-- `--gradient-ember` — urgency / live-ops accents (sparingly)
-- `--gradient-map-overlay` — soft green-glass scrim for map surfaces
-- `--gradient-wallet` — radial emerald, CHOPWallet card only
+**Three canonical gradients only — do not invent new ones.**
+- `--gradient-primary` / `.gradient-cta` — vertical emerald, every primary CTA
+- `--gradient-wallet` — radial emerald, CHOPWallet surfaces only
+- `--gradient-ambient` / `.surface-warm` — soft warm wash for page backgrounds
+
+Reserved accents (use sparingly):
+- `--gradient-secondary` — saffron pulses for demand/highlight moments
+- `--gradient-ember` — live-ops urgency
+- `--gradient-map-overlay` — map scrim only
 
 ### Elevation
-- `shadow-card` — default card lift (warm-tinted)
-- `shadow-soft` — drawers, sticky headers
-- `shadow-elevated` — modals, FABs, primary CTAs
-- `--shadow-glow-primary` — focus glow for CHOPPay / confirm actions
+Four-level elevation system, warm-tinted, never harsh black:
+- **flat** — `shadow-flat` (none) — inline surfaces
+- **elevated** — `shadow-card` — default card lift
+- **floating** — `shadow-soft` / `shadow-elevated` — drawers, sticky headers, modals
+- **island** — `shadow-island` — ride request island, focus moments
+
+Specials: `shadow-wallet` for the CHOPWallet card; `--shadow-glow-primary` for focus rings on confirm actions.
+
+## Motion
+Single canonical easing: `var(--ease-flow)` = `cubic-bezier(0.22, 1, 0.36, 1)`.
+Standard durations: micro `200ms`, default `300ms`, sheet `350ms`. No springs on transactional UI.
+Tap response: `whileTap={{ scale: 0.985 }}`. Hover (desktop only): `whileHover={{ scale: 1.015 }}`.
 
 Service accents already exist: `--accent-{moto,toktok,repas,marche,envoyer,scanner}`.
 
