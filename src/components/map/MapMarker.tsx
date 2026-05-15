@@ -46,7 +46,7 @@ export function MapMarker({
           backgroundColor: color,
           transform: isPin ? undefined : `rotate(${rotation}deg)`,
           boxShadow:
-            '0 0 0 1px hsl(var(--secondary) / 0.55), 0 6px 14px -6px hsl(160 50% 18% / 0.45)',
+            '0 0 0 1px hsl(var(--secondary) / 0.45), 0 0 0 4px hsl(var(--background) / 0.55), 0 8px 18px -8px hsl(30 25% 12% / 0.40)',
         }}
       >
         <svg
