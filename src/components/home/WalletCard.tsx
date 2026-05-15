@@ -17,9 +17,11 @@ export function WalletCard({ balance, onSend, onReceive }: WalletCardProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="gradient-wallet rounded-3xl p-5 text-primary-foreground shadow-soft ring-glow-primary relative overflow-hidden"
+      className="gradient-wallet rounded-3xl p-5 text-primary-foreground shadow-wallet relative overflow-hidden"
     >
       <div className="pointer-events-none absolute -top-12 -right-10 w-44 h-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/10" aria-hidden />
       <div className="flex justify-between items-start mb-4">
         <div>
           <div className="flex items-center gap-2 opacity-90">
@@ -37,7 +39,10 @@ export function WalletCard({ balance, onSend, onReceive }: WalletCardProps) {
               {showBalance ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          <p className="text-[11px] opacity-80 mt-1">Paiements sécurisés · GNF</p>
+          <p className="text-[11px] opacity-80 mt-1 inline-flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+            Sécurisé par CHOPPay · GNF
+          </p>
         </div>
         <div className="w-11 h-11 rounded-2xl glass-surface flex items-center justify-center font-extrabold">
           C
