@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
+import { useRef } from "react";
 import { Marker } from "react-map-gl";
 import { formatGNF } from "@/lib/format";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
-import { Users, Timer, BellRing, Flame, Navigation } from "lucide-react";
+import { Users, Timer, BellRing, Flame, Navigation, Plus, Minus, LocateFixed } from "lucide-react";
 import { IncomingRequestIsland } from "@/components/driver/IncomingRequestIsland";
 import { MenuButton } from "@/components/ui/MainMenuSheet";
-import { ChopMap, HeatmapLayer } from "@/components/map";
+import { ChopMap, HeatmapLayer, type ChopMapHandle } from "@/components/map";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { toast } from "sonner";
 
 const CONAKRY_HOTSPOTS = [
   { name: "Kaloum", lng: -13.7100, lat: 9.5100, weight: 1.0 },
@@ -19,6 +22,8 @@ const CONAKRY_HOTSPOTS = [
 export function DriverOrdersView() {
   const { queue, current, currentExpiresAt, accept, decline, showCurrent, isOnline, activeTrip } =
     useDriverSession();
+  const mapRef = useRef<ChopMapHandle>(null);
+  const geo = useGeolocation();
   const displayedRequest = !activeTrip ? current ?? queue[0] ?? null : null;
   const offerTimeoutSec = currentExpiresAt
     ? Math.max(1, Math.ceil((new Date(currentExpiresAt).getTime() - Date.now()) / 1000))
@@ -27,13 +32,39 @@ export function DriverOrdersView() {
   const sorted = [...CONAKRY_HOTSPOTS].sort((a, b) => b.weight - a.weight);
   const top = sorted[0];
 
+  const zoomBy = (delta: number) => {
+    const m = mapRef.current?.getMap();
+    if (!m) return;
+    const z = m.getZoom();
+    m.easeTo({ zoom: z + delta, duration: 250 });
+  };
+  const recenter = () => {
+    const m = mapRef.current?.getMap();
+    if (!m) return;
+    if (geo.position) {
+      m.flyTo({
+        center: [geo.position.lng, geo.position.lat],
+        zoom: 15.5,
+        bearing: 0,
+        essential: true,
+        duration: 800,
+      });
+    } else if (!geo.isReady) {
+      geo.request();
+      toast("Position chauffeur indisponible.");
+    } else {
+      toast("Position chauffeur indisponible.");
+    }
+  };
+
   return (
     <div className="fixed inset-0 overflow-hidden">
       {/* Full-bleed map background */}
       <div className="absolute inset-0">
         <ChopMap
+          ref={mapRef}
           className="absolute inset-0 w-full h-full"
-          interactive={false}
+          interactive={true}
           initialView={{ longitude: -13.6773, latitude: 9.5900, zoom: 11.4 }}
         >
           <HeatmapLayer
@@ -63,6 +94,34 @@ export function DriverOrdersView() {
         {/* Soft top + bottom fades so floating UI stays legible over the map */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/85 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background/85 to-transparent" />
+      </div>
+
+      {/* Floating map controls (right side, above BottomNav) */}
+      <div
+        className="absolute right-3 z-20 flex flex-col gap-2"
+        style={{ bottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
+      >
+        <button
+          onClick={() => zoomBy(1)}
+          aria-label="Zoom avant"
+          className="w-11 h-11 rounded-full bg-card/95 backdrop-blur border border-border/60 shadow-card flex items-center justify-center active:scale-95 transition"
+        >
+          <Plus className="w-5 h-5 text-foreground" />
+        </button>
+        <button
+          onClick={() => zoomBy(-1)}
+          aria-label="Zoom arrière"
+          className="w-11 h-11 rounded-full bg-card/95 backdrop-blur border border-border/60 shadow-card flex items-center justify-center active:scale-95 transition"
+        >
+          <Minus className="w-5 h-5 text-foreground" />
+        </button>
+        <button
+          onClick={recenter}
+          aria-label="Recentrer sur ma position"
+          className="w-11 h-11 rounded-full gradient-primary text-primary-foreground shadow-elevated flex items-center justify-center active:scale-95 transition"
+        >
+          <LocateFixed className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Top floating header (translucent, no opaque card) */}
