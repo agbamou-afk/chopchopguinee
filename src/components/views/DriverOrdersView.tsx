@@ -96,6 +96,34 @@ export function DriverOrdersView() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background/85 to-transparent" />
       </div>
 
+      {/* Floating map controls (right side, above BottomNav) */}
+      <div
+        className="absolute right-3 z-20 flex flex-col gap-2"
+        style={{ bottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
+      >
+        <button
+          onClick={() => zoomBy(1)}
+          aria-label="Zoom avant"
+          className="w-11 h-11 rounded-full bg-card/95 backdrop-blur border border-border/60 shadow-card flex items-center justify-center active:scale-95 transition"
+        >
+          <Plus className="w-5 h-5 text-foreground" />
+        </button>
+        <button
+          onClick={() => zoomBy(-1)}
+          aria-label="Zoom arrière"
+          className="w-11 h-11 rounded-full bg-card/95 backdrop-blur border border-border/60 shadow-card flex items-center justify-center active:scale-95 transition"
+        >
+          <Minus className="w-5 h-5 text-foreground" />
+        </button>
+        <button
+          onClick={recenter}
+          aria-label="Recentrer sur ma position"
+          className="w-11 h-11 rounded-full gradient-primary text-primary-foreground shadow-elevated flex items-center justify-center active:scale-95 transition"
+        >
+          <LocateFixed className="w-5 h-5" />
+        </button>
+      </div>
+
       {/* Top floating header (translucent, no opaque card) */}
       <div
         className="absolute left-0 right-0 px-4 z-10"
