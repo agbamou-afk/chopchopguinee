@@ -80,10 +80,7 @@ const Index = () => {
     rideId?: string | null;
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(demoScopedKey(ONBOARDING_DONE_KEY, null, false)) !== "1";
-  });
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showDriverOnboarding, setShowDriverOnboarding] = useState(false);
   const { requireAuth } = useAuthGuard();
   const { ready, roles, user } = useAuth();
@@ -125,13 +122,14 @@ const Index = () => {
   useEffect(() => {
     if (!ready || typeof window === "undefined") return;
     if (isDriverMode) return;
+    if (demoDriver) return;
     // Real authenticated non-demo users and admins should not see the demo
     // onboarding unless they explicitly replay it from the Profile menu.
     if (liveUser || adminUser) return;
     // Show onboarding to first-time visitors as well as first-time signed-in users.
     const key = demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, isDemoAny);
     if (localStorage.getItem(key) !== "1") setShowOnboarding(true);
-  }, [ready, user?.id, isDriverMode, liveUser, adminUser, isDemoAny]);
+  }, [ready, user?.id, isDriverMode, liveUser, adminUser, isDemoAny, demoDriver]);
 
   useEffect(() => {
     if (!ready || typeof window === "undefined") return;
@@ -174,6 +172,13 @@ const Index = () => {
       } catch { /* noop */ }
     }
   };
+
+  useEffect(() => {
+    if (!onboardingBlocksApp) return;
+    setBookingRide(null);
+    setActiveTrip(null);
+    setShowScanner(false);
+  }, [onboardingBlocksApp]);
 
   // Logout: clear persisted mode and reset.
   useEffect(() => {
