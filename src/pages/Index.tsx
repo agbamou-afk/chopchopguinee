@@ -33,7 +33,7 @@ import {
   DRIVER_ONBOARDING_REPLAY_EVENT,
 } from "@/components/onboarding/DriverOnboarding";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
-import { isAdminUser, isLiveUser, isDemoUser } from "@/lib/runtimeMode";
+import { isAdminUser, isLiveUser } from "@/lib/runtimeMode";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -125,7 +125,6 @@ const Index = () => {
   const navigate = useNavigate();
   const adminUser = isAdminUser(user, roles);
   const liveUser = isLiveUser(user, roles);
-  const demoUser = isDemoUser(user);
 
   // Admins (god_admin / operations_admin / finance_admin) default to the
   // admin dashboard. They can still navigate back to "/" manually, but
