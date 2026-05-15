@@ -118,7 +118,7 @@ export function WalletView() {
         <div className="w-16 h-16 rounded-2xl gradient-primary mx-auto flex items-center justify-center mb-4">
           <LogIn className="w-7 h-7 text-primary-foreground" />
         </div>
-        <h2 className="text-xl font-bold text-foreground mb-2">Portefeuille CHOP CHOP</h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">CHOPWallet</h2>
         <p className="text-sm text-muted-foreground mb-6">
           Connectez-vous pour activer votre portefeuille et commencer à payer en GNF.
         </p>
@@ -142,7 +142,7 @@ export function WalletView() {
   return (
     <div className="max-w-md mx-auto">
       <ScreenHeader
-        title="Portefeuille"
+        title="CHOPWallet"
         subtitle={profile?.phone ?? "Vos paiements en GNF"}
       />
 

@@ -36,7 +36,7 @@ interface Insight {
 
 const SECTION_LABEL: Record<string, string> = {
   executive: "Résumé exécutif", behavior: "Comportement", mobility: "Mobilité",
-  wallet: "Portefeuille", marketplace: "Marché", driver: "Chauffeurs",
+  wallet: "CHOPWallet", marketplace: "Marché", driver: "Chauffeurs",
   merchant: "Marchands", fraud: "Fraude", growth: "Croissance", recommendation: "Recommandation",
 };
 

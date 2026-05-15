@@ -133,7 +133,7 @@ export function EtaPricePreview({
       >
         <span className="flex items-center gap-2">
           <Wallet className="h-3.5 w-3.5" />
-          {paymentMethod === "wallet" ? "Portefeuille CHOP" : "Espèces à la livraison"}
+          {paymentMethod === "wallet" ? "CHOPWallet" : "Espèces à la livraison"}
         </span>
         <span className="text-muted-foreground">Modifier</span>
       </button>

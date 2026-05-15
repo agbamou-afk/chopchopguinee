@@ -86,7 +86,7 @@ function copy(p: WalletEventPayload): { title: string; body: string; tone: "succ
       };
     case "wallet_frozen":
       return {
-        title: "Portefeuille gelé",
+        title: "CHOPWallet gelé",
         body: p.reason
           ? `Votre portefeuille a été gelé : ${p.reason}.`
           : "Votre portefeuille a été gelé. Contactez le support.",

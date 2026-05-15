@@ -56,8 +56,8 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
         <p className="text-[11px] opacity-80 mt-1">
           {frozen
             ? status === "frozen"
-              ? "Portefeuille gelé — contactez le support"
-              : "Portefeuille restreint — vérifiez votre profil"
+              ? "CHOPWallet gelé — contactez le support"
+              : "CHOPWallet restreint — vérifiez votre profil"
             : zero
             ? "Rechargez pour commencer à payer en GNF"
             : "Paiements sécurisés · GNF"}

@@ -37,7 +37,7 @@ const FAQS = [
   },
   {
     q: "Comment envoyer de l'argent à un ami ?",
-    a: "Dans Portefeuille, choisissez Envoyer, saisissez le numéro du destinataire et le montant. La transaction est instantanée et gratuite entre utilisateurs CHOP CHOP.",
+    a: "Dans CHOPWallet, choisissez Envoyer, saisissez le numéro du destinataire et le montant. La transaction est instantanée et gratuite entre utilisateurs CHOP CHOP.",
   },
   {
     q: "Quels sont les frais de service ?",

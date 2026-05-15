@@ -285,7 +285,7 @@ export function routeQuery(rawQuery: string, opts: { isAdmin?: boolean } = {}): 
   if (opts.isAdmin && seen.has("admin")) {
     results.push(
       svc("admin", "Console Administration", "Tableau de bord global", "admin", 0, "/admin"),
-      svc("admin", "Portefeuilles & finances", "Recharges, transactions, audit", "admin", 1, "/admin/wallets"),
+      svc("admin", "CHOPWallet Portefeuilles & finances finances", "Recharges, transactions, audit", "admin", 1, "/admin/wallets"),
       svc("admin", "Utilisateurs", "Comptes, rôles, KYC", "admin", 2, "/admin/users"),
     );
   }
