@@ -67,8 +67,9 @@ export function PrimaryActionGrid({ onAction }: Props) {
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           onClick={() => onAction(id)}
           aria-label={label}
-          className="relative flex flex-col items-start gap-2.5 rounded-2xl border border-border/60 bg-card p-4 min-h-[112px] text-left shadow-card active:shadow-soft transition-shadow"
+          className="relative flex flex-col items-start gap-2.5 rounded-2xl card-warm p-4 min-h-[116px] text-left active:shadow-soft transition-shadow overflow-hidden"
         >
+          <div className="pointer-events-none absolute inset-x-3 top-0 h-px saffron-seam opacity-70" aria-hidden />
           <div className={`w-11 h-11 rounded-xl ${halo} flex items-center justify-center overflow-hidden`}>
             <img
               src={img}
