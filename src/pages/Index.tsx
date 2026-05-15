@@ -26,6 +26,7 @@ import { DriverSessionProvider } from "@/contexts/DriverSessionContext";
 import { DriverRideAlertBanner } from "@/components/driver/DriverRideAlertBanner";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { DriverOfferDebugPanel } from "@/components/driver/DriverOfferDebugPanel";
+import { ClientOnboarding, ONBOARDING_DONE_KEY, ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/ClientOnboarding";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -59,6 +60,7 @@ const Index = () => {
     rideId?: string | null;
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const { requireAuth } = useAuthGuard();
   const { roles, user } = useAuth();
   const isDriver = roles.includes("driver");
@@ -73,6 +75,27 @@ const Index = () => {
   // One-shot guard: only auto-enter driver mode the first time we see this
   // signed-in demo driver. After that, manual toggles win.
   const autoModeAppliedRef = useRef(false);
+
+  // First-login client onboarding: show once per user. Replay via Profile menu.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!user || isDriverMode) return;
+    const key = `${ONBOARDING_DONE_KEY}:${user.id}`;
+    if (localStorage.getItem(key) !== "1") setShowOnboarding(true);
+  }, [user?.id, isDriverMode]);
+
+  useEffect(() => {
+    const handler = () => setShowOnboarding(true);
+    window.addEventListener(ONBOARDING_REPLAY_EVENT, handler);
+    return () => window.removeEventListener(ONBOARDING_REPLAY_EVENT, handler);
+  }, []);
+
+  const finishOnboarding = () => {
+    setShowOnboarding(false);
+    if (typeof window !== "undefined" && user) {
+      try { localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user.id}`, "1"); } catch { /* noop */ }
+    }
+  };
 
   // Logout: clear persisted mode and reset.
   useEffect(() => {
@@ -456,6 +479,12 @@ const Index = () => {
           }}
         />
       )}
+
+      <AnimatePresence>
+        {showOnboarding && !isDriverMode && (
+          <ClientOnboarding key="client-onboarding" onDone={finishOnboarding} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
