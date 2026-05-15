@@ -7,7 +7,7 @@ import { formatGNF } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
-import { SecuredByChopPay, TrustCues } from "@/components/trust/TrustCues";
+import { SecuredByChopPay } from "@/components/trust/TrustCues";
 
 interface Props {
   rideId: string;
