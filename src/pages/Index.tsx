@@ -80,13 +80,19 @@ const Index = () => {
     rideId?: string | null;
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(demoScopedKey(ONBOARDING_DONE_KEY, null, false)) !== "1";
+  });
+  const [showDriverOnboarding, setShowDriverOnboarding] = useState(false);
   const { requireAuth } = useAuthGuard();
-  const { roles, user } = useAuth();
+  const { ready, roles, user } = useAuth();
   const isDriver = roles.includes("driver");
   const navigate = useNavigate();
   const adminUser = isAdminUser(user, roles);
   const liveUser = isLiveUser(user, roles);
+  const demoUser = isDemoMode(user?.email ?? null);
+  const demoDriver = isDemoDriverMode(user?.email ?? null);
 
   // Admins (god_admin / operations_admin / finance_admin) default to the
   // admin dashboard. They can still navigate back to "/" manually, but
