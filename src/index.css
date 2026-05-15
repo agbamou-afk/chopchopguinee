@@ -331,3 +331,60 @@
       hsl(var(--muted));
   }
 }
+
+@layer utilities {
+  /* === CHOPWallet · CHOPPay money-surface language ===
+     Lagoon mint + deep green + saffron highlight. Used across CHOPWallet
+     card, payment sheet, receipt, QR scan, transaction rows, merchant QR.
+     Calm and trustworthy — never neon, never crypto. */
+
+  /* Pale lagoon mint surface — for inline money cards inside sheets:
+     payment merchant card, receipt ribbon, QR halo, tx-row containers. */
+  .surface-money {
+    background:
+      linear-gradient(180deg, hsl(162 48% 96%) 0%, hsl(160 38% 93%) 100%);
+    border: 1px solid hsl(162 30% 84%);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Mint chip — secure status indicator (e.g. "CHOPPay sécurisé"). */
+  .chip-money-secure {
+    background: hsl(162 48% 92%);
+    color: hsl(160 50% 20%);
+    border: 1px solid hsl(162 35% 78%);
+  }
+
+  /* Saffron seam — 1px gold hairline used on money surfaces (top edge of
+     wallet card, header strip on QR scan / receipt). */
+  .saffron-seam {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--secondary) / 0.55) 35%,
+      hsl(var(--secondary) / 0.85) 50%,
+      hsl(var(--secondary) / 0.55) 65%,
+      transparent 100%
+    );
+  }
+
+  /* Transaction-row halos — calm directional cues without alarm reds.
+     Inflow → lagoon mint, outflow → warm sand (only failures stay
+     destructive). */
+  .tx-halo-in {
+    background: hsl(162 48% 92%);
+    color: hsl(160 55% 24%);
+    border: 1px solid hsl(162 35% 80%);
+  }
+  .tx-halo-out {
+    background: hsl(38 55% 94%);
+    color: hsl(35 45% 28%);
+    border: 1px solid hsl(38 35% 82%);
+  }
+
+  /* Deep money header — used on QR scan and receipt headers when we want
+     a darker, infrastructural tone (vs the lighter gradient-primary). */
+  .gradient-money-deep {
+    background:
+      radial-gradient(120% 100% at 0% 0%, hsl(162 55% 30%) 0%, hsl(160 60% 18%) 55%, hsl(168 65% 11%) 100%);
+  }
+}
