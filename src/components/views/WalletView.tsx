@@ -17,6 +17,7 @@ import {
   XCircle,
   Sparkles,
   ScanLine,
+  Store,
 } from "lucide-react";
 import { WalletCard } from "@/components/home/WalletCard";
 import { useWallet, type WalletTransaction } from "@/hooks/useWallet";
@@ -133,6 +134,25 @@ export function WalletView() {
     }, 0);
   }, [transactions, wallet]);
 
+  // Lightweight "marchands récents" strip — derived from CHOPPay merchant
+  // payments in history. Tapping prompts a fresh scan (calm retention loop,
+  // no aggressive rewards or loyalty spam).
+  const recentMerchants = useMemo(() => {
+    if (!wallet) return [] as { name: string; lastAt: string }[];
+    const seen = new Map<string, string>();
+    for (const tx of transactions) {
+      if (tx.type !== "payment") continue;
+      if (txDirection(tx, wallet.id) !== "out") continue;
+      if (!tx.description?.startsWith("Paiement CHOPPay")) continue;
+      const name = tx.description.replace(/^Paiement CHOPPay\s*·\s*/, "").trim();
+      if (!name) continue;
+      if (!seen.has(name)) seen.set(name, tx.created_at);
+    }
+    return Array.from(seen.entries())
+      .slice(0, 6)
+      .map(([name, lastAt]) => ({ name, lastAt }));
+  }, [transactions, wallet]);
+
   if (loading) {
     return (
       <div className="max-w-md mx-auto px-4 py-6 space-y-4">
@@ -202,6 +222,59 @@ export function WalletView() {
           </div>
         )}
       </div>
+
+      {recentMerchants.length > 0 && (
+        <div className="mt-5 px-4">
+          <div className="flex items-end justify-between mb-2">
+            <h2 className="text-sm font-semibold text-foreground">Marchands récents</h2>
+            <span className="text-[10px] text-muted-foreground">CHOPPay</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
+            {recentMerchants.map((m) => {
+              const initials =
+                m.name
+                  .split(/\s+/)
+                  .slice(0, 2)
+                  .map((p) => p[0]?.toUpperCase() ?? "")
+                  .join("") || "M";
+              return (
+                <button
+                  key={m.name}
+                  onClick={() => {
+                    Analytics.track("merchant.repeat_interaction", {
+                      metadata: { merchant_name: m.name, surface: "wallet_strip" },
+                    });
+                    setPayOpen(true);
+                  }}
+                  className="shrink-0 w-[88px] flex flex-col items-center gap-1.5 rounded-2xl border border-border/60 bg-card p-2.5 shadow-card hover:bg-muted/40 transition"
+                  aria-label={`Repayer ${m.name}`}
+                >
+                  <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-soft">
+                    <span className="text-xs font-bold text-primary-foreground tracking-wide">
+                      {initials}
+                    </span>
+                  </div>
+                  <p className="text-[11px] font-medium text-foreground text-center leading-tight truncate w-full">
+                    {m.name}
+                  </p>
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setPayOpen(true)}
+              className="shrink-0 w-[88px] flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border/60 bg-card/50 p-2.5 hover:bg-muted/40 transition"
+              aria-label="Scanner un nouveau marchand"
+            >
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                <ScanLine className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <p className="text-[11px] font-medium text-muted-foreground text-center leading-tight">
+                Scanner
+              </p>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4">
         <LiveStrip
