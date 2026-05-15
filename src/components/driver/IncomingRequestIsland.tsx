@@ -117,28 +117,28 @@ export function IncomingRequestIsland({
             role="dialog"
             aria-label="Nouvelle demande de course"
             onPointerDownCapture={() => setInteracted(true)}
-            className="w-[min(340px,100%)] will-change-transform pointer-events-auto rounded-3xl bg-card/95 border border-primary/20 shadow-elevated overflow-hidden ring-1 ring-primary/10"
-            style={{ boxShadow: "var(--shadow-glow-primary), var(--shadow-elevated)" }}
+            className="w-[min(348px,100%)] will-change-transform pointer-events-auto rounded-[26px] bg-card/97 backdrop-blur-md border border-primary/15 overflow-hidden"
+            style={{ boxShadow: "0 0 0 6px hsl(var(--primary) / 0.06), 0 24px 60px -22px hsl(160 55% 16% / 0.45)" }}
           >
             {/* Brand seam — saffron→ember directional flow */}
-            <div className="pointer-events-none h-[3px] bg-gradient-to-r from-primary via-secondary to-primary" aria-hidden />
+            <div className="pointer-events-none h-[2px] bg-gradient-to-r from-primary/70 via-secondary to-primary/70" aria-hidden />
             {/* Countdown */}
             <CountdownBar id={request.id} duration={timeoutSec} urgent={urgent} />
 
-            <div className="p-3.5 space-y-3">
+            <div className="p-4 space-y-3.5">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.16em] text-primary">
-                  <span className="relative flex h-1.5 w-1.5">
+                <span className="inline-flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-primary">
+                  <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full rounded-full bg-primary/60 animate-ping" />
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                   </span>
                   Nouvelle course
                 </span>
                 <div
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-medium tabular-nums text-[11px] ${
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full font-semibold tabular-nums text-[11px] ${
                     urgent
                       ? "bg-destructive/15 text-destructive"
-                      : "bg-secondary/15 text-secondary-foreground"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   <Clock className="w-3 h-3" />
@@ -146,39 +146,44 @@ export function IncomingRequestIsland({
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <p className="text-sm font-medium text-foreground truncate">
+              <div className="space-y-2 rounded-2xl bg-muted/40 p-3 border border-border/50">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="w-6 h-6 shrink-0 rounded-lg bg-primary/12 flex items-center justify-center">
+                    <MapPin className="w-3.5 h-3.5 text-primary" />
+                  </span>
+                  <p className="text-sm font-semibold text-foreground truncate">
                     {request.pickup}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 min-w-0">
-                  <Navigation className="w-3.5 h-3.5 text-secondary shrink-0" />
-                  <p className="text-sm font-medium text-muted-foreground truncate">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="w-6 h-6 shrink-0 rounded-lg bg-secondary/20 flex items-center justify-center">
+                    <Navigation className="w-3.5 h-3.5 text-secondary-foreground" />
+                  </span>
+                  <p className="text-sm font-medium text-foreground/85 truncate">
                     {request.destination}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                <span className="font-medium text-foreground tabular-nums">
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
+                <span className="font-bold text-foreground tabular-nums text-sm">
                   {formatGNF(request.estimatedPrice)}
                 </span>
-                <span>·</span>
-                <span>{request.distance}</span>
-                <span>·</span>
-                <span>{request.eta}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span>{request.distance}</span>
+                  <span className="opacity-50">·</span>
+                  <span>{request.eta}</span>
+                </span>
               </div>
 
-              <div className="flex gap-2 pt-1">
+              <div className="flex gap-2 pt-0.5">
                 <button
                   onClick={() => {
                     setInteracted(true);
                     unlockDriverSounds();
                     onDecline(request.id);
                   }}
-                  className="h-11 px-3 rounded-2xl border border-destructive/40 text-destructive font-medium text-sm bg-background/50 hover:bg-destructive/5 active:scale-95 transition inline-flex items-center justify-center gap-1"
+                  className="h-12 px-4 rounded-2xl border border-border text-muted-foreground font-medium text-sm bg-background/40 hover:bg-muted/60 active:scale-[0.97] transition inline-flex items-center justify-center gap-1"
                   aria-label="Refuser"
                 >
                   <X className="w-4 h-4" />
@@ -191,7 +196,7 @@ export function IncomingRequestIsland({
                     playOfferAccepted();
                     onAccept(request.id);
                   }}
-                  className="flex-1 h-11 rounded-2xl gradient-primary text-primary-foreground font-semibold text-sm shadow-card inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+                  className="flex-1 h-12 rounded-2xl gradient-cta text-primary-foreground font-bold text-sm inline-flex items-center justify-center gap-1.5 active:scale-[0.985] transition-transform"
                   aria-label="Accepter"
                 >
                   <Check className="w-5 h-5" />
