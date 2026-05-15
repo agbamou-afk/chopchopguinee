@@ -201,17 +201,20 @@ function WalletScene({ animated }: { animated: boolean }) {
 
 function FinalScene() {
   return (
-    <div className="relative w-full h-56 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/15 via-card to-secondary/15 border border-border/60 flex flex-col items-center justify-center text-center px-6">
+    <div className="relative w-full h-56 rounded-3xl overflow-hidden gradient-wallet text-primary-foreground border border-primary/30 flex flex-col items-center justify-center text-center px-6 ring-glow-primary">
+      <div className="pointer-events-none absolute -top-12 -right-10 w-44 h-44 rounded-full bg-secondary/30 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-12 -left-10 w-40 h-40 rounded-full bg-white/10 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" aria-hidden />
       <motion.img
         initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 180 }}
         src={logo}
         alt="CHOP CHOP"
-        className="w-20 h-20 rounded-2xl shadow-card mb-3"
+        className="w-20 h-20 rounded-2xl shadow-elevated mb-3 bg-white/95 p-2"
       />
-      <p className="text-lg font-extrabold text-foreground">CHOP CHOP</p>
-      <p className="text-sm text-muted-foreground mt-1">Tout. Partout. Pour Tous.</p>
+      <p className="text-lg font-extrabold tracking-tight">CHOP CHOP</p>
+      <p className="text-sm opacity-90 mt-1">Tout. Partout. Pour Tous.</p>
     </div>
   );
 }
@@ -304,15 +307,15 @@ export function ClientOnboarding({ onDone }: Props) {
           {dots.map((i) => (
             <span
               key={i}
-              className={`h-1.5 rounded-full transition-all ${
-                i === index ? "w-6 bg-primary" : "w-1.5 bg-border"
+              className={`h-1.5 rounded-full transition-all duration-300 ease-out ${
+                i === index ? "w-7 bg-gradient-to-r from-primary to-secondary" : "w-1.5 bg-border"
               }`}
             />
           ))}
         </div>
         <button
           onClick={next}
-          className="w-full inline-flex items-center justify-center gap-2 px-4 py-4 min-h-[56px] rounded-2xl bg-primary text-primary-foreground font-bold text-base shadow-card hover:opacity-95 transition-opacity"
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-4 min-h-[56px] rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-elevated ring-glow-primary hover:opacity-95 transition-opacity"
         >
           {isLast ? "Explorer CHOP CHOP" : (<>Suivant <ChevronRight className="w-5 h-5" /></>)}
         </button>
