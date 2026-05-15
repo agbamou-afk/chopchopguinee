@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { Marker } from "react-map-gl";
 import { formatGNF } from "@/lib/format";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
-import { Users, Timer, BellRing, Flame, Navigation, Plus, Minus, LocateFixed } from "lucide-react";
+import { Users, BellRing, Flame, Navigation, Plus, Minus, LocateFixed } from "lucide-react";
 import { IncomingRequestIsland } from "@/components/driver/IncomingRequestIsland";
 import { MenuButton } from "@/components/ui/MainMenuSheet";
 import { ChopMap, HeatmapLayer, DriverPositionMarker, type ChopMapHandle } from "@/components/map";
