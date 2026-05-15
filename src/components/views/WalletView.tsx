@@ -185,7 +185,7 @@ export function WalletView() {
       <div className="px-4 mt-4">
         <WalletCard
           balance={available}
-          onSend={() => onAction("send")}
+          onSend={() => onAction("pay")}
           onReceive={() => onAction("receive")}
         />
         {wallet && wallet.held_gnf > 0 && (
