@@ -137,8 +137,9 @@ const Index = () => {
   // First-login client onboarding: show once per user. Replay via Profile menu.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!user || isDriverMode) return;
-    const key = `${ONBOARDING_DONE_KEY}:${user.id}`;
+    if (isDriverMode) return;
+    // Show onboarding to first-time visitors as well as first-time signed-in users.
+    const key = `${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`;
     if (localStorage.getItem(key) !== "1") setShowOnboarding(true);
   }, [user?.id, isDriverMode]);
 
@@ -150,8 +151,10 @@ const Index = () => {
 
   const finishOnboarding = () => {
     setShowOnboarding(false);
-    if (typeof window !== "undefined" && user) {
-      try { localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user.id}`, "1"); } catch { /* noop */ }
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
+      } catch { /* noop */ }
     }
   };
 
@@ -293,9 +296,11 @@ const Index = () => {
   };
 
   const handleAction = (action: string, params?: { destination?: string }) => {
-    // "market" = browsing is allowed without account.
-    // Every other action requires authentication.
-    if (action !== "market" && !requireAuth()) return;
+    // Public exploration: ride booking, food and market browsing are allowed
+    // without an account. Signup is enforced later at commitment points
+    // (real wallet hold / real ride creation).
+    const publicActions = new Set(["market", "food", "moto", "toktok", "parcel", "scan", "support"]);
+    if (!publicActions.has(action) && !requireAuth()) return;
     switch (action) {
       case "moto":
         setBookingDestination(params?.destination);
@@ -416,7 +421,12 @@ const Index = () => {
             onBook={async (trip) => {
               const { data: sess } = await supabase.auth.getSession();
               if (!sess.session) {
-                toast({ title: "Connexion requise", description: "Connectez-vous pour réserver." });
+                toast({
+                  title: "Créez votre compte pour réserver une vraie course.",
+                  description: "Connectez-vous pour confirmer cette course.",
+                });
+                const next = encodeURIComponent("/");
+                navigate(`/auth?next=${next}`);
                 return;
               }
               const holdAmount = Math.ceil(trip.fare * 1.1);

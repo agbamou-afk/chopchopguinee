@@ -314,7 +314,7 @@ export function ClientOnboarding({ onDone }: Props) {
           onClick={next}
           className="w-full inline-flex items-center justify-center gap-2 px-4 py-4 min-h-[56px] rounded-2xl bg-primary text-primary-foreground font-bold text-base shadow-card hover:opacity-95 transition-opacity"
         >
-          {isLast ? "Entrer dans la démo" : (<>Suivant <ChevronRight className="w-5 h-5" /></>)}
+          {isLast ? "Explorer CHOP CHOP" : (<>Suivant <ChevronRight className="w-5 h-5" /></>)}
         </button>
       </div>
     </motion.div>
