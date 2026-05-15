@@ -38,13 +38,13 @@ const RIDES: OpsRide[] = [
   { id: "CC-LV-7721", driver: "Ibrahima B.", driverOnline: false, from: "Pharmacie Niger", to: "Lambanyi", phase: "in_trip",   etaMin: null, waitingMin: 14 },
 ];
 
-const PHASE_META: Record<RidePhase, { label: string; tone: string; icon: typeof Bike }> = {
-  searching:  { label: "Recherche",    tone: "bg-amber-100 text-amber-800 border-amber-200",       icon: Search },
-  assigned:   { label: "En approche",  tone: "bg-blue-100 text-blue-700 border-blue-200",          icon: Navigation },
-  arrived:    { label: "Au point",     tone: "bg-violet-100 text-violet-700 border-violet-200",    icon: MapPin },
-  in_trip:    { label: "En course",    tone: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: Bike },
-  completed:  { label: "Terminée",     tone: "bg-muted text-muted-foreground border-border",       icon: CheckCircle2 },
-  cancelled:  { label: "Annulée",      tone: "bg-rose-100 text-rose-700 border-rose-200",          icon: Flag },
+const PHASE_META: Record<RidePhase, { label: string; chip: string; icon: typeof Bike }> = {
+  searching: { label: "Recherche",   chip: "chip-warn",   icon: Search },
+  assigned:  { label: "En approche", chip: "chip-info",   icon: Navigation },
+  arrived:   { label: "Au point",    chip: "chip-violet", icon: MapPin },
+  in_trip:   { label: "En course",   chip: "chip-ok",     icon: Bike },
+  completed: { label: "Terminée",    chip: "chip-mute",   icon: CheckCircle2 },
+  cancelled: { label: "Annulée",     chip: "chip-err",    icon: Flag },
 };
 
 /** Risk thresholds (minutes) */
@@ -90,10 +90,10 @@ export default function LiveOps() {
   return (
     <ModulePage module="live_ops" title="Live Operations" subtitle="Centre de commande en temps réel">
       <StatGrid items={[
-        { label: "Courses actives",      value: String(counts.active),    icon: Bike,      tone: "text-emerald-600" },
-        { label: "Pickups en attente",   value: String(counts.arrived),   icon: Hourglass, tone: "text-violet-600" },
-        { label: "Recherche chauffeur",  value: String(counts.searching), icon: Search,    tone: "text-amber-600" },
-        { label: "Alertes",              value: String(counts.alerts),    icon: AlertTriangle, tone: "text-rose-600" },
+        { label: "Courses actives",      value: String(counts.active),    icon: Bike,          tone: "text-primary" },
+        { label: "Pickups en attente",   value: String(counts.arrived),   icon: Hourglass,     tone: "text-muted-foreground/70" },
+        { label: "Recherche chauffeur",  value: String(counts.searching), icon: Search,        tone: "text-secondary" },
+        { label: "Alertes",              value: String(counts.alerts),    icon: AlertTriangle, tone: "text-destructive" },
       ]} />
       <AdminLiveOpsMap variant="moto" />
       <div className="flex gap-2 flex-wrap">
@@ -101,9 +101,9 @@ export default function LiveOps() {
           <FilterChip key={x} label={x} active={f === x} onClick={() => setF(x)} />
         ))}
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {filtered.length === 0 && (
-          <Card className="p-6 text-center text-sm text-muted-foreground">
+          <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">
             Aucune course ne correspond à ce filtre.
           </Card>
         )}
@@ -112,68 +112,48 @@ export default function LiveOps() {
           const PhaseIcon = meta.icon;
           const risk = classifyRisk(r);
           const isAlert = risk.kind !== null;
-          const cardTone = isAlert
-            ? risk.kind === "offline_active"
-              ? "border-rose-300 bg-rose-50/60"
-              : risk.kind === "stuck"
-                ? "border-amber-300 bg-amber-50/60"
-                : "border-violet-300 bg-violet-50/60"
-            : "";
+          const accent = isAlert
+            ? risk.kind === "offline_active" ? "border-l-destructive"
+              : risk.kind === "stuck"        ? "border-l-secondary"
+              :                                 "border-l-[hsl(265_50%_55%)]"
+            : "border-l-transparent";
           return (
-            <Card key={r.id} className={`p-3 transition-all hover:shadow-soft ${cardTone}`}>
+            <div key={r.id} className={`admin-card p-2.5 border-l-2 ${accent} transition-colors hover:bg-muted/40`}>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shrink-0">
-                  <Bike className="w-4 h-4 text-primary-foreground" />
-                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-sm">{r.id}</p>
-                    <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border font-medium ${meta.tone}`}>
-                      <PhaseIcon className="w-3 h-3" /> {meta.label}
+                    <p className="font-mono text-[12px] font-medium tracking-tight">{r.id}</p>
+                    <span className={`chip-status ${meta.chip}`}>
+                      <PhaseIcon className="w-3 h-3 -ml-0.5" /> {meta.label}
                     </span>
-                    {/* Driver presence chip */}
                     {r.driver !== "—" && (
-                      <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border font-medium ${
-                        r.driverOnline
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-rose-50 text-rose-700 border-rose-200"
-                      }`}>
-                        <span className="relative inline-flex h-1.5 w-1.5">
-                          {r.driverOnline && (
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
-                          )}
-                          <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${r.driverOnline ? "bg-emerald-500" : "bg-rose-500"}`} />
-                        </span>
+                      <span className={`chip-status ${r.driverOnline ? "chip-ok" : "chip-err"}`}>
                         {r.driverOnline ? "En ligne" : "Hors ligne"}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                  <p className="text-[11.5px] text-muted-foreground truncate mt-0.5 font-mono">
                     {r.from} → {r.to} · {r.driver}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <p className="font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground/70">
                     {r.phase === "in_trip" ? "ETA" : r.phase === "assigned" ? "Arrivée" : "Attente"}
                   </p>
-                  <p className="text-sm font-semibold tabular-nums">
-                    {r.etaMin != null ? `${r.etaMin} min` : `${r.waitingMin}′`}
+                  <p className="text-[13px] font-semibold tabular-nums">
+                    {r.etaMin != null ? `${r.etaMin}m` : `${r.waitingMin}m`}
                   </p>
                 </div>
               </div>
               {isAlert && (
-                <div className={`mt-2 flex items-center gap-2 text-[11px] font-medium px-2 py-1.5 rounded-md ${
-                  risk.kind === "offline_active" ? "bg-rose-100 text-rose-800"
-                  : risk.kind === "stuck"        ? "bg-amber-100 text-amber-800"
-                  :                                "bg-violet-100 text-violet-800"
-                }`}>
-                  {risk.kind === "offline_active" ? <WifiOff className="w-3.5 h-3.5" />
-                   : risk.kind === "stuck"        ? <Hourglass className="w-3.5 h-3.5" />
-                   :                                 <AlertTriangle className="w-3.5 h-3.5" />}
-                  {risk.label}
+                <div className="mt-2 flex items-center gap-1.5 text-[11px] text-foreground/75">
+                  {risk.kind === "offline_active" ? <WifiOff className="w-3 h-3 text-destructive" />
+                   : risk.kind === "stuck"        ? <Hourglass className="w-3 h-3 text-secondary" />
+                   :                                 <AlertTriangle className="w-3 h-3 text-[hsl(265_50%_55%)]" />}
+                  <span className="font-mono tracking-tight">{risk.label}</span>
                 </div>
               )}
-            </Card>
+            </div>
           );
         })}
       </div>

@@ -2,8 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChopMap, type ChopMapHandle, DriverCluster } from '@/components/map';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Activity, Bike, Loader2, RefreshCw, Wifi } from 'lucide-react';
 import { useMapPerfMonitor } from '@/hooks/useMapPerfMonitor';
 import { useLowDataMode } from '@/hooks/useLowDataMode';
@@ -65,40 +63,42 @@ export function AdminLiveOpsMap({ variant = 'moto', className }: { variant?: 'mo
   const recenter = () => mapRef.current?.flyTo(-13.5784, 9.6412, 12);
 
   return (
-    <Card className={`relative overflow-hidden p-0 ${className ?? ''}`}>
-      <div className="absolute z-10 top-3 left-3 right-3 flex items-start justify-between gap-2 pointer-events-none">
-        <div className="flex flex-wrap gap-2 pointer-events-auto">
+    <Card className={`relative overflow-hidden p-0 admin-card ${className ?? ''}`}>
+      <div className="absolute z-10 top-2 left-2 right-2 flex items-start justify-between gap-2 pointer-events-none">
+        <div className="flex flex-wrap gap-1 pointer-events-auto bg-background/90 backdrop-blur rounded-md border border-border/70 p-1">
           {FILTERS.map((f) => (
-            <Button
+            <button
               key={f.id}
-              size="sm"
-              variant={filter === f.id ? 'default' : 'secondary'}
-              className="h-7 px-2.5 text-xs gap-1.5"
               onClick={() => setFilter(f.id)}
+              className={`h-6 px-2 rounded-sm text-[11px] font-medium font-mono inline-flex items-center gap-1.5 transition-colors ${
+                filter === f.id
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-foreground/70 hover:bg-muted'
+              }`}
             >
               {f.id === 'all' && <Bike className="w-3 h-3" />}
               {f.id === 'on_trip' && <Activity className="w-3 h-3" />}
-              {f.label}
-              <span className="opacity-70">{f.count}</span>
-            </Button>
+              <span className="uppercase tracking-wider">{f.label}</span>
+              <span className="tabular-nums opacity-70">{f.count}</span>
+            </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <Button
-            size="sm"
-            variant={low ? 'default' : 'outline'}
-            className="h-7 gap-1.5 text-xs"
+        <div className="flex items-center gap-1 pointer-events-auto bg-background/90 backdrop-blur rounded-md border border-border/70 p-1">
+          <button
             onClick={() => setPref(pref === 'on' ? 'auto' : 'on')}
             title="Mode données réduites"
+            className={`h-6 px-2 rounded-sm font-mono text-[10px] uppercase tracking-wider inline-flex items-center gap-1 transition-colors ${
+              low ? 'bg-secondary/15 text-secondary' : 'text-foreground/70 hover:bg-muted'
+            }`}
           >
-            <Wifi className="w-3 h-3" /> {low ? 'Économie' : 'Auto'}
-          </Button>
-          <Badge variant={degraded ? 'destructive' : 'outline'} className="font-mono">
-            {fps} fps
-          </Badge>
-          <Button size="icon" variant="secondary" onClick={recenter} aria-label="Recentrer">
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
+            <Wifi className="w-3 h-3" /> {low ? 'éco' : 'auto'}
+          </button>
+          <span className={`h-6 px-2 inline-flex items-center font-mono text-[10px] tabular-nums ${degraded ? 'text-destructive' : 'text-muted-foreground'}`}>
+            {fps}fps
+          </span>
+          <button onClick={recenter} aria-label="Recentrer" className="h-6 w-6 rounded-sm inline-flex items-center justify-center text-foreground/70 hover:bg-muted">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
       {loading && rows.length === 0 && (

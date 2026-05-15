@@ -7,13 +7,15 @@ import { Search } from "lucide-react";
 
 export function StatGrid({ items }: { items: { label: string; value: string; icon?: any; tone?: string }[] }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
       {items.map((k) => (
-        <Card key={k.label} className="p-4 transition-all hover:shadow-soft animate-fade-in">
-          {k.icon && <k.icon className={`w-4 h-4 ${k.tone ?? "text-muted-foreground"}`} />}
-          <p className="text-xs text-muted-foreground mt-2">{k.label}</p>
-          <p className="text-lg font-bold mt-1">{k.value}</p>
-        </Card>
+        <div key={k.label} className="admin-card p-3">
+          <div className="flex items-center justify-between">
+            <span className="admin-eyebrow">{k.label}</span>
+            {k.icon && <k.icon className={`w-3.5 h-3.5 ${k.tone ?? "text-muted-foreground/70"}`} />}
+          </div>
+          <p className="text-[17px] font-semibold mt-1.5 tabular-nums tracking-tight">{k.value}</p>
+        </div>
       ))}
     </div>
   );
@@ -23,8 +25,8 @@ export function AdminToolbar({ placeholder, right }: { placeholder: string; righ
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <div className="relative flex-1 min-w-[180px]">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder={placeholder} className="pl-9 bg-card" />
+        <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder={placeholder} className="pl-8 h-8 bg-card text-[13px]" />
       </div>
       {right}
     </div>
@@ -33,52 +35,43 @@ export function AdminToolbar({ placeholder, right }: { placeholder: string; righ
 
 export function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    active: "bg-emerald-100 text-emerald-700",
-    online: "bg-emerald-100 text-emerald-700",
-    pending: "bg-amber-100 text-amber-800",
-    open: "bg-amber-100 text-amber-800",
-    investigating: "bg-blue-100 text-blue-700",
-    resolved: "bg-emerald-100 text-emerald-700",
-    completed: "bg-emerald-100 text-emerald-700",
-    suspended: "bg-rose-100 text-rose-700",
-    offline: "bg-muted text-muted-foreground",
-    failed: "bg-rose-100 text-rose-700",
-    reversed: "bg-purple-100 text-purple-700",
-    escalated: "bg-rose-100 text-rose-700",
-    high: "bg-rose-100 text-rose-700",
-    medium: "bg-amber-100 text-amber-800",
-    low: "bg-emerald-100 text-emerald-700",
+    active: "chip-ok", online: "chip-ok", resolved: "chip-ok", completed: "chip-ok", low: "chip-ok",
+    pending: "chip-warn", open: "chip-warn", medium: "chip-warn",
+    investigating: "chip-info",
+    suspended: "chip-err", failed: "chip-err", escalated: "chip-err", high: "chip-err",
+    offline: "chip-mute",
+    reversed: "chip-violet",
   };
-  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${map[status] ?? "bg-muted"}`}>{status}</span>;
+  return <span className={`chip-status ${map[status] ?? "chip-mute"}`}>{status}</span>;
 }
 
 export function DataTable({ columns, rows }: { columns: string[]; rows: (ReactNode[])[] }) {
   return (
-    <Card className="p-0 overflow-hidden">
+    <div className="admin-card p-0 overflow-hidden">
       <div className="overflow-x-auto scrollbar-hide">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr className="text-left">{columns.map((c) => <th key={c} className="p-3 font-medium text-xs uppercase tracking-wide text-muted-foreground">{c}</th>)}</tr>
+        <table className="w-full text-[13px] tabular-nums">
+          <thead className="bg-muted/40">
+            <tr className="text-left">{columns.map((c) => <th key={c} className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/80 border-b border-border/70">{c}</th>)}</tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
-              <tr><td colSpan={columns.length} className="p-10 text-center text-muted-foreground text-sm">Aucune donnée</td></tr>
+              <tr><td colSpan={columns.length} className="px-3 py-8 text-center text-muted-foreground text-[13px]">Aucune donnée</td></tr>
             ) : rows.map((r, i) => (
-              <tr key={i} className="border-t hover:bg-muted/30 transition-colors">
-                {r.map((c, j) => <td key={j} className="p-3">{c}</td>)}
+              <tr key={i} className="border-t border-border/50 hover:bg-muted/40 transition-colors">
+                {r.map((c, j) => <td key={j} className="px-3 py-2 align-middle">{c}</td>)}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </Card>
+    </div>
   );
 }
 
 export function FilterChip({ label, active, onClick }: { label: string; active?: boolean; onClick?: () => void }) {
   return (
     <button onClick={onClick}
-      className={`text-xs px-3 py-1.5 rounded-full border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:bg-muted"}`}>
+      className={`text-[11px] font-medium px-2.5 py-1 rounded-md border transition-colors ${active ? "bg-primary/10 text-primary border-primary/40" : "bg-card hover:bg-muted border-border/70 text-foreground/75"}`}>
       {label}
     </button>
   );
