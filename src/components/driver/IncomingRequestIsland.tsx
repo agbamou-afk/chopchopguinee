@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, Clock, X, Check } from "lucide-react";
+import { MapPin, Navigation, Clock, X, Check, ShieldCheck } from "lucide-react";
 import { formatGNF } from "@/lib/format";
 import type { IncomingRequest } from "./IncomingRequestPopup";
 import {
@@ -9,6 +9,7 @@ import {
   unlockDriverSounds,
 } from "@/lib/sound/driverSounds";
 import { useLowDataMode } from "@/hooks/useLowDataMode";
+import { Analytics } from "@/lib/analytics/AnalyticsService";
 
 function vibrate(pattern: number | number[]) {
   try {
@@ -48,6 +49,11 @@ export function IncomingRequestIsland({
     if (!request) return;
     setRemaining(timeoutSec);
     setInteracted(false);
+    try {
+      Analytics.track("driver.trust_message_viewed" as any, {
+        metadata: { surface: "incoming_request", rideId: request.id },
+      });
+    } catch {}
     if (vibratedRef.current !== request.id) {
       vibratedRef.current = request.id;
       vibrate([300, 100, 300, 100, 500]);
@@ -129,9 +135,9 @@ export function IncomingRequestIsland({
                 <span className="inline-flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-primary">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full rounded-full bg-primary/60 animate-ping" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                   </span>
-                  Nouvelle course
+                  Nouvelle course · client vérifié
                 </span>
                 <div
                   className={`flex items-center gap-1 px-2 py-1 rounded-full font-semibold tabular-nums text-[11px] ${
@@ -173,6 +179,11 @@ export function IncomingRequestIsland({
                   <span className="opacity-50">·</span>
                   <span>{request.eta}</span>
                 </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground px-1">
+                <ShieldCheck className="w-3 h-3 text-success" aria-hidden />
+                Gain crédité automatiquement à votre CHOPWallet
               </div>
 
               <div className="flex gap-2 pt-0.5">
