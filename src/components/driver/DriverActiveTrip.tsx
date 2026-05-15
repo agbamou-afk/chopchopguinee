@@ -8,6 +8,7 @@ import {
 } from "@/lib/maps";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
 import { useRideLifecycleNotifications } from "@/hooks/useRideLifecycleNotifications";
+import { useConnectionRestored } from "@/hooks/useConnectionRestored";
 import { useTurnByTurn } from "@/hooks/useTurnByTurn";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { NavigationHud } from "./NavigationHud";
@@ -46,6 +47,7 @@ interface Props {
 export function DriverActiveTrip({ rideId, onClose }: Props) {
   const { ride, loading } = useRideRealtime(rideId);
   useRideLifecycleNotifications(ride, "driver");
+  useConnectionRestored({ context: "driver-active-trip" });
   const { user } = useAuth();
   const runtimeMode = getRuntimeMode(user?.email);
   const mapRef = useRef<ChopMapHandle>(null);

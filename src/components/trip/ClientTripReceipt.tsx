@@ -38,7 +38,7 @@ export function ClientTripReceipt({
     setSubmitting(false);
     if (error) { toast({ title: "Note non enregistrée", description: error.message }); return; }
     setSubmitted(true);
-    try { Analytics.track("client.ride.completed" as any, { metadata: { rideId, rated: score } }); } catch {}
+    try { Analytics.track("client.ride.completed", { metadata: { rideId, rated: score } }); } catch {}
     toast({ title: "Merci !", description: "Votre note a été enregistrée." });
   };
 
