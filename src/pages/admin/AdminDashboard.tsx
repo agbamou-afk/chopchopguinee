@@ -1,9 +1,8 @@
-import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { ModulePage } from "@/components/admin/ModulePage";
 import {
   Users, Bike, Store, Coins, Wallet, ClipboardList, UtensilsCrossed,
-  ShoppingBag, AlertTriangle, RefreshCw, Activity, CheckCircle2, ArrowRight,
+  ShoppingBag, AlertTriangle, RefreshCw, Activity, ArrowRight,
 } from "lucide-react";
 
 const KPIS = [
