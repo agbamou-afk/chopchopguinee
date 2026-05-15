@@ -1,14 +1,16 @@
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Marker } from "react-map-gl";
 import { formatGNF } from "@/lib/format";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { Users, Timer, BellRing, Flame, Navigation, Plus, Minus, LocateFixed } from "lucide-react";
 import { IncomingRequestIsland } from "@/components/driver/IncomingRequestIsland";
 import { MenuButton } from "@/components/ui/MainMenuSheet";
-import { ChopMap, HeatmapLayer, type ChopMapHandle } from "@/components/map";
+import { ChopMap, HeatmapLayer, DriverPositionMarker, type ChopMapHandle } from "@/components/map";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { useLowDataMode } from "@/hooks/useLowDataMode";
 import { toast } from "sonner";
+import { unlockDriverSounds } from "@/lib/sound/driverSounds";
 
 const CONAKRY_HOTSPOTS = [
   { name: "Kaloum", lng: -13.7100, lat: 9.5100, weight: 1.0 },
@@ -24,6 +26,7 @@ export function DriverOrdersView() {
     useDriverSession();
   const mapRef = useRef<ChopMapHandle>(null);
   const geo = useGeolocation();
+  const { low } = useLowDataMode();
   const displayedRequest = !activeTrip ? current ?? queue[0] ?? null : null;
   const offerTimeoutSec = currentExpiresAt
     ? Math.max(1, Math.ceil((new Date(currentExpiresAt).getTime() - Date.now()) / 1000))
@@ -33,12 +36,14 @@ export function DriverOrdersView() {
   const top = sorted[0];
 
   const zoomBy = (delta: number) => {
+    unlockDriverSounds();
     const m = mapRef.current?.getMap();
     if (!m) return;
     const z = m.getZoom();
     m.easeTo({ zoom: z + delta, duration: 250 });
   };
   const recenter = () => {
+    unlockDriverSounds();
     const m = mapRef.current?.getMap();
     if (!m) return;
     if (geo.position) {
@@ -57,6 +62,13 @@ export function DriverOrdersView() {
     }
   };
 
+  // Unlock audio on first user pointer (browsers require user gesture).
+  useEffect(() => {
+    const handler = () => unlockDriverSounds();
+    window.addEventListener("pointerdown", handler, { once: true });
+    return () => window.removeEventListener("pointerdown", handler);
+  }, []);
+
   return (
     <div className="fixed inset-0 overflow-hidden">
       {/* Full-bleed map background */}
@@ -72,24 +84,41 @@ export function DriverOrdersView() {
           />
           {sorted.slice(0, 3).map((h, i) => (
             <Marker key={h.name} longitude={h.lng} latitude={h.lat} anchor="bottom">
-              <div className="flex flex-col items-center pointer-events-none">
+              <div className="relative flex flex-col items-center pointer-events-none">
                 <div
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold shadow-card ${
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide ${
                     i === 0
-                      ? "bg-destructive text-destructive-foreground"
-                      : "bg-card text-foreground border border-border"
+                      ? "bg-destructive/90 text-destructive-foreground"
+                      : "bg-card/90 text-foreground border border-border/60"
                   }`}
                 >
                   {h.name}
                 </div>
-                <div
-                  className={`w-2 h-2 rounded-full mt-0.5 ${
-                    i === 0 ? "bg-destructive" : "bg-foreground/60"
-                  }`}
-                />
+                <div className="relative mt-0.5">
+                  {!low && (
+                    <span
+                      className={`absolute inset-0 rounded-full animate-ping ${
+                        i === 0 ? "bg-destructive/50" : "bg-foreground/30"
+                      }`}
+                      style={{ animationDuration: `${2.4 + i * 0.6}s` }}
+                    />
+                  )}
+                  <div
+                    className={`relative w-2 h-2 rounded-full ${
+                      i === 0 ? "bg-destructive" : "bg-foreground/70"
+                    }`}
+                  />
+                </div>
               </div>
             </Marker>
           ))}
+          {geo.position && (
+            <DriverPositionMarker
+              lng={geo.position.lng}
+              lat={geo.position.lat}
+              heading={0}
+            />
+          )}
         </ChopMap>
         {/* Soft top + bottom fades so floating UI stays legible over the map */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/85 to-transparent" />
@@ -135,7 +164,7 @@ export function DriverOrdersView() {
             <h1 className="text-lg font-extrabold text-foreground leading-tight">Mes courses</h1>
             <p className="text-[11px] text-muted-foreground">Zones actives · Conakry</p>
           </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-card/90 backdrop-blur px-2.5 py-1 border border-border/60 shadow-card">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-card/85 backdrop-blur px-2.5 py-1 border border-border/60">
             <span className="relative flex h-1.5 w-1.5">
               <span
                 className={`absolute inline-flex h-full w-full rounded-full ${
@@ -149,7 +178,7 @@ export function DriverOrdersView() {
               />
             </span>
             <Timer className="w-3 h-3 text-foreground" />
-            <span className="text-[11px] font-semibold text-foreground">
+            <span className="text-[11px] font-medium text-foreground">
               {isOnline ? "En ligne" : "Hors ligne"}
             </span>
           </div>

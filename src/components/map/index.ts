@@ -1,6 +1,7 @@
 export { ChopMap, type ChopMapHandle } from './ChopMap';
 export { MapMarker } from './MapMarker';
 export { DriverMarker } from './DriverMarker';
+export { DriverPositionMarker } from './DriverPositionMarker';
 export { DriverCluster } from './DriverCluster';
 export { RoutePolyline } from './RoutePolyline';
 export { PinSet } from './PinSet';
