@@ -40,6 +40,8 @@ export function IncomingRequestIsland({
   timeoutSec = 20,
 }: Props) {
   const [remaining, setRemaining] = useState(timeoutSec);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [interacted, setInteracted] = useState(false);
   const vibratedRef = useRef<string | null>(null);
   const soundedRef = useRef<string | null>(null);
   const { low } = useLowDataMode();
