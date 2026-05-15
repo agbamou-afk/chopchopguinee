@@ -196,10 +196,10 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         {/* Online toggle — 3 states: Hors ligne / Recherche / En course */}
         {(() => {
           const label = !isOnline
-            ? toggling ? "Activation…" : "Hors ligne — appuyez pour commencer"
+            ? toggling ? "Activation…" : "Hors ligne — appuyez pour démarrer"
             : searching
-              ? "Recherche de courses"
-              : "En ligne — course en cours";
+              ? "En ligne · à l'écoute des courses"
+              : "En course — concentrez-vous sur la conduite";
           const tone = !isOnline
             ? "bg-card border border-border text-foreground shadow-card"
             : searching
