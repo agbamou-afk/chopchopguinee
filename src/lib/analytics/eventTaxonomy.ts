@@ -111,6 +111,15 @@ export const EVENTS = {
   "driver.trust_message_viewed": "driver",
   "receipt.viewed": "session",
 
+  // --- CHOPPay merchant QR ---
+  "qr.payment_sheet_opened": "wallet",
+  "qr.payment_confirmed": "wallet",
+  "qr.payment_cancelled": "wallet",
+  "qr.payment_failed": "wallet",
+  "qr.scan_invalid": "wallet",
+  "merchant.qr_viewed": "wallet",
+  "receipt.qr_payment_viewed": "wallet",
+
   // --- Maps / routing / location (Day 6) ---
   "map.loaded": "map",
   "map.load.failed": "map",
