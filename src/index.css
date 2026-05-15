@@ -211,11 +211,11 @@
 
   .gradient-wallet {
     background:
-      radial-gradient(140% 110% at 12% 0%, hsl(152 70% 50% / 0.92) 0%, hsl(158 60% 28%) 48%, hsl(168 60% 14%) 100%);
+      radial-gradient(135% 100% at 12% 0%, hsl(162 55% 42% / 0.95) 0%, hsl(160 55% 22%) 50%, hsl(168 60% 12%) 100%);
   }
   /* Back-compat alias — prefer .gradient-wallet */
   .gradient-wallet-premium { background:
-    radial-gradient(140% 110% at 12% 0%, hsl(152 70% 50% / 0.92) 0%, hsl(158 60% 28%) 48%, hsl(168 60% 14%) 100%); }
+    radial-gradient(135% 100% at 12% 0%, hsl(162 55% 42% / 0.95) 0%, hsl(160 55% 22%) 50%, hsl(168 60% 12%) 100%); }
 
   .surface-warm { background: var(--gradient-ambient); }
 
