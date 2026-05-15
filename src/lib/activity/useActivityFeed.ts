@@ -50,6 +50,13 @@ function txnToActivity(tx: WalletTransaction, walletId: string): ActivityItem | 
       kind = isIncoming ? "transfer_in" : "merchant_payment";
       title = isIncoming ? "Paiement reçu" : "Paiement CHOPPay";
       badge = "choppay";
+      // Description shape from ChopPaySheet: "Paiement CHOPPay · {merchant}".
+      // Surface the merchant name as the subtitle so the timeline reads as a
+      // proper merchant payment row instead of a raw description.
+      if (!isIncoming && desc.includes("·")) {
+        const tail = desc.split("·").slice(1).join("·").trim();
+        if (tail) subtitle = tail;
+      }
       break;
     case "transfer":
       kind = isIncoming ? "transfer_in" : "transfer_out";
@@ -61,7 +68,8 @@ function txnToActivity(tx: WalletTransaction, walletId: string): ActivityItem | 
       break;
     case "payout":
       kind = "payout";
-      title = "Versement chauffeur";
+      title = isIncoming ? "Versement chauffeur reçu" : "Versement chauffeur";
+      subtitle = subtitle ?? "Crédité sur CHOPWallet";
       break;
     case "capture":
     case "release":
