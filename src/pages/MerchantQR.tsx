@@ -44,7 +44,8 @@ type Payment = {
 };
 
 export default function MerchantQR() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, ready } = useAuth();
+  const authLoading = !ready;
   const navigate = useNavigate();
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [loading, setLoading] = useState(true);
