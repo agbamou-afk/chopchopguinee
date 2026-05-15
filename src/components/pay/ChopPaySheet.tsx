@@ -11,6 +11,8 @@ import {
   Receipt,
   Store,
   Radio,
+  MapPin,
+  BadgeCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet } from "@/hooks/useWallet";
@@ -38,6 +40,11 @@ interface Props {
 
 type Step = "loading" | "confirm" | "processing" | "success" | "error";
 
+function merchantInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).slice(0, 2);
+  return parts.map((p) => p[0]?.toUpperCase() ?? "").join("") || "M";
+}
+
 /**
  * CHOPPay payment sheet — opens after a successful merchant-QR scan.
  * Calm, single-purpose surface: merchant identity + amount + one CTA.
@@ -49,6 +56,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
   const [step, setStep] = useState<Step>("loading");
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<{ ref: string; tx_id: string; at: string } | null>(null);
+  const [balanceAfter, setBalanceAfter] = useState<number | null>(null);
 
   const amountFromQr = payload?.amount ?? 0;
   const fixedAmount = amountFromQr > 0;
@@ -70,6 +78,9 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
 
     let active = true;
     Analytics.track("qr.payment_sheet_opened", {
+      metadata: { merchant_id: payload.merchantId, prefilled: !!payload.amount },
+    });
+    Analytics.track("qr.scan_success", {
       metadata: { merchant_id: payload.merchantId, prefilled: !!payload.amount },
     });
     Analytics.track("ride.trust_message_viewed", { metadata: { surface: "choppay_sheet" } });
@@ -134,16 +145,30 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
     }
     const tx = data as { id: string; reference: string; created_at: string };
     setReceipt({ ref: tx.reference, tx_id: tx.id, at: tx.created_at });
+    const projected = Math.max(0, available - amount);
+    setBalanceAfter(projected);
     setStep("success");
     refresh();
     Analytics.track("qr.payment_confirmed", {
       metadata: { merchant_id: merchant.id, amount, tx_id: tx.id },
     });
+    Analytics.track("merchant.payment_completed", {
+      metadata: { merchant_id: merchant.id, amount, tx_id: tx.id, category: merchant.category ?? null },
+    });
+    Analytics.track("wallet.balance_updated_after_payment", {
+      metadata: { delta: -amount, balance_after: projected },
+    });
     Analytics.track("receipt.qr_payment_viewed", {
       metadata: { merchant_id: merchant.id, amount },
     });
+    Analytics.track("merchant.receipt_viewed", {
+      metadata: { merchant_id: merchant.id, amount, tx_id: tx.id },
+    });
     try {
-      toast.success("Paiement confirmé", { description: merchant.name });
+      toast.success("Paiement CHOPPay confirmé", {
+        description: `${merchant.name} · disponible dans CHOPWallet`,
+        duration: 3500,
+      });
     } catch {}
   };
 
@@ -217,21 +242,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
             {(step === "confirm" || step === "processing") && merchant && (
               <div className="px-5 pt-5 pb-6 space-y-5">
                 {/* Merchant identity */}
-                <div className="rounded-2xl border border-border/60 bg-muted/30 p-4 flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Store className="w-5 h-5 text-primary" aria-hidden />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-base font-semibold text-foreground leading-tight truncate">
-                      {merchant.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {[merchant.category, merchant.address ?? merchant.city]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  </div>
-                </div>
+                <MerchantIdentityCard merchant={merchant} />
 
                 {/* Amount */}
                 <div className="text-center">
@@ -281,7 +292,11 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
                 </div>
 
                 {/* Trust cues */}
-                <TrustCues cues={["choppay", "verified", "live"]} compact className="justify-center" />
+                <TrustCues
+                  cues={["choppay", "merchant_verified", "instant_credit"]}
+                  compact
+                  className="justify-center"
+                />
 
                 {/* CTAs */}
                 <div className="space-y-2 pt-1">
@@ -320,6 +335,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
                 amount={amount}
                 reference={receipt.ref}
                 at={receipt.at}
+                balanceAfter={balanceAfter ?? Math.max(0, available - amount)}
                 onClose={onClose}
               />
             )}
@@ -335,51 +351,100 @@ function ChopPaySuccess({
   amount,
   reference,
   at,
+  balanceAfter,
   onClose,
 }: {
   merchant: Merchant;
   amount: number;
   reference: string;
   at: string;
+  balanceAfter: number;
   onClose: () => void;
 }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="px-6 pt-6 pb-7 flex flex-col items-center text-center"
+      className="px-6 pt-7 pb-7 flex flex-col items-center text-center"
     >
       <motion.div
-        initial={{ scale: 0.6, opacity: 0 }}
+        initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="w-16 h-16 rounded-full bg-success/10 ring-4 ring-success/15 flex items-center justify-center mb-3"
+        transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+        className="w-14 h-14 rounded-full bg-success/10 ring-[3px] ring-success/15 flex items-center justify-center mb-3"
       >
-        <CheckCircle2 className="w-8 h-8 text-success" />
+        <CheckCircle2 className="w-7 h-7 text-success" />
       </motion.div>
-      <p className="text-lg font-bold text-foreground">Paiement confirmé</p>
-      <p className="text-xs text-muted-foreground mt-0.5">{merchant.name}</p>
+      <p className="text-base font-semibold text-foreground">Paiement CHOPPay confirmé</p>
+      <p className="text-xs text-muted-foreground mt-0.5">à {merchant.name}</p>
 
-      <p className="mt-5 text-3xl font-bold text-foreground tracking-tight">
+      <p className="mt-4 text-[28px] font-bold text-foreground tracking-tight tabular-nums">
         − {formatGNF(amount)}
       </p>
-      <p className="text-[11px] text-muted-foreground mt-1">Débité de votre CHOPWallet</p>
+      <p className="text-[11px] text-muted-foreground mt-1">
+        Nouveau solde CHOPWallet · <span className="font-semibold text-foreground tabular-nums">{formatGNF(balanceAfter)}</span>
+      </p>
 
-      <div className="w-full mt-5 rounded-2xl border border-border/60 bg-muted/30 p-3 text-left space-y-1.5">
+      <div className="w-full mt-5 rounded-2xl border border-border/60 bg-muted/25 p-3 text-left space-y-1.5">
         <ReceiptRow icon={Receipt} label="Référence" value={reference} mono />
         <ReceiptRow icon={Store} label="Marchand" value={merchant.name} />
         <ReceiptRow icon={Radio} label="Date" value={formatReceiptDate(at)} />
         <ReceiptRow icon={ShieldCheck} label="Statut" value="Confirmé · CHOPPay" tone="success" />
       </div>
 
-      <div className="mt-4">
+      <p className="mt-4 text-[11px] text-muted-foreground">
+        Disponible dans CHOPWallet · historique synchronisé
+      </p>
+
+      <div className="mt-3">
         <SecuredByChopPay />
       </div>
 
-      <Button className="w-full h-12 mt-5 gradient-primary" onClick={onClose}>
-        Terminé
-      </Button>
+      <div className="w-full mt-5 space-y-2">
+        <Button className="w-full h-12 gradient-primary" onClick={onClose}>
+          Voir dans CHOPWallet
+        </Button>
+      </div>
     </motion.div>
+  );
+}
+
+function MerchantIdentityCard({ merchant }: { merchant: Merchant }) {
+  const initials = merchantInitials(merchant.name);
+  const verified = merchant.status === "active";
+  const subtitle = [merchant.category, merchant.address ?? merchant.city]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <div className="rounded-2xl border border-border/60 bg-muted/30 p-4 flex items-start gap-3">
+      <div
+        className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shrink-0 shadow-soft"
+        aria-hidden
+      >
+        <span className="text-sm font-bold text-primary-foreground tracking-wide">
+          {initials}
+        </span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <p className="text-base font-semibold text-foreground leading-tight truncate">
+            {merchant.name}
+          </p>
+          {verified && (
+            <BadgeCheck className="w-4 h-4 text-primary shrink-0" aria-label="Marchand vérifié" />
+          )}
+        </div>
+        {subtitle && (
+          <p className="text-xs text-muted-foreground truncate mt-0.5">{subtitle}</p>
+        )}
+        {(merchant.address || merchant.city) && (
+          <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5 inline-flex items-center gap-1">
+            <MapPin className="w-3 h-3" aria-hidden />
+            {merchant.address ?? merchant.city}
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
