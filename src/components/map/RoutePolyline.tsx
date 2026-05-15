@@ -4,10 +4,11 @@ import { decodePolyline } from '@/lib/maps/geo';
 
 export type RouteState = 'active' | 'approach' | 'completed';
 
+// Warmer, CHOP-native route palette — emerald → saffron → graphite.
 const COLOR: Record<RouteState, string> = {
-  active: 'hsl(138, 64%, 42%)',
-  approach: 'hsl(45, 90%, 50%)',
-  completed: 'hsl(0, 0%, 55%)',
+  active:    'hsl(146, 70%, 34%)',
+  approach:  'hsl(38, 92%, 52%)',
+  completed: 'hsl(30, 8%, 50%)',
 };
 
 export function RoutePolyline({
@@ -29,14 +30,15 @@ export function RoutePolyline({
   const dash = state === 'approach' ? [2, 2] : undefined;
   return (
     <Source id={id} type="geojson" data={geojson}>
-      <Layer id={`${id}-casing`} type="line" paint={{ 'line-color': '#ffffff', 'line-width': 8, 'line-opacity': 0.9 }} layout={{ 'line-cap': 'round', 'line-join': 'round' }} />
+      {/* Soft cream casing for a branded, infrastructural feel */}
+      <Layer id={`${id}-casing`} type="line" paint={{ 'line-color': 'hsl(36, 35%, 97%)', 'line-width': 9, 'line-opacity': 0.95 }} layout={{ 'line-cap': 'round', 'line-join': 'round' }} />
       <Layer
         id={`${id}-line`}
         type="line"
         paint={{
           'line-color': color,
-          'line-width': 5,
-          'line-opacity': state === 'completed' ? 0.6 : (animated ? 0.95 : 1),
+          'line-width': 4.5,
+          'line-opacity': state === 'completed' ? 0.55 : (animated ? 0.92 : 1),
           ...(dash ? { 'line-dasharray': dash } : {}),
         }}
         layout={{ 'line-cap': 'round', 'line-join': 'round' }}

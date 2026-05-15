@@ -5,20 +5,21 @@ export type MarkerVariant =
 export type MarkerState = 'online' | 'offline' | 'busy' | 'unavailable';
 
 export function markerColor(variant: MarkerVariant, state: MarkerState = 'online'): string {
-  if (state === 'offline') return 'hsl(0 0% 60%)';
-  if (state === 'unavailable') return 'hsl(0 0% 45%)';
-  if (state === 'busy') return 'hsl(38 95% 52%)';
+  // Warm graphite + saffron states for a CHOP-native, infrastructural feel.
+  if (state === 'offline')     return 'hsl(30 8% 55%)';
+  if (state === 'unavailable') return 'hsl(30 6% 38%)';
+  if (state === 'busy')        return 'hsl(28 92% 52%)';
   switch (variant) {
-    case 'moto':    return 'hsl(138 64% 39%)';
-    case 'toktok':  return 'hsl(45 90% 55%)';
-    case 'food':    return 'hsl(8 78% 55%)';
-    case 'livraison': return 'hsl(28 85% 52%)';
-    case 'wallet':  return 'hsl(38 95% 52%)';
-    case 'marche':  return 'hsl(142 55% 38%)';
-    case 'marketplace_pickup': return 'hsl(170 55% 40%)';
-    case 'user_pickup':        return 'hsl(152 60% 38%)';
-    case 'pickup':  return 'hsl(138 64% 39%)';
-    case 'dropoff': return 'hsl(2 75% 56%)';
+    case 'moto':               return 'hsl(146 70% 32%)';
+    case 'toktok':             return 'hsl(38 92% 52%)';
+    case 'food':               return 'hsl(10 76% 56%)';
+    case 'livraison':          return 'hsl(26 84% 52%)';
+    case 'wallet':             return 'hsl(38 92% 52%)';
+    case 'marche':             return 'hsl(150 60% 34%)';
+    case 'marketplace_pickup': return 'hsl(168 50% 36%)';
+    case 'user_pickup':        return 'hsl(150 64% 32%)';
+    case 'pickup':             return 'hsl(146 70% 32%)';
+    case 'dropoff':            return 'hsl(10 76% 54%)';
   }
 }
 
