@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/button";
 import { ClientTripReceipt } from "./ClientTripReceipt";
 import { formatGNF } from "@/lib/format";
 import { ChopMap } from "@/components/map/ChopMap";
+import phaseSearching from "@/assets/demo/phase-searching.png";
+import phaseFound from "@/assets/demo/phase-found.png";
+import phaseEnroute from "@/assets/demo/phase-enroute.png";
+import phaseArrived from "@/assets/demo/phase-arrived.png";
+import phaseInProgress from "@/assets/demo/phase-in-progress.png";
 
 type Phase =
   | "searching"
@@ -34,6 +39,14 @@ const PHASE_COPY: Record<Phase, string> = {
   arrived: "Chauffeur arrivé au point de prise en charge",
   in_progress: "Course en cours",
   completed: "Course terminée",
+};
+
+const PHASE_ART: Record<Exclude<Phase, "completed">, string> = {
+  searching: phaseSearching,
+  found: phaseFound,
+  enroute: phaseEnroute,
+  arrived: phaseArrived,
+  in_progress: phaseInProgress,
 };
 
 /**
@@ -98,6 +111,25 @@ export function DemoRideWalkthrough({ mode, fare, rideId, onClose }: Props) {
         <ChopMap className="absolute inset-0" interactive={false} />
         <div className="absolute inset-0 bg-background/10 pointer-events-none" />
         <PhaseBadge phase={phase} />
+
+        {/* Phase illustration */}
+        <div className="absolute inset-x-0 top-20 bottom-32 flex items-center justify-center pointer-events-none">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={phase}
+              src={PHASE_ART[phase as Exclude<Phase, "completed">]}
+              alt=""
+              width={512}
+              height={512}
+              loading="lazy"
+              initial={{ opacity: 0, y: 12, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="w-56 h-56 object-contain drop-shadow-xl"
+            />
+          </AnimatePresence>
+        </div>
 
         {/* Pickup confirmation overlay */}
         <AnimatePresence>
