@@ -22,6 +22,7 @@ import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { TrustCues, SecuredByChopPay } from "@/components/trust/TrustCues";
 import type { ChopPayPayload } from "@/lib/choppay";
 import { toast } from "sonner";
+import { notifications as notif } from "@/lib/notifications";
 
 type Merchant = {
   id: string;
@@ -170,6 +171,16 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
         duration: 3500,
       });
     } catch {}
+    // Drop a calm in-app notification linking back to the activity timeline
+    // so the user can find the merchant payment receipt without scrolling.
+    try {
+      notif.push({
+        kind: "wallet",
+        title: "Paiement CHOPPay confirmé",
+        body: `${merchant.name} · ${formatGNF(amount)}`,
+        link: "/?tab=orders",
+      });
+    } catch { /* noop */ }
   };
 
   return (
