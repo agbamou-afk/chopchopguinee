@@ -57,7 +57,8 @@ export function ClientTripReceipt({
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-background flex flex-col"
     >
-      <div className="gradient-primary px-4 py-6 text-primary-foreground text-center shrink-0">
+      <div className="gradient-money-deep px-4 py-6 text-primary-foreground text-center shrink-0 relative">
+        <div className="pointer-events-none absolute inset-x-10 top-0 h-px saffron-seam" aria-hidden />
         <motion.div
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -101,7 +102,7 @@ export function ClientTripReceipt({
           </motion.div>
         )}
 
-        <section className="rounded-xl border border-border bg-card p-4 space-y-2">
+        <section className="rounded-xl surface-money p-4 space-y-2">
           <h3 className="text-sm font-semibold mb-1">Reçu</h3>
           <Row icon={Banknote} label="Tarif de la course" value={formatGNF(fareGnf)} />
           <Row icon={Receipt} label="Mode de paiement" value={paymentLabel} muted />

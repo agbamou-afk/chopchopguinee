@@ -97,7 +97,8 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[60] bg-background flex flex-col"
     >
-      <div className="gradient-primary px-4 py-3 flex items-center justify-between">
+      <div className="gradient-money-deep px-4 py-3 flex items-center justify-between relative">
+        <div className="pointer-events-none absolute inset-x-10 top-0 h-px saffron-seam" aria-hidden />
         <button
           onClick={onClose}
           className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition"
@@ -116,12 +117,12 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
         {!error && (
           <>
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <div className="relative w-64 h-64 rounded-2xl border-2 border-primary shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]">
+              <div className="relative w-64 h-64 rounded-2xl border-2 border-secondary shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]">
                 <motion.div
                   initial={{ y: 0 }}
                   animate={{ y: [0, 240, 0] }}
                   transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute left-2 right-2 h-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
+                  className="absolute left-2 right-2 h-0.5 bg-secondary shadow-[0_0_10px_hsl(var(--secondary))]"
                 />
               </div>
             </div>

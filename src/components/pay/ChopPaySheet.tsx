@@ -199,8 +199,9 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
             exit={{ y: 60, opacity: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-card w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-elevated overflow-hidden"
+            className="bg-card w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-elevated overflow-hidden relative"
           >
+            <div className="pointer-events-none absolute inset-x-8 top-0 h-px saffron-seam" aria-hidden />
             {/* Header */}
             <div className="relative px-5 pt-5 pb-3 border-b border-border/50">
               <div className="flex items-center justify-between">
@@ -282,17 +283,17 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
                   )}
                 </div>
 
-                {/* Wallet line */}
-                <div className="rounded-2xl border border-border/60 bg-card p-3 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-secondary/20 flex items-center justify-center">
-                    <Wallet className="w-4 h-4 text-foreground" aria-hidden />
+                {/* Wallet line — money surface */}
+                <div className="rounded-2xl surface-money p-3 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/12 ring-1 ring-primary/20 flex items-center justify-center">
+                    <Wallet className="w-4 h-4 text-primary" aria-hidden />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-medium text-foreground leading-tight">
                       CHOPWallet
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Solde disponible · {formatGNF(available)}
+                    <p className="text-[11px] text-muted-foreground tabular-nums">
+                      Solde disponible · <span className="font-semibold text-foreground">{formatGNF(available)}</span>
                     </p>
                   </div>
                   {insufficient && (
@@ -396,7 +397,7 @@ function ChopPaySuccess({
         Nouveau solde CHOPWallet · <span className="font-semibold text-foreground tabular-nums">{formatGNF(balanceAfter)}</span>
       </p>
 
-      <div className="w-full mt-5 rounded-2xl border border-border/60 bg-muted/25 p-3 text-left space-y-1.5">
+      <div className="w-full mt-5 rounded-2xl surface-money p-3 text-left space-y-1.5">
         <ReceiptRow icon={Receipt} label="Référence" value={reference} mono />
         <ReceiptRow icon={Store} label="Marchand" value={merchant.name} />
         <ReceiptRow icon={Radio} label="Date" value={formatReceiptDate(at)} />

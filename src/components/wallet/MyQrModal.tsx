@@ -103,17 +103,23 @@ export function MyQrModal({ open, onClose, userId, phone }: MyQrModalProps) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-card w-full max-w-sm rounded-3xl shadow-elevated p-6"
+            className="bg-card w-full max-w-sm rounded-3xl shadow-elevated p-6 relative overflow-hidden"
           >
+            <div className="pointer-events-none absolute inset-x-10 top-0 h-px saffron-seam" aria-hidden />
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-foreground">Mon QR CHOP CHOP</h2>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground leading-none">CHOPWallet</p>
+                <h2 className="text-lg font-bold text-foreground leading-tight mt-0.5">Mon QR CHOP CHOP</h2>
+              </div>
               <button onClick={onClose} className="p-1 hover:bg-muted rounded-lg">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex justify-center bg-white p-4 rounded-2xl mb-4">
-              <QRCodeSVG value={qrPayload} size={200} level="M" includeMargin={false} />
+            <div className="surface-money p-4 rounded-2xl mb-4 flex justify-center">
+              <div className="bg-white p-3 rounded-xl ring-1 ring-border/50">
+                <QRCodeSVG value={qrPayload} size={200} level="M" includeMargin={false} />
+              </div>
             </div>
 
             <div className="text-center mb-4">
@@ -131,7 +137,7 @@ export function MyQrModal({ open, onClose, userId, phone }: MyQrModalProps) {
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-primary/10 border border-primary/20 rounded-2xl p-4"
+                className="surface-money rounded-2xl p-4"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <ShieldCheck className="w-4 h-4 text-primary" />

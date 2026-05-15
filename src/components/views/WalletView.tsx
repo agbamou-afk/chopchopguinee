@@ -425,14 +425,12 @@ export function WalletView() {
                   className={`bg-card rounded-2xl p-4 shadow-card flex items-center gap-3 ${dimmed ? "opacity-70" : ""}`}
                 >
                   <div
-                    className={`p-2 rounded-xl ${
-                      dir === "in" ? "bg-success/10" : "bg-destructive/10"
-                    }`}
+                    className={`p-2 rounded-xl ${dir === "in" ? "tx-halo-in" : "tx-halo-out"}`}
                   >
                     {dir === "in" ? (
-                      <ArrowDownLeft className="w-5 h-5 text-success" />
+                      <ArrowDownLeft className="w-5 h-5" />
                     ) : (
-                      <ArrowUpRight className="w-5 h-5 text-destructive" />
+                      <ArrowUpRight className="w-5 h-5" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -454,8 +452,8 @@ export function WalletView() {
                   <div className="text-right">
                     <p
                       className={`font-semibold text-sm ${
-                        dimmed ? "text-muted-foreground line-through" : dir === "in" ? "text-success" : "text-foreground"
-                      }`}
+                        dimmed ? "text-muted-foreground line-through" : dir === "in" ? "text-[hsl(160_55%_28%)]" : "text-foreground"
+                      } tabular-nums`}
                     >
                       {dir === "in" ? "+" : "-"}
                       {formatMoney(tx.amount_gnf)}

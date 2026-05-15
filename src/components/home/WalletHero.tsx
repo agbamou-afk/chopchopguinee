@@ -31,8 +31,8 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
       <div className="pointer-events-none absolute -bottom-20 -left-14 w-48 h-48 rounded-full bg-secondary/20 blur-3xl" aria-hidden />
       {/* Inner light edge */}
       <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-inset ring-white/10" aria-hidden />
-      {/* Saffron flow seam */}
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary/55 to-transparent" aria-hidden />
+      {/* Saffron flow seam — gold hairline anchoring the money surface */}
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
 
       <div className="flex items-start justify-between mb-4 relative">
         <div className="flex items-center gap-2.5 opacity-95">
@@ -41,7 +41,7 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
           </span>
           <div className="leading-tight">
             <p className="text-[10.5px] uppercase tracking-[0.22em] font-semibold">CHOPWallet</p>
-            <p className="text-[10px] opacity-70 tracking-wide">CHOPPay · GNF</p>
+            <p className="text-[10px] opacity-75 tracking-wide">Compte CHOP CHOP · GNF</p>
           </div>
         </div>
         <button
@@ -65,15 +65,19 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
             {shown ? formatGNF(balance) : "••••••••"}
           </h2>
         )}
-        <p className="text-[11px] opacity-80 mt-2">
-          {frozen
-            ? status === "frozen"
+        {frozen ? (
+          <p className="text-[11px] opacity-85 mt-2 inline-flex items-center gap-1.5">
+            <Lock className="w-3 h-3" />
+            {status === "frozen"
               ? "CHOPWallet gelé — contactez le support"
-              : "CHOPWallet restreint — vérifiez votre profil"
-            : zero
-            ? "Rechargez pour payer avec CHOPPay"
-            : "Disponible · CHOPPay sécurisé"}
-        </p>
+              : "CHOPWallet restreint — vérifiez votre profil"}
+          </p>
+        ) : (
+          <span className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/14 ring-1 ring-white/18 text-[10.5px] font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_6px_hsl(var(--secondary)/0.7)]" />
+            {zero ? "Prêt à recharger" : "Disponible · sécurisé par CHOPPay"}
+          </span>
+        )}
       </div>
 
       <div className="flex gap-2 relative">
