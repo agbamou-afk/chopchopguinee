@@ -16,7 +16,7 @@ export function markerColor(variant: MarkerVariant, state: MarkerState = 'online
     case 'wallet':  return 'hsl(38 95% 52%)';
     case 'marche':  return 'hsl(142 55% 38%)';
     case 'marketplace_pickup': return 'hsl(170 55% 40%)';
-    case 'user_pickup':        return 'hsl(220 70% 55%)';
+    case 'user_pickup':        return 'hsl(152 60% 38%)';
     case 'pickup':  return 'hsl(138 64% 39%)';
     case 'dropoff': return 'hsl(2 75% 56%)';
   }

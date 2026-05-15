@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import Map, { type MapRef, NavigationControl, type ViewState } from 'react-map-gl';
+import Map, { type MapRef, type ViewState } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapConfig } from '@/lib/maps';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,10 +34,34 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
     flyTo: (lng, lat, zoom = 14) => mapRef.current?.flyTo({ center: [lng, lat], zoom, essential: true }),
     fitBounds: (b, padding = 60) => mapRef.current?.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding, duration: 600 }),
   }));
-  if (error) return <div className={`flex items-center justify-center bg-muted text-muted-foreground text-sm rounded-2xl ${className ?? ''}`}>Carte indisponible</div>;
+  if (error) {
+    return (
+      <div className={`relative chop-map-fallback rounded-2xl ${className ?? ''}`}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+            Carte CHOP CHOP
+          </span>
+          <span className="text-xs text-muted-foreground mt-1">Mode hors-ligne</span>
+        </div>
+      </div>
+    );
+  }
   if (!config) return <Skeleton className={`rounded-2xl ${className ?? ''}`} />;
+  if (low) {
+    return (
+      <div className={`relative chop-map-fallback rounded-2xl ${className ?? ''}`}>
+        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+            Données réduites · carte simplifiée
+          </span>
+        </div>
+        {/* Children (markers) still render so positions can be communicated symbolically */}
+      </div>
+    );
+  }
   return (
-    <div className={className}>
+    <div className={`relative chop-map-skin ${className ?? ''}`}>
       <Map ref={mapRef} mapboxAccessToken={config.mapboxToken} mapStyle={config.styleUrl}
         initialViewState={{
           longitude: initialView?.longitude ?? config.defaultCenter.lng,
@@ -61,9 +85,10 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
           try { Analytics.track('map.load.failed' as any, { metadata: { reason: String((e as any)?.error?.message ?? 'unknown') } }); } catch {}
         }}
         reuseMaps>
-        {interactive && <NavigationControl position="top-right" showCompass={false} />}
         {children}
       </Map>
+      {/* Warm wash overlay — renders above tiles, below markers/UI from parents */}
+      <div className="chop-map-wash" aria-hidden />
     </div>
   );
 });

@@ -198,6 +198,81 @@
   }
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+ * Proprietary CHOP map skin — applied on top of any underlying Mapbox style
+ * via a CSS filter on the canvas plus a warm overlay wash. Tones the map down
+ * into a warm grayscale so brand markers pop without changing the tile source.
+ * ────────────────────────────────────────────────────────────────────────── */
+@layer utilities {
+  .chop-map-skin .mapboxgl-canvas {
+    filter: saturate(0.55) sepia(0.10) contrast(0.96) brightness(1.02);
+  }
+  .chop-map-skin .mapboxgl-ctrl-attrib,
+  .chop-map-skin .mapboxgl-ctrl-logo {
+    opacity: 0.45;
+    transform: scale(0.85);
+    transform-origin: bottom left;
+  }
+  /* Soft warm wash over the entire canvas for the "Conakry warm grayscale" look */
+  .chop-map-skin .chop-map-wash {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(80% 60% at 50% 40%, hsl(45 80% 90% / 0.10), transparent 70%),
+      linear-gradient(180deg, hsl(35 60% 92% / 0.08), hsl(160 30% 88% / 0.06));
+    mix-blend-mode: multiply;
+  }
+  /* Branded mapbox controls (rounded, card-warm) — used wherever the default
+     NavigationControl is rendered. Custom floating controls have their own look. */
+  .chop-map-skin .mapboxgl-ctrl-group {
+    background: hsl(var(--card) / 0.95);
+    border: 1px solid hsl(var(--border) / 0.6);
+    border-radius: 14px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    backdrop-filter: blur(6px);
+  }
+  .chop-map-skin .mapboxgl-ctrl-group button {
+    width: 36px;
+    height: 36px;
+  }
+  .chop-map-skin .mapboxgl-ctrl-group button + button {
+    border-top: 1px solid hsl(var(--border) / 0.5);
+  }
+}
+
+/* Low-data / no-config fallback — stylized warm "city block" pattern that
+ * still reads as a map but never fetches tiles. */
+@layer utilities {
+  .chop-map-fallback {
+    position: relative;
+    background:
+      linear-gradient(180deg, hsl(35 50% 95%) 0%, hsl(150 25% 90%) 100%);
+    overflow: hidden;
+  }
+  .chop-map-fallback::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(hsl(160 25% 70% / 0.18) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(160 25% 70% / 0.18) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(120% 90% at 50% 50%, black 60%, transparent 100%);
+  }
+  .chop-map-fallback::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(60px 24px at 30% 35%, hsl(var(--secondary) / 0.45), transparent 70%),
+      radial-gradient(80px 28px at 65% 60%, hsl(var(--primary) / 0.30), transparent 70%),
+      radial-gradient(50px 18px at 80% 30%, hsl(var(--destructive) / 0.20), transparent 70%);
+    filter: blur(2px);
+  }
+}
+
 @layer utilities {
   /* Hide scrollbars across the app for a premium, native feel */
   .scrollbar-hide::-webkit-scrollbar { display: none; }
