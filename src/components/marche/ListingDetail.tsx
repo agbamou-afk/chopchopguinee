@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Heart, Flag, Phone, MessageCircle, Truck, BadgeCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Flag, Phone, MessageCircle, Truck, BadgeCheck, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { categoryLabel, formatGNF, timeAgo, type SellerKind } from "@/lib/marche";
@@ -8,6 +8,7 @@ import { ReportModal } from "./ReportModal";
 import { ChatThread } from "./ChatThread";
 import { toast } from "@/hooks/use-toast";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { incrementListingMetric, getListingMetrics } from "@/lib/marche/stores";
 
 interface FullListing {
   id: string;
@@ -36,6 +37,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
   const [saved, setSaved] = useState(false);
   const [selfId, setSelfId] = useState<string | null>(null);
   const [openConv, setOpenConv] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<{ views: number; saves: number; messages: number } | null>(null);
   const { requireAuth } = useAuthGuard();
 
   useEffect(() => {
@@ -79,6 +81,19 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
     })();
     return () => {
       mounted = false;
+    };
+  }, [listingId]);
+
+  // Fire a non-blocking view metric + load aggregate counters.
+  useEffect(() => {
+    incrementListingMetric(listingId, "view");
+    let alive = true;
+    (async () => {
+      const m = await getListingMetrics(listingId);
+      if (alive) setMetrics(m);
+    })();
+    return () => {
+      alive = false;
     };
   }, [listingId]);
 
