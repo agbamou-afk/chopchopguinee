@@ -816,6 +816,45 @@ export type Database = {
           },
         ]
       }
+      listing_interests: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["listing_interest_kind"]
+          listing_id: string
+          note: string | null
+          response: string | null
+          seller_id: string
+          state: Database["public"]["Enums"]["listing_interest_state"]
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["listing_interest_kind"]
+          listing_id: string
+          note?: string | null
+          response?: string | null
+          seller_id: string
+          state?: Database["public"]["Enums"]["listing_interest_state"]
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["listing_interest_kind"]
+          listing_id?: string
+          note?: string | null
+          response?: string | null
+          seller_id?: string
+          state?: Database["public"]["Enums"]["listing_interest_state"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listing_metrics: {
         Row: {
           clicks: number
@@ -3057,6 +3096,18 @@ export type Database = {
         | "to_confirm"
         | "reserved"
         | "sold"
+      listing_interest_kind:
+        | "availability"
+        | "delivery"
+        | "reservation"
+        | "offer"
+      listing_interest_state:
+        | "pending"
+        | "available"
+        | "reserved"
+        | "sold"
+        | "responded"
+        | "declined"
       listing_kind: "merchant" | "community" | "service"
       listing_status: "active" | "sold" | "paused" | "removed"
       message_channel: "whatsapp" | "sms" | "inapp"
@@ -3294,6 +3345,20 @@ export const Constants = {
         "to_confirm",
         "reserved",
         "sold",
+      ],
+      listing_interest_kind: [
+        "availability",
+        "delivery",
+        "reservation",
+        "offer",
+      ],
+      listing_interest_state: [
+        "pending",
+        "available",
+        "reserved",
+        "sold",
+        "responded",
+        "declined",
       ],
       listing_kind: ["merchant", "community", "service"],
       listing_status: ["active", "sold", "paused", "removed"],
