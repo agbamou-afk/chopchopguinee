@@ -8,6 +8,7 @@ import {
   listSellerInterests,
   respondInterest,
   INTEREST_KIND_LABEL,
+  INTEREST_STATE_LABEL,
   type ListingInterest,
   type InterestState,
 } from "@/lib/marche/interests";
@@ -146,7 +147,7 @@ export function SellerRequestsSheet({
                     <div key={it.id} className="bg-card/60 rounded-2xl p-3 border border-border/40">
                       <p className="text-sm">{titles[it.listing_id] ?? "Annonce"}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {INTEREST_KIND_LABEL[it.kind]} · {timeAgo(it.updated_at)} · {it.state}
+                        {INTEREST_KIND_LABEL[it.kind]} · {timeAgo(it.updated_at)} · {INTEREST_STATE_LABEL[it.state]}
                       </p>
                     </div>
                   ))}
