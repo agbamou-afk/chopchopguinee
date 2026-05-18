@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, Truck, Flame } from "lucide-react";
+import { MapPin, Truck, Flame, Eye, Heart } from "lucide-react";
 import { formatGNF, timeAgo, type SellerKind } from "@/lib/marche";
 import { SellerBadge } from "./SellerBadge";
 
@@ -15,10 +15,13 @@ export interface ListingCardData {
   created_at: string;
   kind: SellerKind;
   cover_url?: string | null;
+  views?: number;
+  saves?: number;
 }
 
 export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () => void }) {
   const location = [l.neighborhood, l.commune].filter(Boolean).join(", ") || "Conakry";
+  const showMetrics = (l.views ?? 0) > 0 || (l.saves ?? 0) > 0;
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
