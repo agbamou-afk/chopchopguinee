@@ -29,6 +29,7 @@ export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () =>
   const location = [l.neighborhood, l.commune].filter(Boolean).join(", ") || "Conakry";
   const showMetrics = (l.views ?? 0) > 0 || (l.saves ?? 0) > 0;
   const softened = l.availability === "sold" || l.availability === "reserved";
+  const softLabel = l.availability === "sold" ? "Vendu" : l.availability === "reserved" ? "Réservé" : null;
   const complete = isListingComplete({
     photo_count: l.photo_count,
     description: l.description,
@@ -53,18 +54,27 @@ export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () =>
             Aucune photo
           </div>
         )}
-        {l.is_urgent && (
+        {l.is_urgent && !softened && (
           <span className="absolute top-2 left-2 inline-flex items-center gap-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
             <Flame className="w-3 h-3" /> Urgent
           </span>
         )}
-        <div className="absolute top-2 right-2">
-          <AvailabilityChip value={l.availability} compact />
-        </div>
-        {l.delivery_available && (
+        {!softened && (
+          <div className="absolute top-2 right-2">
+            <AvailabilityChip value={l.availability} compact />
+          </div>
+        )}
+        {l.delivery_available && !softened && (
           <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full">
             <Truck className="w-3 h-3" /> Livraison
           </span>
+        )}
+        {softLabel && (
+          <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center">
+            <span className="px-3 py-1 rounded-full bg-background/90 text-foreground text-xs font-semibold border border-border/60 shadow-sm">
+              {softLabel}
+            </span>
+          </div>
         )}
       </div>
       <div className="p-2.5">
