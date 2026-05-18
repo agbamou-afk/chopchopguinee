@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { MapPin, Truck, Flame, Eye, Heart } from "lucide-react";
-import { formatGNF, timeAgo, type SellerKind } from "@/lib/marche";
+import { formatGNF, timeAgo, isListingComplete, type SellerKind, type FulfillmentId } from "@/lib/marche";
 import { SellerBadge } from "./SellerBadge";
+import { AvailabilityChip, CompleteListingChip } from "./TrustChips";
 
 export interface ListingCardData {
   id: string;
@@ -17,16 +18,32 @@ export interface ListingCardData {
   cover_url?: string | null;
   views?: number;
   saves?: number;
+  availability?: string | null;
+  fulfillment_options?: FulfillmentId[] | string[] | null;
+  photo_count?: number | null;
+  condition?: string | null;
+  description?: string | null;
 }
 
 export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () => void }) {
   const location = [l.neighborhood, l.commune].filter(Boolean).join(", ") || "Conakry";
   const showMetrics = (l.views ?? 0) > 0 || (l.saves ?? 0) > 0;
+  const sold = l.availability === "sold";
+  const complete = isListingComplete({
+    photo_count: l.photo_count,
+    description: l.description,
+    condition: l.condition,
+    neighborhood: l.neighborhood,
+    commune: l.commune,
+    price_gnf: l.price_gnf,
+  });
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="text-left bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-elevated transition-shadow"
+      className={`text-left bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-elevated transition-shadow ${
+        sold ? "opacity-70" : ""
+      }`}
     >
       <div className="relative aspect-square bg-muted">
         {l.cover_url ? (
@@ -41,6 +58,9 @@ export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () =>
             <Flame className="w-3 h-3" /> Urgent
           </span>
         )}
+        <div className="absolute top-2 right-2">
+          <AvailabilityChip value={l.availability} compact />
+        </div>
         {l.delivery_available && (
           <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full">
             <Truck className="w-3 h-3" /> Livraison
@@ -63,6 +83,11 @@ export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () =>
           <SellerBadge kind={l.kind} />
           <span className="text-[10px] text-muted-foreground">{timeAgo(l.created_at)}</span>
         </div>
+        {complete && (
+          <div className="mt-1.5">
+            <CompleteListingChip />
+          </div>
+        )}
         {showMetrics && (
           <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
             {(l.views ?? 0) > 0 && (
