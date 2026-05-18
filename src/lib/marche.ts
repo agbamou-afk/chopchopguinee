@@ -76,9 +76,10 @@ export const REPORT_REASONS = [
 
 export const QUICK_REPLIES = [
   "Toujours disponible ?",
-  "Dernier prix ?",
   "Livraison possible ?",
-  "Où êtes-vous situé ?",
+  "Où récupérer ?",
+  "Réserver ?",
+  "Prix final ?",
 ];
 
 export type SellerKind = "merchant" | "community" | "service";
