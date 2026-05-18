@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatThread } from "./ChatThread";
-import { timeAgo } from "@/lib/marche";
+import { timeAgo, availabilityLabel } from "@/lib/marche";
 
 interface Conv {
   id: string;
@@ -10,9 +10,9 @@ interface Conv {
   buyer_id: string;
   seller_id: string;
   last_message_at: string;
-  listing: { title: string } | null;
-  buyer: { full_name: string | null } | null;
-  seller: { full_name: string | null } | null;
+  listing: { title: string; price_gnf: number | null; availability: string | null } | null;
+  buyer: { full_name: string | null; phone: string | null } | null;
+  seller: { full_name: string | null; phone: string | null } | null;
 }
 
 export function InboxView({ onBack }: { onBack: () => void }) {
@@ -28,21 +28,27 @@ export function InboxView({ onBack }: { onBack: () => void }) {
       if (!uid) return;
       const { data } = await supabase
         .from("conversations")
-        .select("id, listing_id, buyer_id, seller_id, last_message_at, listing:marketplace_listings(title)")
+        .select("id, listing_id, buyer_id, seller_id, last_message_at, listing:marketplace_listings(title, price_gnf, availability)")
         .or(`buyer_id.eq.${uid},seller_id.eq.${uid}`)
         .order("last_message_at", { ascending: false });
       const rows = (data ?? []) as unknown as Conv[];
       // fetch peer names in batch
       const peerIds = Array.from(new Set(rows.map((r) => (r.buyer_id === uid ? r.seller_id : r.buyer_id))));
       const { data: profs } = peerIds.length
-        ? await supabase.from("profiles").select("user_id, full_name").in("user_id", peerIds)
-        : { data: [] as { user_id: string; full_name: string | null }[] };
-      const map = new Map((profs ?? []).map((p) => [p.user_id, p.full_name]));
+        ? await supabase.from("profiles").select("user_id, full_name, phone").in("user_id", peerIds)
+        : { data: [] as { user_id: string; full_name: string | null; phone: string | null }[] };
+      const map = new Map((profs ?? []).map((p) => [p.user_id, p]));
       setConvs(
         rows.map((r) => ({
           ...r,
-          buyer: r.buyer_id === uid ? null : { full_name: map.get(r.buyer_id) ?? null },
-          seller: r.seller_id === uid ? null : { full_name: map.get(r.seller_id) ?? null },
+          buyer:
+            r.buyer_id === uid
+              ? null
+              : { full_name: map.get(r.buyer_id)?.full_name ?? null, phone: map.get(r.buyer_id)?.phone ?? null },
+          seller:
+            r.seller_id === uid
+              ? null
+              : { full_name: map.get(r.seller_id)?.full_name ?? null, phone: map.get(r.seller_id)?.phone ?? null },
         }))
       );
     })();
@@ -88,7 +94,10 @@ export function InboxView({ onBack }: { onBack: () => void }) {
           conversationId={open.id}
           selfId={selfId}
           peerName={(open.buyer?.full_name ?? open.seller?.full_name) || "Utilisateur"}
+          peerPhone={open.buyer?.phone ?? open.seller?.phone ?? null}
           listingTitle={open.listing?.title ?? "Annonce"}
+          listingPrice={open.listing?.price_gnf ?? null}
+          listingAvailability={open.listing?.availability ? availabilityLabel(open.listing.availability) : null}
           onBack={() => setOpenId(null)}
         />
       )}
