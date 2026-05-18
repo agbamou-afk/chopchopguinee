@@ -22,6 +22,10 @@ import {
 } from "@/lib/marche/interests";
 import { CalendarCheck, PackageSearch } from "lucide-react";
 
+// Module-level guard so a single listing view counts once per session,
+// even under StrictMode double-mount or quick back/forward navigation.
+const VIEWED_IN_SESSION = new Set<string>();
+
 interface FullListing {
   id: string;
   seller_id: string;
@@ -114,7 +118,10 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
 
   // Fire a non-blocking view metric + load aggregate counters.
   useEffect(() => {
-    incrementListingMetric(listingId, "view");
+    if (!VIEWED_IN_SESSION.has(listingId)) {
+      VIEWED_IN_SESSION.add(listingId);
+      incrementListingMetric(listingId, "view");
+    }
     let alive = true;
     (async () => {
       const m = await getListingMetrics(listingId);
