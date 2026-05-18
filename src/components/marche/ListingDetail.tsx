@@ -134,6 +134,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
       toast({ title: "Erreur", description: error.message });
       return;
     }
+    incrementListingMetric(listing.id, "message");
     setOpenConv(created.id);
   };
 
@@ -291,6 +292,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           conversationId={openConv}
           selfId={selfId}
           peerName={seller?.full_name ?? "Vendeur"}
+          peerPhone={seller?.phone ?? null}
           listingTitle={listing.title}
           onBack={() => setOpenConv(null)}
         />
