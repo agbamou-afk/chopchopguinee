@@ -63,6 +63,16 @@ export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () =>
           <SellerBadge kind={l.kind} />
           <span className="text-[10px] text-muted-foreground">{timeAgo(l.created_at)}</span>
         </div>
+        {showMetrics && (
+          <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+            {(l.views ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-0.5"><Eye className="w-3 h-3" />{l.views}</span>
+            )}
+            {(l.saves ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-0.5"><Heart className="w-3 h-3" />{l.saves}</span>
+            )}
+          </div>
+        )}
       </div>
     </motion.button>
   );
