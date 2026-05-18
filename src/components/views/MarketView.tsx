@@ -55,7 +55,7 @@ export function MarketView({ onBack }: MarketViewProps) {
     let q = supabase
       .from("marketplace_listings")
       .select(
-        "id, title, price_gnf, is_negotiable, is_urgent, delivery_available, neighborhood, commune, created_at, kind, listing_images(url, position)"
+        "id, title, price_gnf, is_negotiable, is_urgent, delivery_available, neighborhood, commune, created_at, kind, availability, fulfillment_options, photo_count, condition, description, listing_images(url, position)"
       )
       .eq("status", "active")
       .limit(60);
@@ -76,6 +76,12 @@ export function MarketView({ onBack }: MarketViewProps) {
       commune: r.commune,
       created_at: r.created_at,
       kind: r.kind,
+      availability: (r as unknown as { availability?: string }).availability ?? null,
+      fulfillment_options:
+        (r as unknown as { fulfillment_options?: string[] }).fulfillment_options ?? null,
+      photo_count: (r as unknown as { photo_count?: number }).photo_count ?? null,
+      condition: (r as unknown as { condition?: string | null }).condition ?? null,
+      description: (r as unknown as { description?: string | null }).description ?? null,
       cover_url:
         r.listing_images?.slice().sort((a, b) => a.position - b.position)[0]?.url ?? null,
     }));
