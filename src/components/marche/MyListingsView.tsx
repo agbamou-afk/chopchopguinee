@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Eye, Heart, MessageSquare, Plus, Store } from "lucide-react";
+import { ArrowLeft, Eye, Heart, MessageSquare, Plus, Store, Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatGNF, timeAgo } from "@/lib/marche";
 import { MarcheEmpty } from "./MarcheEmpty";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Button } from "@/components/ui/button";
 import { getOwnStore, type MerchantStore } from "@/lib/marche/stores";
+import { listSellerInterests } from "@/lib/marche/interests";
+import { SellerRequestsSheet } from "./SellerRequestsSheet";
 
 interface MyListing {
   id: string;
@@ -31,6 +33,10 @@ export function MyListingsView({
   const [items, setItems] = useState<MyListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [store, setStore] = useState<MerchantStore | null>(null);
+  const [sellerId, setSellerId] = useState<string | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [requestsByListing, setRequestsByListing] = useState<Record<string, number>>({});
+  const [requestsOpen, setRequestsOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -42,6 +48,7 @@ export function MyListingsView({
         setLoading(false);
         return;
       }
+      if (alive) setSellerId(uid);
       const own = await getOwnStore(uid);
       if (alive) setStore(own);
       const { data } = await supabase
@@ -86,6 +93,18 @@ export function MyListingsView({
           metrics: metricsMap.get(r.id) ?? { views: 0, saves: 0, messages: 0 },
         })),
       );
+      const interests = await listSellerInterests(uid, 100);
+      if (!alive) return;
+      const perListing: Record<string, number> = {};
+      let pending = 0;
+      for (const i of interests) {
+        if (i.state === "pending") {
+          pending += 1;
+          perListing[i.listing_id] = (perListing[i.listing_id] ?? 0) + 1;
+        }
+      }
+      setPendingCount(pending);
+      setRequestsByListing(perListing);
       setLoading(false);
     })();
     return () => {
@@ -109,6 +128,20 @@ export function MyListingsView({
             <p className="text-[11px] text-muted-foreground">Vendeur communauté</p>
           )}
         </div>
+        {sellerId && (
+          <button
+            onClick={() => setRequestsOpen(true)}
+            aria-label="Demandes"
+            className="relative p-2 rounded-full bg-card border border-border/60"
+          >
+            <Inbox className="w-4 h-4 text-foreground" />
+            {pendingCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center">
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        )}
         <button
           onClick={onOpenStore}
           aria-label="Boutique"
@@ -149,6 +182,11 @@ export function MyListingsView({
                   <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" />{l.metrics.views} vues</span>
                   <span className="inline-flex items-center gap-1"><Heart className="w-3 h-3" />{l.metrics.saves}</span>
                   <span className="inline-flex items-center gap-1"><MessageSquare className="w-3 h-3" />{l.metrics.messages}</span>
+                  {requestsByListing[l.id] > 0 && (
+                    <span className="inline-flex items-center gap-1 text-primary">
+                      <Inbox className="w-3 h-3" />{requestsByListing[l.id]}
+                    </span>
+                  )}
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{timeAgo(l.created_at)} · {l.status}</p>
               </div>
@@ -156,6 +194,13 @@ export function MyListingsView({
           ))
         )}
       </div>
+      {sellerId && (
+        <SellerRequestsSheet
+          open={requestsOpen}
+          onOpenChange={setRequestsOpen}
+          sellerId={sellerId}
+        />
+      )}
     </div>
   );
 }
