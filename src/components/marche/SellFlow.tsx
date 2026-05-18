@@ -186,7 +186,6 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
               <h2 className="font-semibold mb-3">Choisissez une catégorie</h2>
               <div className="grid grid-cols-3 gap-2">
                 {MARCHE_CATEGORIES.map((c) => {
-                  const Icon = c.icon;
                   return (
                     <button
                       key={c.id}
@@ -195,8 +194,8 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
                         category === c.id ? "border-primary bg-primary/5" : "border-border bg-card"
                       }`}
                     >
-                      <div className={`w-10 h-10 rounded-xl ${c.tint} flex items-center justify-center`}>
-                        <Icon className={`w-5 h-5 ${c.fg}`} />
+                      <div className={`w-10 h-10 rounded-xl ${c.tint} flex items-center justify-center overflow-hidden`}>
+                        <img src={c.icon} alt="" className="w-9 h-9 object-contain" loading="lazy" />
                       </div>
                       <span className="text-[11px] text-center leading-tight">{c.label}</span>
                     </button>
