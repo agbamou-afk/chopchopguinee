@@ -232,6 +232,14 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           <span>{location}</span>
         </div>
 
+        {metrics && (metrics.views > 0 || metrics.saves > 0 || metrics.messages > 0) && (
+          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" />{metrics.views} vues</span>
+            <span className="inline-flex items-center gap-1"><Heart className="w-3 h-3" />{metrics.saves} sauvegardes</span>
+            <span className="inline-flex items-center gap-1"><MessageCircle className="w-3 h-3" />{metrics.messages} intéressés</span>
+          </div>
+        )}
+
         {listing.description && (
           <div className="bg-card rounded-2xl p-4 shadow-card">
             <h2 className="font-semibold mb-2">Description</h2>
