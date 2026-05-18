@@ -3,6 +3,7 @@ import { ArrowLeft, MapPin, Heart, Flag, Phone, MessageCircle, Truck, BadgeCheck
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { categoryLabel, formatGNF, timeAgo, isListingComplete, type SellerKind, type FulfillmentId } from "@/lib/marche";
+import { availabilityLabel } from "@/lib/marche";
 import { SellerBadge } from "./SellerBadge";
 import {
   SellerTrustChips,
@@ -429,6 +430,8 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           peerName={seller?.full_name ?? "Vendeur"}
           peerPhone={seller?.phone ?? null}
           listingTitle={listing.title}
+          listingPrice={listing.price_gnf}
+          listingAvailability={listing.availability ? availabilityLabel(listing.availability) : null}
           onBack={() => setOpenConv(null)}
         />
       )}

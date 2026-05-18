@@ -19,6 +19,8 @@ export function ChatThread({
   peerName,
   peerPhone,
   listingTitle,
+  listingPrice,
+  listingAvailability,
   onBack,
 }: {
   conversationId: string;
@@ -26,6 +28,8 @@ export function ChatThread({
   peerName: string;
   peerPhone?: string | null;
   listingTitle: string;
+  listingPrice?: number | null;
+  listingAvailability?: string | null;
   onBack: () => void;
 }) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -86,25 +90,30 @@ export function ChatThread({
         </button>
         <div className="flex-1 min-w-0">
           <p className="font-semibold truncate">{peerName}</p>
-          <p className="text-xs text-muted-foreground truncate">À propos de : {listingTitle}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {listingTitle}
+            {listingPrice ? ` · ${new Intl.NumberFormat("fr-FR").format(listingPrice)} GNF` : ""}
+            {listingAvailability ? ` · ${listingAvailability}` : ""}
+          </p>
         </div>
         {peerPhone && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
+            <a
+              href={`tel:${peerPhone}`}
+              aria-label="Appeler le vendeur"
+              className="p-2 rounded-full hover:bg-muted text-muted-foreground"
+            >
+              <Phone className="w-[18px] h-[18px]" />
+            </a>
             <a
               href={`https://wa.me/${peerPhone.replace(/[^0-9]/g, "")}`}
               target="_blank"
               rel="noreferrer"
-              aria-label="Continuer sur WhatsApp"
-              className="p-2 rounded-full hover:bg-muted text-success"
+              aria-label="Continuer sur WhatsApp (optionnel)"
+              title="WhatsApp (optionnel)"
+              className="p-2 rounded-full hover:bg-muted text-muted-foreground"
             >
-              <MessageCircle className="w-5 h-5" />
-            </a>
-            <a
-              href={`tel:${peerPhone}`}
-              aria-label="Appeler"
-              className="p-2 rounded-full hover:bg-muted text-primary"
-            >
-              <Phone className="w-5 h-5" />
+              <MessageCircle className="w-[18px] h-[18px]" />
             </a>
           </div>
         )}
@@ -120,6 +129,8 @@ export function ChatThread({
             hour: "2-digit",
             minute: "2-digit",
           });
+          const isLastOwn =
+            mine && !msgs.slice(i + 1).some((x) => x.sender_id === selfId);
           return (
             <div key={m.id}>
               {showStamp && (
@@ -134,6 +145,11 @@ export function ChatThread({
                 {m.body}
               </div>
               </div>
+              {isLastOwn && (
+                <p className="text-[10px] text-muted-foreground text-right mt-0.5 mr-1">
+                  Envoyé
+                </p>
+              )}
             </div>
           );
         })}
