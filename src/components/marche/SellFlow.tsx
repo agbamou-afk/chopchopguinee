@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { MARCHE_CATEGORIES } from "@/lib/marche";
+import { MARCHE_CATEGORIES, DESCRIPTION_PROMPTS, CONDITIONS, type ConditionId } from "@/lib/marche";
+import { getOwnStore } from "@/lib/marche/stores";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -36,6 +37,7 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
   const [delivery, setDelivery] = useState(true);
   const [urgent, setUrgent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [condition, setCondition] = useState<ConditionId | "">("");
 
   const addFiles = (fl: FileList | null) => {
     if (!fl) return;
@@ -65,6 +67,8 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
       return;
     }
     const uid = sess.session.user.id;
+    // Auto-attach to owner's store if one exists.
+    const ownStore = await getOwnStore(uid).catch(() => null);
     const parsed = schema.safeParse({
       title,
       description: description || undefined,
@@ -84,7 +88,8 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
       .from("marketplace_listings")
       .insert({
         seller_id: uid,
-        kind: "community",
+        kind: ownStore ? "merchant" : "community",
+        store_id: ownStore?.id ?? null,
         category: parsed.data.category,
         title: parsed.data.title,
         description: parsed.data.description ?? null,
@@ -92,10 +97,11 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
         is_negotiable: priceMode === "negotiable",
         is_urgent: urgent,
         delivery_available: delivery,
+        condition: condition || null,
         neighborhood: parsed.data.neighborhood ?? null,
         commune: parsed.data.commune ?? null,
         landmark: parsed.data.landmark ?? null,
-      })
+      } as never)
       .select("id")
       .single();
     if (error || !listing) {
@@ -251,6 +257,21 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
           {step === 5 && (
             <section className="space-y-2">
               <h2 className="font-semibold">Description</h2>
+              <div className="flex flex-wrap gap-1.5">
+                {DESCRIPTION_PROMPTS.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => {
+                      const tag = `${p} `;
+                      setDescription((d) => (d.includes(p) ? d : `${d}${d ? "\n" : ""}${tag}`));
+                    }}
+                    className="px-2.5 py-1 rounded-full bg-muted text-[11px] text-foreground hover:bg-muted/80"
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
               <Textarea
                 placeholder="Décrivez votre produit (état, marque, accessoires, raison de la vente)…"
                 value={description}
@@ -258,6 +279,23 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
                 onChange={(e) => setDescription(e.target.value)}
                 rows={6}
               />
+              <div className="flex gap-2 flex-wrap pt-1">
+                <span className="text-[11px] text-muted-foreground self-center">État :</span>
+                {CONDITIONS.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCondition(condition === c.id ? "" : c.id)}
+                    className={`px-3 py-1 rounded-full text-[11px] border ${
+                      condition === c.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card border-border text-muted-foreground"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
               <p className="text-xs text-muted-foreground">{description.length}/2000</p>
             </section>
           )}

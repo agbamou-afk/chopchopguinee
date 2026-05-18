@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, Truck, Flame } from "lucide-react";
+import { MapPin, Truck, Flame, Eye, Heart } from "lucide-react";
 import { formatGNF, timeAgo, type SellerKind } from "@/lib/marche";
 import { SellerBadge } from "./SellerBadge";
 
@@ -15,10 +15,13 @@ export interface ListingCardData {
   created_at: string;
   kind: SellerKind;
   cover_url?: string | null;
+  views?: number;
+  saves?: number;
 }
 
 export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () => void }) {
   const location = [l.neighborhood, l.commune].filter(Boolean).join(", ") || "Conakry";
+  const showMetrics = (l.views ?? 0) > 0 || (l.saves ?? 0) > 0;
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
@@ -60,6 +63,16 @@ export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () =>
           <SellerBadge kind={l.kind} />
           <span className="text-[10px] text-muted-foreground">{timeAgo(l.created_at)}</span>
         </div>
+        {showMetrics && (
+          <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+            {(l.views ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-0.5"><Eye className="w-3 h-3" />{l.views}</span>
+            )}
+            {(l.saves ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-0.5"><Heart className="w-3 h-3" />{l.saves}</span>
+            )}
+          </div>
+        )}
       </div>
     </motion.button>
   );

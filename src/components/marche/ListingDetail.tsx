@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Heart, Flag, Phone, MessageCircle, Truck, BadgeCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Flag, Phone, MessageCircle, Truck, BadgeCheck, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { categoryLabel, formatGNF, timeAgo, type SellerKind } from "@/lib/marche";
@@ -8,6 +8,7 @@ import { ReportModal } from "./ReportModal";
 import { ChatThread } from "./ChatThread";
 import { toast } from "@/hooks/use-toast";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { incrementListingMetric, getListingMetrics } from "@/lib/marche/stores";
 
 interface FullListing {
   id: string;
@@ -36,6 +37,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
   const [saved, setSaved] = useState(false);
   const [selfId, setSelfId] = useState<string | null>(null);
   const [openConv, setOpenConv] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<{ views: number; saves: number; messages: number } | null>(null);
   const { requireAuth } = useAuthGuard();
 
   useEffect(() => {
@@ -82,6 +84,19 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
     };
   }, [listingId]);
 
+  // Fire a non-blocking view metric + load aggregate counters.
+  useEffect(() => {
+    incrementListingMetric(listingId, "view");
+    let alive = true;
+    (async () => {
+      const m = await getListingMetrics(listingId);
+      if (alive) setMetrics(m);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [listingId]);
+
   const toggleSave = async () => {
     if (!selfId) { requireAuth(); return; }
     if (saved) {
@@ -119,6 +134,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
       toast({ title: "Erreur", description: error.message });
       return;
     }
+    incrementListingMetric(listing.id, "message");
     setOpenConv(created.id);
   };
 
@@ -217,6 +233,14 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           <span>{location}</span>
         </div>
 
+        {metrics && (metrics.views > 0 || metrics.saves > 0 || metrics.messages > 0) && (
+          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" />{metrics.views} vues</span>
+            <span className="inline-flex items-center gap-1"><Heart className="w-3 h-3" />{metrics.saves} sauvegardes</span>
+            <span className="inline-flex items-center gap-1"><MessageCircle className="w-3 h-3" />{metrics.messages} intéressés</span>
+          </div>
+        )}
+
         {listing.description && (
           <div className="bg-card rounded-2xl p-4 shadow-card">
             <h2 className="font-semibold mb-2">Description</h2>
@@ -268,6 +292,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           conversationId={openConv}
           selfId={selfId}
           peerName={seller?.full_name ?? "Vendeur"}
+          peerPhone={seller?.phone ?? null}
           listingTitle={listing.title}
           onBack={() => setOpenConv(null)}
         />

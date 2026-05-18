@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown, ShoppingBag, Timer } from "lucide-react";
+import { Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown, ShoppingBag, Timer, Store, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryGrid } from "@/components/marche/CategoryGrid";
 import { FeaturedBanners } from "@/components/marche/FeaturedBanners";
@@ -8,6 +8,13 @@ import { ListingCard, type ListingCardData } from "@/components/marche/ListingCa
 import { ListingDetail } from "@/components/marche/ListingDetail";
 import { SellFlow } from "@/components/marche/SellFlow";
 import { InboxView } from "@/components/marche/InboxView";
+import { StoreCard } from "@/components/marche/StoreCard";
+import { StoreProfile } from "@/components/marche/StoreProfile";
+import { StoreOnboardingSheet } from "@/components/marche/StoreOnboardingSheet";
+import { MyListingsView } from "@/components/marche/MyListingsView";
+import { PromotedSlot } from "@/components/marche/PromotedSlot";
+import { MarcheEmpty } from "@/components/marche/MarcheEmpty";
+import { listStores, type MerchantStore } from "@/lib/marche/stores";
 import { categoryLabel } from "@/lib/marche";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
@@ -19,9 +26,9 @@ interface MarketViewProps {
   onBack: () => void;
 }
 
-type Screen = "home" | "detail" | "sell" | "inbox";
+type Screen = "home" | "detail" | "sell" | "inbox" | "store" | "mine";
 type SortKey = "recent" | "price_asc" | "price_desc";
-type Tab = "all" | "saved";
+type Tab = "all" | "saved" | "stores";
 
 interface RawListing extends Omit<ListingCardData, "cover_url"> {
   listing_images?: { url: string; position: number }[];
@@ -30,6 +37,8 @@ interface RawListing extends Omit<ListingCardData, "cover_url"> {
 export function MarketView({ onBack }: MarketViewProps) {
   const [screen, setScreen] = useState<Screen>("home");
   const [activeListing, setActiveListing] = useState<string | null>(null);
+  const [activeStoreId, setActiveStoreId] = useState<string | null>(null);
+  const [storeSheetOpen, setStoreSheetOpen] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [listings, setListings] = useState<ListingCardData[]>([]);
@@ -37,6 +46,8 @@ export function MarketView({ onBack }: MarketViewProps) {
   const [sort, setSort] = useState<SortKey>("recent");
   const [tab, setTab] = useState<Tab>("all");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [stores, setStores] = useState<MerchantStore[]>([]);
+  const [storesLoading, setStoresLoading] = useState(false);
   const { requireAuth } = useAuthGuard();
 
   const load = useCallback(async () => {
@@ -76,6 +87,22 @@ export function MarketView({ onBack }: MarketViewProps) {
     load();
   }, [load]);
 
+  // Load stores when Boutiques tab becomes active or search changes.
+  useEffect(() => {
+    if (tab !== "stores") return;
+    let alive = true;
+    (async () => {
+      setStoresLoading(true);
+      const data = await listStores({ q: search || undefined, limit: 40 });
+      if (!alive) return;
+      setStores(data);
+      setStoresLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [tab, search]);
+
   // Load saved listings for the current user (if signed in)
   useEffect(() => {
     let active = true;
@@ -97,6 +124,31 @@ export function MarketView({ onBack }: MarketViewProps) {
 
   if (screen === "detail" && activeListing) {
     return <ListingDetail listingId={activeListing} onBack={() => setScreen("home")} />;
+  }
+  if (screen === "store" && activeStoreId) {
+    return (
+      <StoreProfile
+        storeId={activeStoreId}
+        onBack={() => setScreen("home")}
+        onOpenListing={(id) => {
+          setActiveListing(id);
+          setScreen("detail");
+        }}
+      />
+    );
+  }
+  if (screen === "mine") {
+    return (
+      <MyListingsView
+        onBack={() => setScreen("home")}
+        onCreate={() => requireAuth(() => setScreen("sell"))}
+        onOpenListing={(id) => {
+          setActiveListing(id);
+          setScreen("detail");
+        }}
+        onOpenStore={() => setStoreSheetOpen(true)}
+      />
+    );
   }
   if (screen === "sell") {
     return (
@@ -124,6 +176,9 @@ export function MarketView({ onBack }: MarketViewProps) {
         onBack={onBack}
         right={
           <div className="flex items-center gap-1">
+            <button onClick={() => requireAuth(() => setScreen("mine"))} aria-label="Mes annonces" className="w-10 h-10 rounded-full bg-card border border-border/60 hover:bg-muted flex items-center justify-center">
+              <ClipboardList className="w-5 h-5 text-foreground" />
+            </button>
             <button onClick={() => requireAuth(() => setScreen("inbox"))} aria-label="Messages" className="w-10 h-10 rounded-full bg-card border border-border/60 hover:bg-muted flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-foreground" />
             </button>
@@ -173,7 +228,15 @@ export function MarketView({ onBack }: MarketViewProps) {
               tab === "all" ? "gradient-wallet text-primary-foreground" : "bg-card border border-border text-muted-foreground"
             }`}
           >
-            Toutes les annonces
+            Annonces
+          </button>
+          <button
+            onClick={() => setTab("stores")}
+            className={`flex-1 py-2.5 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-1.5 ${
+              tab === "stores" ? "gradient-wallet text-primary-foreground" : "bg-card border border-border text-muted-foreground"
+            }`}
+          >
+            <Store className="w-4 h-4" /> Boutiques
           </button>
           <button
             onClick={() => requireAuth(() => setTab("saved"))}
@@ -181,7 +244,7 @@ export function MarketView({ onBack }: MarketViewProps) {
               tab === "saved" ? "gradient-wallet text-primary-foreground" : "bg-card border border-border text-muted-foreground"
             }`}
           >
-            <Heart className="w-4 h-4" /> Sauvegardées
+            <Heart className="w-4 h-4" />
             {savedIds.size > 0 && (
               <span className="text-[10px] bg-card text-foreground rounded-full px-1.5 ml-1">
                 {savedIds.size}
@@ -190,13 +253,45 @@ export function MarketView({ onBack }: MarketViewProps) {
           </button>
         </div>
 
-        <section>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Catégories</h2>
-          <CategoryGrid active={category} onSelect={(id) => setCategory(category === id ? null : id)} />
-        </section>
+        {tab !== "stores" && (
+          <section>
+            <h2 className="text-sm font-semibold text-foreground mb-3">Catégories</h2>
+            <CategoryGrid active={category} onSelect={(id) => setCategory(category === id ? null : id)} />
+          </section>
+        )}
 
-        <FeaturedBanners />
+        {tab !== "stores" && <FeaturedBanners />}
 
+        {tab === "stores" && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-foreground">Boutiques</h2>
+              <button onClick={() => requireAuth(() => setStoreSheetOpen(true))} className="text-xs text-primary font-medium">
+                + Créer la mienne
+              </button>
+            </div>
+            {storesLoading ? (
+              <LoadingState variant="cards" rows={3} />
+            ) : stores.length === 0 ? (
+              <MarcheEmpty variant="stores" />
+            ) : (
+              <div className="space-y-2">
+                {stores.map((s) => (
+                  <StoreCard
+                    key={s.id}
+                    store={s}
+                    onClick={() => {
+                      setActiveStoreId(s.id);
+                      setScreen("store");
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {tab !== "stores" && (
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-foreground">
@@ -259,12 +354,20 @@ export function MarketView({ onBack }: MarketViewProps) {
             />
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              {visible.map((l) => (
-                <ListingCard key={l.id} l={l} onClick={() => { setActiveListing(l.id); setScreen("detail"); }} />
-              ))}
+              {visible.flatMap((l, idx) => {
+                const card = (
+                  <ListingCard key={l.id} l={l} onClick={() => { setActiveListing(l.id); setScreen("detail"); }} />
+                );
+                // Interleave a reserved promoted slot every ~6 cards (not active ad).
+                if (tab === "all" && idx > 0 && (idx + 1) % 6 === 0) {
+                  return [card, <PromotedSlot key={`promo-${idx}`} />];
+                }
+                return [card];
+              })}
             </div>
           )}
         </section>
+        )}
       </div>
 
       {/* FAB Sell */}
@@ -275,6 +378,8 @@ export function MarketView({ onBack }: MarketViewProps) {
       >
         <Plus className="w-5 h-5" /> Vendre
       </motion.button>
+
+      <StoreOnboardingSheet open={storeSheetOpen} onOpenChange={setStoreSheetOpen} />
     </div>
   );
 }
