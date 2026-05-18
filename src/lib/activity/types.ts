@@ -17,6 +17,7 @@ export type ActivityKind =
   | "payout"
   | "food_order"
   | "market_order"
+  | "market_interest"
   | "support";
 
 export type ActivityStatus = "completed" | "pending" | "failed" | "cancelled" | "in_progress";

@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet, type WalletTransaction } from "@/hooks/useWallet";
 import type { ActivityItem, ActivityKind, ActivityStatus } from "./types";
+import {
+  listBuyerInterests,
+  INTEREST_KIND_LABEL,
+  INTEREST_STATE_LABEL,
+  type ListingInterest,
+} from "@/lib/marche/interests";
 
 type RideRow = {
   id: string;
@@ -133,6 +139,7 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
   const { wallet, transactions, userId, loading: walletLoading, refresh: refreshWallet } = useWallet(partyType);
   const [rides, setRides] = useState<RideRow[]>([]);
   const [loadingRides, setLoadingRides] = useState(true);
+  const [interests, setInterests] = useState<ListingInterest[]>([]);
 
   const loadRides = useCallback(async (uid: string | null) => {
     if (!uid) {
@@ -156,6 +163,22 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
     loadRides(userId);
   }, [userId, loadRides]);
 
+  useEffect(() => {
+    if (!userId || partyType !== "client") {
+      setInterests([]);
+      return;
+    }
+    let alive = true;
+    listBuyerInterests(userId, 30)
+      .then((rows) => {
+        if (alive) setInterests(rows);
+      })
+      .catch(() => alive && setInterests([]));
+    return () => {
+      alive = false;
+    };
+  }, [userId, partyType]);
+
   const items = useMemo<ActivityItem[]>(() => {
     const wId = wallet?.id ?? "";
     const txItems = wId
@@ -164,10 +187,20 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
           .filter((x): x is ActivityItem => x !== null)
       : [];
     const rideItems = rides.map((r) => rideToActivity(r, partyType));
-    return [...txItems, ...rideItems].sort(
+    const interestItems: ActivityItem[] = interests.map((i) => ({
+      id: `interest:${i.id}`,
+      kind: "market_interest",
+      title: INTEREST_KIND_LABEL[i.kind],
+      subtitle: INTEREST_STATE_LABEL[i.state],
+      status: i.state === "pending" ? "pending" : i.state === "declined" ? "cancelled" : "completed",
+      occurredAt: i.updated_at ?? i.created_at,
+      entityId: i.listing_id,
+      meta: { interest: i },
+    }));
+    return [...txItems, ...rideItems, ...interestItems].sort(
       (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
     );
-  }, [wallet?.id, transactions, rides, partyType]);
+  }, [wallet?.id, transactions, rides, interests, partyType]);
 
   const refresh = useCallback(() => {
     refreshWallet();

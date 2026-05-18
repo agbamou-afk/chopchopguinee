@@ -28,7 +28,7 @@ export interface ListingCardData {
 export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () => void }) {
   const location = [l.neighborhood, l.commune].filter(Boolean).join(", ") || "Conakry";
   const showMetrics = (l.views ?? 0) > 0 || (l.saves ?? 0) > 0;
-  const sold = l.availability === "sold";
+  const softened = l.availability === "sold" || l.availability === "reserved";
   const complete = isListingComplete({
     photo_count: l.photo_count,
     description: l.description,
@@ -42,7 +42,7 @@ export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () =>
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={`text-left bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-elevated transition-shadow ${
-        sold ? "opacity-70" : ""
+        softened ? "opacity-70" : ""
       }`}
     >
       <div className="relative aspect-square bg-muted">
