@@ -89,33 +89,50 @@ export function ChatThread({
           <p className="text-xs text-muted-foreground truncate">À propos de : {listingTitle}</p>
         </div>
         {peerPhone && (
-          <a
-            href={`https://wa.me/${peerPhone.replace(/[^0-9]/g, "")}`}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Continuer sur WhatsApp"
-            className="p-2 rounded-full bg-success/10 text-success"
-          >
-            <MessageCircle className="w-5 h-5" />
-          </a>
-        )}
-        {peerPhone && (
-          <a href={`tel:${peerPhone}`} aria-label="Appeler" className="p-2 rounded-full bg-primary/10 text-primary">
-            <Phone className="w-5 h-5" />
-          </a>
+          <div className="flex items-center gap-1">
+            <a
+              href={`https://wa.me/${peerPhone.replace(/[^0-9]/g, "")}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Continuer sur WhatsApp"
+              className="p-2 rounded-full hover:bg-muted text-success"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </a>
+            <a
+              href={`tel:${peerPhone}`}
+              aria-label="Appeler"
+              className="p-2 rounded-full hover:bg-muted text-primary"
+            >
+              <Phone className="w-5 h-5" />
+            </a>
+          </div>
         )}
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {msgs.map((m) => {
+        {msgs.map((m, i) => {
           const mine = m.sender_id === selfId;
+          const prev = msgs[i - 1];
+          const showStamp =
+            !prev ||
+            new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() > 5 * 60 * 1000;
+          const stamp = new Date(m.created_at).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
           return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+            <div key={m.id}>
+              {showStamp && (
+                <p className="text-[10px] text-muted-foreground text-center my-2">{stamp}</p>
+              )}
+              <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${
                   mine ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"
                 }`}
               >
                 {m.body}
+              </div>
               </div>
             </div>
           );
