@@ -15,6 +15,12 @@ import { ChatThread } from "./ChatThread";
 import { toast } from "@/hooks/use-toast";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { incrementListingMetric, getListingMetrics, getStoreById, type MerchantStore } from "@/lib/marche/stores";
+import {
+  createInterest,
+  countInterestsByListing,
+  type InterestKind,
+} from "@/lib/marche/interests";
+import { CalendarCheck, PackageSearch } from "lucide-react";
 
 interface FullListing {
   id: string;
@@ -49,6 +55,11 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
   const [openConv, setOpenConv] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<{ views: number; saves: number; messages: number } | null>(null);
   const [store, setStore] = useState<MerchantStore | null>(null);
+  const [interestCounts, setInterestCounts] = useState<{ total: number; pending: number }>({
+    total: 0,
+    pending: 0,
+  });
+  const [askedKinds, setAskedKinds] = useState<Set<InterestKind>>(new Set());
   const { requireAuth } = useAuthGuard();
 
   useEffect(() => {
@@ -108,6 +119,8 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
     (async () => {
       const m = await getListingMetrics(listingId);
       if (alive) setMetrics(m);
+      const c = await countInterestsByListing([listingId]);
+      if (alive) setInterestCounts(c.get(listingId) ?? { total: 0, pending: 0 });
     })();
     return () => {
       alive = false;
@@ -155,11 +168,30 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
     setOpenConv(created.id);
   };
 
-  const requestDelivery = () => {
-    toast({
-      title: "Livraison CHOP CHOP",
-      description: "Le vendeur sera notifié. Un livreur viendra chercher l'article.",
-    });
+  const sendInterest = async (kind: InterestKind, successMsg: string) => {
+    if (!listing) return;
+    if (!selfId) { requireAuth(); return; }
+    if (selfId === listing.seller_id) {
+      toast({ title: "Votre annonce", description: "Action réservée aux acheteurs." });
+      return;
+    }
+    if (askedKinds.has(kind)) {
+      toast({ title: "Déjà envoyé", description: "Le vendeur a été notifié." });
+      return;
+    }
+    try {
+      await createInterest({
+        listingId: listing.id,
+        buyerId: selfId,
+        sellerId: listing.seller_id,
+        kind,
+      });
+      setAskedKinds((s) => new Set(s).add(kind));
+      setInterestCounts((c) => ({ total: c.total + 1, pending: c.pending + 1 }));
+      toast({ title: successMsg, description: "Le vendeur sera notifié." });
+    } catch (e) {
+      toast({ title: "Erreur", description: (e as Error).message });
+    }
   };
 
   if (!listing)
@@ -275,6 +307,19 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           </div>
         )}
 
+        {interestCounts.total > 0 && (
+          <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+            <span className="px-2 py-0.5 rounded-full bg-muted">
+              {interestCounts.total} {interestCounts.total > 1 ? "personnes intéressées" : "personne intéressée"}
+            </span>
+            {interestCounts.pending > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-muted">
+                {interestCounts.pending} demande{interestCounts.pending > 1 ? "s" : ""} en attente
+              </span>
+            )}
+          </div>
+        )}
+
         {listing.description && (
           <div className="bg-card rounded-2xl p-4 shadow-card">
             <h2 className="font-semibold mb-2">Description</h2>
@@ -330,10 +375,42 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
             </Button>
           </a>
         )}
-        {listing.delivery_available && (
-          <Button onClick={requestDelivery} variant="secondary" className="w-full">
-            <Truck className="w-4 h-4 mr-1" /> Faire livrer
-          </Button>
+
+        {/* Phase 3 — calm interest pipeline */}
+        {selfId !== listing.seller_id && (
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => sendInterest("availability", "Disponibilité demandée")}
+              disabled={askedKinds.has("availability")}
+            >
+              <PackageSearch className="w-4 h-4 mr-1" />
+              {askedKinds.has("availability") ? "Demandé" : "Disponibilité"}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => sendInterest("delivery", "Livraison demandée")}
+              disabled={askedKinds.has("delivery")}
+            >
+              <Truck className="w-4 h-4 mr-1" />
+              {askedKinds.has("delivery") ? "Demandé" : "Livraison"}
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full col-span-2 text-muted-foreground"
+              onClick={() => sendInterest("reservation", "Réservation demandée")}
+              disabled={askedKinds.has("reservation") || listing.availability === "reserved" || listing.availability === "sold"}
+            >
+              <CalendarCheck className="w-4 h-4 mr-1" />
+              {listing.availability === "reserved"
+                ? "Déjà réservé"
+                : askedKinds.has("reservation")
+                  ? "Réservation envoyée"
+                  : "Demander à réserver"}
+            </Button>
+          </div>
         )}
       </div>
 
