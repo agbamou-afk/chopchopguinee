@@ -1,46 +1,43 @@
-import {
-  Smartphone,
-  Cpu,
-  Car,
-  Home,
-  Sofa,
-  Wrench,
-  Shirt,
-  Sparkles,
-  Briefcase,
-  HardHat,
-  ShoppingBasket,
-  Pill,
-  Baby,
-  Laptop,
-  Trophy,
-  type LucideIcon,
-} from "lucide-react";
+import phonesIcon from "@/assets/icons/marche/phones.png";
+import electronicsIcon from "@/assets/icons/marche/electronics.png";
+import vehiclesIcon from "@/assets/icons/marche/vehicles.png";
+import realEstateIcon from "@/assets/icons/marche/real_estate.png";
+import homeIcon from "@/assets/icons/marche/home.png";
+import toolsIcon from "@/assets/icons/marche/tools.png";
+import fashionIcon from "@/assets/icons/marche/fashion.png";
+import beautyIcon from "@/assets/icons/marche/beauty.png";
+import servicesIcon from "@/assets/icons/marche/services.png";
+import constructionIcon from "@/assets/icons/marche/construction.png";
+import foodMarketIcon from "@/assets/icons/marche/food_market.png";
+import pharmacyIcon from "@/assets/icons/marche/pharmacy.png";
+import babyIcon from "@/assets/icons/marche/baby.png";
+import computingIcon from "@/assets/icons/marche/computing.png";
+import sportsIcon from "@/assets/icons/marche/sports.png";
 
 export type MarcheCategory = {
   id: string;
   label: string;
-  icon: LucideIcon;
-  tint: string; // tailwind bg class
-  fg: string; // tailwind text class
+  icon: string; // PNG asset (Kinetic Utility icon family)
+  tint: string; // tailwind bg class (kept for chip backdrops)
+  fg: string; // legacy tailwind text class (unused for PNG icons)
 };
 
 export const MARCHE_CATEGORIES: MarcheCategory[] = [
-  { id: "phones", label: "Téléphones", icon: Smartphone, tint: "bg-emerald-50", fg: "text-emerald-600" },
-  { id: "electronics", label: "Électronique", icon: Cpu, tint: "bg-sky-50", fg: "text-sky-600" },
-  { id: "vehicles", label: "Véhicules", icon: Car, tint: "bg-amber-50", fg: "text-amber-600" },
-  { id: "real_estate", label: "Immobilier", icon: Home, tint: "bg-rose-50", fg: "text-rose-600" },
-  { id: "home", label: "Maison", icon: Sofa, tint: "bg-violet-50", fg: "text-violet-600" },
-  { id: "tools", label: "Outils", icon: Wrench, tint: "bg-stone-100", fg: "text-stone-700" },
-  { id: "fashion", label: "Mode", icon: Shirt, tint: "bg-pink-50", fg: "text-pink-600" },
-  { id: "beauty", label: "Beauté", icon: Sparkles, tint: "bg-fuchsia-50", fg: "text-fuchsia-600" },
-  { id: "services", label: "Services", icon: Briefcase, tint: "bg-teal-50", fg: "text-teal-600" },
-  { id: "construction", label: "Construction", icon: HardHat, tint: "bg-yellow-50", fg: "text-yellow-700" },
-  { id: "food_market", label: "Marché alimentaire", icon: ShoppingBasket, tint: "bg-lime-50", fg: "text-lime-700" },
-  { id: "pharmacy", label: "Pharmacie", icon: Pill, tint: "bg-red-50", fg: "text-red-600" },
-  { id: "baby", label: "Bébé", icon: Baby, tint: "bg-orange-50", fg: "text-orange-600" },
-  { id: "computing", label: "Informatique", icon: Laptop, tint: "bg-indigo-50", fg: "text-indigo-600" },
-  { id: "sports", label: "Sports", icon: Trophy, tint: "bg-cyan-50", fg: "text-cyan-600" },
+  { id: "phones", label: "Téléphones", icon: phonesIcon, tint: "bg-muted", fg: "" },
+  { id: "electronics", label: "Électronique", icon: electronicsIcon, tint: "bg-muted", fg: "" },
+  { id: "vehicles", label: "Véhicules", icon: vehiclesIcon, tint: "bg-muted", fg: "" },
+  { id: "real_estate", label: "Immobilier", icon: realEstateIcon, tint: "bg-muted", fg: "" },
+  { id: "home", label: "Maison", icon: homeIcon, tint: "bg-muted", fg: "" },
+  { id: "tools", label: "Outils", icon: toolsIcon, tint: "bg-muted", fg: "" },
+  { id: "fashion", label: "Mode", icon: fashionIcon, tint: "bg-muted", fg: "" },
+  { id: "beauty", label: "Beauté", icon: beautyIcon, tint: "bg-muted", fg: "" },
+  { id: "services", label: "Services", icon: servicesIcon, tint: "bg-muted", fg: "" },
+  { id: "construction", label: "Construction", icon: constructionIcon, tint: "bg-muted", fg: "" },
+  { id: "food_market", label: "Marché alimentaire", icon: foodMarketIcon, tint: "bg-muted", fg: "" },
+  { id: "pharmacy", label: "Pharmacie", icon: pharmacyIcon, tint: "bg-muted", fg: "" },
+  { id: "baby", label: "Bébé", icon: babyIcon, tint: "bg-muted", fg: "" },
+  { id: "computing", label: "Informatique", icon: computingIcon, tint: "bg-muted", fg: "" },
+  { id: "sports", label: "Sports", icon: sportsIcon, tint: "bg-muted", fg: "" },
 ];
 
 export const categoryLabel = (id: string) =>

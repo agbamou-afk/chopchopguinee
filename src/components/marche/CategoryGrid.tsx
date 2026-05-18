@@ -11,7 +11,6 @@ export function CategoryGrid({
   return (
     <div className="grid grid-cols-4 gap-3">
       {MARCHE_CATEGORIES.map((c) => {
-        const Icon = c.icon;
         const isActive = active === c.id;
         return (
           <motion.button
@@ -22,8 +21,8 @@ export function CategoryGrid({
               isActive ? "ring-2 ring-primary" : ""
             }`}
           >
-            <div className={`w-12 h-12 rounded-2xl ${c.tint} flex items-center justify-center shadow-card`}>
-              <Icon className={`w-5 h-5 ${c.fg}`} />
+            <div className={`w-12 h-12 rounded-2xl ${c.tint} flex items-center justify-center shadow-card overflow-hidden`}>
+              <img src={c.icon} alt="" className="w-11 h-11 object-contain" loading="lazy" />
             </div>
             <span className="text-[10px] font-medium text-foreground text-center leading-tight">
               {c.label}
