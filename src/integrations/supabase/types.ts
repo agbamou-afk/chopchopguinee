@@ -1010,18 +1010,21 @@ export type Database = {
       }
       marketplace_listings: {
         Row: {
+          availability: Database["public"]["Enums"]["listing_availability"]
           category: string
           commune: string | null
           condition: string | null
           created_at: string
           delivery_available: boolean
           description: string | null
+          fulfillment_options: string[]
           id: string
           is_negotiable: boolean
           is_urgent: boolean
           kind: Database["public"]["Enums"]["listing_kind"]
           landmark: string | null
           neighborhood: string | null
+          photo_count: number
           price_gnf: number | null
           promoted: boolean
           seller_id: string
@@ -1033,18 +1036,21 @@ export type Database = {
           view_count: number
         }
         Insert: {
+          availability?: Database["public"]["Enums"]["listing_availability"]
           category: string
           commune?: string | null
           condition?: string | null
           created_at?: string
           delivery_available?: boolean
           description?: string | null
+          fulfillment_options?: string[]
           id?: string
           is_negotiable?: boolean
           is_urgent?: boolean
           kind?: Database["public"]["Enums"]["listing_kind"]
           landmark?: string | null
           neighborhood?: string | null
+          photo_count?: number
           price_gnf?: number | null
           promoted?: boolean
           seller_id: string
@@ -1056,18 +1062,21 @@ export type Database = {
           view_count?: number
         }
         Update: {
+          availability?: Database["public"]["Enums"]["listing_availability"]
           category?: string
           commune?: string | null
           condition?: string | null
           created_at?: string
           delivery_available?: boolean
           description?: string | null
+          fulfillment_options?: string[]
           id?: string
           is_negotiable?: boolean
           is_urgent?: boolean
           kind?: Database["public"]["Enums"]["listing_kind"]
           landmark?: string | null
           neighborhood?: string | null
+          photo_count?: number
           price_gnf?: number | null
           promoted?: boolean
           seller_id?: string
@@ -3042,6 +3051,12 @@ export type Database = {
         | "fraud"
         | "growth"
         | "recommendation"
+      listing_availability:
+        | "available"
+        | "limited"
+        | "to_confirm"
+        | "reserved"
+        | "sold"
       listing_kind: "merchant" | "community" | "service"
       listing_status: "active" | "sold" | "paused" | "removed"
       message_channel: "whatsapp" | "sms" | "inapp"
@@ -3272,6 +3287,13 @@ export const Constants = {
         "fraud",
         "growth",
         "recommendation",
+      ],
+      listing_availability: [
+        "available",
+        "limited",
+        "to_confirm",
+        "reserved",
+        "sold",
       ],
       listing_kind: ["merchant", "community", "service"],
       listing_status: ["active", "sold", "paused", "removed"],

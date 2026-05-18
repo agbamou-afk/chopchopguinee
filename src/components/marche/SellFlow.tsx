@@ -7,7 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { MARCHE_CATEGORIES, DESCRIPTION_PROMPTS, CONDITIONS, type ConditionId } from "@/lib/marche";
+import {
+  MARCHE_CATEGORIES,
+  DESCRIPTION_PROMPTS,
+  CONDITIONS,
+  AVAILABILITIES,
+  FULFILLMENT_OPTIONS,
+  DISTRICTS,
+  type ConditionId,
+  type AvailabilityId,
+  type FulfillmentId,
+} from "@/lib/marche";
 import { getOwnStore } from "@/lib/marche/stores";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -38,6 +48,16 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
   const [urgent, setUrgent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [condition, setCondition] = useState<ConditionId | "">("");
+  const [availability, setAvailability] = useState<AvailabilityId>("to_confirm");
+  const [fulfillment, setFulfillment] = useState<FulfillmentId[]>(["to_confirm"]);
+
+  const toggleFulfillment = (id: FulfillmentId) => {
+    setFulfillment((cur) => {
+      const has = cur.includes(id);
+      const next = has ? cur.filter((x) => x !== id) : [...cur.filter((x) => x !== "to_confirm"), id];
+      return next.length === 0 ? ["to_confirm"] : next;
+    });
+  };
 
   const addFiles = (fl: FileList | null) => {
     if (!fl) return;
@@ -97,6 +117,8 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
         is_negotiable: priceMode === "negotiable",
         is_urgent: urgent,
         delivery_available: delivery,
+        availability,
+        fulfillment_options: fulfillment,
         condition: condition || null,
         neighborhood: parsed.data.neighborhood ?? null,
         commune: parsed.data.commune ?? null,
@@ -303,13 +325,69 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
             <section className="space-y-3">
               <h2 className="font-semibold">Localisation</h2>
               <Input placeholder="Quartier (ex : Kipé)" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
-              <Input placeholder="Commune (ex : Ratoma)" value={commune} onChange={(e) => setCommune(e.target.value)} />
+              <div className="flex flex-wrap gap-1.5">
+                {DISTRICTS.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setCommune(commune === d ? "" : d)}
+                    className={`px-3 py-1 rounded-full text-[11px] border ${
+                      commune === d
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card border-border text-muted-foreground"
+                    }`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
               <Input placeholder="Repère (ex : près de la pharmacie)" value={landmark} onChange={(e) => setLandmark(e.target.value)} />
             </section>
           )}
           {step === 7 && (
             <section className="space-y-3">
               <h2 className="font-semibold">Options</h2>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5">Disponibilité</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {AVAILABILITIES.filter((a) => a.id !== "sold").map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setAvailability(a.id)}
+                      className={`px-3 py-1 rounded-full text-[11px] border ${
+                        availability === a.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border text-muted-foreground"
+                      }`}
+                    >
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5">Options de remise</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {FULFILLMENT_OPTIONS.map((f) => {
+                    const active = fulfillment.includes(f.id);
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => toggleFulfillment(f.id)}
+                        className={`px-3 py-1 rounded-full text-[11px] border ${
+                          active
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-card border-border text-muted-foreground"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <label className="flex items-center justify-between p-4 rounded-2xl bg-card shadow-card">
                 <div>
                   <p className="font-medium">Livraison CHOP CHOP disponible</p>

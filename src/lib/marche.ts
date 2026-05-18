@@ -67,6 +67,10 @@ export const REPORT_REASONS = [
   { id: "prohibited", label: "Article interdit" },
   { id: "spam", label: "Spam" },
   { id: "harassment", label: "Harcèlement" },
+  { id: "not_received", label: "Objet non reçu" },
+  { id: "bad_description", label: "Mauvaise description" },
+  { id: "delivery_failed", label: "Livraison échouée" },
+  { id: "seller_issue", label: "Problème vendeur" },
   { id: "other", label: "Autre" },
 ];
 
@@ -102,7 +106,49 @@ export type ConditionId = (typeof CONDITIONS)[number]["id"];
 export const DISTRICTS = [
   "Kaloum", "Dixinn", "Matam", "Matoto", "Ratoma",
   "Kipé", "Kagbelen", "Lambanyi", "Coyah",
+  "Madina", "Bambeto", "Hamdallaye", "Cosa", "Nongo",
 ];
+
+// Availability lifecycle for listings (Phase 2 trust).
+export const AVAILABILITIES = [
+  { id: "available", label: "Disponible" },
+  { id: "limited", label: "Stock limité" },
+  { id: "to_confirm", label: "À confirmer" },
+  { id: "reserved", label: "Réservé" },
+  { id: "sold", label: "Vendu" },
+] as const;
+export type AvailabilityId = (typeof AVAILABILITIES)[number]["id"];
+export const availabilityLabel = (id: string) =>
+  AVAILABILITIES.find((a) => a.id === id)?.label ?? "À confirmer";
+
+// Fulfillment options — real local commerce mirrors these patterns.
+export const FULFILLMENT_OPTIONS = [
+  { id: "pickup", label: "Retrait sur place" },
+  { id: "chop_delivery", label: "Livraison CHOP" },
+  { id: "seller_delivery", label: "Livraison vendeur" },
+  { id: "meetup", label: "Rencontre / remise en main" },
+  { id: "to_confirm", label: "À confirmer" },
+] as const;
+export type FulfillmentId = (typeof FULFILLMENT_OPTIONS)[number]["id"];
+export const fulfillmentLabel = (id: string) =>
+  FULFILLMENT_OPTIONS.find((f) => f.id === id)?.label ?? id;
+
+// Lightweight completeness — drives the "Annonce complète" chip.
+export function isListingComplete(l: {
+  photo_count?: number | null;
+  description?: string | null;
+  condition?: string | null;
+  neighborhood?: string | null;
+  commune?: string | null;
+  price_gnf?: number | null;
+}) {
+  const hasPhotos = (l.photo_count ?? 0) >= 3;
+  const hasDescription = (l.description ?? "").trim().length >= 40;
+  const hasCondition = !!l.condition;
+  const hasLocation = !!(l.neighborhood || l.commune);
+  const hasPrice = l.price_gnf != null;
+  return hasPhotos && hasDescription && hasCondition && hasLocation && hasPrice;
+}
 
 // Lightweight slug helper for store URLs.
 export const slugify = (s: string) =>

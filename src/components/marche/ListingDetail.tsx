@@ -2,13 +2,19 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, MapPin, Heart, Flag, Phone, MessageCircle, Truck, BadgeCheck, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { categoryLabel, formatGNF, timeAgo, type SellerKind } from "@/lib/marche";
+import { categoryLabel, formatGNF, timeAgo, isListingComplete, type SellerKind, type FulfillmentId } from "@/lib/marche";
 import { SellerBadge } from "./SellerBadge";
+import {
+  SellerTrustChips,
+  AvailabilityChip,
+  FulfillmentChips,
+  CompleteListingChip,
+} from "./TrustChips";
 import { ReportModal } from "./ReportModal";
 import { ChatThread } from "./ChatThread";
 import { toast } from "@/hooks/use-toast";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { incrementListingMetric, getListingMetrics } from "@/lib/marche/stores";
+import { incrementListingMetric, getListingMetrics, getStoreById, type MerchantStore } from "@/lib/marche/stores";
 
 interface FullListing {
   id: string;
@@ -26,6 +32,10 @@ interface FullListing {
   commune: string | null;
   landmark: string | null;
   created_at: string;
+  availability?: string | null;
+  fulfillment_options?: string[] | null;
+  photo_count?: number | null;
+  store_id?: string | null;
 }
 
 export function ListingDetail({ listingId, onBack }: { listingId: string; onBack: () => void }) {
@@ -38,6 +48,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
   const [selfId, setSelfId] = useState<string | null>(null);
   const [openConv, setOpenConv] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<{ views: number; saves: number; messages: number } | null>(null);
+  const [store, setStore] = useState<MerchantStore | null>(null);
   const { requireAuth } = useAuthGuard();
 
   useEffect(() => {
@@ -49,11 +60,17 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
 
       const { data: l } = await supabase
         .from("marketplace_listings")
-        .select("id, seller_id, kind, category, title, description, price_gnf, is_negotiable, is_urgent, delivery_available, condition, neighborhood, commune, landmark, created_at")
+        .select("id, seller_id, kind, category, title, description, price_gnf, is_negotiable, is_urgent, delivery_available, condition, neighborhood, commune, landmark, created_at, availability, fulfillment_options, photo_count, store_id")
         .eq("id", listingId)
         .maybeSingle();
       if (!mounted || !l) return;
       setListing(l as FullListing);
+
+      const storeId = (l as unknown as { store_id?: string | null }).store_id ?? null;
+      if (storeId) {
+        const s = await getStoreById(storeId).catch(() => null);
+        if (mounted) setStore(s);
+      }
 
       const { data: imgs } = await supabase
         .from("listing_images")
@@ -151,6 +168,14 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
     );
 
   const location = [listing.neighborhood, listing.commune, listing.landmark].filter(Boolean).join(" · ") || "Conakry";
+  const complete = isListingComplete(listing);
+  const fulfillment = (listing.fulfillment_options ?? []) as FulfillmentId[];
+  const sellerPhoneDigits = seller?.phone ? seller.phone.replace(/[^\d]/g, "") : "";
+  const whatsappHref = sellerPhoneDigits
+    ? `https://wa.me/${sellerPhoneDigits}?text=${encodeURIComponent(
+        `Bonjour, je suis intéressé par votre annonce CHOP CHOP : ${listing.title}`,
+      )}`
+    : null;
 
   return (
     <div className="max-w-md mx-auto pb-24 bg-background min-h-screen">
@@ -208,6 +233,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
             )}
           </p>
           <div className="flex flex-wrap gap-2 mt-2">
+            <AvailabilityChip value={listing.availability} />
             {listing.is_urgent && (
               <span className="px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground text-xs font-semibold">
                 Urgent
@@ -224,6 +250,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
             {listing.condition && (
               <span className="px-2 py-0.5 rounded-full bg-muted text-foreground text-xs">{listing.condition}</span>
             )}
+            {complete && <CompleteListingChip />}
           </div>
           <p className="text-xs text-muted-foreground mt-2">Publié {timeAgo(listing.created_at)}</p>
         </div>
@@ -232,6 +259,13 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           <MapPin className="w-4 h-4 text-primary shrink-0" />
           <span>{location}</span>
         </div>
+
+        {fulfillment.length > 0 && (
+          <div>
+            <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">Options de remise</p>
+            <FulfillmentChips options={fulfillment} />
+          </div>
+        )}
 
         {metrics && (metrics.views > 0 || metrics.saves > 0 || metrics.messages > 0) && (
           <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
@@ -261,6 +295,16 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
               </div>
             </div>
           </div>
+          <SellerTrustChips
+            className="mt-3"
+            kind={listing.kind}
+            storeVerified={store?.verification_state === "verified"}
+            chopDeliveryAvailable={
+              fulfillment.includes("chop_delivery") || !!store?.delivery_available
+            }
+            choppayEnabled={!!store?.choppay_enabled}
+            district={store?.district ?? listing.commune ?? listing.neighborhood ?? null}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
@@ -279,6 +323,13 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
             </Button>
           )}
         </div>
+        {whatsappHref && (
+          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="block">
+            <Button variant="outline" className="w-full">
+              Continuer sur WhatsApp
+            </Button>
+          </a>
+        )}
         {listing.delivery_available && (
           <Button onClick={requestDelivery} variant="secondary" className="w-full">
             <Truck className="w-4 h-4 mr-1" /> Faire livrer
