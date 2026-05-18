@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Send, Phone } from "lucide-react";
+import { ArrowLeft, Send, Phone, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +17,14 @@ export function ChatThread({
   conversationId,
   selfId,
   peerName,
+  peerPhone,
   listingTitle,
   onBack,
 }: {
   conversationId: string;
   selfId: string;
   peerName: string;
+  peerPhone?: string | null;
   listingTitle: string;
   onBack: () => void;
 }) {
@@ -84,11 +86,24 @@ export function ChatThread({
         </button>
         <div className="flex-1 min-w-0">
           <p className="font-semibold truncate">{peerName}</p>
-          <p className="text-xs text-muted-foreground truncate">{listingTitle}</p>
+          <p className="text-xs text-muted-foreground truncate">À propos de : {listingTitle}</p>
         </div>
-        <button className="p-2 rounded-full bg-primary/10 text-primary">
-          <Phone className="w-5 h-5" />
-        </button>
+        {peerPhone && (
+          <a
+            href={`https://wa.me/${peerPhone.replace(/[^0-9]/g, "")}`}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Continuer sur WhatsApp"
+            className="p-2 rounded-full bg-success/10 text-success"
+          >
+            <MessageCircle className="w-5 h-5" />
+          </a>
+        )}
+        {peerPhone && (
+          <a href={`tel:${peerPhone}`} aria-label="Appeler" className="p-2 rounded-full bg-primary/10 text-primary">
+            <Phone className="w-5 h-5" />
+          </a>
+        )}
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {msgs.map((m) => {
