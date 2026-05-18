@@ -1,34 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/marche";
 
-// Cast helper: schema for these tables isn't reflected in generated types yet.
-const db = supabase as unknown as {
-  from: (t: string) => {
-    select: (s: string, o?: { count?: "exact"; head?: boolean }) => {
-      eq: (c: string, v: unknown) => {
-        eq?: (c: string, v: unknown) => unknown;
-        maybeSingle: () => Promise<{ data: unknown }>;
-        order?: (c: string, o: { ascending: boolean }) => unknown;
-      };
-      order: (c: string, o: { ascending: boolean }) => {
-        limit: (n: number) => {
-          ilike?: (c: string, v: string) => unknown;
-          eq?: (c: string, v: unknown) => unknown;
-          then?: never;
-        };
-      };
-    };
-    insert: (p: Record<string, unknown>) => {
-      select: (s: string) => { single: () => Promise<{ data: unknown; error: unknown }> };
-    };
-    update: (p: Record<string, unknown>) => {
-      eq: (c: string, v: unknown) => {
-        select: (s: string) => { single: () => Promise<{ data: unknown; error: unknown }> };
-      };
-    };
-  };
-  rpc: (n: string, a: Record<string, unknown>) => Promise<unknown>;
-};
+// Note: types for merchant_stores / listing_metrics aren't in the generated
+// Supabase types yet, so we cast `supabase` to a permissive shape at call sites.
 
 export type MerchantStore = {
   id: string;
