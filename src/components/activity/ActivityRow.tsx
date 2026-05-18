@@ -1,4 +1,4 @@
-import { Bike, QrCode, Wallet, ArrowDownLeft, ArrowUpRight, RefreshCw, UtensilsCrossed, ShoppingBag, LifeBuoy, ChevronRight, BadgeCheck, Radio, ShieldCheck } from "lucide-react";
+import { Bike, QrCode, Wallet, ArrowDownLeft, ArrowUpRight, RefreshCw, UtensilsCrossed, ShoppingBag, LifeBuoy, ChevronRight, BadgeCheck, Radio, ShieldCheck, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatGNF } from "@/lib/format";
 import type { ActivityItem, ActivityKind } from "@/lib/activity/types";
@@ -14,6 +14,7 @@ const ICONS: Record<ActivityKind, typeof Bike> = {
   payout: Wallet,
   food_order: UtensilsCrossed,
   market_order: ShoppingBag,
+  market_interest: MessageSquare,
   support: LifeBuoy,
 };
 
