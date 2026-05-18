@@ -131,7 +131,7 @@ export function MyListingsView({
         {sellerId && (
           <button
             onClick={() => setRequestsOpen(true)}
-            aria-label="Demandes"
+            aria-label={pendingCount > 0 ? `${pendingCount} demande${pendingCount > 1 ? "s" : ""} en attente` : "Demandes des acheteurs"}
             className="relative p-2 rounded-full bg-card border border-border/60"
           >
             <Inbox className="w-4 h-4 text-foreground" />
