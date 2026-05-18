@@ -80,3 +80,76 @@ export const QUICK_REPLIES = [
 export type SellerKind = "merchant" | "community" | "service";
 export const sellerBadgeLabel = (k: SellerKind) =>
   k === "merchant" ? "Marchand vérifié" : k === "service" ? "Prestataire" : "Vendeur communauté";
+
+// Guided description prompts — encourage richer listings without harsh min-char gates.
+export const DESCRIPTION_PROMPTS = [
+  "État du produit ?",
+  "Marque ?",
+  "Taille ?",
+  "Fonctionnalités ?",
+  "Livraison disponible ?",
+  "Utilisé ou neuf ?",
+];
+
+export const CONDITIONS = [
+  { id: "new", label: "Neuf" },
+  { id: "like_new", label: "Comme neuf" },
+  { id: "used", label: "Utilisé" },
+] as const;
+
+export type ConditionId = (typeof CONDITIONS)[number]["id"];
+
+export const DISTRICTS = [
+  "Kaloum", "Dixinn", "Matam", "Matoto", "Ratoma",
+  "Kipé", "Kagbelen", "Lambanyi", "Coyah",
+];
+
+// Lightweight slug helper for store URLs.
+export const slugify = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+
+// Empty-state copy registry (Phase 7).
+export const MARCHE_EMPTY_COPY = {
+  listings: {
+    title: "Aucune annonce disponible pour le moment.",
+    hint: "Revenez plus tard ou publiez la première annonce de votre quartier.",
+  },
+  stores: {
+    title: "Aucune boutique trouvée.",
+    hint: "Essayez un autre nom ou parcourez les catégories.",
+  },
+  messages: {
+    title: "Vos conversations apparaîtront ici.",
+    hint: "Contactez un vendeur pour démarrer une discussion.",
+  },
+  search: {
+    title: "Recherchez un produit ou une boutique.",
+    hint: "Tapez un mot-clé pour voir les résultats.",
+  },
+} as const;
+
+export type MarcheEmptyKey = keyof typeof MARCHE_EMPTY_COPY;
+
+// Recent categories — local-only memory, no DB.
+const RECENT_CATS_KEY = "cc_marche_recent_categories";
+export function getRecentCategories(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_CATS_KEY);
+    return raw ? (JSON.parse(raw) as string[]).slice(0, 4) : [];
+  } catch {
+    return [];
+  }
+}
+export function pushRecentCategory(id: string) {
+  try {
+    const cur = getRecentCategories().filter((x) => x !== id);
+    localStorage.setItem(RECENT_CATS_KEY, JSON.stringify([id, ...cur].slice(0, 4)));
+  } catch {}
+}
