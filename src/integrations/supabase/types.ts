@@ -816,6 +816,41 @@ export type Database = {
           },
         ]
       }
+      listing_metrics: {
+        Row: {
+          clicks: number
+          listing_id: string
+          messages: number
+          saves: number
+          updated_at: string
+          views: number
+        }
+        Insert: {
+          clicks?: number
+          listing_id: string
+          messages?: number
+          saves?: number
+          updated_at?: string
+          views?: number
+        }
+        Update: {
+          clicks?: number
+          listing_id?: string
+          messages?: number
+          saves?: number
+          updated_at?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_metrics_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_reports: {
         Row: {
           created_at: string
@@ -847,6 +882,32 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "listing_reports_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_saves: {
+        Row: {
+          created_at: string
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_saves_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "marketplace_listings"
@@ -962,8 +1023,11 @@ export type Database = {
           landmark: string | null
           neighborhood: string | null
           price_gnf: number | null
+          promoted: boolean
           seller_id: string
+          sold_count: number
           status: Database["public"]["Enums"]["listing_status"]
+          store_id: string | null
           title: string
           updated_at: string
           view_count: number
@@ -982,8 +1046,11 @@ export type Database = {
           landmark?: string | null
           neighborhood?: string | null
           price_gnf?: number | null
+          promoted?: boolean
           seller_id: string
+          sold_count?: number
           status?: Database["public"]["Enums"]["listing_status"]
+          store_id?: string | null
           title: string
           updated_at?: string
           view_count?: number
@@ -1002,11 +1069,79 @@ export type Database = {
           landmark?: string | null
           neighborhood?: string | null
           price_gnf?: number | null
+          promoted?: boolean
           seller_id?: string
+          sold_count?: number
           status?: Database["public"]["Enums"]["listing_status"]
+          store_id?: string | null
           title?: string
           updated_at?: string
           view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_stores: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          category: string | null
+          choppay_enabled: boolean
+          cover_url: string | null
+          created_at: string
+          delivery_available: boolean
+          district: string | null
+          id: string
+          member_since: string
+          name: string
+          owner_user_id: string
+          slug: string
+          status: string
+          updated_at: string
+          verification_state: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          category?: string | null
+          choppay_enabled?: boolean
+          cover_url?: string | null
+          created_at?: string
+          delivery_available?: boolean
+          district?: string | null
+          id?: string
+          member_since?: string
+          name: string
+          owner_user_id: string
+          slug: string
+          status?: string
+          updated_at?: string
+          verification_state?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          category?: string | null
+          choppay_enabled?: boolean
+          cover_url?: string | null
+          created_at?: string
+          delivery_available?: boolean
+          district?: string | null
+          id?: string
+          member_since?: string
+          name?: string
+          owner_user_id?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+          verification_state?: string
         }
         Relationships: []
       }
@@ -2290,6 +2425,14 @@ export type Database = {
           _target_type?: string
         }
         Returns: string
+      }
+      marche_increment_listing_metric: {
+        Args: { _kind: string; _listing_id: string }
+        Returns: undefined
+      }
+      marche_toggle_listing_save: {
+        Args: { _listing_id: string }
+        Returns: boolean
       }
       merchant_ensure_wallet: {
         Args: { p_merchant_id: string }
