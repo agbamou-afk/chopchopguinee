@@ -1,15 +1,18 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal, Timer, Star, Flame } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FoodCategories } from "@/components/food/FoodCategories";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { RestaurantDetail, type Restaurant } from "@/components/food/RestaurantDetail";
+import { RepasRestaurantDetail } from "@/components/food/RepasRestaurantDetail";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { UtensilsCrossed } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { isLiveUser } from "@/lib/runtimeMode";
+import { listOpenRestaurants } from "@/lib/repas/restaurants";
+import type { FoodRestaurant } from "@/lib/repas/types";
 
 interface FoodViewProps {
   onBack: () => void;
@@ -96,11 +99,20 @@ export function FoodView({ onBack }: FoodViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("rating");
   const [active, setActive] = useState<Restaurant | null>(null);
+  const [activeLive, setActiveLive] = useState<FoodRestaurant | null>(null);
+  const [liveRestaurants, setLiveRestaurants] = useState<FoodRestaurant[] | null>(null);
   const { user, roles } = useAuth();
-  // Real authenticated non-demo users see real data only. Until a live
-  // restaurant feed is wired in, render a calm empty state for them instead
-  // of the showroom restaurants used for guests/demo accounts.
   const liveUser = isLiveUser(user, roles);
+
+  useEffect(() => {
+    let alive = true;
+    listOpenRestaurants(40)
+      .then((r) => alive && setLiveRestaurants(r))
+      .catch(() => alive && setLiveRestaurants([]));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const visible = useMemo(() => {
     const filtered = allRestaurants.filter((r) =>
@@ -113,6 +125,17 @@ export function FoodView({ onBack }: FoodViewProps) {
       return parseFirst(a.distance) - parseFirst(b.distance);
     });
   }, [searchQuery, sort]);
+
+  const visibleLive = useMemo(() => {
+    if (!liveRestaurants) return null;
+    const q = searchQuery.toLowerCase();
+    return liveRestaurants.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        (r.cuisine ?? "").toLowerCase().includes(q) ||
+        (r.district ?? "").toLowerCase().includes(q),
+    );
+  }, [liveRestaurants, searchQuery]);
 
   return (
     <div className="max-w-md mx-auto">
@@ -179,11 +202,55 @@ export function FoodView({ onBack }: FoodViewProps) {
       {/* Restaurant list */}
       <div className="px-4 pt-4 pb-28">
         {liveUser ? (
-          <EmptyState
-            icon={UtensilsCrossed}
-            title="Repas bientôt disponible"
-            description="Les restaurants partenaires de votre zone seront affichés ici dès leur ouverture."
-          />
+          visibleLive === null ? (
+            <div className="grid grid-cols-2 gap-3">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="h-44 rounded-2xl bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : visibleLive.length === 0 ? (
+            <EmptyState
+              icon={UtensilsCrossed}
+              title="Repas bientôt disponible"
+              description="Les restaurants partenaires de votre zone seront affichés ici dès leur ouverture."
+            />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {visibleLive.map((r, index) => (
+                <motion.button
+                  key={r.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => setActiveLive(r)}
+                  className="w-full bg-card rounded-2xl overflow-hidden shadow-card text-left"
+                >
+                  <div className="relative h-32 bg-muted">
+                    {(r.cover_url || r.avatar_url) && (
+                      <img
+                        src={r.cover_url || r.avatar_url || ""}
+                        alt={r.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    <div className="absolute top-2 right-2 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-full text-[10px] font-medium">
+                      {r.is_open ? "Ouvert" : "Fermé"}
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-semibold text-foreground text-sm truncate">{r.name}</h3>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {r.cuisine ?? "Cuisine locale"}
+                      {r.district ? ` · ${r.district}` : ""}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1">~{r.prep_time_min} min</p>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          )
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {visible.map((restaurant, index) => (
@@ -203,6 +270,9 @@ export function FoodView({ onBack }: FoodViewProps) {
       <AnimatePresence>
         {active && (
           <RestaurantDetail restaurant={active} onClose={() => setActive(null)} />
+        )}
+        {activeLive && (
+          <RepasRestaurantDetail restaurant={activeLive} onClose={() => setActiveLive(null)} />
         )}
       </AnimatePresence>
     </div>
