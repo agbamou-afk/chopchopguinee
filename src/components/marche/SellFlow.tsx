@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { ArrowLeft, Camera, X, ChevronRight, Check } from "lucide-react";
 import { motion } from "framer-motion";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   MARCHE_CATEGORIES,
-  DESCRIPTION_PROMPTS,
+  getDescriptionPrompts,
   CONDITIONS,
   AVAILABILITIES,
   FULFILLMENT_OPTIONS,
