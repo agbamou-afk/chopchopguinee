@@ -72,9 +72,9 @@ export function RestaurantDetail({ restaurant, onClose }: Props) {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 24 }}
-      className="fixed inset-0 z-50 bg-background overflow-y-auto"
+      className="fixed inset-0 z-[70] bg-background overflow-y-auto"
     >
-      <div className="max-w-md mx-auto pb-32">
+      <div className="max-w-md mx-auto pb-40">
         {/* Hero */}
         <div className="relative h-48">
           <img loading="lazy" decoding="async" src={restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
@@ -156,21 +156,41 @@ export function RestaurantDetail({ restaurant, onClose }: Props) {
         </section>
       </div>
 
-      {/* Cart bar */}
-      {itemCount > 0 && stage === "menu" && (
-        <motion.button
-          initial={{ y: 80 }}
-          animate={{ y: 0 }}
-          onClick={() => setStage("cart")}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-foreground text-background rounded-2xl p-4 shadow-elevated flex items-center justify-between"
-        >
-          <span className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5" />
-            <span className="font-semibold">{itemCount} article{itemCount > 1 ? "s" : ""}</span>
-          </span>
-          <span className="font-bold">{formatGNF(subtotal)}</span>
-        </motion.button>
-      )}
+      {/* Floating cart bar — Conakry Contemporary */}
+      <AnimatePresence>
+        {itemCount > 0 && stage === "menu" && (
+          <motion.div
+            initial={{ y: 96, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 96, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            className="fixed left-0 right-0 z-40 px-4 pointer-events-none"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+          >
+            <button
+              onClick={() => setStage("cart")}
+              className="pointer-events-auto mx-auto w-full max-w-md flex items-center justify-between gap-3 bg-card border border-border/60 rounded-2xl pl-4 pr-2 py-2 shadow-elevated"
+            >
+              <span className="flex items-center gap-2.5 min-w-0">
+                <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <ShoppingBag className="w-4 h-4" />
+                </span>
+                <span className="flex flex-col items-start min-w-0">
+                  <span className="text-[11px] text-muted-foreground leading-tight">
+                    {itemCount} article{itemCount > 1 ? "s" : ""}
+                  </span>
+                  <span className="text-sm font-bold text-foreground leading-tight truncate">
+                    {formatGNF(subtotal)}
+                  </span>
+                </span>
+              </span>
+              <span className="shrink-0 gradient-primary text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold shadow-soft">
+                Voir le panier
+              </span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Cart sheet */}
       <AnimatePresence>
