@@ -739,6 +739,214 @@ export type Database = {
         }
         Relationships: []
       }
+      food_menu_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_available: boolean
+          name: string
+          photo_url: string | null
+          position: number
+          prep_time_min: number | null
+          price_gnf: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          name: string
+          photo_url?: string | null
+          position?: number
+          prep_time_min?: number | null
+          price_gnf?: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean
+          name?: string
+          photo_url?: string | null
+          position?: number
+          prep_time_min?: number | null
+          price_gnf?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "food_restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          menu_item_id: string | null
+          name_snapshot: string
+          order_id: string
+          qty: number
+          unit_price_gnf: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string | null
+          name_snapshot: string
+          order_id: string
+          qty?: number
+          unit_price_gnf?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string | null
+          name_snapshot?: string
+          order_id?: string
+          qty?: number
+          unit_price_gnf?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_order_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_orders: {
+        Row: {
+          created_at: string
+          delivery_address: string | null
+          fulfillment: Database["public"]["Enums"]["food_fulfillment"]
+          id: string
+          notes: string | null
+          payment_method: Database["public"]["Enums"]["food_payment_method"]
+          restaurant_id: string
+          state: Database["public"]["Enums"]["food_order_state"]
+          subtotal_gnf: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_address?: string | null
+          fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
+          id?: string
+          notes?: string | null
+          payment_method?: Database["public"]["Enums"]["food_payment_method"]
+          restaurant_id: string
+          state?: Database["public"]["Enums"]["food_order_state"]
+          subtotal_gnf?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_address?: string | null
+          fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
+          id?: string
+          notes?: string | null
+          payment_method?: Database["public"]["Enums"]["food_payment_method"]
+          restaurant_id?: string
+          state?: Database["public"]["Enums"]["food_order_state"]
+          subtotal_gnf?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "food_restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_restaurants: {
+        Row: {
+          avatar_url: string | null
+          choppay_enabled: boolean
+          cover_url: string | null
+          created_at: string
+          cuisine: string | null
+          delivery_available: boolean
+          district: string | null
+          id: string
+          is_open: boolean
+          name: string
+          owner_user_id: string | null
+          pickup_available: boolean
+          prep_time_min: number
+          slug: string
+          status: string
+          updated_at: string
+          verification_state: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          choppay_enabled?: boolean
+          cover_url?: string | null
+          created_at?: string
+          cuisine?: string | null
+          delivery_available?: boolean
+          district?: string | null
+          id?: string
+          is_open?: boolean
+          name: string
+          owner_user_id?: string | null
+          pickup_available?: boolean
+          prep_time_min?: number
+          slug: string
+          status?: string
+          updated_at?: string
+          verification_state?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          choppay_enabled?: boolean
+          cover_url?: string | null
+          created_at?: string
+          cuisine?: string | null
+          delivery_available?: boolean
+          district?: string | null
+          id?: string
+          is_open?: boolean
+          name?: string
+          owner_user_id?: string | null
+          pickup_available?: boolean
+          prep_time_min?: number
+          slug?: string
+          status?: string
+          updated_at?: string
+          verification_state?: string
+        }
+        Relationships: []
+      }
       landmarks: {
         Row: {
           active: boolean
@@ -3078,6 +3286,16 @@ export type Database = {
       driver_presence: "offline" | "online" | "on_trip"
       driver_status: "pending" | "approved" | "rejected" | "suspended"
       driver_vehicle_type: "moto" | "toktok" | "livraison" | "auto"
+      food_fulfillment: "pickup" | "delivery"
+      food_order_state:
+        | "placed"
+        | "confirmed"
+        | "preparing"
+        | "ready"
+        | "out_for_delivery"
+        | "completed"
+        | "cancelled"
+      food_payment_method: "wallet" | "choppay" | "cash"
       insight_confidence: "low" | "medium" | "high"
       insight_section:
         | "executive"
@@ -3326,6 +3544,17 @@ export const Constants = {
       driver_presence: ["offline", "online", "on_trip"],
       driver_status: ["pending", "approved", "rejected", "suspended"],
       driver_vehicle_type: ["moto", "toktok", "livraison", "auto"],
+      food_fulfillment: ["pickup", "delivery"],
+      food_order_state: [
+        "placed",
+        "confirmed",
+        "preparing",
+        "ready",
+        "out_for_delivery",
+        "completed",
+        "cancelled",
+      ],
+      food_payment_method: ["wallet", "choppay", "cash"],
       insight_confidence: ["low", "medium", "high"],
       insight_section: [
         "executive",

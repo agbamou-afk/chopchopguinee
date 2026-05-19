@@ -8,6 +8,8 @@ import {
   INTEREST_STATE_LABEL,
   type ListingInterest,
 } from "@/lib/marche/interests";
+import { listMyFoodOrders } from "@/lib/repas/orders";
+import { FOOD_ORDER_STATE_LABEL, type FoodOrder } from "@/lib/repas/types";
 
 type RideRow = {
   id: string;
@@ -140,6 +142,7 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
   const [rides, setRides] = useState<RideRow[]>([]);
   const [loadingRides, setLoadingRides] = useState(true);
   const [interests, setInterests] = useState<ListingInterest[]>([]);
+  const [foodOrders, setFoodOrders] = useState<FoodOrder[]>([]);
 
   const loadRides = useCallback(async (uid: string | null) => {
     if (!uid) {
@@ -179,6 +182,20 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
     };
   }, [userId, partyType]);
 
+  useEffect(() => {
+    if (!userId || partyType !== "client") {
+      setFoodOrders([]);
+      return;
+    }
+    let alive = true;
+    listMyFoodOrders(userId, 20)
+      .then((rows) => alive && setFoodOrders(rows))
+      .catch(() => alive && setFoodOrders([]));
+    return () => {
+      alive = false;
+    };
+  }, [userId, partyType]);
+
   const items = useMemo<ActivityItem[]>(() => {
     const wId = wallet?.id ?? "";
     const txItems = wId
@@ -197,10 +214,28 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
       entityId: i.listing_id,
       meta: { interest: i },
     }));
-    return [...txItems, ...rideItems, ...interestItems].sort(
+    const foodItems: ActivityItem[] = foodOrders.map((o) => ({
+      id: `food:${o.id}`,
+      kind: "food_order",
+      title: "Commande Repas",
+      subtitle: FOOD_ORDER_STATE_LABEL[o.state],
+      amount: -o.subtotal_gnf,
+      status:
+        o.state === "completed"
+          ? "completed"
+          : o.state === "cancelled"
+            ? "cancelled"
+            : o.state === "out_for_delivery" || o.state === "preparing" || o.state === "ready"
+              ? "in_progress"
+              : "pending",
+      occurredAt: o.updated_at ?? o.created_at,
+      entityId: o.id,
+      meta: { foodOrder: o },
+    }));
+    return [...txItems, ...rideItems, ...interestItems, ...foodItems].sort(
       (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
     );
-  }, [wallet?.id, transactions, rides, interests, partyType]);
+  }, [wallet?.id, transactions, rides, interests, foodOrders, partyType]);
 
   const refresh = useCallback(() => {
     refreshWallet();
