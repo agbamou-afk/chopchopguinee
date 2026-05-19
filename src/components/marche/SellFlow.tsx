@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { ArrowLeft, Camera, X, ChevronRight, Check } from "lucide-react";
 import { motion } from "framer-motion";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   MARCHE_CATEGORIES,
-  DESCRIPTION_PROMPTS,
+  getDescriptionPrompts,
   CONDITIONS,
   AVAILABILITIES,
   FULFILLMENT_OPTIONS,
@@ -50,6 +50,30 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
   const [condition, setCondition] = useState<ConditionId | "">("");
   const [availability, setAvailability] = useState<AvailabilityId>("to_confirm");
   const [fulfillment, setFulfillment] = useState<FulfillmentId[]>(["to_confirm"]);
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const insertPrompt = (field: string) => {
+    const tag = `${field} : `;
+    // Avoid duplicate field labels.
+    if (description.includes(`${field} :`)) {
+      descriptionRef.current?.focus();
+      return;
+    }
+    const needsBreak = description.length > 0 && !description.endsWith("\n");
+    const next = `${description}${needsBreak ? "\n" : ""}${tag}`;
+    setDescription(next);
+    // Place cursor at end after React updates the textarea.
+    requestAnimationFrame(() => {
+      const el = descriptionRef.current;
+      if (!el) return;
+      el.focus();
+      const pos = next.length;
+      try {
+        el.setSelectionRange(pos, pos);
+      } catch {}
+      el.scrollTop = el.scrollHeight;
+    });
+  };
 
   const toggleFulfillment = (id: FulfillmentId) => {
     setFulfillment((cur) => {
@@ -279,23 +303,31 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
           {step === 5 && (
             <section className="space-y-2">
               <h2 className="font-semibold">Description</h2>
+              <p className="text-[11px] text-muted-foreground">
+                Touchez une suggestion pour enrichir naturellement votre description.
+              </p>
               <div className="flex flex-wrap gap-1.5">
-                {DESCRIPTION_PROMPTS.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => {
-                      const tag = `${p} `;
-                      setDescription((d) => (d.includes(p) ? d : `${d}${d ? "\n" : ""}${tag}`));
-                    }}
-                    className="px-2.5 py-1 rounded-full bg-muted text-[11px] text-foreground hover:bg-muted/80"
-                  >
-                    {p}
-                  </button>
-                ))}
+                {getDescriptionPrompts(category).map((p) => {
+                  const used = description.includes(`${p.field} :`);
+                  return (
+                    <button
+                      key={p.field}
+                      type="button"
+                      onClick={() => insertPrompt(p.field)}
+                      className={`px-2.5 py-1 rounded-full text-[11px] border transition ${
+                        used
+                          ? "bg-primary/10 border-primary/30 text-primary"
+                          : "bg-muted/60 border-transparent text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
               </div>
               <Textarea
-                placeholder="Décrivez votre produit (état, marque, accessoires, raison de la vente)…"
+                ref={descriptionRef}
+                placeholder="Décrivez votre produit naturellement…"
                 value={description}
                 maxLength={2000}
                 onChange={(e) => setDescription(e.target.value)}

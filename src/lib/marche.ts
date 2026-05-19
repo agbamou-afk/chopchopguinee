@@ -86,15 +86,114 @@ export type SellerKind = "merchant" | "community" | "service";
 export const sellerBadgeLabel = (k: SellerKind) =>
   k === "merchant" ? "Marchand vérifié" : k === "service" ? "Prestataire" : "Vendeur communauté";
 
-// Guided description prompts — encourage richer listings without harsh min-char gates.
-export const DESCRIPTION_PROMPTS = [
-  "État du produit ?",
-  "Marque ?",
-  "Taille ?",
-  "Fonctionnalités ?",
-  "Livraison disponible ?",
-  "Utilisé ou neuf ?",
+// Guided description prompts — lightweight, category-aware composition assistance.
+// Each prompt has a short chip `label` and a structured `field` that gets injected
+// into the textarea as `Field : ` so the seller writes naturally after it.
+export type DescriptionPrompt = { label: string; field: string };
+
+const PROMPT_GENERIC: DescriptionPrompt[] = [
+  { label: "État ?", field: "État" },
+  { label: "Marque ?", field: "Marque" },
+  { label: "Accessoires ?", field: "Accessoires inclus" },
+  { label: "Raison de la vente ?", field: "Raison de la vente" },
 ];
+
+const PROMPT_BY_CATEGORY: Record<string, DescriptionPrompt[]> = {
+  phones: [
+    { label: "Marque ?", field: "Marque" },
+    { label: "Stockage ?", field: "Stockage" },
+    { label: "État de la batterie ?", field: "Batterie" },
+    { label: "Accessoires inclus ?", field: "Accessoires inclus" },
+    { label: "Fonctionne correctement ?", field: "Fonctionnement" },
+  ],
+  electronics: [
+    { label: "Marque ?", field: "Marque" },
+    { label: "Modèle ?", field: "Modèle" },
+    { label: "État ?", field: "État" },
+    { label: "Accessoires ?", field: "Accessoires inclus" },
+    { label: "Garantie ?", field: "Garantie" },
+  ],
+  computing: [
+    { label: "Marque ?", field: "Marque" },
+    { label: "Processeur ?", field: "Processeur" },
+    { label: "RAM ?", field: "RAM" },
+    { label: "Stockage ?", field: "Stockage" },
+    { label: "État ?", field: "État" },
+  ],
+  vehicles: [
+    { label: "Année ?", field: "Année" },
+    { label: "Kilométrage ?", field: "Kilométrage" },
+    { label: "Boîte ?", field: "Boîte" },
+    { label: "Carburant ?", field: "Carburant" },
+    { label: "Documents ?", field: "Documents disponibles" },
+  ],
+  real_estate: [
+    { label: "Surface ?", field: "Surface" },
+    { label: "Pièces ?", field: "Nombre de pièces" },
+    { label: "Quartier ?", field: "Quartier" },
+    { label: "Charges ?", field: "Charges" },
+  ],
+  fashion: [
+    { label: "Taille ?", field: "Taille" },
+    { label: "Marque ?", field: "Marque" },
+    { label: "Matière ?", field: "Matière" },
+    { label: "Jamais porté ?", field: "État" },
+  ],
+  beauty: [
+    { label: "Marque ?", field: "Marque" },
+    { label: "Contenance ?", field: "Contenance" },
+    { label: "Date d'expiration ?", field: "Date d'expiration" },
+    { label: "Neuf / scellé ?", field: "État" },
+  ],
+  baby: [
+    { label: "Âge recommandé ?", field: "Âge recommandé" },
+    { label: "Marque ?", field: "Marque" },
+    { label: "État ?", field: "État" },
+  ],
+  home: [
+    { label: "Dimensions ?", field: "Dimensions" },
+    { label: "Matière ?", field: "Matière" },
+    { label: "État ?", field: "État" },
+  ],
+  tools: [
+    { label: "Puissance ?", field: "Puissance" },
+    { label: "Marque ?", field: "Marque" },
+    { label: "État ?", field: "État" },
+    { label: "Utilisation précédente ?", field: "Utilisation précédente" },
+  ],
+  construction: [
+    { label: "Quantité ?", field: "Quantité" },
+    { label: "Marque ?", field: "Marque" },
+    { label: "État ?", field: "État" },
+    { label: "Livraison chantier ?", field: "Livraison chantier" },
+  ],
+  food_market: [
+    { label: "Quantité ?", field: "Quantité" },
+    { label: "Origine ?", field: "Origine" },
+    { label: "Fraîcheur ?", field: "Fraîcheur" },
+  ],
+  pharmacy: [
+    { label: "Marque ?", field: "Marque" },
+    { label: "Date d'expiration ?", field: "Date d'expiration" },
+    { label: "Scellé ?", field: "État" },
+  ],
+  sports: [
+    { label: "Taille ?", field: "Taille" },
+    { label: "Marque ?", field: "Marque" },
+    { label: "État ?", field: "État" },
+  ],
+  services: [
+    { label: "Expérience ?", field: "Expérience" },
+    { label: "Zone d'intervention ?", field: "Zone d'intervention" },
+    { label: "Disponibilités ?", field: "Disponibilités" },
+    { label: "Tarif ?", field: "Tarif" },
+  ],
+};
+
+export function getDescriptionPrompts(categoryId?: string | null): DescriptionPrompt[] {
+  if (!categoryId) return PROMPT_GENERIC;
+  return PROMPT_BY_CATEGORY[categoryId] ?? PROMPT_GENERIC;
+}
 
 export const CONDITIONS = [
   { id: "new", label: "Neuf" },
