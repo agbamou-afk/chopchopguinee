@@ -134,7 +134,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 24 }}
-      className="fixed inset-0 z-50 bg-background overflow-y-auto"
+      className="fixed inset-0 z-[70] bg-background overflow-y-auto"
     >
       <div className="max-w-md mx-auto pb-40">
         {/* Hero */}
