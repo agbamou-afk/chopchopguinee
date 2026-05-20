@@ -8,7 +8,7 @@ import {
 export type ChopPinVariant = "map" | "inline" | "card" | "timeline" | "receipt" | "compact";
 
 const SIZE_PX: Record<ChopPinVariant, number> = {
-  map: 38, inline: 24, card: 28, timeline: 20, receipt: 22, compact: 18,
+  map: 32, inline: 24, card: 28, timeline: 20, receipt: 22, compact: 18,
 };
 
 interface Props {
@@ -64,17 +64,17 @@ export function ChopPin({
         height: size,
         backgroundColor: color,
         boxShadow: isPin
-          ? "0 0 0 1.5px hsl(var(--background)) inset, 0 6px 12px -6px hsl(30 25% 12% / 0.45)"
+          ? "0 0 0 1px hsl(var(--background)) inset, 0 3px 6px -3px hsl(30 25% 12% / 0.28)"
           : "0 0 0 1px hsl(var(--background)) inset",
       }}
     >
       <span
         className="flex items-center justify-center rounded-full bg-white"
-        style={{ width: size * 0.66, height: size * 0.66 }}
+        style={{ width: size * 0.56, height: size * 0.56 }}
       >
         <Icon
-          width={size * 0.42}
-          height={size * 0.42}
+          width={size * 0.38}
+          height={size * 0.38}
           strokeWidth={1.75}
           style={{ color }}
           aria-hidden
@@ -90,8 +90,8 @@ export function ChopPin({
     >
       {pulse && (
         <span
-          className="absolute inset-x-0 top-0 rounded-full animate-ping opacity-30"
-          style={{ height: size, backgroundColor: color, animationDuration: "2.4s" }}
+          className="absolute inset-x-0 top-0 rounded-full animate-ping opacity-15"
+          style={{ height: size, backgroundColor: color, animationDuration: "2.8s" }}
           aria-hidden
         />
       )}
@@ -104,10 +104,10 @@ export function ChopPin({
           bottom: 0,
           width: 0,
           height: 0,
-          borderLeft: `${size * 0.18}px solid transparent`,
-          borderRight: `${size * 0.18}px solid transparent`,
-          borderTop: `${size * 0.22}px solid ${color}`,
-          filter: "drop-shadow(0 2px 2px hsl(30 25% 12% / 0.25))",
+          borderLeft: `${size * 0.15}px solid transparent`,
+          borderRight: `${size * 0.15}px solid transparent`,
+          borderTop: `${size * 0.18}px solid ${color}`,
+          filter: "drop-shadow(0 1px 1.5px hsl(30 25% 12% / 0.18))",
         }}
       />
     </span>
@@ -115,8 +115,8 @@ export function ChopPin({
     <span className="relative inline-flex">
       {pulse && (
         <span
-          className="absolute inset-0 rounded-full animate-ping opacity-30"
-          style={{ backgroundColor: color, animationDuration: "2.4s" }}
+          className="absolute inset-0 rounded-full animate-ping opacity-15"
+          style={{ backgroundColor: color, animationDuration: "2.8s" }}
           aria-hidden
         />
       )}

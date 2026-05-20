@@ -3,7 +3,7 @@ import {
   Shirt, Sparkles, Briefcase, HardHat, ShoppingBasket, Pill,
   Baby, Laptop, Trophy,
   User, UtensilsCrossed, Store, Bike,
-  Upload, Download, Package, Route, Check,
+  Package, Route, Check, Flag,
   Clock, Pause, X,
   MapPin, Navigation,
 } from "lucide-react";
@@ -89,7 +89,7 @@ const ACTOR_ICON: Record<ChopPinActor, LucideIcon> = {
 };
 
 const MISSION_ICON: Record<ChopPinMission, LucideIcon> = {
-  pickup: Upload, dropoff: Download, handoff: Package,
+  pickup: MapPin, dropoff: Flag, handoff: Package,
   active_mission: Route, completed: Check,
 };
 
