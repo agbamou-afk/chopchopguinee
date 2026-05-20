@@ -19,6 +19,7 @@ interface MissionRequestCardProps {
 export function MissionRequestCard({ mission, onAccept, onDecline, busy }: MissionRequestCardProps) {
   const identity = MISSION_IDENTITY[mission.type];
   const Icon = identity.icon;
+  const { pickup: pickupLabel, dropoff: dropoffLabel } = identity.endpointLabels;
   const km = mission.estimated_distance_m ? (mission.estimated_distance_m / 1000).toFixed(1) : null;
   const minutes = mission.estimated_duration_s ? Math.round(mission.estimated_duration_s / 60) : null;
 
@@ -60,7 +61,7 @@ export function MissionRequestCard({ mission, onAccept, onDecline, busy }: Missi
           <div className="flex items-start gap-2 text-sm text-foreground">
             <MapPin className="w-4 h-4 mt-0.5 text-primary shrink-0" />
             <span className="truncate">
-              <span className="text-muted-foreground text-[10px] uppercase tracking-wide mr-1">Retrait</span>
+              <span className="text-muted-foreground text-[10px] uppercase tracking-wide mr-1">{pickupLabel}</span>
               {mission.pickup_address}
             </span>
           </div>
@@ -69,7 +70,7 @@ export function MissionRequestCard({ mission, onAccept, onDecline, busy }: Missi
           <div className="flex items-start gap-2 text-sm text-foreground">
             <Navigation className="w-4 h-4 mt-0.5 text-secondary shrink-0" />
             <span className="truncate">
-              <span className="text-muted-foreground text-[10px] uppercase tracking-wide mr-1">Client</span>
+              <span className="text-muted-foreground text-[10px] uppercase tracking-wide mr-1">{dropoffLabel}</span>
               {mission.dropoff_address}
             </span>
           </div>
@@ -91,7 +92,7 @@ export function MissionRequestCard({ mission, onAccept, onDecline, busy }: Missi
         )}
         {onAccept && (
           <Button className="flex-1 h-12 font-bold" onClick={() => onAccept(mission.id)} disabled={busy}>
-            Accepter la mission
+            {identity.acceptCta}
           </Button>
         )}
       </div>
