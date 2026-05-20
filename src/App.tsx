@@ -101,11 +101,13 @@ const App = () => {
         <TopupNotificationsMount />
         <InstallPrompt />
         {(isSandboxMode() ||
-          (typeof window !== "undefined" && /[?&]field=1/.test(window.location.search))) && (
+          (typeof window !== "undefined" &&
+            /[?&](field|sandbox|debug)=1/.test(window.location.search))) && (
           <Suspense fallback={null}><FieldTestingPanel /></Suspense>
         )}
         {(isSandboxMode() ||
-          (typeof window !== "undefined" && /[?&]field=1/.test(window.location.search))) && (
+          (typeof window !== "undefined" &&
+            /[?&](field|sandbox|debug)=1/.test(window.location.search))) && (
           <Suspense fallback={null}><DemoTestPanel /></Suspense>
         )}
         <Routes>
