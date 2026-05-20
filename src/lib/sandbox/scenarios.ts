@@ -214,3 +214,413 @@ export const SANDBOX_SCENARIOS: SandboxScenario[] = [
 export function getScenario(id: string): SandboxScenario | undefined {
   return SANDBOX_SCENARIOS.find((s) => s.id === id);
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Expanded multi-actor / district / wallet / notification scenarios.
+// All scripted, deterministic, in-memory.
+// ─────────────────────────────────────────────────────────────────────
+
+SANDBOX_SCENARIOS.push(
+  {
+    id: "repas_5_simultaneous",
+    title: "Repas · 5 commandes simultanées",
+    description: "5 clients commandent en parallèle sur 2 restaurants Kaloum.",
+    family: "repas",
+    async run(ctx) {
+      const restos = [
+        ctx.spawnActor("restaurant", { label: "Restaurant Damier", district: "Kaloum" }),
+        ctx.spawnActor("restaurant", { label: "Restaurant Niger", district: "Kaloum" }),
+      ];
+      const missions = Array.from({ length: 5 }).map((_, i) => {
+        const customer = ctx.spawnActor("customer", { label: `Client #${i + 1}`, district: "Kaloum" });
+        const courier = ctx.spawnActor("courier", { label: `Repas-courier ${i + 1}`, district: "Kaloum" });
+        const resto = restos[i % restos.length];
+        const m = ctx.spawnMission({
+          kind: "repas",
+          pickupDistrict: "Kaloum",
+          dropoffDistrict: i % 2 === 0 ? "Kaloum" : "Dixinn",
+          actorIds: [customer.id, resto.id, courier.id],
+          amountGnf: REPAS_TICKET,
+        });
+        ctx.notify(`Nouvelle commande → ${resto.label}`, { refId: m.id });
+        return { m, customer, courier, resto };
+      });
+      await ctx.wait(150);
+      for (const { m } of missions) ctx.transitionMission(m.id, "accepted");
+      await ctx.wait(200);
+      for (const { m } of missions) ctx.transitionMission(m.id, "in_progress");
+      await ctx.wait(250);
+      for (const { m, customer, courier, resto } of missions) {
+        ctx.transitionMission(m.id, "completed");
+        ctx.walletEntry({ actorId: customer.id, missionId: m.id, kind: "receipt", amountGnf: -REPAS_TICKET });
+        ctx.walletEntry({ actorId: resto.id, missionId: m.id, kind: "merchant_inflow", amountGnf: Math.round(REPAS_TICKET * 0.75) });
+        ctx.walletEntry({ actorId: courier.id, missionId: m.id, kind: "earning", amountGnf: Math.round(REPAS_TICKET * 0.15) });
+      }
+    },
+  },
+  {
+    id: "couriers_compete",
+    title: "Moto · 5 couriers en compétition",
+    description: "Une offre, 5 couriers — premier accepte, les autres se voient annulés.",
+    family: "ride",
+    async run(ctx) {
+      const rider = ctx.spawnActor("rider", { label: "Rider Kaloum", district: "Kaloum" });
+      const couriers = Array.from({ length: 5 }).map((_, i) =>
+        ctx.spawnActor("courier", { label: `Moto-${i + 1}`, district: "Kaloum" }),
+      );
+      const offers = couriers.map((c) =>
+        ctx.spawnMission({
+          kind: "moto",
+          pickupDistrict: "Kaloum",
+          dropoffDistrict: "Ratoma",
+          actorIds: [rider.id, c.id],
+          amountGnf: RIDE_FARE,
+        }),
+      );
+      offers.forEach((m) => ctx.transitionMission(m.id, "dispatched"));
+      ctx.notify("Course Kaloum → Ratoma diffusée", { refId: offers[0].id });
+      await ctx.wait(180);
+      ctx.transitionMission(offers[0].id, "accepted");
+      for (let i = 1; i < offers.length; i++) ctx.transitionMission(offers[i].id, "cancelled", { reason: "claimed_by_other" });
+      await ctx.wait(300);
+      ctx.transitionMission(offers[0].id, "completed");
+      ctx.walletEntry({ actorId: rider.id, missionId: offers[0].id, kind: "receipt", amountGnf: -RIDE_FARE });
+      ctx.walletEntry({ actorId: couriers[0].id, missionId: offers[0].id, kind: "earning", amountGnf: Math.round(RIDE_FARE * 0.85) });
+    },
+  },
+  {
+    id: "marche_chain",
+    title: "Marché · chaîne buyer/seller/courier",
+    description: "Madina → Dixinn, intérêt acheteur, négo, livraison, paiement.",
+    family: "marche",
+    async run(ctx) {
+      const seller = ctx.spawnActor("seller", { label: "Vendeur Madina", district: "Madina" });
+      const buyer = ctx.spawnActor("customer", { label: "Acheteur Dixinn", district: "Dixinn" });
+      const courier = ctx.spawnActor("courier", { label: "Marché-courier", district: "Madina" });
+      const m = ctx.spawnMission({
+        kind: "marche",
+        pickupDistrict: "Madina",
+        dropoffDistrict: "Dixinn",
+        actorIds: [buyer.id, seller.id, courier.id],
+        amountGnf: MARCHE_TICKET,
+      });
+      ctx.notify("Acheteur intéressé", { refId: m.id });
+      await ctx.wait(150);
+      ctx.notify("Vendeur a accepté l'offre", { refId: m.id });
+      ctx.transitionMission(m.id, "accepted");
+      await ctx.wait(200);
+      ctx.transitionMission(m.id, "en_route");
+      await ctx.wait(250);
+      ctx.transitionMission(m.id, "completed");
+      ctx.walletEntry({ actorId: buyer.id, missionId: m.id, kind: "receipt", amountGnf: -MARCHE_TICKET });
+      ctx.walletEntry({ actorId: seller.id, missionId: m.id, kind: "merchant_inflow", amountGnf: Math.round(MARCHE_TICKET * 0.85) });
+      ctx.walletEntry({ actorId: courier.id, missionId: m.id, kind: "earning", amountGnf: Math.round(MARCHE_TICKET * 0.1) });
+    },
+  },
+  {
+    id: "ride_burst_kaloum",
+    title: "Moto · burst haute demande Kaloum",
+    description: "8 demandes successives en zone Kaloum, 3 couriers disponibles.",
+    family: "ride",
+    async run(ctx) {
+      const couriers = Array.from({ length: 3 }).map((_, i) =>
+        ctx.spawnActor("courier", { label: `Moto-K${i + 1}`, district: "Kaloum" }),
+      );
+      for (let i = 0; i < 8; i++) {
+        const rider = ctx.spawnActor("rider", { label: `Demand #${i + 1}`, district: "Kaloum" });
+        const m = ctx.spawnMission({
+          kind: "moto",
+          pickupDistrict: "Kaloum",
+          dropoffDistrict: i % 2 ? "Matam" : "Madina",
+          actorIds: [rider.id],
+          amountGnf: RIDE_FARE,
+        });
+        ctx.transitionMission(m.id, "dispatched");
+        await ctx.wait(60);
+        if (i < 3) {
+          ctx.transitionMission(m.id, "accepted");
+          ctx.walletEntry({ actorId: couriers[i].id, missionId: m.id, kind: "earning", amountGnf: Math.round(RIDE_FARE * 0.85) });
+        } else {
+          ctx.transitionMission(m.id, "timeout", { reason: "no_courier_available" });
+          ctx.notify("Aucun courier disponible — file d'attente", { level: "warn", refId: m.id });
+        }
+      }
+    },
+  },
+  {
+    id: "district_mismatch",
+    title: "District · mismatch courier",
+    description: "Courier préfère Ratoma mais reçoit une mission Matoto — refus poli.",
+    family: "failure",
+    async run(ctx) {
+      const courier = ctx.spawnActor("courier", { label: "Moto-Ratoma", district: "Ratoma" });
+      const rider = ctx.spawnActor("rider", { label: "Rider Matoto", district: "Matoto" });
+      const m = ctx.spawnMission({
+        kind: "moto",
+        pickupDistrict: "Matoto",
+        dropoffDistrict: "Kaloum",
+        actorIds: [rider.id, courier.id],
+        amountGnf: RIDE_FARE,
+      });
+      ctx.transitionMission(m.id, "dispatched");
+      await ctx.wait(150);
+      ctx.notify("Mission hors zone préférée", { level: "warn", refId: m.id });
+      ctx.transitionMission(m.id, "cancelled", { reason: "district_mismatch" });
+    },
+  },
+  {
+    id: "mission_in_your_zone",
+    title: "District · mission dans votre zone",
+    description: "Courier Kipé reçoit une course Kipé → Ratoma — alerte de zone.",
+    family: "notification",
+    async run(ctx) {
+      const courier = ctx.spawnActor("courier", { label: "Moto-Kipé", district: "Kipé" });
+      const rider = ctx.spawnActor("rider", { label: "Rider Kipé", district: "Kipé" });
+      const m = ctx.spawnMission({
+        kind: "moto",
+        pickupDistrict: "Kipé",
+        dropoffDistrict: "Ratoma",
+        actorIds: [rider.id, courier.id],
+        amountGnf: RIDE_FARE,
+      });
+      ctx.notify("Mission dans votre zone · Kipé → Ratoma", { refId: m.id });
+      ctx.transitionMission(m.id, "accepted");
+      await ctx.wait(200);
+      ctx.transitionMission(m.id, "completed");
+      ctx.walletEntry({ actorId: courier.id, missionId: m.id, kind: "earning", amountGnf: Math.round(RIDE_FARE * 0.9) });
+    },
+  },
+  {
+    id: "restaurant_delays_pickup",
+    title: "Échec · restaurant retarde pickup",
+    description: "Resto accepte, mais le plat n'est pas prêt à l'arrivée du courier.",
+    family: "failure",
+    async run(ctx) {
+      const resto = ctx.spawnActor("restaurant", { label: "Resto lent", district: "Dixinn" });
+      const customer = ctx.spawnActor("customer", { label: "Customer Dixinn", district: "Dixinn" });
+      const courier = ctx.spawnActor("courier", { label: "Repas-courier", district: "Dixinn" });
+      const m = ctx.spawnMission({
+        kind: "repas",
+        pickupDistrict: "Dixinn",
+        dropoffDistrict: "Dixinn",
+        actorIds: [customer.id, resto.id, courier.id],
+        amountGnf: REPAS_TICKET,
+      });
+      ctx.transitionMission(m.id, "accepted");
+      await ctx.wait(200);
+      ctx.transitionMission(m.id, "arrived");
+      ctx.notify("Commande non prête — attente", { level: "warn", refId: m.id });
+      await ctx.wait(300);
+      ctx.transitionMission(m.id, "in_progress");
+      await ctx.wait(200);
+      ctx.transitionMission(m.id, "completed");
+      ctx.walletEntry({ actorId: courier.id, missionId: m.id, kind: "earning", amountGnf: Math.round(REPAS_TICKET * 0.15) });
+    },
+  },
+  {
+    id: "merchant_cancels_after_accept",
+    title: "Échec · merchant annule après accept",
+    description: "Le restaurant annule alors que le courier a déjà accepté.",
+    family: "failure",
+    async run(ctx) {
+      const resto = ctx.spawnActor("restaurant", { label: "Resto annulant", district: "Kaloum" });
+      const customer = ctx.spawnActor("customer", { label: "Customer Kaloum", district: "Kaloum" });
+      const courier = ctx.spawnActor("courier", { label: "Repas-courier", district: "Kaloum" });
+      const m = ctx.spawnMission({
+        kind: "repas",
+        pickupDistrict: "Kaloum",
+        dropoffDistrict: "Kaloum",
+        actorIds: [customer.id, resto.id, courier.id],
+        amountGnf: REPAS_TICKET,
+      });
+      ctx.transitionMission(m.id, "accepted");
+      await ctx.wait(150);
+      ctx.notify("Merchant annule la commande", { level: "warn", refId: m.id });
+      ctx.transitionMission(m.id, "cancelled", { reason: "merchant_cancelled" });
+      ctx.walletEntry({ actorId: customer.id, missionId: m.id, kind: "refund", amountGnf: REPAS_TICKET });
+    },
+  },
+  {
+    id: "missing_dropoff_address",
+    title: "Échec · adresse dropoff manquante",
+    description: "Mission sans district dropoff — fallback gracieux.",
+    family: "failure",
+    async run(ctx) {
+      const rider = ctx.spawnActor("rider", { label: "Rider sans adresse" });
+      const courier = ctx.spawnActor("courier", { label: "Moto-fallback", district: "Ratoma" });
+      const m = ctx.spawnMission({
+        kind: "moto",
+        pickupDistrict: "Ratoma",
+        actorIds: [rider.id, courier.id],
+        amountGnf: RIDE_FARE,
+      });
+      ctx.transitionMission(m.id, "dispatched");
+      await ctx.wait(120);
+      ctx.notify("Dropoff manquant — demande info au client", { level: "warn", refId: m.id });
+      ctx.transitionMission(m.id, "failed", { reason: "missing_dropoff" });
+    },
+  },
+  {
+    id: "customer_unreachable_dropoff",
+    title: "Échec · client injoignable au dropoff",
+    description: "Le courier arrive au dropoff, le client ne répond pas.",
+    family: "failure",
+    async run(ctx) {
+      const customer = ctx.spawnActor("customer", { label: "Customer absent", district: "Matam" });
+      const courier = ctx.spawnActor("courier", { label: "Repas-courier", district: "Matam" });
+      const m = ctx.spawnMission({
+        kind: "repas",
+        pickupDistrict: "Kaloum",
+        dropoffDistrict: "Matam",
+        actorIds: [customer.id, courier.id],
+        amountGnf: REPAS_TICKET,
+      });
+      ctx.transitionMission(m.id, "en_route");
+      await ctx.wait(200);
+      ctx.transitionMission(m.id, "arrived");
+      ctx.notify("Client injoignable au dropoff", { level: "warn", refId: m.id });
+      await ctx.wait(300);
+      ctx.transitionMission(m.id, "failed", { reason: "customer_unreachable" });
+    },
+  },
+  {
+    id: "wallet_payment_pending",
+    title: "Wallet · paiement en attente",
+    description: "Paiement client pending, puis confirmé après délai.",
+    family: "wallet",
+    async run(ctx) {
+      const customer = ctx.spawnActor("customer", { label: "Customer payeur", district: "Kaloum" });
+      const merchant = ctx.spawnActor("restaurant", { label: "Resto CHOPPay", district: "Kaloum" });
+      const m = ctx.spawnMission({
+        kind: "repas",
+        pickupDistrict: "Kaloum",
+        dropoffDistrict: "Kaloum",
+        actorIds: [customer.id, merchant.id],
+        amountGnf: REPAS_TICKET,
+      });
+      ctx.walletEntry({ actorId: customer.id, missionId: m.id, kind: "hold", amountGnf: -REPAS_TICKET });
+      ctx.notify("Paiement en attente de confirmation", { refId: m.id });
+      await ctx.wait(300);
+      ctx.transitionMission(m.id, "completed");
+      ctx.walletEntry({ actorId: customer.id, missionId: m.id, kind: "receipt", amountGnf: -REPAS_TICKET });
+      ctx.walletEntry({ actorId: merchant.id, missionId: m.id, kind: "merchant_inflow", amountGnf: Math.round(REPAS_TICKET * 0.85) });
+    },
+  },
+  {
+    id: "wallet_payment_failed_recovery",
+    title: "Wallet · paiement échoué + récupération",
+    description: "Premier paiement refusé, second réussit (récupération CHOPPay).",
+    family: "wallet",
+    async run(ctx) {
+      const customer = ctx.spawnActor("customer", { label: "Customer retry", district: "Ratoma" });
+      const merchant = ctx.spawnActor("restaurant", { label: "Resto CHOPPay", district: "Ratoma" });
+      const m = ctx.spawnMission({
+        kind: "repas",
+        pickupDistrict: "Ratoma",
+        dropoffDistrict: "Ratoma",
+        actorIds: [customer.id, merchant.id],
+        amountGnf: REPAS_TICKET,
+      });
+      ctx.walletEntry({ actorId: customer.id, missionId: m.id, kind: "hold", amountGnf: -REPAS_TICKET });
+      ctx.notify("Paiement refusé — nouvel essai", { level: "warn", refId: m.id });
+      await ctx.wait(150);
+      ctx.walletEntry({ actorId: customer.id, missionId: m.id, kind: "refund", amountGnf: REPAS_TICKET });
+      await ctx.wait(150);
+      ctx.walletEntry({ actorId: customer.id, missionId: m.id, kind: "receipt", amountGnf: -REPAS_TICKET });
+      ctx.walletEntry({ actorId: merchant.id, missionId: m.id, kind: "merchant_inflow", amountGnf: Math.round(REPAS_TICKET * 0.85) });
+      ctx.transitionMission(m.id, "completed");
+    },
+  },
+  {
+    id: "choppay_merchant_inflow",
+    title: "Wallet · CHOPPay merchant inflow",
+    description: "3 paiements directs CHOPPay reçus par un marchand.",
+    family: "wallet",
+    async run(ctx) {
+      const merchant = ctx.spawnActor("restaurant", { label: "Marchand CHOPPay", district: "Madina" });
+      for (let i = 0; i < 3; i++) {
+        const customer = ctx.spawnActor("customer", { label: `Payeur ${i + 1}`, district: "Madina" });
+        ctx.walletEntry({ actorId: customer.id, kind: "receipt", amountGnf: -REPAS_TICKET });
+        ctx.walletEntry({ actorId: merchant.id, kind: "merchant_inflow", amountGnf: Math.round(REPAS_TICKET * 0.97) });
+        await ctx.wait(80);
+      }
+    },
+  },
+  {
+    id: "duplicate_delivery_updates",
+    title: "Notifications · updates dupliqués",
+    description: "Le même update est émis 4 fois — vérifie la déduplication.",
+    family: "notification",
+    async run(ctx) {
+      const customer = ctx.spawnActor("customer", { label: "Customer dup", district: "Kipé" });
+      const m = ctx.spawnMission({
+        kind: "repas",
+        pickupDistrict: "Kipé",
+        dropoffDistrict: "Kipé",
+        actorIds: [customer.id],
+        amountGnf: REPAS_TICKET,
+      });
+      for (let i = 0; i < 4; i++) {
+        ctx.notify("Commande en route", { refId: m.id });
+        await ctx.wait(40);
+      }
+      ctx.transitionMission(m.id, "completed");
+    },
+  },
+  {
+    id: "courier_accept_then_cancel",
+    title: "Échec · courier accepte puis annule",
+    description: "Courier accepte la course puis se désiste en route.",
+    family: "failure",
+    async run(ctx) {
+      const rider = ctx.spawnActor("rider", { label: "Rider Dixinn", district: "Dixinn" });
+      const courier = ctx.spawnActor("courier", { label: "Moto-désiste", district: "Dixinn" });
+      const m = ctx.spawnMission({
+        kind: "moto",
+        pickupDistrict: "Dixinn",
+        dropoffDistrict: "Kaloum",
+        actorIds: [rider.id, courier.id],
+        amountGnf: RIDE_FARE,
+      });
+      ctx.transitionMission(m.id, "accepted");
+      await ctx.wait(150);
+      ctx.transitionMission(m.id, "en_route");
+      await ctx.wait(200);
+      ctx.notify("Courier annule — réassignation", { level: "warn", refId: m.id });
+      ctx.transitionMission(m.id, "cancelled", { reason: "courier_aborted" });
+      const backup = ctx.spawnActor("courier", { label: "Moto-backup", district: "Dixinn" });
+      const m2 = ctx.spawnMission({
+        kind: "moto",
+        pickupDistrict: "Dixinn",
+        dropoffDistrict: "Kaloum",
+        actorIds: [rider.id, backup.id],
+        amountGnf: RIDE_FARE,
+      });
+      ctx.transitionMission(m2.id, "accepted");
+      await ctx.wait(200);
+      ctx.transitionMission(m2.id, "completed");
+      ctx.walletEntry({ actorId: backup.id, missionId: m2.id, kind: "earning", amountGnf: Math.round(RIDE_FARE * 0.85) });
+    },
+  },
+  {
+    id: "rapid_mission_alerts",
+    title: "Notifications · 5 alertes rapides",
+    description: "5 alertes mission consécutives — test du calme UI.",
+    family: "notification",
+    async run(ctx) {
+      const courier = ctx.spawnActor("courier", { label: "Moto-stress", district: "Ratoma" });
+      for (let i = 0; i < 5; i++) {
+        const m = ctx.spawnMission({
+          kind: "moto",
+          pickupDistrict: "Ratoma",
+          dropoffDistrict: i % 2 ? "Kipé" : "Matoto",
+          actorIds: [courier.id],
+          amountGnf: RIDE_FARE,
+        });
+        ctx.notify(`Nouvelle mission dispo · ${i + 1}/5`, { refId: m.id });
+        await ctx.wait(60);
+        ctx.transitionMission(m.id, "timeout", { reason: "auto_decline" });
+      }
+    },
+  },
+);

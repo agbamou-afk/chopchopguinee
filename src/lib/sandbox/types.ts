@@ -122,4 +122,25 @@ export interface SandboxSnapshot {
   events: SandboxEvent[];
   wallet: SandboxWalletEntry[];
   runningScenarios: string[];
+  runs: SandboxScenarioRun[];
+}
+
+export type SandboxRunStatus = "running" | "completed" | "failed" | "cancelled";
+
+export interface SandboxScenarioRun {
+  id: string;
+  scenarioId: string;
+  title: string;
+  status: SandboxRunStatus;
+  startedAt: number;
+  endedAt?: number;
+  durationMs?: number;
+  counts: {
+    actors: number;
+    missions: number;
+    wallet: number;
+    notifications: number;
+    failures: number;
+  };
+  error?: string;
 }

@@ -85,8 +85,9 @@ export function SandboxOpsPanel() {
         </div>
 
         <Tabs defaultValue="scenarios" className="mt-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="scenarios">Scénarios</TabsTrigger>
+            <TabsTrigger value="runs">Runs</TabsTrigger>
             <TabsTrigger value="missions">Missions</TabsTrigger>
             <TabsTrigger value="wallet">Wallet</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
@@ -94,7 +95,7 @@ export function SandboxOpsPanel() {
 
           <TabsContent value="scenarios" className="space-y-2 mt-3">
             <div className="flex flex-wrap gap-1.5">
-              {["all", "ride", "repas", "marche", "wallet", "failure", "notification"].map((f) => (
+              {["all", "ride", "repas", "marche", "wallet", "failure", "notification", "merchant"].map((f) => (
                 <Badge
                   key={f}
                   variant={familyFilter === f ? "default" : "outline"}
@@ -111,6 +112,7 @@ export function SandboxOpsPanel() {
                   <div className="min-w-0">
                     <div className="text-sm font-medium truncate">{s.title}</div>
                     <div className="text-[11px] text-muted-foreground">{s.description}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wide">{s.family}</div>
                   </div>
                   <Button size="sm" variant="outline" disabled={!!busy} onClick={() => run(s.id)} className="gap-1.5 shrink-0">
                     <Play className="w-3.5 h-3.5" />
@@ -119,6 +121,34 @@ export function SandboxOpsPanel() {
                 </div>
               </Card>
             ))}
+          </TabsContent>
+
+          <TabsContent value="runs" className="space-y-2 mt-3">
+            {snap.runs.length === 0 && <p className="text-xs text-muted-foreground">Aucun run lancé.</p>}
+            {snap.runs.map((r) => {
+              const variant =
+                r.status === "completed" ? "default" :
+                r.status === "failed" || r.status === "cancelled" ? "destructive" : "secondary";
+              return (
+                <Card key={r.id} className="p-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs font-medium truncate">{r.title}</div>
+                    <Badge variant={variant} className="text-[9px]">{r.status}</Badge>
+                  </div>
+                  <div className="mt-1 grid grid-cols-5 gap-1 text-[10px] text-muted-foreground">
+                    <span>👤 {r.counts.actors}</span>
+                    <span>🎯 {r.counts.missions}</span>
+                    <span>💰 {r.counts.wallet}</span>
+                    <span>🔔 {r.counts.notifications}</span>
+                    <span>⚠ {r.counts.failures}</span>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-1 font-mono">
+                    {r.durationMs != null ? `${r.durationMs} ms` : "…"}
+                    {r.error ? ` · ${r.error}` : ""}
+                  </div>
+                </Card>
+              );
+            })}
           </TabsContent>
 
           <TabsContent value="missions" className="space-y-2 mt-3">
