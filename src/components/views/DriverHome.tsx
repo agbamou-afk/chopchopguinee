@@ -307,7 +307,12 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         )}
 
         {/* Unified missions (deliveries + future ride missions) */}
-        {user && <MissionsPanel userId={user.id} />}
+        {user && (
+          <MissionsPanel
+            userId={user.id}
+            capabilities={profile?.capabilities ?? []}
+          />
+        )}
 
         {/* Capability picker — drivers opt into delivery work */}
         {user && profile && (
