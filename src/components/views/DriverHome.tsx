@@ -17,6 +17,7 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { MissionsPanel } from "@/components/driver/MissionsPanel";
 import { CapabilityPicker } from "@/components/driver/CapabilityPicker";
 import { useMissionAlerts } from "@/hooks/useMissionAlerts";
+import { DemoMissionLauncher } from "@/components/driver/DemoMissionLauncher";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
@@ -178,14 +179,18 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
       {/* Content */}
       <div className="px-4 mt-5 space-y-4">
         {showDemoLauncher && !activeTrip && !current && queue.length === 0 && (
-          <Button
-            onClick={launchDemoRide}
-            disabled={demoLaunching}
-            className="w-full h-12 gradient-primary gap-2"
-          >
-            <Sparkles className="w-4 h-4" />
-            {demoLaunching ? "Préparation…" : "Lancer une course démo"}
-          </Button>
+          <div className="space-y-2">
+            <Button
+              onClick={launchDemoRide}
+              disabled={demoLaunching}
+              variant="outline"
+              className="w-full h-11 gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              {demoLaunching ? "Préparation…" : "Lancer une course démo liée"}
+            </Button>
+            <DemoMissionLauncher />
+          </div>
         )}
         {cashOverLimit && (
           <Card className="p-4 border-destructive/40 bg-destructive/5 flex gap-3 items-start">
