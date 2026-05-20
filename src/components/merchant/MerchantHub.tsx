@@ -12,6 +12,7 @@ import { ChopPayActivitySection } from "./ChopPayActivitySection";
 import { AnalyticsStrip } from "./AnalyticsStrip";
 import { setRestaurantOpen, setStoreOpen } from "@/lib/merchant/operations";
 import { toast } from "@/hooks/use-toast";
+import { MerchantActivationPanel } from "./MerchantActivationPanel";
 
 export function MerchantHub() {
   const navigate = useNavigate();
@@ -23,14 +24,13 @@ export function MerchantHub() {
     setIsOpen(restaurant ? !!restaurant.is_open : store ? store.status === "active" : false);
   }, [restaurant, store]);
 
-  useEffect(() => {
-    if (!loading && !hasAny) navigate("/", { replace: true });
-  }, [loading, hasAny, navigate]);
-
   if (loading) {
     return <div className="p-6 text-center text-sm text-muted-foreground">Chargement…</div>;
   }
-  if (!hasAny || !user) return null;
+  if (!user) {
+    navigate("/auth", { replace: true });
+    return null;
+  }
 
   const handleOpenToggle = async (next: boolean) => {
     setIsOpen(next);
@@ -60,6 +60,9 @@ export function MerchantHub() {
         <h1 className="text-lg font-extrabold text-foreground">Espace marchand</h1>
       </header>
 
+      {!hasAny ? (
+        <MerchantActivationPanel onActivated={refresh} />
+      ) : (
       <main className="max-w-md mx-auto px-4 pt-4 space-y-3">
         <MerchantIdentityStrip
           store={store}
@@ -85,6 +88,7 @@ export function MerchantHub() {
           sellerId={store ? user.id : undefined}
         />
       </main>
+      )}
     </div>
   );
 }

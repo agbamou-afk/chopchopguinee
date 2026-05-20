@@ -50,6 +50,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
   const { lowDataMode, setLowDataMode } = useAppEnv();
   const navigate = useNavigate();
   const { hasAny: isMerchant } = useMerchantIdentity();
+  const isAuthed = !!user;
 
   const isDriver = roles.includes("driver");
   const fullName =
@@ -194,7 +195,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
       {/* Menu */}
       <div className="px-4 pb-44">
         <div className="bg-card rounded-2xl shadow-card border border-border/60 overflow-hidden">
-          {isMerchant && (
+          {isAuthed && (
             <button
               onClick={() => navigate("/merchant/hub")}
               className="w-full flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors border-b border-border"
@@ -203,7 +204,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
                 <Store className="w-5 h-5 text-primary" />
               </div>
               <span className="flex-1 text-left font-medium text-foreground">
-                Espace marchand
+                {isMerchant ? "Espace marchand" : "Commencer à vendre"}
               </span>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
