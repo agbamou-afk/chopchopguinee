@@ -17,6 +17,7 @@ import {
   isTerminalState,
   type Mission,
 } from "@/lib/missions/types";
+import { formatDistrictPair, detectDistrictInText, districtFor } from "@/lib/maps/zones";
 
 type RideRow = {
   id: string;
@@ -119,17 +120,27 @@ function rideToActivity(ride: RideRow, role: "client" | "driver"): ActivityItem 
   const isDriver = role === "driver";
   const amount = isDriver ? (ride.driver_earning_gnf ?? 0) : -(ride.fare_gnf ?? 0);
   const status = statusFromRide(ride.status);
+  const meta = (ride.metadata ?? {}) as Record<string, any>;
+  const pickupText = meta.pickup_address ?? meta.pickup ?? null;
+  const dropoffText = meta.dropoff_address ?? meta.destination ?? null;
+  const a = pickupText ? detectDistrictInText(String(pickupText)) : null;
+  const b = dropoffText ? detectDistrictInText(String(dropoffText)) : null;
+  let district: string | undefined;
+  if (a && b && a !== b) district = `${a} → ${b}`;
+  else if (a || b) district = (a ?? b) as string;
   return {
     id: `ride:${ride.id}`,
     kind: "ride",
     title: isDriver ? `Course ${modeLabel} terminée` : `Course CHOP CHOP · ${modeLabel}`,
-    subtitle: status === "in_progress" ? "Course en cours" : status === "pending" ? "Recherche d'un chauffeur" : "Trajet terminé",
+    subtitle: district ?? (status === "in_progress" ? "Course en cours" : status === "pending" ? "Recherche d'un chauffeur" : "Trajet terminé"),
     amount: status === "completed" ? amount : undefined,
     status,
     occurredAt: ride.completed_at ?? ride.created_at,
     reference: ride.id.slice(0, 8).toUpperCase(),
     entityId: ride.id,
     badge: status === "in_progress" ? "live" : undefined,
+    district,
+    missionKind: "moto",
     meta: { ride },
   };
 }
