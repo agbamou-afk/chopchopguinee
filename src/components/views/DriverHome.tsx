@@ -17,7 +17,10 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { MissionsPanel } from "@/components/driver/MissionsPanel";
 import { CapabilityPicker } from "@/components/driver/CapabilityPicker";
 import { useMissionAlerts } from "@/hooks/useMissionAlerts";
-import { DemoMissionLauncher } from "@/components/driver/DemoMissionLauncher";
+import {
+  DemoMissionDispatchProvider,
+  DemoMissionLauncher,
+} from "@/components/driver/DemoMissionDispatch";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
