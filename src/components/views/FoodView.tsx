@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, SlidersHorizontal, Timer, Star, Flame } from "lucide-react";
+import { Search, SlidersHorizontal, Timer, Star, Flame, ChefHat } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { FoodCategories } from "@/components/food/FoodCategories";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
@@ -13,6 +13,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isLiveUser } from "@/lib/runtimeMode";
 import { listOpenRestaurants } from "@/lib/repas/restaurants";
 import type { FoodRestaurant } from "@/lib/repas/types";
+import { RestaurantOnboardingSheet } from "@/components/food/RestaurantOnboardingSheet";
+import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 
 interface FoodViewProps {
   onBack: () => void;
@@ -103,6 +105,8 @@ export function FoodView({ onBack }: FoodViewProps) {
   const [liveRestaurants, setLiveRestaurants] = useState<FoodRestaurant[] | null>(null);
   const { user, roles } = useAuth();
   const liveUser = isLiveUser(user, roles);
+  const { restaurant: ownRestaurant, refresh: refreshMerchant } = useMerchantIdentity();
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -167,6 +171,22 @@ export function FoodView({ onBack }: FoodViewProps) {
             { icon: Star, label: "Restaurants notés 4.5+", bg: "bg-primary/10", tone: "text-primary" },
           ]}
         />
+
+        {user && !ownRestaurant && (
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/60 shadow-card text-left hover:bg-muted/40 transition"
+          >
+            <div className="p-2 rounded-xl bg-primary/10">
+              <ChefHat className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Créer un restaurant</p>
+              <p className="text-[11px] text-muted-foreground">Recevez des commandes Repas en quelques minutes.</p>
+            </div>
+            <span className="text-xs text-primary font-medium">Activer</span>
+          </button>
+        )}
 
         {/* Categories */}
         <FoodCategories
@@ -275,6 +295,11 @@ export function FoodView({ onBack }: FoodViewProps) {
           <RepasRestaurantDetail restaurant={activeLive} onClose={() => setActiveLive(null)} />
         )}
       </AnimatePresence>
+      <RestaurantOnboardingSheet
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={() => refreshMerchant()}
+      />
     </div>
   );
 }
