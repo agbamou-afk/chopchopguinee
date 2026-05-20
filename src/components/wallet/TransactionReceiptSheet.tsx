@@ -6,10 +6,17 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Receipt } from "lucide-react";
+import { ShieldCheck, Receipt, MapPin, Store } from "lucide-react";
 import { formatGNF } from "@/lib/format";
 import type { WalletTransaction } from "@/hooks/useWallet";
-import { txLabel, txStatusCopy, type TxDirection } from "@/lib/wallet/labels";
+import {
+  txLabel,
+  txStatusCopy,
+  txContext,
+  payoutAvailabilityCopy,
+  MISSION_KIND_LABEL,
+  type TxDirection,
+} from "@/lib/wallet/labels";
 
 interface Props {
   tx: WalletTransaction | null;
@@ -27,6 +34,8 @@ export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: P
   const status = txStatusCopy(tx.status);
   const ref = tx.related_entity ?? null;
   const linkedCta = ref ? linkedCtaFor(ref) : null;
+  const ctx = txContext(tx);
+  const availability = payoutAvailabilityCopy(tx, direction);
   const dateStr = new Date(tx.created_at).toLocaleString("fr-FR", {
     day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
@@ -57,7 +66,36 @@ export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: P
                 {status.label}
               </span>
             )}
+            <p className={`mt-2 text-[11px] ${availabilityTone(availability.tone)}`}>
+              {availability.label}
+            </p>
           </div>
+
+          {(ctx.missionKind || ctx.pickupArea || ctx.merchantName) && (
+            <div className="bg-muted/40 rounded-2xl p-3 space-y-1.5">
+              {ctx.missionKind && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold text-[10px]">
+                    {MISSION_KIND_LABEL[ctx.missionKind]}
+                  </span>
+                </div>
+              )}
+              {ctx.pickupArea && ctx.dropoffArea && (
+                <div className="flex items-center gap-1.5 text-xs text-foreground">
+                  <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>{ctx.pickupArea}</span>
+                  <span className="text-muted-foreground">→</span>
+                  <span>{ctx.dropoffArea}</span>
+                </div>
+              )}
+              {ctx.merchantName && !ctx.pickupArea && (
+                <div className="flex items-center gap-1.5 text-xs text-foreground">
+                  <Store className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="truncate">{ctx.merchantName}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="bg-card rounded-2xl border border-border/60 p-4 space-y-2.5 shadow-card">
             <Row label="Date" value={dateStr} />
@@ -97,10 +135,17 @@ function statusTone(tone: "pending" | "failed" | "cancelled" | "ok") {
   return "bg-muted text-muted-foreground border-border";
 }
 
+function availabilityTone(tone: "ok" | "pending" | "muted") {
+  if (tone === "ok") return "text-[hsl(160_55%_28%)] font-medium";
+  if (tone === "pending") return "text-secondary-foreground font-medium";
+  return "text-muted-foreground";
+}
+
 function linkedCtaFor(ref: string): string | null {
   const r = ref.toLowerCase();
   if (r.startsWith("food_") || r.includes("repas")) return "Voir la commande";
   if (r.startsWith("listing:") || r.includes("marketplace") || r.includes("marche")) return "Voir l'article";
+  if (r.startsWith("store:") || r.includes("boutique")) return "Voir la boutique";
   if (r.startsWith("mission:") || r.includes("mission")) return "Voir la mission";
   if (r.startsWith("ride:") || r.includes("ride")) return "Voir la course";
   return null;
