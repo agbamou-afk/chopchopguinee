@@ -432,6 +432,19 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           listingTitle={listing.title}
           listingPrice={listing.price_gnf}
           listingAvailability={listing.availability ? availabilityLabel(listing.availability) : null}
+          listingId={listing.id}
+          sellerId={listing.seller_id}
+          listingCategory={listing.category}
+          listingNeighborhood={listing.neighborhood}
+          listingCommune={listing.commune}
+          listingLandmark={listing.landmark}
+          storeId={listing.store_id ?? null}
+          storeName={store?.name ?? null}
+          deliveryEligible={
+            listing.delivery_available ||
+            fulfillment.includes("chop_delivery") ||
+            !!store?.delivery_available
+          }
           onBack={() => setOpenConv(null)}
         />
       )}
