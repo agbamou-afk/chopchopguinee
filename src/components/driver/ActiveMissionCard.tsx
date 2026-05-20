@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Bike, UtensilsCrossed, ShoppingBag, Package, MapPin, Navigation, Loader2, AlertTriangle } from "lucide-react";
+import { Bike, UtensilsCrossed, ShoppingBag, Package, MapPin, Navigation, Loader2, AlertTriangle, Phone, ShieldCheck, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatGNF } from "@/lib/format";
 import { toast } from "sonner";
@@ -11,13 +11,14 @@ import {
   isTerminalState,
   type Mission,
   type MissionType,
+  type MissionState,
 } from "@/lib/missions/types";
 import {
   advanceMission,
   confirmDropoff,
   confirmPickup,
-  reportIssue,
 } from "@/lib/missions/missions";
+import { MissionIssueSheet } from "./MissionIssueSheet";
 
 const ICONS: Record<MissionType, typeof Bike> = {
   ride: Bike,
@@ -26,6 +27,32 @@ const ICONS: Record<MissionType, typeof Bike> = {
   package_delivery: Package,
 };
 
+const STEPS: { key: MissionState; label: string }[] = [
+  { key: "heading_to_pickup", label: "Vers retrait" },
+  { key: "arrived_pickup", label: "Au retrait" },
+  { key: "picked_up", label: "Récupéré" },
+  { key: "heading_to_dropoff", label: "Vers client" },
+  { key: "delivered", label: "Livré" },
+];
+
+const STEP_INDEX: Record<MissionState, number> = {
+  assigned: 0,
+  heading_to_pickup: 0,
+  arrived_pickup: 1,
+  picked_up: 2,
+  heading_to_dropoff: 3,
+  arrived_dropoff: 4,
+  delivered: 4,
+  failed: -1,
+};
+
+/** Extract a phone number from payload_summary (we embed ☎ +224... in Repas). */
+function extractPhone(s: string | null): string | null {
+  if (!s) return null;
+  const m = s.match(/(\+?\d[\d\s.-]{6,})/);
+  return m ? m[1].replace(/\s+/g, "") : null;
+}
+
 interface ActiveMissionCardProps {
   mission: Mission;
   onChange?: (m: Mission) => void;
@@ -33,9 +60,12 @@ interface ActiveMissionCardProps {
 
 export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps) {
   const [busy, setBusy] = useState(false);
+  const [issueOpen, setIssueOpen] = useState(false);
   const Icon = ICONS[mission.type] ?? Package;
   const ctaLabel = MISSION_NEXT_LABEL[mission.state];
   const terminal = isTerminalState(mission.state);
+  const phone = extractPhone(mission.payload_summary);
+  const activeIdx = STEP_INDEX[mission.state];
 
   const handleNext = async () => {
     if (busy) return;
@@ -52,22 +82,6 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         updated = await advanceMission(mission.id, mission.state);
       }
       onChange?.(updated);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Action impossible");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleIssue = async () => {
-    if (busy) return;
-    const reason = window.prompt("Décrivez brièvement le problème", "");
-    if (!reason) return;
-    setBusy(true);
-    try {
-      const updated = await reportIssue(mission.id, reason);
-      onChange?.(updated);
-      toast.success("Problème signalé");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Action impossible");
     } finally {
@@ -106,6 +120,34 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         )}
       </div>
 
+      {/* Mini checklist timeline */}
+      {!terminal && activeIdx >= 0 && (
+        <div className="flex items-center justify-between mb-3 px-0.5">
+          {STEPS.map((s, i) => {
+            const done = i < activeIdx;
+            const active = i === activeIdx;
+            return (
+              <div key={s.key} className="flex-1 flex flex-col items-center gap-1">
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                    done
+                      ? "bg-primary text-primary-foreground"
+                      : active
+                        ? "bg-primary/15 text-primary ring-2 ring-primary"
+                        : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {done ? <Check className="w-3 h-3" /> : i + 1}
+                </span>
+                <span className={`text-[9px] leading-tight text-center ${active ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
+                  {s.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-muted-foreground">Gain estimé</span>
         <span className="text-sm font-bold tabular-nums">
@@ -114,22 +156,45 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
       </div>
 
       {!terminal && ctaLabel && (
-        <Button className="w-full h-10" onClick={handleNext} disabled={busy}>
+        <Button className="w-full h-12" onClick={handleNext} disabled={busy}>
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : ctaLabel}
         </Button>
       )}
 
       {!terminal && (
-        <button
-          type="button"
-          onClick={handleIssue}
-          disabled={busy}
-          className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
-        >
-          <AlertTriangle className="w-3 h-3" />
-          Signaler un problème
-        </button>
+        <div className="mt-2 flex items-center gap-2">
+          {phone && (
+            <a
+              href={`tel:${phone}`}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-muted"
+            >
+              <Phone className="w-4 h-4" /> Appeler
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() => setIssueOpen(true)}
+            disabled={busy}
+            className={`${phone ? "flex-1" : "w-full"} inline-flex items-center justify-center gap-1.5 h-10 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/40 disabled:opacity-50`}
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Problème
+          </button>
+        </div>
       )}
+
+      {!terminal && (
+        <p className="mt-2 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+          <ShieldCheck className="w-3 h-3 text-primary" /> Mission suivie par CHOP CHOP
+        </p>
+      )}
+
+      <MissionIssueSheet
+        missionId={mission.id}
+        open={issueOpen}
+        onOpenChange={setIssueOpen}
+        onReported={onChange}
+      />
     </motion.div>
   );
 }
