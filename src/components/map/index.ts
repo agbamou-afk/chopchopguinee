@@ -1,5 +1,7 @@
 export { ChopMap, type ChopMapHandle } from './ChopMap';
 export { MapMarker } from './MapMarker';
+export { ChopPin, type ChopPinVariant } from './ChopPin';
+export * from './chopPinTypes';
 export { DriverMarker } from './DriverMarker';
 export { DriverPositionMarker } from './DriverPositionMarker';
 export { DriverCluster } from './DriverCluster';
