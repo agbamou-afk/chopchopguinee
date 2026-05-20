@@ -30,8 +30,9 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const { user } = useAuth();
-  const mode = getRuntimeMode(user?.email);
-  const isDemo = mode === "demo";
+  const mode = getRuntimeMode(user);
+  // No demo runtime mode any more — keep the strict pickup handshake by default.
+  const isDemo = false;
   const isSandbox = mode === "sandbox";
 
   useEffect(() => {

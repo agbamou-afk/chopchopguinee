@@ -82,23 +82,11 @@ export function useDriverSession() {
 export function DriverSessionProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { profile, loading: profileLoading, refetch } = useDriverProfile();
-  // Synthetic auto-offers are only legitimate in sandbox mode (internal
-  // testing). In demo mode the linked client creates the real ride and we
-  // must NOT spawn fake offers on top of it.
-  const isDemoDriver = (user?.email ?? "").toLowerCase() === "demo.driver@chopchop.gn";
-  const sandboxOn = typeof window !== "undefined" && (
-    import.meta.env.DEV ||
-    /[?&]sandbox=1/.test(window.location.search) ||
-    /[?&]debug=1/.test(window.location.search)
-  );
-  const demoAutoOffer = isDemoDriver && sandboxOn;
   const [isOnline, setIsOnline] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [current, setCurrent] = useState<IncomingRequest | null>(null);
   const [activeTrip, setActiveTrip] = useState<IncomingRequest | null>(null);
   const [activeRideId, setActiveRideId] = useState<string | null>(null);
-  // Guard against duplicate auto-offer creations when state thrashes.
-  const [autoOfferInFlight, setAutoOfferInFlight] = useState(false);
   const { offers, latestOffer, realtimeStatus, refetch: refetchOffers } = useIncomingOffers(isOnline);
   const queue = offers.map(offerToRequest);
   const currentExpiresAt = current
@@ -252,59 +240,6 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
   }, [queue]);
 
   const closeTrip = () => { setActiveTrip(null); setActiveRideId(null); };
-
-  // Demo-only: auto-generate ride offer popups so the demo driver flow
-  // is reliably testable end-to-end without manual admin action.
-  useEffect(() => {
-    if (!demoAutoOffer) return;
-    if (!isOnline) return;
-    if (activeTrip || activeRideId) return;
-    // Only generate if no pending offer (queue empty) and no visible popup.
-    if (queue.length > 0 || current) return;
-    if (autoOfferInFlight) return;
-    // If the latest offer is still pending or only just terminal, wait briefly.
-    const cooldownMs = latestOffer && latestOffer.status !== "pending"
-      ? 4000
-      : 6000 + Math.floor(Math.random() * 4000); // 6–10s
-
-    let cancelled = false;
-    const timer = window.setTimeout(async () => {
-      if (cancelled) return;
-      setAutoOfferInFlight(true);
-      try {
-        // Linked-demo guard: if a real linked-demo ride is still pending for
-        // this driver, never inject a synthetic offer over it.
-        const { data: linked } = await supabase
-          .from("ride_offers")
-          .select("id, ride_id, rides!inner(metadata,status)")
-          .eq("driver_id", user?.id ?? "")
-          .eq("status", "pending")
-          .limit(5);
-        const hasLinked = (linked ?? []).some((row) => {
-          const meta = ((row as unknown as { rides: { metadata: Record<string, unknown> | null } }).rides?.metadata) ?? {};
-          return meta && (meta as Record<string, unknown>).linked_demo === true;
-        });
-        if (hasLinked) {
-          await refetchOffers();
-          return;
-        }
-        const { error } = await supabase.rpc("debug_create_offer_for_current_driver" as never);
-        if (error) {
-          // eslint-disable-next-line no-console
-          console.warn("[demo-auto-offer] failed", error);
-          return;
-        }
-        await refetchOffers();
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn("[demo-auto-offer] exception", e);
-      } finally {
-        setAutoOfferInFlight(false);
-      }
-    }, cooldownMs);
-
-    return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [demoAutoOffer, isOnline, activeTrip, activeRideId, queue.length, current?.id, latestOffer?.id, latestOffer?.status, refetchOffers, autoOfferInFlight, user?.id]);
 
   const createDebugOfferForCurrentDriver = useCallback(async () => {
     setActiveTrip(null);

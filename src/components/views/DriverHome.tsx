@@ -8,19 +8,12 @@ import { useWallet } from "@/hooks/useWallet";
 import { useDriverEarnings } from "@/hooks/useDriverEarnings";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { formatGNF } from "@/lib/format";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { MissionsPanel } from "@/components/driver/MissionsPanel";
 import { CapabilityPicker } from "@/components/driver/CapabilityPicker";
 import { useMissionAlerts } from "@/hooks/useMissionAlerts";
-import {
-  DemoMissionDispatchProvider,
-  DemoMissionLauncher,
-} from "@/components/driver/DemoMissionDispatch";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
@@ -43,32 +36,6 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     hasActiveMission: !!activeTrip || !!current,
     enabled: isOnline,
   });
-
-  // Demo driver = calm guided showroom. We expose an explicit CTA so the
-  // operator can trigger a linked-demo offer on demand instead of having
-  // ride popups appear automatically. Hidden in sandbox (which already
-  // auto-spawns offers) and in live mode.
-  const isDemoDriver = (user?.email ?? "").toLowerCase() === "demo.driver@chopchop.gn";
-  const sandboxOn =
-    typeof window !== "undefined" &&
-    (/[?&]sandbox=1/.test(window.location.search) ||
-      /[?&]debug=1/.test(window.location.search));
-  const showDemoLauncher = isDemoDriver && !sandboxOn;
-  const [demoLaunching, setDemoLaunching] = useState(false);
-  const launchDemoRide = async () => {
-    if (demoLaunching) return;
-    setDemoLaunching(true);
-    try {
-      const { error } = await supabase.rpc("demo_seed_ride_offer" as never);
-      if (error) {
-        toast({ title: "Démo", description: error.message });
-      } else {
-        toast({ title: "Course démo lancée", description: "Une nouvelle demande arrive." });
-      }
-    } finally {
-      setDemoLaunching(false);
-    }
-  };
 
   // Rotating activity hints — short, operational, glanceable.
   const ACTIVITY_HINTS = [
@@ -181,20 +148,6 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
 
       {/* Content */}
       <div className="px-4 mt-5 space-y-4">
-        {showDemoLauncher && !activeTrip && !current && queue.length === 0 && (
-          <div className="space-y-2">
-            <Button
-              onClick={launchDemoRide}
-              disabled={demoLaunching}
-              variant="outline"
-              className="w-full h-11 gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              {demoLaunching ? "Préparation…" : "Lancer une course démo liée"}
-            </Button>
-            <DemoMissionLauncher />
-          </div>
-        )}
         {cashOverLimit && (
           <Card className="p-4 border-destructive/40 bg-destructive/5 flex gap-3 items-start">
             <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
@@ -342,9 +295,5 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     </div>
   );
 
-  return showDemoLauncher ? (
-    <DemoMissionDispatchProvider>{dashboard}</DemoMissionDispatchProvider>
-  ) : (
-    dashboard
-  );
+  return dashboard;
 }

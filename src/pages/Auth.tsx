@@ -343,59 +343,6 @@ export default function Auth() {
         <Link to="/" className="block text-center text-xs text-muted-foreground mt-4 hover:underline">
           ← Retour à l'application
         </Link>
-
-        <div className="mt-6 pt-4 border-t border-border">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground text-center mb-2">
-            Comptes de démonstration
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                // Clean any prior session/state so the next demo account starts fresh.
-                try { await supabase.auth.signOut({ scope: "local" }); } catch { /* noop */ }
-                try {
-                  sessionStorage.removeItem("cc_driver_mode");
-                  localStorage.removeItem("cc_realtime_trip");
-                } catch { /* noop */ }
-                const { error } = await supabase.auth.signInWithPassword({
-                  email: "demo.client@chopchop.gn",
-                  password: "demo1234",
-                });
-                setBusy(false);
-                if (error) toast({ title: "Échec démo client", description: error.message });
-              }}
-            >
-              Demo Client
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                try { await supabase.auth.signOut({ scope: "local" }); } catch { /* noop */ }
-                try {
-                  sessionStorage.removeItem("cc_driver_mode");
-                  localStorage.removeItem("cc_realtime_trip");
-                } catch { /* noop */ }
-                const { error } = await supabase.auth.signInWithPassword({
-                  email: "demo.driver@chopchop.gn",
-                  password: "demo1234",
-                });
-                setBusy(false);
-                if (error) toast({ title: "Échec démo chauffeur", description: error.message });
-              }}
-            >
-              Demo Chauffeur
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );
