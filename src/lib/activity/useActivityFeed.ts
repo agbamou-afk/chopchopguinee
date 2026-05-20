@@ -112,6 +112,13 @@ function txnToActivity(tx: WalletTransaction, walletId: string): ActivityItem | 
     reference: tx.reference,
     entityId: tx.related_entity ?? undefined,
     badge,
+    district: (() => {
+      const c = txContext(tx);
+      if (c.pickupArea && c.dropoffArea) return `${c.pickupArea} → ${c.dropoffArea}`;
+      return c.pickupArea ?? c.dropoffArea ?? undefined;
+    })(),
+    merchantName: txContext(tx).merchantName ?? undefined,
+    missionKind: txContext(tx).missionKind ?? undefined,
     meta: { txn: tx },
   };
 }
