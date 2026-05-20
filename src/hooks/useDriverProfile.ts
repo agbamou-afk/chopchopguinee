@@ -25,6 +25,9 @@ export interface DriverProfile {
   rejected_reason: string | null;
   suspended_reason: string | null;
   capabilities: string[];
+  preferred_district: string | null;
+  current_operating_district: string | null;
+  last_seen_district: string | null;
 }
 
 interface State {
