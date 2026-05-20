@@ -509,3 +509,32 @@
   .chip-mute::before  { background: hsl(220 8% 65%); }
   .chip-violet::before{ background: hsl(265 50% 55%); }
 }
+
+@layer components {
+  /* CHOP CHOP — district identity chips. Subtle by design: a tinted dot +
+     muted background. Never used to theme whole screens. */
+  .district-chip {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-size: 10.5px; line-height: 1; font-weight: 600;
+    padding: 0.22rem 0.5rem; border-radius: 9999px;
+    background: hsl(var(--muted) / 0.7);
+    color: hsl(var(--foreground) / 0.85);
+    border: 1px solid hsl(var(--border) / 0.7);
+    letter-spacing: 0.02em;
+  }
+  .district-chip::before {
+    content: ""; width: 6px; height: 6px; border-radius: 9999px;
+    background: hsl(var(--muted-foreground));
+  }
+  .district-chip--emerald::before  { background: hsl(142 71% 38%); }
+  .district-chip--mint::before     { background: hsl(152 55% 50%); }
+  .district-chip--saffron::before  { background: hsl(28 89% 53%); }
+  .district-chip--sun::before      { background: hsl(42 95% 55%); }
+  .district-chip--ember::before    { background: hsl(4 76% 56%); }
+  .district-chip--clay::before     { background: hsl(14 60% 50%); }
+  .district-chip--violet::before   { background: hsl(265 50% 55%); }
+  .district-chip--plum::before     { background: hsl(295 40% 50%); }
+  .district-chip--ocean::before    { background: hsl(200 70% 45%); }
+  .district-chip--sand::before     { background: hsl(38 35% 55%); }
+  .district-chip--graphite::before { background: hsl(213 13% 35%); }
+}

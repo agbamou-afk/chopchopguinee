@@ -19,9 +19,11 @@ import { MissionRequestCard } from "./MissionRequestCard";
 export function MissionsPanel({
   userId,
   capabilities = [],
+  preferredDistrict = null,
 }: {
   userId: string | null;
   capabilities?: string[];
+  preferredDistrict?: string | null;
 }) {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [available, setAvailable] = useState<Mission[]>([]);
@@ -119,6 +121,7 @@ export function MissionsPanel({
                 mission={m}
                 onAccept={handleAccept}
                 busy={busyId === m.id}
+                preferredDistrict={preferredDistrict}
               />
             ))}
           </div>

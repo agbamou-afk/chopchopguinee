@@ -8,6 +8,8 @@ import {
   MISSION_NEXT_STATE,
   missionStateToEvent,
 } from "./types";
+import { resolveDistrict } from "@/lib/districts";
+import { findNearestHub } from "@/lib/districts/hubs";
 
 /**
  * Lightweight mission ops. All writes also log a `mission_events` row so the
@@ -185,14 +187,50 @@ export async function confirmDropoff(
 }
 
 export async function reportIssue(missionId: string, reason: string): Promise<Mission> {
+  // Best-effort district enrichment so support can locate the courier.
+  let issue_district: string | null = null;
+  let issue_hub_id: string | null = null;
+  try {
+    const { data: m } = await supabase
+      .from("missions")
+      .select("pickup_lat,pickup_lng,dropoff_lat,dropoff_lng,pickup_address,dropoff_address")
+      .eq("id", missionId)
+      .maybeSingle();
+    if (m) {
+      const d =
+        resolveDistrict({
+          point: m.pickup_lat != null && m.pickup_lng != null
+            ? { lat: m.pickup_lat as number, lng: m.pickup_lng as number } : null,
+          text: (m.pickup_address as string | null) ?? null,
+        }) ??
+        resolveDistrict({
+          point: m.dropoff_lat != null && m.dropoff_lng != null
+            ? { lat: m.dropoff_lat as number, lng: m.dropoff_lng as number } : null,
+          text: (m.dropoff_address as string | null) ?? null,
+        });
+      if (d) {
+        issue_district = d.name;
+        try {
+          const hub = await findNearestHub(d.name, "issue_reporting");
+          issue_hub_id = hub?.id ?? null;
+        } catch { /* hubs table optional */ }
+      }
+    }
+  } catch { /* enrichment is best-effort */ }
+
   const { data, error } = await supabase
     .from("missions")
-    .update({ state: "failed", issue_reason: reason })
+    .update({
+      state: "failed",
+      issue_reason: reason,
+      ...(issue_district ? { issue_district } : {}),
+      ...(issue_hub_id ? { issue_hub_id } : {}),
+    })
     .eq("id", missionId)
     .select("*")
     .single();
   if (error) throw error;
-  await logEvent(missionId, "issue", reason);
+  await logEvent(missionId, "issue", issue_district ? `${reason} · ${issue_district}` : reason);
   return data as Mission;
 }
 
