@@ -24,6 +24,7 @@ export interface DriverProfile {
   approved_at: string | null;
   rejected_reason: string | null;
   suspended_reason: string | null;
+  capabilities: string[];
 }
 
 interface State {
