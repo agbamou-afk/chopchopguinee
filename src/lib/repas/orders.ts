@@ -78,7 +78,32 @@ export async function createFoodOrder(input: CreateOrderInput): Promise<CreateOr
         (input.deliveryAddress || (input.deliveryLat && input.deliveryLng))
       ) {
         const itemCount = input.items.reduce((n, i) => n + i.qty, 0);
-        const summary = `${r.name} · ${itemCount} article${itemCount > 1 ? "s" : ""} · ${subtotal.toLocaleString("fr-FR")} GNF`;
+        // Best-effort customer phone — not required for dispatch.
+        let phone: string | null = null;
+        try {
+          const { data: p } = await (supabase as any)
+            .from("profiles")
+            .select("phone")
+            .eq("user_id", uid)
+            .maybeSingle();
+          phone = p?.phone ?? null;
+        } catch { /* ignore */ }
+
+        const payMethodLabel =
+          input.paymentMethod === "wallet"
+            ? "CHOPWallet"
+            : input.paymentMethod === "choppay"
+              ? "CHOPPay"
+              : "Espèces";
+        const summary = [
+          r.name,
+          `${itemCount} article${itemCount > 1 ? "s" : ""}`,
+          `${subtotal.toLocaleString("fr-FR")} GNF`,
+          `Paiement ${payMethodLabel}`,
+          phone ? `☎ ${phone}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ");
         const mission = await createMission({
           type: "food_delivery",
           customer_id: uid,
