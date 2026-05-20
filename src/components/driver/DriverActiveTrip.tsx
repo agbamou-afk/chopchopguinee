@@ -49,7 +49,7 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   useRideLifecycleNotifications(ride, "driver");
   useConnectionRestored({ context: "driver-active-trip" });
   const { user } = useAuth();
-  const runtimeMode = getRuntimeMode(user?.email);
+  const runtimeMode = getRuntimeMode(user);
   const mapRef = useRef<ChopMapHandle>(null);
   const [busy, setBusy] = useState(false);
   const [clientPhone, setClientPhone] = useState<string | null>(null);
@@ -73,8 +73,8 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     window.open(url, "_blank", "noopener");
   };
 
-  // Demo and sandbox both relax the strict "wait for client scan" gate.
-  const isDemo = runtimeMode === "demo" || runtimeMode === "sandbox";
+  // Sandbox relaxes the strict "wait for client scan" gate for internal QA.
+  const isDemo = runtimeMode === "sandbox";
   const pickupCode = (ride?.metadata as any)?.pickup_code as string | undefined;
 
   // Auto-popup QR when driver confirms arrival, with a fresh token every 30s.
