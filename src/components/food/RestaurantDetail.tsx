@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Minus, ShoppingBag, Clock, Star, MapPin, X, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Minus, ShoppingBag, Clock, Star, MapPin, X, CheckCircle2, LocateFixed, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -36,6 +36,8 @@ export function RestaurantDetail({ restaurant, onClose }: Props) {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [stage, setStage] = useState<Stage>("menu");
   const [address, setAddress] = useState("Kipé, Conakry");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
 
   const items = useMemo(
     () =>
@@ -65,6 +67,32 @@ export function RestaurantDetail({ restaurant, onClose }: Props) {
   const placeOrder = () => {
     setStage("confirmed");
     toast.success("Commande confirmée !");
+    if (coords) {
+      // Coordinates captured with the order (demo flow keeps state local).
+      console.info("[repas demo] delivery coords", coords);
+    }
+  };
+
+  const useCurrentLocation = () => {
+    if (!("geolocation" in navigator)) {
+      toast.error("Géolocalisation non disponible sur cet appareil.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setCoords({ lat: latitude, lng: longitude });
+        setAddress(`Position actuelle (${latitude.toFixed(5)}, ${longitude.toFixed(5)})`);
+        setLocating(false);
+        toast.success("Position actuelle sélectionnée");
+      },
+      () => {
+        setLocating(false);
+        toast("Position non autorisée. Entrez l’adresse manuellement.");
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
+    );
   };
 
   return (
@@ -252,10 +280,30 @@ export function RestaurantDetail({ restaurant, onClose }: Props) {
                       </label>
                       <input
                         value={address}
-                        onChange={(e) => setAddress(e.target.value)}
+                        onChange={(e) => {
+                          setAddress(e.target.value);
+                          if (coords) setCoords(null);
+                        }}
                         className="w-full bg-muted rounded-xl px-4 py-3 text-sm focus:outline-none"
                         placeholder="Quartier, repère utile…"
                       />
+                      <button
+                        type="button"
+                        onClick={useCurrentLocation}
+                        disabled={locating}
+                        className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium border transition ${
+                          coords
+                            ? "bg-primary/10 border-primary/30 text-primary"
+                            : "bg-card border-border text-muted-foreground hover:text-foreground"
+                        } ${locating ? "opacity-60" : ""}`}
+                      >
+                        {locating ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <LocateFixed className="w-3.5 h-3.5" />
+                        )}
+                        {coords ? "Position actuelle utilisée" : "Utiliser ma position actuelle"}
+                      </button>
                     </div>
                   )}
 
