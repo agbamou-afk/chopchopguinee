@@ -1,0 +1,127 @@
+import { useState } from "react";
+import { Sparkles, Bike, UtensilsCrossed, ShoppingBag, Package } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { MissionRequestCard } from "./MissionRequestCard";
+import { DemoActiveMissionCard } from "./DemoActiveMissionCard";
+import { buildDemoMission } from "@/lib/missions/demoMissions";
+import { MISSION_TYPE_LABEL, type Mission, type MissionType } from "@/lib/missions/types";
+import { toast } from "sonner";
+
+const TYPES: { type: MissionType; icon: typeof Bike; tagline: string }[] = [
+  { type: "ride", icon: Bike, tagline: "Course Moto · Kaloum → Ratoma" },
+  { type: "food_delivery", icon: UtensilsCrossed, tagline: "Livraison Repas · Kipé → Ratoma" },
+  { type: "marketplace_delivery", icon: ShoppingBag, tagline: "Livraison Marché · Madina → Dixinn" },
+  { type: "package_delivery", icon: Package, tagline: "Colis · Matoto → Kaloum" },
+];
+
+/**
+ * Demo-only launcher. Renders a single CTA ("Lancer une mission démo") that
+ * opens a type picker, then surfaces a real-looking MissionRequestCard. On
+ * accept, the mission is handed to DemoActiveMissionCard which advances the
+ * lifecycle locally. Nothing is written to the database.
+ */
+export function DemoMissionLauncher() {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pending, setPending] = useState<Mission | null>(null);
+  const [active, setActive] = useState<Mission | null>(null);
+
+  const start = (type: MissionType) => {
+    setPickerOpen(false);
+    setPending(buildDemoMission(type));
+    toast("Mission démo disponible", {
+      description: MISSION_TYPE_LABEL[type],
+    });
+  };
+
+  const handleAccept = () => {
+    if (!pending) return;
+    setActive({ ...pending, state: "heading_to_pickup", courier_id: "demo-courier" });
+    setPending(null);
+    toast.success("Mission acceptée (démo)");
+  };
+
+  const handleDecline = () => {
+    setPending(null);
+    toast("Mission ignorée");
+  };
+
+  return (
+    <div className="space-y-3">
+      {!pending && !active && (
+        <Button
+          onClick={() => setPickerOpen(true)}
+          className="w-full h-12 gradient-primary gap-2"
+        >
+          <Sparkles className="w-4 h-4" />
+          Lancer une mission démo
+        </Button>
+      )}
+
+      {pending && (
+        <section className="space-y-2">
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground px-1">
+            Mission démo disponible
+          </h3>
+          <MissionRequestCard
+            mission={pending}
+            onAccept={handleAccept}
+            onDecline={handleDecline}
+          />
+        </section>
+      )}
+
+      {active && (
+        <section className="space-y-2">
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground px-1">
+            Mission démo en cours
+          </h3>
+          <DemoActiveMissionCard
+            mission={active}
+            onChange={setActive}
+            onClose={() => setActive(null)}
+          />
+        </section>
+      )}
+
+      <Sheet open={pickerOpen} onOpenChange={setPickerOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader className="text-left">
+            <SheetTitle>Choisir une mission démo</SheetTitle>
+            <SheetDescription>
+              Mission suivie par CHOP CHOP · mode démo, aucune donnée réelle.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-2 pb-4">
+            {TYPES.map(({ type, icon: Icon, tagline }) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => start(type)}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl border border-border hover:border-primary/40 hover:bg-muted/50 text-left transition-colors"
+              >
+                <span className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-foreground">
+                    {MISSION_TYPE_LABEL[type]}
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground truncate">
+                    {tagline}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
