@@ -1,4 +1,4 @@
-import { Bike, QrCode, Wallet, ArrowDownLeft, ArrowUpRight, RefreshCw, UtensilsCrossed, ShoppingBag, LifeBuoy, ChevronRight, BadgeCheck, Radio, ShieldCheck, MessageSquare } from "lucide-react";
+import { Bike, QrCode, Wallet, ArrowDownLeft, ArrowUpRight, RefreshCw, UtensilsCrossed, ShoppingBag, LifeBuoy, ChevronRight, BadgeCheck, Radio, ShieldCheck, MessageSquare, MapPin, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatGNF } from "@/lib/format";
 import type { ActivityItem, ActivityKind } from "@/lib/activity/types";
@@ -61,6 +61,8 @@ export function ActivityRow({ item, onOpen, compact }: ActivityRowProps) {
   const positive = item.amount !== undefined && item.amount > 0;
   const negative = item.amount !== undefined && item.amount < 0;
 
+  const missionChip = item.missionKind ? MISSION_CHIP[item.missionKind] : null;
+
   return (
     <button
       type="button"
@@ -88,6 +90,27 @@ export function ActivityRow({ item, onOpen, compact }: ActivityRowProps) {
         {item.subtitle && (
           <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
         )}
+        {(item.district || item.merchantName || missionChip) && (
+          <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
+            {missionChip && (
+              <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium", missionChip.tone)}>
+                {missionChip.label}
+              </span>
+            )}
+            {item.district && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                <MapPin className="w-2.5 h-2.5" />
+                {item.district}
+              </span>
+            )}
+            {item.merchantName && !item.district && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground truncate max-w-[12rem]">
+                <Store className="w-2.5 h-2.5" />
+                {item.merchantName}
+              </span>
+            )}
+          </div>
+        )}
         <p className={cn("text-[11px] mt-0.5", STATUS_TONE[item.status])}>
           {STATUS_LABEL[item.status]} · {formatActivityTime(item.occurredAt)}
         </p>
@@ -111,3 +134,10 @@ export function ActivityRow({ item, onOpen, compact }: ActivityRowProps) {
     </button>
   );
 }
+
+const MISSION_CHIP: Record<NonNullable<ActivityItem["missionKind"]>, { label: string; tone: string }> = {
+  moto: { label: "Course Moto", tone: "bg-primary/10 text-primary" },
+  repas: { label: "Livraison Repas", tone: "bg-[hsl(var(--accent-repas)/0.15)] text-[hsl(var(--accent-repas))]" },
+  marche: { label: "Livraison Marché", tone: "bg-[hsl(var(--accent-marche)/0.15)] text-[hsl(var(--accent-marche))]" },
+  envoyer: { label: "Envoyer colis", tone: "bg-muted text-foreground" },
+};

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet, type WalletTransaction } from "@/hooks/useWallet";
 import type { ActivityItem, ActivityKind, ActivityStatus } from "./types";
+import { txContext } from "@/lib/wallet/labels";
 import {
   listBuyerInterests,
   INTEREST_KIND_LABEL,
@@ -17,6 +18,7 @@ import {
   isTerminalState,
   type Mission,
 } from "@/lib/missions/types";
+import { formatDistrictPair, detectDistrictInText, districtFor } from "@/lib/maps/zones";
 
 type RideRow = {
   id: string;
@@ -110,6 +112,13 @@ function txnToActivity(tx: WalletTransaction, walletId: string): ActivityItem | 
     reference: tx.reference,
     entityId: tx.related_entity ?? undefined,
     badge,
+    district: (() => {
+      const c = txContext(tx);
+      if (c.pickupArea && c.dropoffArea) return `${c.pickupArea} → ${c.dropoffArea}`;
+      return c.pickupArea ?? c.dropoffArea ?? undefined;
+    })(),
+    merchantName: txContext(tx).merchantName ?? undefined,
+    missionKind: txContext(tx).missionKind ?? undefined,
     meta: { txn: tx },
   };
 }
@@ -119,17 +128,27 @@ function rideToActivity(ride: RideRow, role: "client" | "driver"): ActivityItem 
   const isDriver = role === "driver";
   const amount = isDriver ? (ride.driver_earning_gnf ?? 0) : -(ride.fare_gnf ?? 0);
   const status = statusFromRide(ride.status);
+  const meta = (ride.metadata ?? {}) as Record<string, any>;
+  const pickupText = meta.pickup_address ?? meta.pickup ?? null;
+  const dropoffText = meta.dropoff_address ?? meta.destination ?? null;
+  const a = pickupText ? detectDistrictInText(String(pickupText)) : null;
+  const b = dropoffText ? detectDistrictInText(String(dropoffText)) : null;
+  let district: string | undefined;
+  if (a && b && a !== b) district = `${a} → ${b}`;
+  else if (a || b) district = (a ?? b) as string;
   return {
     id: `ride:${ride.id}`,
     kind: "ride",
     title: isDriver ? `Course ${modeLabel} terminée` : `Course CHOP CHOP · ${modeLabel}`,
-    subtitle: status === "in_progress" ? "Course en cours" : status === "pending" ? "Recherche d'un chauffeur" : "Trajet terminé",
+    subtitle: district ?? (status === "in_progress" ? "Course en cours" : status === "pending" ? "Recherche d'un chauffeur" : "Trajet terminé"),
     amount: status === "completed" ? amount : undefined,
     status,
     occurredAt: ride.completed_at ?? ride.created_at,
     reference: ride.id.slice(0, 8).toUpperCase(),
     entityId: ride.id,
     badge: status === "in_progress" ? "live" : undefined,
+    district,
+    missionKind: "moto",
     meta: { ride },
   };
 }
@@ -253,6 +272,10 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
               : "pending",
       occurredAt: o.updated_at ?? o.created_at,
       entityId: o.id,
+      district: o.delivery_lat != null && o.delivery_lng != null
+        ? (districtFor({ lat: o.delivery_lat, lng: o.delivery_lng }) ?? undefined)
+        : (detectDistrictInText(o.delivery_address) ?? undefined),
+      missionKind: "repas",
       meta: { foodOrder: o },
     }));
     const missionItems: ActivityItem[] = missions.map((m) => {
@@ -270,16 +293,29 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
             : isTerminalState(m.state)
               ? "completed"
               : "in_progress";
+      const pickupPt = m.pickup_lat != null && m.pickup_lng != null ? { lat: m.pickup_lat, lng: m.pickup_lng } : null;
+      const dropPt = m.dropoff_lat != null && m.dropoff_lng != null ? { lat: m.dropoff_lat, lng: m.dropoff_lng } : null;
+      const district = formatDistrictPair(pickupPt, dropPt)
+        ?? detectDistrictInText(m.dropoff_address)
+        ?? detectDistrictInText(m.pickup_address)
+        ?? undefined;
+      const missionKind: ActivityItem["missionKind"] =
+        m.type === "food_delivery" ? "repas"
+          : m.type === "marketplace_delivery" ? "marche"
+            : m.type === "package_delivery" ? "envoyer"
+              : "moto";
       return {
         id: `mission:${m.id}`,
         kind,
         title: `${MISSION_TYPE_SHORT[m.type]} · livraison`,
-        subtitle: MISSION_STATE_LABEL[m.state],
+        subtitle: district ? `${MISSION_STATE_LABEL[m.state]} · ${district}` : MISSION_STATE_LABEL[m.state],
         amount: partyType === "driver" && m.state === "delivered" ? m.estimated_earning_gnf : undefined,
         status,
         occurredAt: m.updated_at ?? m.created_at,
         entityId: m.id,
         badge: status === "in_progress" ? "live" : undefined,
+        district: district ?? undefined,
+        missionKind,
         meta: { mission: m },
       };
     });

@@ -40,6 +40,12 @@ export interface ActivityItem {
   entityId?: string;
   /** Optional badge — verified merchant, CHOPPay seal, live ride. */
   badge?: "choppay" | "verified" | "live";
+  /** District continuity — e.g. "Kipé → Ratoma" or "Dixinn". */
+  district?: string;
+  /** Merchant / store / restaurant name when known. */
+  merchantName?: string;
+  /** Mission family chip — operational continuity across surfaces. */
+  missionKind?: "moto" | "repas" | "marche" | "envoyer";
   /** Free-form metadata for the detail sheet (avoids re-querying). */
   meta?: Record<string, unknown>;
 }

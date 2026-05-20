@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MISSION_TYPE_LABEL, type Mission } from "@/lib/missions/types";
 import { formatGNF } from "@/lib/format";
+import { formatDistrictPair, detectDistrictInText } from "@/lib/maps/zones";
 
 const CAPABILITY_TO_TYPE: Record<string, Mission["type"]> = {
   rides_moto: "ride",
@@ -55,8 +56,15 @@ export function useMissionAlerts({
           if (!allowedTypes.current.has(m.type)) return;
           if (hasActiveMission) return;
           seen.current.add(m.id);
+          const pickupPt = m.pickup_lat != null && m.pickup_lng != null ? { lat: m.pickup_lat, lng: m.pickup_lng } : null;
+          const dropPt = m.dropoff_lat != null && m.dropoff_lng != null ? { lat: m.dropoff_lat, lng: m.dropoff_lng } : null;
+          const district = formatDistrictPair(pickupPt, dropPt)
+            ?? detectDistrictInText(m.dropoff_address)
+            ?? detectDistrictInText(m.pickup_address);
           toast(`Nouvelle ${MISSION_TYPE_LABEL[m.type]}`, {
-            description: `Gain estimé ${formatGNF(m.estimated_earning_gnf)}`,
+            description: district
+              ? `${district} · Gain estimé ${formatGNF(m.estimated_earning_gnf)}`
+              : `Gain estimé ${formatGNF(m.estimated_earning_gnf)}`,
             duration: 6000,
           });
         },
