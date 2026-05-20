@@ -2689,6 +2689,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      driver_has_capability: {
+        Args: { _capability: string; _user_id: string }
+        Returns: boolean
+      }
       driver_offer_accept: {
         Args: { p_offer_id: string }
         Returns: {
@@ -2825,6 +2829,10 @@ export type Database = {
       }
       merchant_ensure_wallet: {
         Args: { p_merchant_id: string }
+        Returns: string
+      }
+      mission_required_capability: {
+        Args: { _type: Database["public"]["Enums"]["mission_type"] }
         Returns: string
       }
       move_to_dlq: {
