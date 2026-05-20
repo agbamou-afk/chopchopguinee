@@ -38,6 +38,8 @@ import { TopUpOrangeMoney } from "@/components/wallet/TopUpOrangeMoney";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { ChopPayLauncher } from "@/components/pay/ChopPayLauncher";
+import { TransactionReceiptSheet } from "@/components/wallet/TransactionReceiptSheet";
+import { groupTransactions, txLabel, txStatusCopy } from "@/lib/wallet/labels";
 
 type ActionId = "pay" | "receive" | "scan" | "add";
 
@@ -53,26 +55,12 @@ const quickActions: {
   { id: "add", icon: Plus, label: "Recharger", color: "bg-primary" },
 ];
 
-const TX_LABEL: Record<string, string> = {
-  topup: "Recharge reçue",
-  payment: "Paiement CHOPPay",
-  refund: "Remboursement",
-  commission: "Commission course",
-  payout: "Versement chauffeur",
-  hold: "Fonds réservés",
-  capture: "Course payée",
-  release: "Fonds libérés",
-  transfer: "Transfert",
-  adjustment: "Ajustement",
-};
-
-// Calm, plain-French status copy. We avoid banking jargon ("Pending",
-// "Authorized", "Settled") in favor of confidence-building phrasing.
-const TX_STATUS_BADGE: Record<string, { label: string; tone: string; Icon: React.ComponentType<{ className?: string }> }> = {
-  pending:   { label: "En attente",  tone: "bg-secondary/15 text-secondary-foreground border-secondary/30", Icon: Clock },
-  failed:    { label: "Échoué",      tone: "bg-destructive/10 text-destructive border-destructive/30",     Icon: XCircle },
-  cancelled: { label: "Annulé",      tone: "bg-muted text-muted-foreground border-border",                  Icon: XCircle },
-  reversed:  { label: "Annulé",      tone: "bg-muted text-muted-foreground border-border",                  Icon: XCircle },
+// Calm status tones, sourced from shared label helper.
+const TX_STATUS_TONE: Record<string, { tone: string; Icon: React.ComponentType<{ className?: string }> }> = {
+  pending:   { tone: "bg-secondary/15 text-secondary-foreground border-secondary/30", Icon: Clock },
+  failed:    { tone: "bg-destructive/10 text-destructive border-destructive/30",     Icon: XCircle },
+  cancelled: { tone: "bg-muted text-muted-foreground border-border",                  Icon: XCircle },
+  reversed:  { tone: "bg-muted text-muted-foreground border-border",                  Icon: XCircle },
 };
 
 function formatMoney(amount: number) {
@@ -102,6 +90,7 @@ export function WalletView() {
   const [payOpen, setPayOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterRange, setFilterRange] = useState<"all" | "7d" | "30d">("all");
+  const [receiptTx, setReceiptTx] = useState<WalletTransaction | null>(null);
 
   useEffect(() => {
     if (userId) Analytics.track("wallet.history.viewed", { metadata: { count: transactions.length } });
@@ -410,61 +399,60 @@ export function WalletView() {
             onTopUp={() => setTopUpOpen(true)}
           />
         ) : (
-          <div className="space-y-3">
-            {filteredTransactions.map((tx, index) => {
-              const dir = wallet ? txDirection(tx, wallet.id) : "out";
-              const statusBadge =
-                tx.status && TX_STATUS_BADGE[tx.status] ? TX_STATUS_BADGE[tx.status] : null;
-              const dimmed = tx.status === "failed" || tx.status === "cancelled" || tx.status === "reversed";
-              return (
-                <motion.div
-                  key={tx.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  className={`bg-card rounded-2xl p-4 shadow-card flex items-center gap-3 ${dimmed ? "opacity-70" : ""}`}
-                >
-                  <div
-                    className={`p-2 rounded-xl ${dir === "in" ? "tx-halo-in" : "tx-halo-out"}`}
-                  >
-                    {dir === "in" ? (
-                      <ArrowDownLeft className="w-5 h-5" />
-                    ) : (
-                      <ArrowUpRight className="w-5 h-5" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground text-sm truncate">
-                        {TX_LABEL[tx.type] ?? tx.type}
-                      </p>
-                      {statusBadge && (
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${statusBadge.tone}`}>
-                          <statusBadge.Icon className="w-2.5 h-2.5" />
-                          {statusBadge.label}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {tx.description ?? tx.reference}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className={`font-semibold text-sm ${
-                        dimmed ? "text-muted-foreground line-through" : dir === "in" ? "text-[hsl(160_55%_28%)]" : "text-foreground"
-                      } tabular-nums`}
-                    >
-                      {dir === "in" ? "+" : "-"}
-                      {formatMoney(tx.amount_gnf)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(tx.created_at)}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
+          <div className="space-y-5">
+            {groupTransactions(filteredTransactions).map((group) => (
+              <section key={group.key} className="space-y-2">
+                <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground px-1">
+                  {group.label}
+                </h3>
+                <div className="space-y-2">
+                  {group.items.map((tx, index) => {
+                    const dir = wallet ? txDirection(tx, wallet.id) : "out";
+                    const statusTone = tx.status ? TX_STATUS_TONE[tx.status] : null;
+                    const statusInfo = txStatusCopy(tx.status);
+                    const dimmed = tx.status === "failed" || tx.status === "cancelled" || tx.status === "reversed";
+                    return (
+                      <motion.button
+                        key={tx.id}
+                        initial={{ opacity: 0, x: -16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                        onClick={() => setReceiptTx(tx)}
+                        className={`w-full text-left bg-card rounded-2xl p-4 shadow-card flex items-center gap-3 hover:bg-muted/30 transition ${dimmed ? "opacity-70" : ""}`}
+                      >
+                        <div className={`p-2 rounded-xl ${dir === "in" ? "tx-halo-in" : "tx-halo-out"}`}>
+                          {dir === "in" ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-foreground text-sm truncate">
+                              {txLabel(tx, dir)}
+                            </p>
+                            {statusInfo && statusTone && (
+                              <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${statusTone.tone}`}>
+                                <statusTone.Icon className="w-2.5 h-2.5" />
+                                {statusInfo.label}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {tx.description ?? tx.reference}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-semibold text-sm ${
+                            dimmed ? "text-muted-foreground line-through" : dir === "in" ? "text-[hsl(160_55%_28%)]" : "text-foreground"
+                          } tabular-nums`}>
+                            {dir === "in" ? "+" : "-"}{formatMoney(tx.amount_gnf)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{formatDate(tx.created_at)}</p>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         )}
       </div>
@@ -477,6 +465,13 @@ export function WalletView() {
       />
 
       <ChopPayLauncher open={payOpen} onClose={() => setPayOpen(false)} />
+
+      <TransactionReceiptSheet
+        tx={receiptTx}
+        direction={receiptTx && wallet ? txDirection(receiptTx, wallet.id) : "out"}
+        open={!!receiptTx}
+        onOpenChange={(v) => { if (!v) setReceiptTx(null); }}
+      />
 
       <Sheet open={topUpOpen} onOpenChange={setTopUpOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto">
