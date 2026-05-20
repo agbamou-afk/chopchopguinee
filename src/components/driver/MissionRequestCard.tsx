@@ -1,27 +1,60 @@
 import { motion } from "framer-motion";
-import { MapPin, Navigation, ShieldCheck } from "lucide-react";
+import { MapPin, Navigation, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatGNF } from "@/lib/format";
 import type { Mission } from "@/lib/missions/types";
 import { MISSION_IDENTITY } from "@/lib/missions/pipelines";
+import { resolveDistrict, districtChipClasses } from "@/lib/districts";
+import { formatDistrictPair } from "@/lib/maps/zones";
 
 interface MissionRequestCardProps {
   mission: Mission;
   onAccept?: (id: string) => void;
   onDecline?: (id: string) => void;
   busy?: boolean;
+  /** Driver's preferred operating district. When the mission's pickup
+   *  matches, we surface a "Mission dans votre zone" hint. */
+  preferredDistrict?: string | null;
 }
 
 /**
  * Incoming-mission card for couriers — works for any mission type.
  * Mirrors the calm, operational tone of the ride request card.
  */
-export function MissionRequestCard({ mission, onAccept, onDecline, busy }: MissionRequestCardProps) {
+export function MissionRequestCard({
+  mission,
+  onAccept,
+  onDecline,
+  busy,
+  preferredDistrict,
+}: MissionRequestCardProps) {
   const identity = MISSION_IDENTITY[mission.type];
   const Icon = identity.icon;
   const { pickup: pickupLabel, dropoff: dropoffLabel } = identity.endpointLabels;
   const km = mission.estimated_distance_m ? (mission.estimated_distance_m / 1000).toFixed(1) : null;
   const minutes = mission.estimated_duration_s ? Math.round(mission.estimated_duration_s / 60) : null;
+
+  const pickupDistrict = resolveDistrict({
+    point: mission.pickup_lat != null && mission.pickup_lng != null
+      ? { lat: mission.pickup_lat, lng: mission.pickup_lng } : null,
+    text: mission.pickup_address,
+  });
+  const dropoffDistrict = resolveDistrict({
+    point: mission.dropoff_lat != null && mission.dropoff_lng != null
+      ? { lat: mission.dropoff_lat, lng: mission.dropoff_lng } : null,
+    text: mission.dropoff_address,
+  });
+  const districtPair = formatDistrictPair(
+    mission.pickup_lat != null && mission.pickup_lng != null
+      ? { lat: mission.pickup_lat, lng: mission.pickup_lng } : null,
+    mission.dropoff_lat != null && mission.dropoff_lng != null
+      ? { lat: mission.dropoff_lat, lng: mission.dropoff_lng } : null,
+  ) ?? (pickupDistrict && dropoffDistrict
+      ? (pickupDistrict.name === dropoffDistrict.name ? pickupDistrict.name : `${pickupDistrict.name} → ${dropoffDistrict.name}`)
+      : pickupDistrict?.name ?? dropoffDistrict?.name ?? null);
+  const inPreferredZone = !!(
+    preferredDistrict && pickupDistrict && pickupDistrict.name === preferredDistrict
+  );
 
   return (
     <motion.div
@@ -54,6 +87,20 @@ export function MissionRequestCard({ mission, onAccept, onDecline, busy }: Missi
           </span>
         </div>
       </div>
+
+      {/* District continuity row */}
+      {(districtPair || inPreferredZone) && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+          {districtPair && pickupDistrict && (
+            <span className={districtChipClasses(pickupDistrict.tone)}>{districtPair}</span>
+          )}
+          {inPreferredZone && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary">
+              <Sparkles className="w-3 h-3" /> Mission dans votre zone
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Pickup + dropoff */}
       <div className="space-y-1.5 mb-2">
