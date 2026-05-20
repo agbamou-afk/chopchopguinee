@@ -272,6 +272,10 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
               : "pending",
       occurredAt: o.updated_at ?? o.created_at,
       entityId: o.id,
+      district: o.delivery_lat != null && o.delivery_lng != null
+        ? (districtFor({ lat: o.delivery_lat, lng: o.delivery_lng }) ?? undefined)
+        : (detectDistrictInText(o.delivery_address) ?? undefined),
+      missionKind: "repas",
       meta: { foodOrder: o },
     }));
     const missionItems: ActivityItem[] = missions.map((m) => {
