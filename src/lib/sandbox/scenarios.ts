@@ -333,7 +333,16 @@ SANDBOX_SCENARIOS.push(
     title: "Moto · burst haute demande Kaloum",
     description: "8 demandes successives en zone Kaloum, 3 couriers disponibles.",
     family: "ride",
-    expected: { missions: 8, failed: 5, failureReasons: ["no_courier_available"], requireDistrictContinuity: true, warnTolerant: true },
+    expected: {
+      missions: 8,
+      completed: 3,
+      failed: 5,
+      wallet: 3,
+      failureReasons: ["no_courier_available"],
+      requireDistrictContinuity: true,
+      maxUnresolvedMissions: 0,
+      pendingLabel: "expected courier shortage",
+    },
     async run(ctx) {
       const couriers = Array.from({ length: 3 }).map((_, i) =>
         ctx.spawnActor("courier", { label: `Moto-K${i + 1}`, district: "Kaloum" }),
@@ -351,6 +360,8 @@ SANDBOX_SCENARIOS.push(
         await ctx.wait(60);
         if (i < 3) {
           ctx.transitionMission(m.id, "accepted");
+          await ctx.wait(80);
+          ctx.transitionMission(m.id, "completed");
           ctx.walletEntry({ actorId: couriers[i].id, missionId: m.id, kind: "earning", amountGnf: Math.round(RIDE_FARE * 0.85) });
         } else {
           ctx.transitionMission(m.id, "timeout", { reason: "no_courier_available" });
