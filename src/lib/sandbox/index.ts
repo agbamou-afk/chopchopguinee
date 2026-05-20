@@ -3,6 +3,8 @@ export { SANDBOX_SCENARIOS, getScenario } from "./scenarios";
 export type {
   SandboxEvent,
   SandboxScenario,
+  SandboxScenarioRun,
+  SandboxRunStatus,
   SandboxSnapshot,
   SandboxWalletEntry,
   SyntheticActor,
