@@ -155,6 +155,8 @@ export interface SandboxScenarioExpectations {
   failureReasons?: string[];
   /** When true, scenario is allowed to end with warn status (no fail demotion). */
   warnTolerant?: boolean;
+  /** Human label explaining why unresolved missions are acceptable (e.g. "expected backlog"). */
+  pendingLabel?: string;
 }
 
 export interface SandboxAssertion {
@@ -192,4 +194,8 @@ export interface SandboxScenarioRun {
   notificationMessages?: string[];
   /** Failure reasons observed via transitionMission. */
   failureReasons?: string[];
+  /** Count of notifications that collapsed into a prior event row. */
+  dedupedNotifications?: number;
+  /** Optional contextual note (e.g. "expected backlog: 3 pending"). */
+  note?: string;
 }
