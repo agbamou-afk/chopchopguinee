@@ -341,7 +341,9 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                   </p>
                   <p className="text-xs text-muted-foreground mb-6">
                     {fulfillment === "delivery"
-                      ? "Livraison à confirmer."
+                      ? deliveryPending
+                        ? "Livraison à confirmer."
+                        : "Livraison CHOP demandée."
                       : `Prêt pour retrait dans ~${restaurant.prep_time_min} min.`}
                   </p>
                   <PrimaryButton fullWidth onClick={onClose}>
