@@ -48,9 +48,9 @@ export function DriverOfferDebugPanel({ activeTab }: { activeTab: string }) {
     return () => window.clearInterval(id);
   }, []);
 
-  const demoDebug = typeof window !== "undefined" && /[?&](demo|debug)=1/.test(window.location.search);
-  const isDemoDriver = user?.email?.toLowerCase() === "demo.driver@chopchop.gn";
-  if (!demoDebug && !isAdmin && !isDemoDriver) return null;
+  const sandboxDebug = typeof window !== "undefined"
+    && /[?&](sandbox|debug)=1/.test(window.location.search);
+  if (!sandboxDebug && !isAdmin) return null;
 
   const hasVisibleOffer = isOnline && queue.length > 0 && !activeTrip && !activeRideId;
   const bottomSheetShouldOpen = hasVisibleOffer && activeTab === "orders";
@@ -98,7 +98,6 @@ export function DriverOfferDebugPanel({ activeTab }: { activeTab: string }) {
         <div className="mt-4 grid grid-cols-1 gap-1.5">
           <DebugRow label="user_id" value={user?.id} />
           <DebugRow label="driver_profile_id" value={profile?.user_id} />
-          <DebugRow label="is_demo_driver" value={isDemoDriver} />
           <DebugRow label="driver status" value={driverStatus} />
           <DebugRow label="active tab" value={tabLabel[activeTab] ?? activeTab} />
           <DebugRow label="realtime ride_offers" value={realtimeStatus} />
