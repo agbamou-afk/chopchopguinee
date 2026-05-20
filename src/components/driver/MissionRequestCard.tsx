@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { Bike, UtensilsCrossed, ShoppingBag, Package, MapPin, Navigation } from "lucide-react";
+import { Bike, UtensilsCrossed, ShoppingBag, Package, MapPin, Navigation, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatGNF } from "@/lib/format";
-import { MISSION_TYPE_SHORT, type Mission, type MissionType } from "@/lib/missions/types";
+import { MISSION_TYPE_LABEL, type Mission, type MissionType } from "@/lib/missions/types";
 
 const ICONS: Record<MissionType, typeof Bike> = {
   ride: Bike,
@@ -31,49 +31,67 @@ export function MissionRequestCard({ mission, onAccept, onDecline, busy }: Missi
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-card border border-border p-4 shadow-card"
+      className="rounded-2xl bg-card border border-primary/30 p-4 shadow-card"
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
-          <Icon className="w-3.5 h-3.5" />
-          {MISSION_TYPE_SHORT[mission.type]}
+      {/* Primary: type + earning */}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
+            <Icon className="w-3.5 h-3.5" />
+            {MISSION_TYPE_LABEL[mission.type]}
+          </span>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Gain estimé</p>
+        </div>
+        <span className="text-lg font-extrabold tabular-nums text-foreground shrink-0">
+          {formatGNF(mission.estimated_earning_gnf)}
         </span>
-        <span className="font-bold tabular-nums">{formatGNF(mission.estimated_earning_gnf)}</span>
       </div>
 
-      <div className="space-y-1.5 mb-3">
+      {/* Pickup + dropoff */}
+      <div className="space-y-1.5 mb-2">
         {mission.pickup_address && (
           <div className="flex items-start gap-2 text-sm text-foreground">
             <MapPin className="w-4 h-4 mt-0.5 text-primary shrink-0" />
-            <span className="truncate"><span className="text-muted-foreground text-xs mr-1">Retrait</span>{mission.pickup_address}</span>
+            <span className="truncate">
+              <span className="text-muted-foreground text-[10px] uppercase tracking-wide mr-1">Retrait</span>
+              {mission.pickup_address}
+            </span>
           </div>
         )}
         {mission.dropoff_address && (
           <div className="flex items-start gap-2 text-sm text-foreground">
             <Navigation className="w-4 h-4 mt-0.5 text-secondary shrink-0" />
-            <span className="truncate"><span className="text-muted-foreground text-xs mr-1">Client</span>{mission.dropoff_address}</span>
+            <span className="truncate">
+              <span className="text-muted-foreground text-[10px] uppercase tracking-wide mr-1">Client</span>
+              {mission.dropoff_address}
+            </span>
           </div>
         )}
       </div>
 
+      {/* Secondary: summary */}
       {(mission.payload_summary || km || minutes) && (
-        <p className="text-xs text-muted-foreground mb-3 truncate">
+        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
           {[mission.payload_summary, km && `${km} km`, minutes && `${minutes} min`].filter(Boolean).join(" · ")}
         </p>
       )}
 
       <div className="flex gap-2">
         {onDecline && (
-          <Button variant="ghost" className="flex-1 h-10" onClick={() => onDecline(mission.id)} disabled={busy}>
+          <Button variant="ghost" className="flex-1 h-12" onClick={() => onDecline(mission.id)} disabled={busy}>
             Refuser
           </Button>
         )}
         {onAccept && (
-          <Button className="flex-1 h-10" onClick={() => onAccept(mission.id)} disabled={busy}>
-            Accepter
+          <Button className="flex-1 h-12 font-bold" onClick={() => onAccept(mission.id)} disabled={busy}>
+            Accepter la mission
           </Button>
         )}
       </div>
+
+      <p className="mt-2 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+        <ShieldCheck className="w-3 h-3 text-primary" /> Suivi CHOP CHOP · Signalez tout problème
+      </p>
     </motion.div>
   );
 }

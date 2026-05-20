@@ -12,6 +12,8 @@ import { PrimaryActionGrid, type PrimaryAction } from "@/components/home/Primary
 import { WalletHero } from "@/components/home/WalletHero";
 import { RecentActivityPeek } from "@/components/activity/RecentActivityPeek";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
+import { useCustomerMissionAlerts } from "@/hooks/useCustomerMissionAlerts";
+import { useAuth } from "@/contexts/AuthContext";
 
 const NearbyDriversMap = lazy(() => import("@/components/home/NearbyDriversMap"));
 
@@ -33,6 +35,8 @@ const popularRestaurants: Array<{
 
 export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
   const { available: walletBalance, loading: walletLoading, error: walletError, wallet } = useWallet("client");
+  const { user } = useAuth();
+  useCustomerMissionAlerts(user?.id ?? null);
   const { lowDataMode } = useAppEnv();
   const userLocation = "Kaloum";
   const userCoords = { lat: 9.5092, lng: -13.7122 };

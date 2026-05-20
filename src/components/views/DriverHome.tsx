@@ -16,6 +16,7 @@ import { formatGNF } from "@/lib/format";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { MissionsPanel } from "@/components/driver/MissionsPanel";
 import { CapabilityPicker } from "@/components/driver/CapabilityPicker";
+import { useMissionAlerts } from "@/hooks/useMissionAlerts";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
@@ -31,6 +32,13 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   } = useDriverSession();
   const { available: driverBalance, loading: walletLoading } = useWallet("driver");
   const e = useDriverEarnings();
+
+  useMissionAlerts({
+    userId: user?.id ?? null,
+    capabilities: profile?.capabilities ?? [],
+    hasActiveMission: !!activeTrip || !!current,
+    enabled: isOnline,
+  });
 
   // Demo driver = calm guided showroom. We expose an explicit CTA so the
   // operator can trigger a linked-demo offer on demand instead of having
