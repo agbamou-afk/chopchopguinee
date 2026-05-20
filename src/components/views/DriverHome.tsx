@@ -14,6 +14,7 @@ import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { MissionsPanel } from "@/components/driver/MissionsPanel";
 import { CapabilityPicker } from "@/components/driver/CapabilityPicker";
 import { useMissionAlerts } from "@/hooks/useMissionAlerts";
+import { getDistrict, districtChipClasses } from "@/lib/districts";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
@@ -280,8 +281,25 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
           <MissionsPanel
             userId={user.id}
             capabilities={profile?.capabilities ?? []}
+            preferredDistrict={profile?.preferred_district ?? null}
           />
         )}
+
+        {/* District awareness — calm, single-line. Future: nearest hub. */}
+        {profile && (profile.current_operating_district || profile.preferred_district) && (() => {
+          const activeName = profile.current_operating_district ?? profile.preferred_district;
+          const meta = getDistrict(activeName);
+          if (!meta) return null;
+          return (
+            <div className="flex items-center justify-between rounded-2xl bg-card border border-border/50 shadow-card px-3 py-2.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Zone active</span>
+                <span className={districtChipClasses(meta.tone)}>{meta.name}</span>
+              </div>
+              <span className="text-[10px] text-muted-foreground">Point CHOP proche · bientôt</span>
+            </div>
+          );
+        })()}
 
         {/* Capability picker — drivers opt into delivery work */}
         {user && profile && (
