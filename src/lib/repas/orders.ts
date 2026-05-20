@@ -7,6 +7,8 @@ export interface CreateOrderInput {
   paymentMethod: FoodPaymentMethod;
   notes?: string;
   deliveryAddress?: string;
+  deliveryLat?: number;
+  deliveryLng?: number;
   items: { menuItemId: string; name: string; unitPriceGnf: number; qty: number }[];
 }
 
@@ -27,6 +29,8 @@ export async function createFoodOrder(input: CreateOrderInput): Promise<FoodOrde
       subtotal_gnf: subtotal,
       notes: input.notes ?? null,
       delivery_address: input.deliveryAddress ?? null,
+      delivery_lat: input.deliveryLat ?? null,
+      delivery_lng: input.deliveryLng ?? null,
       state: "placed",
     })
     .select("*")

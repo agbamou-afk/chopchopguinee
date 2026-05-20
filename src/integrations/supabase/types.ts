@@ -841,6 +841,8 @@ export type Database = {
         Row: {
           created_at: string
           delivery_address: string | null
+          delivery_lat: number | null
+          delivery_lng: number | null
           fulfillment: Database["public"]["Enums"]["food_fulfillment"]
           id: string
           notes: string | null
@@ -854,6 +856,8 @@ export type Database = {
         Insert: {
           created_at?: string
           delivery_address?: string | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
           id?: string
           notes?: string | null
@@ -867,6 +871,8 @@ export type Database = {
         Update: {
           created_at?: string
           delivery_address?: string | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
           id?: string
           notes?: string | null
