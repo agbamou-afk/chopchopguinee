@@ -49,10 +49,34 @@ interface DriverSessionValue {
 
 const DriverSessionContext = createContext<DriverSessionValue | null>(null);
 
+const NOOP_SESSION: DriverSessionValue = {
+  profile: null,
+  profileLoading: false,
+  refetchProfile: () => {},
+  isOnline: false,
+  toggling: false,
+  togglePresence: async () => {},
+  cashOverLimit: false,
+  queue: [],
+  current: null,
+  currentExpiresAt: null,
+  showCurrent: () => {},
+  accept: async () => {},
+  decline: async () => {},
+  activeTrip: null,
+  activeRideId: null,
+  latestOffer: null,
+  realtimeStatus: "idle",
+  blockingReason: "",
+  createDebugOfferForCurrentDriver: async () => {},
+};
+
 export function useDriverSession() {
   const ctx = useContext(DriverSessionContext);
-  if (!ctx) throw new Error("useDriverSession must be used inside DriverSessionProvider");
-  return ctx;
+  // Return a safe no-op session when the provider is not mounted (e.g. brief
+  // HMR transitions or client-mode renders). Throwing here would blank the
+  // entire app for a non-fatal condition.
+  return ctx ?? NOOP_SESSION;
 }
 
 export function DriverSessionProvider({ children }: { children: ReactNode }) {
