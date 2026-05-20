@@ -48,6 +48,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
+  const [deliveryPending, setDeliveryPending] = useState(false);
 
   const cart = useRepasCart();
   const { isLoggedIn, requireAuth } = useAuthGuard();
@@ -106,7 +107,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
     }
     setSubmitting(true);
     try {
-      await createFoodOrder({
+      const result = await createFoodOrder({
         restaurantId: restaurant.id,
         fulfillment,
         paymentMethod,
@@ -121,6 +122,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
           qty: l.qty,
         })),
       });
+      setDeliveryPending(fulfillment === "delivery" && result.deliveryPending);
       cart.clear();
       setStage("confirmed");
     } catch (e: unknown) {
