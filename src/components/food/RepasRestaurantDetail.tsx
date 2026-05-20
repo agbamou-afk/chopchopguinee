@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Minus, ShoppingBag, Clock, X, CheckCircle2, MapPin, ShieldCheck, Truck, Package, BadgeCheck } from "lucide-react";
+import { ArrowLeft, Plus, Minus, ShoppingBag, Clock, X, CheckCircle2, MapPin, ShieldCheck, Truck, Package, BadgeCheck, Loader2, LocateFixed } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -44,6 +44,8 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [paymentMethod, setPaymentMethod] = useState<FoodPaymentMethod>("cash");
   const [notes, setNotes] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryCoords, setDeliveryCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
 
@@ -110,6 +112,8 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
         paymentMethod,
         notes: notes || undefined,
         deliveryAddress: fulfillment === "delivery" ? deliveryAddress || undefined : undefined,
+        deliveryLat: fulfillment === "delivery" ? deliveryCoords?.lat : undefined,
+        deliveryLng: fulfillment === "delivery" ? deliveryCoords?.lng : undefined,
         items: myCartLines.map((l) => ({
           menuItemId: l.menuItemId,
           name: l.name,
