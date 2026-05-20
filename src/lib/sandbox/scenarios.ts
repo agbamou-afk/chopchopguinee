@@ -583,7 +583,7 @@ SANDBOX_SCENARIOS.push(
     title: "Notifications · updates dupliqués",
     description: "Le même update est émis 4 fois — vérifie la déduplication.",
     family: "notification",
-    expected: { notifications: 4, maxDuplicateNotifications: 1, missions: 1, completed: 1 },
+    expected: { notifications: 1, maxDuplicateNotifications: 1, missions: 1, completed: 1 },
     async run(ctx) {
       const customer = ctx.spawnActor("customer", { label: "Customer dup", district: "Kipé" });
       const m = ctx.spawnMission({
