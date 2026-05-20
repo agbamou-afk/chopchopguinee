@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Navigation, Loader2, AlertTriangle, Phone, ShieldCheck, Check, Camera, Route } from "lucide-react";
+import { Marker } from "react-map-gl";
 import { Button } from "@/components/ui/button";
 import { formatGNF } from "@/lib/format";
 import { toast } from "sonner";
@@ -22,6 +23,11 @@ import {
   stepIndex,
 } from "@/lib/missions/pipelines";
 import { MissionIssueSheet } from "./MissionIssueSheet";
+import { ChopMap, RoutePolyline, ChopPin } from "@/components/map";
+import { bbox as bboxOf, type LatLng } from "@/lib/maps/geo";
+import { useEffect, useRef } from "react";
+import type { ChopMapHandle } from "@/components/map/ChopMap";
+import { RoutingService } from "@/lib/maps/RoutingService";
 
 /** Extract a phone number from payload_summary (we embed ☎ +224... in Repas). */
 function extractPhone(s: string | null): string | null {
@@ -50,6 +56,54 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
   const proofBlocks =
     !!proof && proof.requirement === "required" && !proofTaken;
   const dirLabel = useMemo(() => directionsLabel(mission), [mission]);
+
+  // ───────── Operational mini-map ─────────
+  const pickup: LatLng | null =
+    mission.pickup_lat != null && mission.pickup_lng != null
+      ? { lat: mission.pickup_lat, lng: mission.pickup_lng }
+      : null;
+  const dropoff: LatLng | null =
+    mission.dropoff_lat != null && mission.dropoff_lng != null
+      ? { lat: mission.dropoff_lat, lng: mission.dropoff_lng }
+      : null;
+  const beforePickup = activeIdx <= 2; // assigned / heading_to_pickup / arrived_pickup
+  const mapRef = useRef<ChopMapHandle>(null);
+  const [route, setRoute] = useState<{ polyline: string } | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const origin = beforePickup ? pickup : pickup;
+    const dest = beforePickup ? pickup : dropoff;
+    // When we have only one endpoint we skip routing — pin still renders.
+    if (!pickup || !dropoff || !origin || !dest || origin === dest) {
+      setRoute(null);
+      return;
+    }
+    const a = beforePickup ? pickup : pickup;
+    const b = beforePickup ? dropoff : dropoff;
+    RoutingService.route(a, b, "driving")
+      .then((r) => {
+        if (alive) setRoute({ polyline: r.polyline });
+      })
+      .catch(() => {
+        if (alive) setRoute(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng, beforePickup]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const pts: LatLng[] = [];
+    if (pickup) pts.push(pickup);
+    if (dropoff) pts.push(dropoff);
+    if (pts.length === 1) mapRef.current.flyTo(pts[0].lng, pts[0].lat, 14);
+    else if (pts.length >= 2) mapRef.current.fitBounds(bboxOf(pts), 40);
+  }, [pickup?.lat, pickup?.lng, dropoff?.lat, dropoff?.lng]);
+
+  const showMap = !terminal && (pickup || dropoff);
+  const initialView = pickup ?? dropoff;
 
   const openDirections = () => {
     if (mission.pickup_lat && mission.pickup_lng && activeIdx <= 1) {
@@ -111,6 +165,49 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
           {MISSION_STATE_LABEL[mission.state]}
         </span>
       </div>
+
+      {showMap && initialView && (
+        <div className="relative h-32 rounded-xl overflow-hidden border border-border/60 mb-3">
+          <ChopMap
+            ref={mapRef}
+            className="absolute inset-0"
+            interactive={false}
+            initialView={{ latitude: initialView.lat, longitude: initialView.lng, zoom: 13 }}
+          >
+            {route && (
+              <RoutePolyline
+                encoded={route.polyline}
+                id={`mission-${mission.id}`}
+                state="active"
+                tone={identity.routeTone}
+                animated={false}
+              />
+            )}
+            {pickup && (
+              <Marker longitude={pickup.lng} latitude={pickup.lat} anchor="bottom">
+                <ChopPin
+                  kind={{ family: "actor", key: identity.pinActors.pickup }}
+                  variant="map"
+                  pin
+                  pulse={beforePickup}
+                  label={identity.endpointLabels.pickup}
+                />
+              </Marker>
+            )}
+            {dropoff && (
+              <Marker longitude={dropoff.lng} latitude={dropoff.lat} anchor="bottom">
+                <ChopPin
+                  kind={{ family: "actor", key: identity.pinActors.dropoff }}
+                  variant="map"
+                  pin
+                  pulse={!beforePickup}
+                  label={identity.endpointLabels.dropoff}
+                />
+              </Marker>
+            )}
+          </ChopMap>
+        </div>
+      )}
 
       <div className="space-y-1.5 mb-3">
         {mission.pickup_address && (
