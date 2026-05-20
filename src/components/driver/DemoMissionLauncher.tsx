@@ -8,7 +8,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { MissionRequestCard } from "./MissionRequestCard";
+import { MissionOfferPopup } from "./MissionOfferPopup";
 import { DemoActiveMissionCard } from "./DemoActiveMissionCard";
 import { buildDemoMission } from "@/lib/missions/demoMissions";
 import { type Mission, type MissionType } from "@/lib/missions/types";
@@ -41,14 +41,14 @@ export function DemoMissionLauncher() {
     });
   };
 
-  const handleAccept = () => {
+  const handleAccept = (_id: string) => {
     if (!pending) return;
     setActive({ ...pending, state: "heading_to_pickup", courier_id: "demo-courier" });
     setPending(null);
     toast.success("Mission acceptée (démo)");
   };
 
-  const handleDecline = () => {
+  const handleDecline = (_id: string) => {
     setPending(null);
     toast("Mission ignorée");
   };
@@ -65,18 +65,12 @@ export function DemoMissionLauncher() {
         </Button>
       )}
 
-      {pending && (
-        <section className="space-y-2">
-          <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground px-1">
-            Mission démo disponible
-          </h3>
-          <MissionRequestCard
-            mission={pending}
-            onAccept={handleAccept}
-            onDecline={handleDecline}
-          />
-        </section>
-      )}
+      <MissionOfferPopup
+        mission={pending}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+        demo
+      />
 
       {active && (
         <section className="space-y-2">
