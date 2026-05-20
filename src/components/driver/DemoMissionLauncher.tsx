@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { MissionRequestCard } from "./MissionRequestCard";
 import { DemoActiveMissionCard } from "./DemoActiveMissionCard";
 import { buildDemoMission } from "@/lib/missions/demoMissions";
-import { MISSION_TYPE_LABEL, type Mission, type MissionType } from "@/lib/missions/types";
+import { type Mission, type MissionType } from "@/lib/missions/types";
+import { MISSION_IDENTITY } from "@/lib/missions/pipelines";
 import { toast } from "sonner";
 
 const TYPES: { type: MissionType; icon: typeof Bike; tagline: string }[] = [
@@ -36,7 +37,7 @@ export function DemoMissionLauncher() {
     setPickerOpen(false);
     setPending(buildDemoMission(type));
     toast("Mission démo disponible", {
-      description: MISSION_TYPE_LABEL[type],
+      description: MISSION_IDENTITY[type].label,
     });
   };
 
@@ -99,26 +100,30 @@ export function DemoMissionLauncher() {
             </SheetDescription>
           </SheetHeader>
           <div className="mt-4 space-y-2 pb-4">
-            {TYPES.map(({ type, icon: Icon, tagline }) => (
+            {TYPES.map(({ type, tagline }) => {
+              const id = MISSION_IDENTITY[type];
+              const Icon = id.icon;
+              return (
               <button
                 key={type}
                 type="button"
                 onClick={() => start(type)}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl border border-border hover:border-primary/40 hover:bg-muted/50 text-left transition-colors"
+                className={`w-full flex items-center gap-3 p-3 rounded-2xl border ${id.accent.border} hover:bg-muted/50 text-left transition-colors`}
               >
-                <span className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <span className={`w-10 h-10 rounded-xl ${id.accent.iconBg} ${id.accent.iconText} flex items-center justify-center shrink-0`}>
                   <Icon className="w-5 h-5" />
                 </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-bold text-foreground">
-                    {MISSION_TYPE_LABEL[type]}
+                    {id.label}
                   </span>
                   <span className="block text-[11px] text-muted-foreground truncate">
-                    {tagline}
+                    {id.subtitle} · {tagline}
                   </span>
                 </span>
               </button>
-            ))}
+              );
+            })}
           </div>
         </SheetContent>
       </Sheet>
