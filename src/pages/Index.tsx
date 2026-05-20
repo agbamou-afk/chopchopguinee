@@ -32,11 +32,7 @@ import {
   DRIVER_ONBOARDING_DONE_KEY,
   DRIVER_ONBOARDING_REPLAY_EVENT,
 } from "@/components/onboarding/DriverOnboarding";
-import { isAdminUser, isDemoDriverMode, isDemoMode, isLiveUser } from "@/lib/runtimeMode";
-import {
-  demoScopedKey,
-  resetDemoState,
-} from "@/lib/demoState";
+import { isAdminUser, isLiveUser } from "@/lib/runtimeMode";
 import { ConversionGateSheet, type ConversionIntent } from "@/components/onboarding/ConversionGateSheet";
 
 export type RideType = "moto" | "toktok" | null;
@@ -55,10 +51,8 @@ function DriverGlobalAlert({ activeTab, onView }: { activeTab: string; onView: (
 }
 
 const Index = () => {
-  // Always start in client mode; we only flip to driver once `user` is loaded
-  // and we've confirmed the demo driver account or an explicit flag.
-  // (Initialising from sessionStorage before auth resolves caused
-  // DriverHome to render outside a ready provider on first paint.)
+  // Always start in client mode; we flip to driver only after auth resolves
+  // and we've restored an explicit per-session driver-mode preference.
   const [isDriverMode, setIsDriverMode] = useState<boolean>(false);
   // Initial tab/view honour `?tab=` so notification deep-links can land
   // directly on the activity timeline, wallet, or profile.
@@ -90,10 +84,7 @@ const Index = () => {
   const navigate = useNavigate();
   const adminUser = isAdminUser(user, roles);
   const liveUser = isLiveUser(user, roles);
-  const demoUser = isDemoMode(user?.email ?? null);
-  const demoDriver = isDemoDriverMode(user?.email ?? null);
-  // PUBLIC = logged-out visitor. Treated like a demo client showroom for the
-  // first-launch experience: onboarding always opens first.
+  // PUBLIC = logged-out visitor. First-launch onboarding always opens.
   const publicUser = ready && !user;
 
   // Admins (god_admin / operations_admin / finance_admin) default to the
@@ -108,61 +99,38 @@ const Index = () => {
     adminRedirectedRef.current = true;
     navigate("/admin", { replace: true });
   }, [adminUser, navigate]);
-  // Demo mode flavours:
-  // - linked E2E (sandbox): explicit `?demo=linked` — hands the ride to the
-  //   real demo driver account. Used for two-account presentations.
-  // - walkthrough (default for demo client): self-guided clickthrough that
-  //   never waits on a real driver. Used for solo presentations.
-  const isLinkedDemo = typeof window !== "undefined"
-    && /[?&]demo=linked\b/.test(window.location.search);
-  const isDemoAny = demoUser;
-  // Public/demo onboarding always shows on launch; live users never auto-show.
+  // Public onboarding always shows on launch; live users see it once.
   const onboardingBlocksApp = !ready || showOnboarding || showDriverOnboarding;
-  const resetRequested = typeof window !== "undefined"
-    && /[?&](resetDemo|demoReset|reset_demo)=1\b/.test(window.location.search);
-  // One-shot guard: only auto-enter driver mode the first time we see this
-  // signed-in demo driver. After that, manual toggles win.
   const autoModeAppliedRef = useRef(false);
 
   // Onboarding rules:
-  //   - admin / live user → never auto-show.
-  //   - demo driver       → driver onboarding (always, every session).
-  //   - demo client / public (logged-out) → client onboarding (always).
-  // localStorage is intentionally NOT consulted for public/demo so the
-  // showroom story plays back fresh on every launch.
+  //   - admin               → never auto-show.
+  //   - live user           → client onboarding only if not yet completed.
+  //   - public (logged-out) → client onboarding (always replays each session).
   const onboardingDecidedRef = useRef(false);
   useEffect(() => {
     if (!ready) return;
     if (onboardingDecidedRef.current) return;
     if (adminUser) { onboardingDecidedRef.current = true; return; }
-    if (liveUser) { onboardingDecidedRef.current = true; return; }
-    if (demoDriver) {
+    if (liveUser) {
       onboardingDecidedRef.current = true;
-      setShowDriverOnboarding(true);
+      try {
+        const done = typeof window !== "undefined"
+          && localStorage.getItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`) === "1";
+        if (!done) setShowOnboarding(true);
+      } catch { /* noop */ }
       return;
     }
-    // demo client OR public visitor
-    if (demoUser || publicUser) {
+    if (publicUser) {
       onboardingDecidedRef.current = true;
       setShowOnboarding(true);
     }
-  }, [ready, adminUser, liveUser, demoDriver, demoUser, publicUser]);
+  }, [ready, adminUser, liveUser, publicUser, user?.id]);
 
   // If the session changes (login/logout), re-evaluate.
   useEffect(() => {
     onboardingDecidedRef.current = false;
   }, [user?.id]);
-
-  useEffect(() => {
-    if (!ready || typeof window === "undefined") return;
-    if (!resetRequested) return;
-    resetDemoState(user?.id ?? null);
-    setBookingRide(null);
-    setActiveTrip(null);
-    setShowScanner(false);
-    setShowOnboarding(!demoDriver);
-    setShowDriverOnboarding(demoDriver);
-  }, [ready, user?.id, demoDriver, resetRequested]);
 
   useEffect(() => {
     const handler = () => setShowOnboarding(true);
@@ -177,11 +145,11 @@ const Index = () => {
 
   const finishOnboarding = () => {
     setShowOnboarding(false);
-    // Only persist completion for real live users. Public/demo onboarding
-    // is part of the showroom script and must replay every session.
+    // Only persist completion for signed-in live users. Public onboarding
+    // replays on every visit until the user creates an account.
     if (typeof window !== "undefined" && liveUser) {
       try {
-        localStorage.setItem(demoScopedKey(ONBOARDING_DONE_KEY, user?.id ?? null, false), "1");
+        localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
       } catch { /* noop */ }
     }
   };
@@ -190,7 +158,7 @@ const Index = () => {
     setShowDriverOnboarding(false);
     if (typeof window !== "undefined" && liveUser) {
       try {
-        localStorage.setItem(demoScopedKey(DRIVER_ONBOARDING_DONE_KEY, user?.id ?? null, false), "1");
+        localStorage.setItem(`${DRIVER_ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
       } catch { /* noop */ }
     }
   };
@@ -218,28 +186,16 @@ const Index = () => {
     sessionStorage.setItem("cc_driver_mode", isDriverMode ? "1" : "0");
   }, [user?.id, isDriverMode]);
 
-  // After auth resolves, decide initial mode for this session: auto-enter
-  // driver mode for the demo driver account or explicit `?demo=driver`,
-  // otherwise restore whatever mode was persisted earlier this session.
-  // Runs once per signed-in session — manual toggles afterwards win.
+  // After auth resolves, restore the driver-mode preference persisted for
+  // this session. Runs once — manual toggles afterwards win.
   useEffect(() => {
     if (autoModeAppliedRef.current) return;
-    const isExplicitDriverDemo =
-      typeof window !== "undefined" && /[?&]demo=driver\b/.test(window.location.search);
-    if (!user && !isExplicitDriverDemo) return;
+    if (!user) return;
     autoModeAppliedRef.current = true;
-    const email = (user?.email ?? "").toLowerCase();
-    const isDemoDriverAccount = email === "demo.driver@chopchop.gn";
-    if (isDemoDriverAccount || isExplicitDriverDemo) {
-      setIsDriverMode(true);
-      setActiveTab("home");
-      setActiveView("home");
-      return;
-    }
     if (typeof window !== "undefined" && sessionStorage.getItem("cc_driver_mode") === "1") {
       setIsDriverMode(true);
     }
-  }, [user?.id, user?.email]);
+  }, [user?.id]);
 
   // Rides the user has actively dismissed this session — never re-restore them.
   const dismissedRidesRef = useRef<Set<string>>(new Set());
@@ -253,9 +209,6 @@ const Index = () => {
   // ignored so they never trap the user on the tracking screen.
   useEffect(() => {
     if (!user || isDriverMode || activeTrip || restoreAttemptedRef.current || onboardingBlocksApp) return;
-    // Demo mode = calm guided showroom: never auto-restore an in-flight ride
-    // on the client. The user must intentionally tap a dashboard action.
-    if (isDemoAny) { restoreAttemptedRef.current = true; return; }
     restoreAttemptedRef.current = true;
     let cancelled = false;
     (async () => {
@@ -286,36 +239,12 @@ const Index = () => {
       });
     })();
     return () => { cancelled = true; };
-  }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp, isDemoAny]);
+  }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp]);
 
   const closeActiveTrip = async (alsoCancel: boolean) => {
     const trip = activeTrip;
     if (trip?.rideId) {
       dismissedRidesRef.current.add(trip.rideId);
-      // Linked demo: never cancel server-side on close. The demo driver still
-      // needs to be able to accept the same ride_id after the operator
-      // switches accounts. Just dismiss locally for this session.
-      if (alsoCancel && isLinkedDemo) {
-        try {
-          const { data: row } = await supabase
-            .from("rides")
-            .select("metadata,status")
-            .eq("id", trip.rideId)
-            .maybeSingle();
-          const meta = (row?.metadata ?? {}) as { linked_demo?: boolean };
-          const stillLive = row?.status === "pending" || row?.status === "in_progress";
-          if (meta.linked_demo === true && stillLive) {
-            toast({
-              title: "Démo masquée",
-              description: "La course reste active pour le chauffeur.",
-            });
-            setActiveTrip(null);
-            setActiveView("orders");
-            setActiveTab("orders");
-            return;
-          }
-        } catch { /* fall through to default cancel */ }
-      }
       // If the user closes a still-pending (un-matched) ride, cancel it
       // server-side so it does not stay around as an orphan.
       if (alsoCancel) {
@@ -510,16 +439,6 @@ const Index = () => {
                 return;
               }
               const newRideId = (ride as { id: string }).id;
-              // Linked demo (sandbox E2E): hand the ride to the demo driver
-              // as a real offer. Walkthrough demo never links.
-              if (isLinkedDemo) {
-                try {
-                  await supabase.rpc("demo_link_ride" as never, { p_ride_id: newRideId } as never);
-                } catch (e) {
-                  // eslint-disable-next-line no-console
-                  console.warn("[demo_link_ride] failed", e);
-                }
-              }
               setActiveTrip({ mode: bookingRide, ...trip, holdId, rideId: newRideId });
               setBookingRide(null);
               setBookingDestination(undefined);
@@ -538,9 +457,7 @@ const Index = () => {
         {!onboardingBlocksApp && activeTrip && (
           (typeof window !== "undefined" &&
             (localStorage.getItem("cc_realtime_trip") === "1" ||
-              /[?&]trip=v2/.test(window.location.search) ||
-              /[?&]demo=1/.test(window.location.search) ||
-              isLinkedDemo)) && activeTrip.rideId
+              /[?&]trip=v2/.test(window.location.search))) && activeTrip.rideId
           ? (
             <RealtimeTripScreen
               key={`v2-${activeTrip.rideId}`}
