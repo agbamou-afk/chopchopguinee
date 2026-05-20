@@ -9,13 +9,8 @@ export type TxDirection = "in" | "out";
  * courier earnings and merchant inflows. No fintech jargon.
  */
 export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
-  const desc = (tx.description ?? "").toLowerCase();
-  const ref = (tx.related_entity ?? "").toLowerCase();
-
-  const isRepas = /repas|food|menu|restaurant|plat/.test(desc) || ref.startsWith("food_") || ref.startsWith("repas:");
-  const isMarche = /march[ée]|marketplace|listing|article|vente/.test(desc) || ref.startsWith("listing:") || ref.startsWith("marketplace");
-  const isCourier = /coursier|livraison|gain|mission|course/.test(desc) || ref.startsWith("mission:");
-  const isCHOPPay = /choppay|merchant|marchand/.test(desc);
+  const ctx = txContext(tx);
+  const { isRepas, isMarche, isCourier, isCHOPPay, missionKind, isPeer } = ctx;
 
   switch (tx.type) {
     case "topup":
@@ -33,13 +28,18 @@ export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
     case "adjustment":
       return "Ajustement";
     case "transfer":
+      if (isPeer) return dir === "in" ? "Reçu d'un ami" : "Envoyé à un ami";
       return dir === "in" ? "Transfert reçu" : "Paiement envoyé";
     case "capture":
     case "payment": {
       if (dir === "in") {
         if (isCourier) {
-          if (isRepas) return "Gain livraison Repas reçu";
-          if (isMarche) return "Gain livraison Marché reçu";
+          if (missionKind === "repas") return "Gain Livraison Repas reçu";
+          if (missionKind === "marche") return "Gain Livraison Marché reçu";
+          if (missionKind === "moto") return "Gain Course Moto reçu";
+          if (missionKind === "envoyer") return "Gain Envoyer reçu";
+          if (isRepas) return "Gain Livraison Repas reçu";
+          if (isMarche) return "Gain Livraison Marché reçu";
           return "Gain mission reçu";
         }
         if (isRepas) return "Paiement Repas reçu";
@@ -71,6 +71,94 @@ export function txStatusCopy(status: string): { label: string; tone: "pending" |
       return null;
   }
 }
+
+/**
+ * Payout/availability copy used in the receipt sheet to reassure
+ * couriers and merchants. Calm, plain-French; never banking jargon.
+ */
+export function payoutAvailabilityCopy(tx: WalletTransaction, dir: TxDirection): { label: string; tone: "ok" | "pending" | "muted" } {
+  if (tx.status === "pending") return { label: "Paiement en cours de traitement", tone: "pending" };
+  if (tx.status === "failed") return { label: "Paiement échoué", tone: "muted" };
+  if (tx.status === "cancelled" || tx.status === "reversed") return { label: "Transaction annulée", tone: "muted" };
+  if (dir === "in") {
+    const { isCourier } = txContext(tx);
+    if (isCourier) return { label: "Gain confirmé · disponible dans CHOPWallet", tone: "ok" };
+    return { label: "Disponible dans CHOPWallet", tone: "ok" };
+  }
+  return { label: "Paiement confirmé", tone: "ok" };
+}
+
+export type MissionKind = "moto" | "repas" | "marche" | "envoyer" | null;
+
+export interface TxContext {
+  isRepas: boolean;
+  isMarche: boolean;
+  isCourier: boolean;
+  isCHOPPay: boolean;
+  isPeer: boolean;
+  missionKind: MissionKind;
+  pickupArea: string | null;
+  dropoffArea: string | null;
+  merchantName: string | null;
+}
+
+/**
+ * Best-effort context extraction from description + related_entity.
+ * Description heuristics: "… · Bambeto → Kaloum", "… · Resto X",
+ * "mission:moto:…", "mission:repas:…". Safe defaults when unknown.
+ */
+export function txContext(tx: WalletTransaction): TxContext {
+  const desc = (tx.description ?? "");
+  const lower = desc.toLowerCase();
+  const ref = (tx.related_entity ?? "").toLowerCase();
+
+  const isRepas = /repas|food|menu|restaurant|plat/.test(lower) || ref.startsWith("food_") || ref.startsWith("repas:") || ref.includes(":repas:");
+  const isMarche = /march[ée]|marketplace|listing|article|vente/.test(lower) || ref.startsWith("listing:") || ref.startsWith("marketplace") || ref.includes(":marche:");
+  const isCourier = /coursier|livraison|gain|mission|course/.test(lower) || ref.startsWith("mission:");
+  const isCHOPPay = /choppay|merchant|marchand/.test(lower);
+  const isPeer = ref.startsWith("transfer:peer") || /ami|peer|p2p/.test(lower);
+
+  let missionKind: MissionKind = null;
+  if (ref.startsWith("mission:")) {
+    const part = ref.split(":")[1] ?? "";
+    if (part.startsWith("moto") || part === "ride") missionKind = "moto";
+    else if (part.startsWith("repas") || part.startsWith("food")) missionKind = "repas";
+    else if (part.startsWith("marche") || part.startsWith("marketplace")) missionKind = "marche";
+    else if (part.startsWith("envoyer") || part.startsWith("courier")) missionKind = "envoyer";
+  }
+  if (!missionKind && isCourier) {
+    if (/moto|course/.test(lower)) missionKind = "moto";
+    else if (/repas|food|restaurant/.test(lower)) missionKind = "repas";
+    else if (/march[ée]|marketplace|listing/.test(lower)) missionKind = "marche";
+    else if (/envoyer|colis|coursier/.test(lower)) missionKind = "envoyer";
+  }
+
+  // Pickup → Dropoff parsing, e.g. "Mission · Bambeto → Kaloum".
+  let pickupArea: string | null = null;
+  let dropoffArea: string | null = null;
+  const arrow = desc.match(/([A-ZÀ-Ý][\wÀ-ÿ' -]{1,30})\s*(?:→|->|–|-|à)\s*([A-ZÀ-Ý][\wÀ-ÿ' -]{1,30})/);
+  if (arrow) {
+    pickupArea = arrow[1].trim();
+    dropoffArea = arrow[2].trim();
+  }
+
+  // Merchant name, e.g. "Paiement CHOPPay · Boutique X" or "Repas · Chez Mama".
+  let merchantName: string | null = null;
+  const sep = desc.split(/\s·\s|\s—\s|\s-\s/);
+  if (sep.length > 1) {
+    const candidate = sep[sep.length - 1].trim();
+    if (candidate && !arrow) merchantName = candidate;
+  }
+
+  return { isRepas, isMarche, isCourier, isCHOPPay, isPeer, missionKind, pickupArea, dropoffArea, merchantName };
+}
+
+export const MISSION_KIND_LABEL: Record<Exclude<MissionKind, null>, string> = {
+  moto: "Course Moto",
+  repas: "Livraison Repas",
+  marche: "Livraison Marché",
+  envoyer: "Envoyer (Colis)",
+};
 
 export type TxGroupKey = "today" | "yesterday" | "this_week" | "this_month" | "older";
 
