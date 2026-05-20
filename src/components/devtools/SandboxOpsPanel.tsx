@@ -172,6 +172,11 @@ export function SandboxOpsPanel() {
                       ))}
                     </div>
                   )}
+                  {r.note && (
+                    <div className="mt-1 text-[10px] italic text-muted-foreground">
+                      ℹ {r.note}
+                    </div>
+                  )}
                 </Card>
               );
             })}
