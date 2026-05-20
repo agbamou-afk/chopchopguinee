@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import { Source, Layer } from 'react-map-gl';
 import { decodePolyline } from '@/lib/maps/geo';
+import { TONE_HSL, type ChopPinTone } from './chopPinTypes';
 
 export type RouteState = 'active' | 'approach' | 'completed';
 
@@ -12,8 +13,8 @@ const COLOR: Record<RouteState, string> = {
 };
 
 export function RoutePolyline({
-  encoded, id = 'chop-route', state = 'active', animated = true,
-}: { encoded: string; id?: string; state?: RouteState; animated?: boolean }) {
+  encoded, id = 'chop-route', state = 'active', animated = true, tone,
+}: { encoded: string; id?: string; state?: RouteState; animated?: boolean; tone?: ChopPinTone }) {
   // Retain the last good polyline while parents refetch — prevents the line
   // from disappearing for a frame and flickering back in.
   const lastEncodedRef = useRef<string>('');
@@ -26,7 +27,9 @@ export function RoutePolyline({
     if (coords.length < 2) return { type: 'FeatureCollection' as const, features: [] };
     return { type: 'FeatureCollection' as const, features: [{ type: 'Feature' as const, properties: {}, geometry: { type: 'LineString' as const, coordinates: coords } }] };
   }, [effective]);
-  const color = COLOR[state];
+  // Mission-typed tone overrides the active color, but completed/approach
+  // keep their semantic styling so progress reads consistently.
+  const color = tone && state === 'active' ? TONE_HSL[tone] : COLOR[state];
   const dash = state === 'approach' ? [2, 2] : undefined;
   return (
     <Source id={id} type="geojson" data={geojson}>

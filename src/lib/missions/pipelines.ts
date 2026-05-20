@@ -1,5 +1,6 @@
 import { Bike, UtensilsCrossed, ShoppingBag, Package, type LucideIcon } from "lucide-react";
 import type { Mission, MissionState, MissionType } from "./types";
+import type { ChopPinActor, ChopPinTone } from "@/components/map/chopPinTypes";
 
 /**
  * Per-mission-type identity + fulfillment pipeline.
@@ -15,6 +16,14 @@ export interface MissionTypeIdentity {
   subtitle: string;       // operational subtitle
   trustHint: string;      // calm trust/proof hint
   icon: LucideIcon;
+  /** Accept-CTA copy on the incoming request card. */
+  acceptCta: string;
+  /** Pickup/dropoff actor labels for endpoint chips. */
+  endpointLabels: { pickup: string; dropoff: string };
+  /** Spatial: actor kinds for pickup / dropoff pins. */
+  pinActors: { pickup: ChopPinActor; dropoff: ChopPinActor };
+  /** Route polyline tone — keeps mission identity on the map. */
+  routeTone: ChopPinTone;
   /** Tailwind classes — keep subtle, semantic tokens only. */
   accent: {
     iconBg: string;       // background of icon chip
@@ -30,6 +39,10 @@ export const MISSION_IDENTITY: Record<MissionType, MissionTypeIdentity> = {
     subtitle: "Transport passager",
     trustHint: "Pickup client à confirmer",
     icon: Bike,
+    acceptCta: "Accepter la course",
+    endpointLabels: { pickup: "Client", dropoff: "Destination" },
+    pinActors: { pickup: "client", dropoff: "client" },
+    routeTone: "green",
     accent: {
       iconBg: "bg-accent-moto/15",
       iconText: "text-accent-moto",
@@ -39,9 +52,13 @@ export const MISSION_IDENTITY: Record<MissionType, MissionTypeIdentity> = {
   },
   food_delivery: {
     label: "Livraison Repas",
-    subtitle: "Récupérer une commande repas",
+    subtitle: "Commande prête · restaurant confirmé",
     trustHint: "Photo au restaurant + photo livraison",
     icon: UtensilsCrossed,
+    acceptCta: "Accepter la livraison",
+    endpointLabels: { pickup: "Restaurant", dropoff: "Client" },
+    pinActors: { pickup: "restaurant", dropoff: "client" },
+    routeTone: "orange",
     accent: {
       iconBg: "bg-accent-repas/15",
       iconText: "text-accent-repas",
@@ -51,9 +68,13 @@ export const MISSION_IDENTITY: Record<MissionType, MissionTypeIdentity> = {
   },
   marketplace_delivery: {
     label: "Livraison Marché",
-    subtitle: "Récupérer un article vendeur",
+    subtitle: "Boutique vérifiée · article prêt",
     trustHint: "Article vendeur à vérifier",
     icon: ShoppingBag,
+    acceptCta: "Accepter la mission",
+    endpointLabels: { pickup: "Boutique", dropoff: "Acheteur" },
+    pinActors: { pickup: "boutique", dropoff: "client" },
+    routeTone: "purple",
     accent: {
       iconBg: "bg-accent-marche/15",
       iconText: "text-accent-marche",
@@ -63,9 +84,13 @@ export const MISSION_IDENTITY: Record<MissionType, MissionTypeIdentity> = {
   },
   package_delivery: {
     label: "Envoyer colis",
-    subtitle: "Transporter un colis",
+    subtitle: "Colis sécurisé · point relais",
     trustHint: "Colis suivi par CHOP CHOP",
     icon: Package,
+    acceptCta: "Prendre le colis",
+    endpointLabels: { pickup: "Expéditeur", dropoff: "Destinataire" },
+    pinActors: { pickup: "client", dropoff: "client" },
+    routeTone: "gray",
     accent: {
       iconBg: "bg-accent-envoyer/15",
       iconText: "text-accent-envoyer",
