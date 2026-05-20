@@ -281,16 +281,29 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
             : isTerminalState(m.state)
               ? "completed"
               : "in_progress";
+      const pickupPt = m.pickup_lat != null && m.pickup_lng != null ? { lat: m.pickup_lat, lng: m.pickup_lng } : null;
+      const dropPt = m.dropoff_lat != null && m.dropoff_lng != null ? { lat: m.dropoff_lat, lng: m.dropoff_lng } : null;
+      const district = formatDistrictPair(pickupPt, dropPt)
+        ?? detectDistrictInText(m.dropoff_address)
+        ?? detectDistrictInText(m.pickup_address)
+        ?? undefined;
+      const missionKind: ActivityItem["missionKind"] =
+        m.type === "food_delivery" ? "repas"
+          : m.type === "marketplace_delivery" ? "marche"
+            : m.type === "package_delivery" ? "envoyer"
+              : "moto";
       return {
         id: `mission:${m.id}`,
         kind,
         title: `${MISSION_TYPE_SHORT[m.type]} · livraison`,
-        subtitle: MISSION_STATE_LABEL[m.state],
+        subtitle: district ? `${MISSION_STATE_LABEL[m.state]} · ${district}` : MISSION_STATE_LABEL[m.state],
         amount: partyType === "driver" && m.state === "delivered" ? m.estimated_earning_gnf : undefined,
         status,
         occurredAt: m.updated_at ?? m.created_at,
         entityId: m.id,
         badge: status === "in_progress" ? "live" : undefined,
+        district: district ?? undefined,
+        missionKind,
         meta: { mission: m },
       };
     });
