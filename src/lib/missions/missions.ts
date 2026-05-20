@@ -40,6 +40,56 @@ export async function listCustomerMissions(customerId: string): Promise<Mission[
   return (data ?? []) as Mission[];
 }
 
+/**
+ * Available (unassigned) missions visible to the current courier.
+ * RLS already filters by capability; we additionally narrow by mission type
+ * derived from the driver's capability list so the UI is calm.
+ */
+const CAPABILITY_TO_TYPE: Record<string, Mission["type"]> = {
+  rides_moto: "ride",
+  rides_toktok: "ride",
+  repas_delivery: "food_delivery",
+  marche_delivery: "marketplace_delivery",
+  package_delivery: "package_delivery",
+};
+
+export async function listAvailableMissions(capabilities: string[]): Promise<Mission[]> {
+  const types = Array.from(
+    new Set(
+      capabilities.map((c) => CAPABILITY_TO_TYPE[c]).filter((t): t is Mission["type"] => !!t),
+    ),
+  );
+  if (types.length === 0) return [];
+  const { data, error } = await supabase
+    .from("missions")
+    .select("*")
+    .is("courier_id", null)
+    .eq("state", "assigned")
+    .in("type", types)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  return (data ?? []) as Mission[];
+}
+
+/** Courier claims an unassigned mission. */
+export async function claimMission(missionId: string): Promise<Mission> {
+  const { data: u } = await supabase.auth.getUser();
+  const uid = u.user?.id;
+  if (!uid) throw new Error("not_authenticated");
+  const { data, error } = await supabase
+    .from("missions")
+    .update({ courier_id: uid, state: "heading_to_pickup" })
+    .eq("id", missionId)
+    .is("courier_id", null)
+    .select("*")
+    .single();
+  if (error) throw error;
+  await logEvent(missionId, "accepted");
+  await logEvent(missionId, "en_route_pickup");
+  return data as Mission;
+}
+
 export async function listMissionEvents(missionId: string): Promise<MissionEvent[]> {
   const { data, error } = await supabase
     .from("mission_events")
