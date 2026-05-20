@@ -335,15 +335,19 @@ class SandboxEngine {
     }
 
     if (exp.maxUnresolvedMissions != null) {
-      check(
-        `unresolved missions ≤ ${exp.maxUnresolvedMissions}`,
-        unresolved <= exp.maxUnresolvedMissions,
-        "fail",
-        `got ${unresolved}`,
-      );
+      const ok = unresolved <= exp.maxUnresolvedMissions;
+      const label = exp.pendingLabel
+        ? `${exp.pendingLabel} (≤ ${exp.maxUnresolvedMissions})`
+        : `unresolved missions ≤ ${exp.maxUnresolvedMissions}`;
+      check(label, ok, "fail", ok ? (unresolved > 0 ? `${unresolved} pending — intentional` : undefined) : `got ${unresolved}`);
+      if (ok && unresolved > 0 && exp.pendingLabel) {
+        run.note = `${exp.pendingLabel}: ${unresolved} pending`;
+      }
     } else if (unresolved > 0) {
       // Default sanity check: a clean run should not leave stuck missions.
-      check("no stuck missions", false, "fail", `${unresolved} non-terminal`);
+      const stuckStates = [...new Set(missions.filter((m) => !TERMINAL.includes(m.state)).map((m) => m.state))].join(", ");
+      check("no stuck missions", false, "fail",
+        `${unresolved} non-terminal (${stuckStates}) — add terminal transition or set maxUnresolvedMissions`);
     }
 
     if (exp.requireDistrictContinuity) {
@@ -357,6 +361,15 @@ class SandboxEngine {
       const missing = exp.failureReasons.filter((r) => !observed.has(r));
       check(`failure reasons: ${exp.failureReasons.join(", ")}`, missing.length === 0, "fail",
         missing.length ? `missing ${missing.join(", ")}` : undefined);
+    }
+
+    if ((run.dedupedNotifications ?? 0) > 0) {
+      assertions.push({
+        label: `notifications deduped × ${run.dedupedNotifications}`,
+        ok: true,
+        severity: "warn",
+        detail: "consecutive duplicates collapsed",
+      });
     }
 
     let health: SandboxHealth = "pass";
