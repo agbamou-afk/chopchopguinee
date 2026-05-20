@@ -166,7 +166,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
     );
   }
 
-  return (
+  const dashboard = (
     <div className="max-w-md mx-auto">
       <AppHeader
         isDriverMode={true}
@@ -340,5 +340,11 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
       </div>
 
     </div>
+  );
+
+  return showDemoLauncher ? (
+    <DemoMissionDispatchProvider>{dashboard}</DemoMissionDispatchProvider>
+  ) : (
+    dashboard
   );
 }
