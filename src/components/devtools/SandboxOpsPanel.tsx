@@ -129,11 +129,24 @@ export function SandboxOpsPanel() {
               const variant =
                 r.status === "completed" ? "default" :
                 r.status === "failed" || r.status === "cancelled" ? "destructive" : "secondary";
+              const healthVariant =
+                r.health === "pass" ? "default" :
+                r.health === "warn" ? "secondary" :
+                r.health === "fail" ? "destructive" : "outline";
+              const healthClass =
+                r.health === "warn" ? "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/40" : "";
               return (
                 <Card key={r.id} className="p-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-xs font-medium truncate">{r.title}</div>
-                    <Badge variant={variant} className="text-[9px]">{r.status}</Badge>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {r.health && (
+                        <Badge variant={healthVariant} className={`text-[9px] uppercase ${healthClass}`}>
+                          {r.health}
+                        </Badge>
+                      )}
+                      <Badge variant={variant} className="text-[9px]">{r.status}</Badge>
+                    </div>
                   </div>
                   <div className="mt-1 grid grid-cols-5 gap-1 text-[10px] text-muted-foreground">
                     <span>👤 {r.counts.actors}</span>
@@ -146,6 +159,19 @@ export function SandboxOpsPanel() {
                     {r.durationMs != null ? `${r.durationMs} ms` : "…"}
                     {r.error ? ` · ${r.error}` : ""}
                   </div>
+                  {r.assertions && r.assertions.length > 0 && (
+                    <div className="mt-1.5 space-y-0.5">
+                      {r.assertions.map((a, i) => (
+                        <div key={i} className="flex items-start gap-1 text-[10px]">
+                          <span className={a.ok ? "text-primary" : a.severity === "fail" ? "text-destructive" : "text-yellow-600 dark:text-yellow-400"}>
+                            {a.ok ? "✓" : a.severity === "fail" ? "✗" : "⚠"}
+                          </span>
+                          <span className="text-muted-foreground">{a.label}</span>
+                          {a.detail && !a.ok && <span className="text-muted-foreground/70">· {a.detail}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
               );
             })}

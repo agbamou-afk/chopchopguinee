@@ -18,6 +18,7 @@ export const SANDBOX_SCENARIOS: SandboxScenario[] = [
     title: "Moto · course normale",
     description: "Course Moto Kipé → Ratoma, livrée sans incident, règlement wallet.",
     family: "ride",
+    expected: { missions: 1, completed: 1, failed: 0, wallet: 2, requireDistrictContinuity: true },
     async run(ctx) {
       const rider = ctx.spawnActor("rider", { label: "Rider Kipé", district: "Kipé" });
       const courier = ctx.spawnActor("courier", { label: "Moto-01", district: "Kipé" });
@@ -50,6 +51,7 @@ export const SANDBOX_SCENARIOS: SandboxScenario[] = [
     title: "Repas · rush midi (3 commandes)",
     description: "Trois commandes Repas successives via le même restaurant Kaloum.",
     family: "repas",
+    expected: { missions: 3, completed: 3, failed: 0, wallet: 9, notifications: 3, requireDistrictContinuity: true },
     async run(ctx) {
       const resto = ctx.spawnActor("restaurant", { label: "Restaurant Damier", district: "Kaloum" });
       for (let i = 0; i < 3; i++) {
@@ -80,6 +82,7 @@ export const SANDBOX_SCENARIOS: SandboxScenario[] = [
     title: "Marché · livraison vendeur",
     description: "Demande de livraison Marché Madina → Ratoma, vendeur prépare, courier livre.",
     family: "marche",
+    expected: { missions: 1, completed: 1, failed: 0, wallet: 3, requireDistrictContinuity: true },
     async run(ctx) {
       const seller = ctx.spawnActor("seller", { label: "Vendeur Madina", district: "Madina" });
       const buyer = ctx.spawnActor("customer", { label: "Acheteur Ratoma", district: "Ratoma" });
@@ -108,6 +111,7 @@ export const SANDBOX_SCENARIOS: SandboxScenario[] = [
     title: "Échec · pickup raté",
     description: "Le courier arrive mais le client est introuvable.",
     family: "failure",
+    expected: { missions: 1, completed: 0, failed: 1, failureReasons: ["client_no_show"] },
     async run(ctx) {
       const rider = ctx.spawnActor("rider", { label: "Rider absent", district: "Dixinn" });
       const courier = ctx.spawnActor("courier", { label: "Moto-02", district: "Dixinn" });
@@ -133,6 +137,7 @@ export const SANDBOX_SCENARIOS: SandboxScenario[] = [
     title: "Échec · refus courier",
     description: "Le courier reçoit l'offre et la refuse.",
     family: "failure",
+    expected: { missions: 1, completed: 0, failed: 1, failureReasons: ["courier_rejected"] },
     async run(ctx) {
       const rider = ctx.spawnActor("rider", { label: "Rider Matoto", district: "Matoto" });
       const courier = ctx.spawnActor("courier", { label: "Moto-rejet", district: "Matoto" });
@@ -153,6 +158,7 @@ export const SANDBOX_SCENARIOS: SandboxScenario[] = [
     title: "Échec · merchant hors ligne",
     description: "La commande Repas arrive sur un restaurant indisponible.",
     family: "failure",
+    expected: { missions: 1, completed: 0, failed: 1, failureReasons: ["merchant_offline"] },
     async run(ctx) {
       const resto = ctx.spawnActor("restaurant", { label: "Restaurant fermé", district: "Kaloum" });
       const customer = ctx.spawnActor("customer", { label: "Customer X", district: "Kaloum" });
@@ -173,6 +179,7 @@ export const SANDBOX_SCENARIOS: SandboxScenario[] = [
     title: "Wallet · continuité multi-mission",
     description: "Un même courier accumule 3 gains successifs (continuité ledger).",
     family: "wallet",
+    expected: { missions: 3, completed: 3, failed: 0, wallet: 3 },
     async run(ctx) {
       const courier = ctx.spawnActor("courier", { label: "Moto-loyal", district: "Ratoma" });
       for (let i = 0; i < 3; i++) {
@@ -195,6 +202,7 @@ export const SANDBOX_SCENARIOS: SandboxScenario[] = [
     title: "Notifications · rafale",
     description: "Émet 5 notifications variées pour tester la déduplication.",
     family: "notification",
+    expected: { notifications: 5, maxDuplicateNotifications: 1 },
     async run(ctx) {
       const kinds = [
         "Nouvelle course dispo",
@@ -226,6 +234,7 @@ SANDBOX_SCENARIOS.push(
     title: "Repas · 5 commandes simultanées",
     description: "5 clients commandent en parallèle sur 2 restaurants Kaloum.",
     family: "repas",
+    expected: { missions: 5, completed: 5, failed: 0, wallet: 15, notifications: 5, requireDistrictContinuity: true },
     async run(ctx) {
       const restos = [
         ctx.spawnActor("restaurant", { label: "Restaurant Damier", district: "Kaloum" }),
@@ -263,6 +272,7 @@ SANDBOX_SCENARIOS.push(
     title: "Moto · 5 couriers en compétition",
     description: "Une offre, 5 couriers — premier accepte, les autres se voient annulés.",
     family: "ride",
+    expected: { missions: 5, completed: 1, failed: 4, failureReasons: ["claimed_by_other"], requireDistrictContinuity: true },
     async run(ctx) {
       const rider = ctx.spawnActor("rider", { label: "Rider Kaloum", district: "Kaloum" });
       const couriers = Array.from({ length: 5 }).map((_, i) =>
@@ -293,6 +303,7 @@ SANDBOX_SCENARIOS.push(
     title: "Marché · chaîne buyer/seller/courier",
     description: "Madina → Dixinn, intérêt acheteur, négo, livraison, paiement.",
     family: "marche",
+    expected: { missions: 1, completed: 1, failed: 0, wallet: 3, notifications: 2, requireDistrictContinuity: true },
     async run(ctx) {
       const seller = ctx.spawnActor("seller", { label: "Vendeur Madina", district: "Madina" });
       const buyer = ctx.spawnActor("customer", { label: "Acheteur Dixinn", district: "Dixinn" });
@@ -322,6 +333,7 @@ SANDBOX_SCENARIOS.push(
     title: "Moto · burst haute demande Kaloum",
     description: "8 demandes successives en zone Kaloum, 3 couriers disponibles.",
     family: "ride",
+    expected: { missions: 8, failed: 5, failureReasons: ["no_courier_available"], requireDistrictContinuity: true, warnTolerant: true },
     async run(ctx) {
       const couriers = Array.from({ length: 3 }).map((_, i) =>
         ctx.spawnActor("courier", { label: `Moto-K${i + 1}`, district: "Kaloum" }),
@@ -352,6 +364,7 @@ SANDBOX_SCENARIOS.push(
     title: "District · mismatch courier",
     description: "Courier préfère Ratoma mais reçoit une mission Matoto — refus poli.",
     family: "failure",
+    expected: { missions: 1, completed: 0, failed: 1, failureReasons: ["district_mismatch"] },
     async run(ctx) {
       const courier = ctx.spawnActor("courier", { label: "Moto-Ratoma", district: "Ratoma" });
       const rider = ctx.spawnActor("rider", { label: "Rider Matoto", district: "Matoto" });
@@ -373,6 +386,7 @@ SANDBOX_SCENARIOS.push(
     title: "District · mission dans votre zone",
     description: "Courier Kipé reçoit une course Kipé → Ratoma — alerte de zone.",
     family: "notification",
+    expected: { missions: 1, completed: 1, failed: 0, notifications: 1, requireDistrictContinuity: true },
     async run(ctx) {
       const courier = ctx.spawnActor("courier", { label: "Moto-Kipé", district: "Kipé" });
       const rider = ctx.spawnActor("rider", { label: "Rider Kipé", district: "Kipé" });
@@ -395,6 +409,7 @@ SANDBOX_SCENARIOS.push(
     title: "Échec · restaurant retarde pickup",
     description: "Resto accepte, mais le plat n'est pas prêt à l'arrivée du courier.",
     family: "failure",
+    expected: { missions: 1, completed: 1, failed: 0, notifications: 1, warnTolerant: true },
     async run(ctx) {
       const resto = ctx.spawnActor("restaurant", { label: "Resto lent", district: "Dixinn" });
       const customer = ctx.spawnActor("customer", { label: "Customer Dixinn", district: "Dixinn" });
@@ -422,6 +437,7 @@ SANDBOX_SCENARIOS.push(
     title: "Échec · merchant annule après accept",
     description: "Le restaurant annule alors que le courier a déjà accepté.",
     family: "failure",
+    expected: { missions: 1, failed: 1, failureReasons: ["merchant_cancelled"], wallet: 1 },
     async run(ctx) {
       const resto = ctx.spawnActor("restaurant", { label: "Resto annulant", district: "Kaloum" });
       const customer = ctx.spawnActor("customer", { label: "Customer Kaloum", district: "Kaloum" });
@@ -445,6 +461,7 @@ SANDBOX_SCENARIOS.push(
     title: "Échec · adresse dropoff manquante",
     description: "Mission sans district dropoff — fallback gracieux.",
     family: "failure",
+    expected: { missions: 1, failed: 1, failureReasons: ["missing_dropoff"] },
     async run(ctx) {
       const rider = ctx.spawnActor("rider", { label: "Rider sans adresse" });
       const courier = ctx.spawnActor("courier", { label: "Moto-fallback", district: "Ratoma" });
@@ -465,6 +482,7 @@ SANDBOX_SCENARIOS.push(
     title: "Échec · client injoignable au dropoff",
     description: "Le courier arrive au dropoff, le client ne répond pas.",
     family: "failure",
+    expected: { missions: 1, failed: 1, failureReasons: ["customer_unreachable"] },
     async run(ctx) {
       const customer = ctx.spawnActor("customer", { label: "Customer absent", district: "Matam" });
       const courier = ctx.spawnActor("courier", { label: "Repas-courier", district: "Matam" });
@@ -488,6 +506,7 @@ SANDBOX_SCENARIOS.push(
     title: "Wallet · paiement en attente",
     description: "Paiement client pending, puis confirmé après délai.",
     family: "wallet",
+    expected: { missions: 1, completed: 1, wallet: 3, notifications: 1 },
     async run(ctx) {
       const customer = ctx.spawnActor("customer", { label: "Customer payeur", district: "Kaloum" });
       const merchant = ctx.spawnActor("restaurant", { label: "Resto CHOPPay", district: "Kaloum" });
@@ -511,6 +530,7 @@ SANDBOX_SCENARIOS.push(
     title: "Wallet · paiement échoué + récupération",
     description: "Premier paiement refusé, second réussit (récupération CHOPPay).",
     family: "wallet",
+    expected: { missions: 1, completed: 1, wallet: 4, notifications: 1 },
     async run(ctx) {
       const customer = ctx.spawnActor("customer", { label: "Customer retry", district: "Ratoma" });
       const merchant = ctx.spawnActor("restaurant", { label: "Resto CHOPPay", district: "Ratoma" });
@@ -536,6 +556,7 @@ SANDBOX_SCENARIOS.push(
     title: "Wallet · CHOPPay merchant inflow",
     description: "3 paiements directs CHOPPay reçus par un marchand.",
     family: "wallet",
+    expected: { missions: 0, wallet: 6 },
     async run(ctx) {
       const merchant = ctx.spawnActor("restaurant", { label: "Marchand CHOPPay", district: "Madina" });
       for (let i = 0; i < 3; i++) {
@@ -551,6 +572,7 @@ SANDBOX_SCENARIOS.push(
     title: "Notifications · updates dupliqués",
     description: "Le même update est émis 4 fois — vérifie la déduplication.",
     family: "notification",
+    expected: { notifications: 4, maxDuplicateNotifications: 1, missions: 1, completed: 1 },
     async run(ctx) {
       const customer = ctx.spawnActor("customer", { label: "Customer dup", district: "Kipé" });
       const m = ctx.spawnMission({
@@ -572,6 +594,7 @@ SANDBOX_SCENARIOS.push(
     title: "Échec · courier accepte puis annule",
     description: "Courier accepte la course puis se désiste en route.",
     family: "failure",
+    expected: { missions: 2, completed: 1, failed: 1, failureReasons: ["courier_aborted"] },
     async run(ctx) {
       const rider = ctx.spawnActor("rider", { label: "Rider Dixinn", district: "Dixinn" });
       const courier = ctx.spawnActor("courier", { label: "Moto-désiste", district: "Dixinn" });
@@ -607,6 +630,7 @@ SANDBOX_SCENARIOS.push(
     title: "Notifications · 5 alertes rapides",
     description: "5 alertes mission consécutives — test du calme UI.",
     family: "notification",
+    expected: { missions: 5, failed: 5, notifications: 5, maxDuplicateNotifications: 1, failureReasons: ["auto_decline"] },
     async run(ctx) {
       const courier = ctx.spawnActor("courier", { label: "Moto-stress", district: "Ratoma" });
       for (let i = 0; i < 5; i++) {
