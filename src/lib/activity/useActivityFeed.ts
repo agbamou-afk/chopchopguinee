@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet, type WalletTransaction } from "@/hooks/useWallet";
 import type { ActivityItem, ActivityKind, ActivityStatus } from "./types";
+import { txContext } from "@/lib/wallet/labels";
 import {
   listBuyerInterests,
   INTEREST_KIND_LABEL,
