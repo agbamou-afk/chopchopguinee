@@ -1,40 +1,88 @@
-## CHOP Repas Foundation Sprint — Plan
+## CHOP Driver/Courier Operational Layer — Foundation Sprint
 
-Transform Repas from a placeholder tab into a lightweight food vertical that inherits CHOP's ecosystem (wallet, ChopPay, trust, activity, notifications) — without cloning DoorDash.
+Lay the groundwork so drivers become unified fulfillment agents (rides + Repas + Marché + colis) without breaking the existing ride lifecycle.
 
-### Scope split
+### 1. Database — additive only
 
-Big sprint, so I'll batch it into three landings:
+New migration:
 
-**Landing A — Data foundation (DB + lib)**
-- Migration: `food_restaurants`, `food_menu_items`, `food_orders`, `food_order_items`
-  - restaurants: name, slug, owner_user_id, avatar_url, cover_url, district, cuisine, is_open, choppay_enabled, delivery_available, pickup_available, verification_state, prep_time_min, status
-  - menu items: restaurant_id, name, photo_url, description, price_gnf, category, is_available, prep_time_min
-  - orders: user_id, restaurant_id, fulfillment (pickup/delivery), state (placed/confirmed/preparing/ready/completed/cancelled), notes, subtotal_gnf, payment_method, created_at
-  - order items: order_id, menu_item_id, qty, unit_price_gnf, name_snapshot
-- RLS: public read open restaurants/available items; owners manage own; users CRUD own orders; admins manage all
-- `food_order_state` enum, `food_fulfillment` enum
-- New activity event kind: `food_order`
-- New lib: `src/lib/repas/restaurants.ts`, `src/lib/repas/menu.ts`, `src/lib/repas/orders.ts`, `src/lib/repas/cart.ts` (localStorage cart hook)
+- `driver_profiles.capabilities text[]` default `ARRAY['rides_moto']` — values from `rides_moto | rides_toktok | repas_delivery | marche_delivery | package_delivery`.
+- New enum `mission_type`: `ride | food_delivery | marketplace_delivery | package_delivery`.
+- New enum `mission_state`: `assigned | heading_to_pickup | arrived_pickup | picked_up | heading_to_dropoff | arrived_dropoff | delivered | failed`.
+- New table `missions`:
+  - `type mission_type`, `state mission_state default 'assigned'`
+  - `courier_id uuid` (driver), `customer_id uuid`, `merchant_id uuid null`
+  - `pickup_address text`, `pickup_lat/lng`, `dropoff_address text`, `dropoff_lat/lng`
+  - `payload_summary text`, `estimated_earning_gnf bigint`, `estimated_distance_m int`, `estimated_duration_s int`
+  - `ref_ride_id`, `ref_food_order_id`, `ref_market_order_id` (nullable links to legacy systems — compatibility layer, not replacement)
+  - `pickup_confirmed_at`, `pickup_confirmed_by`, `dropoff_confirmed_at`, `dropoff_confirmed_by`
+  - `issue_reason text`, timestamps
+- RLS:
+  - courier reads/updates own missions
+  - customer reads own missions
+  - merchant (restaurant owner / listing seller) reads missions where they are merchant
+  - admins manage all
+- `mission_events` table (event log) feeding ActivityTimeline:
+  - `mission_id`, `event` (`accepted | en_route_pickup | arrived_pickup | picked_up | en_route_dropoff | delivered | issue`), `actor_id`, `note`, `created_at`. RLS mirrors `missions`.
 
-**Landing B — UI: home + detail + cart**
-- Rewrite `FoodView.tsx`: search, cuisine chips, "Disponible maintenant" strip, restaurant grid from DB; empty state when none; demo/public sees showroom (existing behavior preserved)
-- New `RestaurantDetailV2.tsx` (or refactor existing `RestaurantDetail.tsx`): header with trust chips (Ouvert, Préparation ~X min, Livraison/Retrait, ChopPay), menu grouped by category, add-to-cart
-- New `CartSheet.tsx`: items, qty +/-, subtotal, fulfillment choice, notes, clear, "Commander"
-- Reuse `TrustChips`, `AvailabilityChip` patterns from Marché where sensible (food variants)
+Existing `rides` table is untouched.
 
-**Landing C — Order flow + activity/notifications**
-- `ConfirmOrderSheet.tsx`: review, pickup/delivery, pay with CHOPWallet/CHOPPay; public hits `ConversionGateSheet`
-- Insert into `food_orders` + items; create activity event; trigger notification log entry ("Commande envoyée")
-- Extend `useActivityFeed` + `ActivityRow` to render `food_order` events with restaurant name + state
-- "Livraison à confirmer" copy when delivery chosen (no fake courier dispatch)
+### 2. Domain layer
 
-### Out of scope (explicitly)
-- Courier dispatch, live tracking, ratings/reviews, coupons, restaurant admin dashboards, restaurant chat (later-ready hook only)
+`src/lib/missions/types.ts` — TS types + French labels:
+```
+assigned: "Mission attribuée"
+heading_to_pickup: "En route vers le retrait"
+arrived_pickup: "Arrivé au point de retrait"
+picked_up: "Colis récupéré"
+heading_to_dropoff: "En route vers le client"
+arrived_dropoff: "Arrivé chez le client"
+delivered: "Livré"
+failed: "Problème signalé"
+```
 
-### Technical notes
-- Cart = client-side only (localStorage keyed `cc_repas_cart`), single-restaurant at a time (clear-on-switch prompt)
-- Payment: reuse `useWallet` debit + existing `ChopPaySheet` pattern; for v1, mark order `payment_method='wallet'|'choppay'|'cash_on_delivery'`, no actual settlement edge function yet (mirrors Marché's lightweight approach)
-- No fake trust data for live users (`isLiveUser` gate stays); demo/public keeps showroom restaurants
+`src/lib/missions/missions.ts` — `listMyMissions`, `advanceMission(id, nextState)`, `confirmPickup`, `confirmDropoff`, `reportIssue`. All writes also insert into `mission_events`.
 
-I'll start with Landing A (migration) once approved, then B and C in follow-up turns.
+`src/lib/missions/capabilities.ts` — helper for capability checks and labels (`Moto`, `TokTok`, `Livraison Repas`, `Livraison Marché`, `Colis`).
+
+### 3. Driver UI (lightweight, no new bottom tabs)
+
+Rework the existing **Courses** tab into a "Mission hub":
+
+- `src/components/driver/MissionRequestCard.tsx` — incoming card variant supporting all mission types (badge per type, pickup/dropoff lines, payload summary, earning, distance/time).
+- `src/components/driver/ActiveMissionCard.tsx` — current mission with the state-machine CTA: "Je pars vers le retrait" → "Arrivé" → "Récupéré (confirmation manuelle)" → "En route client" → "Arrivé" → "Livré" + a discreet "Signaler un problème" link.
+- Extend `src/components/driver/LiveRidesPanel.tsx` to also fetch from `missions` (alongside `rides`) and render mission cards. Existing ride rows keep working.
+- Capability picker in driver profile/settings area (chips toggling `driver_profiles.capabilities`).
+
+No bottom nav changes. No fake "courier ETA" copy when no courier is assigned.
+
+### 4. Confirmation architecture (manual now, QR/PIN/photo-ready)
+
+`confirmPickup(mission_id, method='manual')` and `confirmDropoff(...)` accept a `method` enum stored in `mission_events.note` so we can later swap in QR/PIN/photo without a schema break. UI shows only "Confirmer le retrait" / "Confirmer la livraison" buttons in this sprint.
+
+### 5. ActivityTimeline integration
+
+Extend `src/lib/activity/useActivityFeed.ts` to map `mission_events` for the current user (as customer or courier) into `ActivityItem` with kinds reused from existing `food_order` / `market_order` plus a generic `ride` for package. Subtitle uses the French state label. No new `ActivityKind` values needed yet — keeps the timeline calm.
+
+### 6. Compatibility (no rewrites)
+
+- Repas: existing `food_orders` flow unchanged. A later sprint can call `createMissionFromFoodOrder` when a restaurant confirms a delivery order. We expose the helper but do **not** auto-dispatch in this sprint.
+- Marché: same — `createMissionFromMarketOrder` helper exists, not wired into checkout.
+- Rides: legacy `rides` table + RPCs remain authoritative.
+
+### 7. Out of scope (explicitly)
+
+- No enterprise dispatch / auto-assignment
+- No insurance, no escrow
+- No QR/PIN/photo capture implementation
+- No bottom-nav changes
+- No fake courier promises in customer UI (Repas/Marché checkout copy unchanged)
+
+### Acceptance check
+
+- Migration applies cleanly; types regenerate.
+- Driver `Courses` tab shows existing rides **and** any seeded missions.
+- A test mission can move through every state via the UI.
+- `ActivityTimeline` shows mission events for the customer.
+- Existing ride accept/complete flow is byte-identical.
+- Build clean at 390×844.
