@@ -414,10 +414,54 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                           </label>
                           <input
                             value={deliveryAddress}
-                            onChange={(e) => setDeliveryAddress(e.target.value)}
+                            onChange={(e) => {
+                              setDeliveryAddress(e.target.value);
+                              if (deliveryCoords) setDeliveryCoords(null);
+                            }}
                             className="w-full bg-muted rounded-xl px-4 py-3 text-sm focus:outline-none"
                             placeholder="Quartier, repère utile…"
                           />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!("geolocation" in navigator)) {
+                                toast.error("Géolocalisation non disponible sur cet appareil.");
+                                return;
+                              }
+                              setLocating(true);
+                              navigator.geolocation.getCurrentPosition(
+                                (pos) => {
+                                  const { latitude, longitude } = pos.coords;
+                                  setDeliveryCoords({ lat: latitude, lng: longitude });
+                                  setDeliveryAddress(
+                                    `Position actuelle (${latitude.toFixed(5)}, ${longitude.toFixed(5)})`,
+                                  );
+                                  setLocating(false);
+                                  toast.success("Position actuelle sélectionnée");
+                                },
+                                () => {
+                                  setLocating(false);
+                                  toast("Position non autorisée. Entrez l’adresse manuellement.");
+                                },
+                                { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
+                              );
+                            }}
+                            disabled={locating}
+                            className={cn(
+                              "mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium border transition",
+                              deliveryCoords
+                                ? "bg-primary/10 border-primary/30 text-primary"
+                                : "bg-card border-border text-muted-foreground hover:text-foreground",
+                              locating && "opacity-60",
+                            )}
+                          >
+                            {locating ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <LocateFixed className="w-3.5 h-3.5" />
+                            )}
+                            {deliveryCoords ? "Position actuelle utilisée" : "Utiliser ma position actuelle"}
+                          </button>
                         </div>
                       )}
 
