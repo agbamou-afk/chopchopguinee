@@ -18,6 +18,7 @@ import type {
   SandboxEventLevel,
   SandboxScenario,
   SandboxScenarioContext,
+  SandboxScenarioRun,
   SandboxSnapshot,
   SandboxWalletEntry,
   SyntheticActor,
@@ -28,6 +29,7 @@ import type {
 
 const MAX_EVENTS = 200;
 const MAX_WALLET = 200;
+const MAX_RUNS = 40;
 
 function rid(prefix: string): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-3)}`;
@@ -41,6 +43,7 @@ class SandboxEngine {
   private events: SandboxEvent[] = [];
   private wallet: SandboxWalletEntry[] = [];
   private running = new Set<string>();
+  private runs: SandboxScenarioRun[] = [];
   private listeners = new Set<Listener>();
 
   enabled(): boolean {
@@ -54,6 +57,7 @@ class SandboxEngine {
       events: [...this.events],
       wallet: [...this.wallet],
       runningScenarios: [...this.running],
+      runs: [...this.runs],
     };
   }
 
@@ -159,6 +163,7 @@ class SandboxEngine {
     this.events = [];
     this.wallet = [];
     this.running.clear();
+    this.runs = [];
     this.emit();
   }
 
@@ -172,29 +177,61 @@ class SandboxEngine {
       return;
     }
     this.running.add(scenario.id);
+    const run: SandboxScenarioRun = {
+      id: rid("run"),
+      scenarioId: scenario.id,
+      title: scenario.title,
+      status: "running",
+      startedAt: Date.now(),
+      counts: { actors: 0, missions: 0, wallet: 0, notifications: 0, failures: 0 },
+    };
+    this.runs.unshift(run);
+    if (this.runs.length > MAX_RUNS) this.runs.length = MAX_RUNS;
     this.emit();
     this.log(`▶ Scenario start: ${scenario.title}`, { scope: "scenario", refId: scenario.id });
 
     const ctx: SandboxScenarioContext = {
-      spawnActor: (kind, overrides) => this.spawnActor(kind, overrides),
-      spawnMission: (m) => this.spawnMission({ ...m, scenarioId: scenario.id }),
-      transitionMission: (id, next, o) => this.transitionMission(id, next, o),
-      walletEntry: (e) => this.walletEntry(e),
-      notify: (msg, o) => this.notify(msg, o),
+      spawnActor: (kind, overrides) => {
+        const a = this.spawnActor(kind, overrides);
+        run.counts.actors += 1;
+        return a;
+      },
+      spawnMission: (m) => {
+        const mission = this.spawnMission({ ...m, scenarioId: scenario.id });
+        run.counts.missions += 1;
+        return mission;
+      },
+      transitionMission: (id, next, o) => {
+        this.transitionMission(id, next, o);
+        if (next === "failed" || next === "timeout" || next === "cancelled") run.counts.failures += 1;
+      },
+      walletEntry: (e) => {
+        this.walletEntry(e);
+        run.counts.wallet += 1;
+      },
+      notify: (msg, o) => {
+        this.notify(msg, o);
+        run.counts.notifications += 1;
+      },
       log: (msg, o) => this.log(msg, o),
       wait: (ms) => new Promise((r) => setTimeout(r, ms)),
     };
 
     try {
       await scenario.run(ctx);
+      run.status = "completed";
       this.log(`✓ Scenario done: ${scenario.title}`, { scope: "scenario", level: "success", refId: scenario.id });
     } catch (err) {
-      this.log(`✗ Scenario failed: ${scenario.title} — ${(err as Error)?.message ?? err}`, {
+      run.status = "failed";
+      run.error = (err as Error)?.message ?? String(err);
+      this.log(`✗ Scenario failed: ${scenario.title} — ${run.error}`, {
         scope: "scenario",
         level: "error",
         refId: scenario.id,
       });
     } finally {
+      run.endedAt = Date.now();
+      run.durationMs = run.endedAt - run.startedAt;
       this.running.delete(scenario.id);
       this.emit();
     }
