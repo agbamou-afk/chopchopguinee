@@ -114,6 +114,11 @@ export interface SandboxScenario {
   /** Family used for filtering in the control panel. */
   family: "ride" | "repas" | "marche" | "wallet" | "failure" | "notification" | "merchant";
   run: (ctx: SandboxScenarioContext) => Promise<void> | void;
+  /**
+   * Optional declarative expectations evaluated after the scenario runs.
+   * Used to compute a health score (pass / warn / fail) — purely in-memory.
+   */
+  expected?: SandboxScenarioExpectations;
 }
 
 export interface SandboxSnapshot {
@@ -126,6 +131,38 @@ export interface SandboxSnapshot {
 }
 
 export type SandboxRunStatus = "running" | "completed" | "failed" | "cancelled";
+
+export type SandboxHealth = "pass" | "warn" | "fail";
+
+export interface SandboxScenarioExpectations {
+  /** Exact number of missions spawned. */
+  missions?: number;
+  /** Exact number of missions reaching `completed`. */
+  completed?: number;
+  /** Exact number of missions ending in failed/cancelled/timeout. */
+  failed?: number;
+  /** Exact number of wallet entries emitted. */
+  wallet?: number;
+  /** Exact number of notifications emitted. */
+  notifications?: number;
+  /** Max allowed identical notification message (dedupe threshold). */
+  maxDuplicateNotifications?: number;
+  /** Max allowed non-terminal missions at end of scenario. */
+  maxUnresolvedMissions?: number;
+  /** Every spawned mission must carry pickup AND dropoff district. */
+  requireDistrictContinuity?: boolean;
+  /** All listed failure reasons must appear at least once. */
+  failureReasons?: string[];
+  /** When true, scenario is allowed to end with warn status (no fail demotion). */
+  warnTolerant?: boolean;
+}
+
+export interface SandboxAssertion {
+  label: string;
+  ok: boolean;
+  severity: "warn" | "fail";
+  detail?: string;
+}
 
 export interface SandboxScenarioRun {
   id: string;
@@ -143,4 +180,16 @@ export interface SandboxScenarioRun {
     failures: number;
   };
   error?: string;
+  /** Aggregate health verdict (filled after run ends). */
+  health?: SandboxHealth;
+  /** Per-rule assertion results. */
+  assertions?: SandboxAssertion[];
+  /** Human-readable warnings & failure summaries. */
+  warnings?: string[];
+  /** Mission ids spawned during this run. */
+  missionIds?: string[];
+  /** Notification messages emitted during this run (raw, pre-dedupe). */
+  notificationMessages?: string[];
+  /** Failure reasons observed via transitionMission. */
+  failureReasons?: string[];
 }
