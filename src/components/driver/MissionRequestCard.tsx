@@ -1,15 +1,9 @@
 import { motion } from "framer-motion";
-import { Bike, UtensilsCrossed, ShoppingBag, Package, MapPin, Navigation, ShieldCheck } from "lucide-react";
+import { MapPin, Navigation, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatGNF } from "@/lib/format";
-import { MISSION_TYPE_LABEL, type Mission, type MissionType } from "@/lib/missions/types";
-
-const ICONS: Record<MissionType, typeof Bike> = {
-  ride: Bike,
-  food_delivery: UtensilsCrossed,
-  marketplace_delivery: ShoppingBag,
-  package_delivery: Package,
-};
+import type { Mission } from "@/lib/missions/types";
+import { MISSION_IDENTITY } from "@/lib/missions/pipelines";
 
 interface MissionRequestCardProps {
   mission: Mission;
@@ -23,7 +17,8 @@ interface MissionRequestCardProps {
  * Mirrors the calm, operational tone of the ride request card.
  */
 export function MissionRequestCard({ mission, onAccept, onDecline, busy }: MissionRequestCardProps) {
-  const Icon = ICONS[mission.type] ?? Package;
+  const identity = MISSION_IDENTITY[mission.type];
+  const Icon = identity.icon;
   const km = mission.estimated_distance_m ? (mission.estimated_distance_m / 1000).toFixed(1) : null;
   const minutes = mission.estimated_duration_s ? Math.round(mission.estimated_duration_s / 60) : null;
 
@@ -31,20 +26,32 @@ export function MissionRequestCard({ mission, onAccept, onDecline, busy }: Missi
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-card border border-primary/30 p-4 shadow-card"
+      className={`rounded-2xl bg-card border ${identity.accent.border} p-4 shadow-card`}
     >
-      {/* Primary: type + earning */}
+      {/* Primary: type identity + earning */}
       <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="min-w-0">
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
-            <Icon className="w-3.5 h-3.5" />
-            {MISSION_TYPE_LABEL[mission.type]}
+        <div className="flex items-start gap-2.5 min-w-0">
+          <span
+            className={`w-9 h-9 rounded-xl ${identity.accent.iconBg} ${identity.accent.iconText} flex items-center justify-center shrink-0`}
+            aria-hidden
+          >
+            <Icon className="w-4.5 h-4.5" />
           </span>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Gain estimé</p>
+          <div className="min-w-0">
+            <span className={`block text-[10px] font-bold uppercase tracking-[0.15em] ${identity.accent.chipText}`}>
+              {identity.label}
+            </span>
+            <span className="block text-[11px] text-muted-foreground truncate">
+              {identity.subtitle}
+            </span>
+          </div>
         </div>
-        <span className="text-lg font-extrabold tabular-nums text-foreground shrink-0">
-          {formatGNF(mission.estimated_earning_gnf)}
-        </span>
+        <div className="text-right shrink-0">
+          <p className="text-[10px] text-muted-foreground">Gain estimé</p>
+          <span className="text-lg font-extrabold tabular-nums text-foreground">
+            {formatGNF(mission.estimated_earning_gnf)}
+          </span>
+        </div>
       </div>
 
       {/* Pickup + dropoff */}
@@ -90,7 +97,7 @@ export function MissionRequestCard({ mission, onAccept, onDecline, busy }: Missi
       </div>
 
       <p className="mt-2 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-        <ShieldCheck className="w-3 h-3 text-primary" /> Suivi CHOP CHOP · Signalez tout problème
+        <ShieldCheck className={`w-3 h-3 ${identity.accent.iconText}`} /> {identity.trustHint}
       </p>
     </motion.div>
   );

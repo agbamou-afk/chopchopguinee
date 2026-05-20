@@ -1,45 +1,22 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Bike, UtensilsCrossed, ShoppingBag, Package, MapPin, Navigation, ShieldCheck, Check, AlertTriangle } from "lucide-react";
+import { MapPin, Navigation, ShieldCheck, Check, AlertTriangle, Camera, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatGNF } from "@/lib/format";
 import {
-  MISSION_NEXT_LABEL,
   MISSION_NEXT_STATE,
   MISSION_STATE_LABEL,
-  MISSION_TYPE_SHORT,
   isTerminalState,
   type Mission,
-  type MissionState,
-  type MissionType,
 } from "@/lib/missions/types";
+import {
+  MISSION_IDENTITY,
+  MISSION_PIPELINES,
+  currentStep,
+  directionsLabel,
+  stepIndex,
+} from "@/lib/missions/pipelines";
 import { toast } from "sonner";
-
-const ICONS: Record<MissionType, typeof Bike> = {
-  ride: Bike,
-  food_delivery: UtensilsCrossed,
-  marketplace_delivery: ShoppingBag,
-  package_delivery: Package,
-};
-
-const STEPS: { key: MissionState; label: string }[] = [
-  { key: "heading_to_pickup", label: "Vers retrait" },
-  { key: "arrived_pickup", label: "Au retrait" },
-  { key: "picked_up", label: "Récupéré" },
-  { key: "heading_to_dropoff", label: "Vers client" },
-  { key: "delivered", label: "Livré" },
-];
-
-const STEP_INDEX: Record<MissionState, number> = {
-  assigned: 0,
-  heading_to_pickup: 0,
-  arrived_pickup: 1,
-  picked_up: 2,
-  heading_to_dropoff: 3,
-  arrived_dropoff: 4,
-  delivered: 4,
-  failed: -1,
-};
 
 interface DemoActiveMissionCardProps {
   mission: Mission;
@@ -54,10 +31,14 @@ interface DemoActiveMissionCardProps {
  */
 export function DemoActiveMissionCard({ mission, onChange, onClose }: DemoActiveMissionCardProps) {
   const [busy, setBusy] = useState(false);
-  const Icon = ICONS[mission.type] ?? Package;
-  const ctaLabel = MISSION_NEXT_LABEL[mission.state];
+  const [proofTaken, setProofTaken] = useState(false);
+  const identity = MISSION_IDENTITY[mission.type];
+  const pipeline = MISSION_PIPELINES[mission.type];
+  const Icon = identity.icon;
+  const step = currentStep(mission);
+  const activeIdx = stepIndex(mission);
   const terminal = isTerminalState(mission.state);
-  const activeIdx = STEP_INDEX[mission.state];
+  const dirLabel = useMemo(() => directionsLabel(mission), [mission]);
 
   const handleNext = () => {
     if (busy) return;
@@ -77,6 +58,7 @@ export function DemoActiveMissionCard({ mission, onChange, onClose }: DemoActive
           next === "delivered" ? new Date().toISOString() : mission.dropoff_confirmed_at,
         updated_at: new Date().toISOString(),
       };
+      setProofTaken(false);
       onChange(updated);
       if (next === "picked_up") toast.success("Retrait confirmé (démo)");
       if (next === "delivered") toast.success("Livraison confirmée (démo)");
@@ -93,12 +75,12 @@ export function DemoActiveMissionCard({ mission, onChange, onClose }: DemoActive
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-card border border-primary/30 p-4 shadow-card"
+      className={`rounded-2xl bg-card border ${identity.accent.border} p-4 shadow-card`}
     >
       <div className="flex items-center justify-between mb-2">
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${identity.accent.chipText}`}>
           <Icon className="w-3.5 h-3.5" />
-          {MISSION_TYPE_SHORT[mission.type]} · démo
+          {identity.label} · démo
         </span>
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           {MISSION_STATE_LABEL[mission.state]}
@@ -122,7 +104,7 @@ export function DemoActiveMissionCard({ mission, onChange, onClose }: DemoActive
 
       {!terminal && activeIdx >= 0 && (
         <div className="flex items-center justify-between mb-3 px-0.5">
-          {STEPS.map((s, i) => {
+          {pipeline.steps.map((s, i) => {
             const done = i < activeIdx;
             const active = i === activeIdx;
             return (
@@ -139,7 +121,7 @@ export function DemoActiveMissionCard({ mission, onChange, onClose }: DemoActive
                   {done ? <Check className="w-3 h-3" /> : i + 1}
                 </span>
                 <span className={`text-[9px] leading-tight text-center ${active ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
-                  {s.label}
+                  {s.short}
                 </span>
               </div>
             );
@@ -154,9 +136,44 @@ export function DemoActiveMissionCard({ mission, onChange, onClose }: DemoActive
         </span>
       </div>
 
-      {!terminal && ctaLabel && (
-        <Button className="w-full h-12" onClick={handleNext} disabled={busy}>
-          {ctaLabel}
+      {!terminal && (
+        <Button
+          variant="outline"
+          className="w-full h-10 mb-2 gap-2"
+          onClick={() => toast("Itinéraire (démo)", { description: dirLabel })}
+        >
+          <Route className="w-4 h-4" /> {dirLabel}
+        </Button>
+      )}
+
+      {!terminal && step?.proof && (
+        <button
+          type="button"
+          onClick={() => {
+            setProofTaken(true);
+            toast.success("Photo enregistrée (démo)", { description: step.proof?.label });
+          }}
+          className={`w-full mb-2 inline-flex items-center justify-center gap-2 h-11 rounded-xl border text-sm font-semibold transition-colors ${
+            proofTaken
+              ? "border-primary/40 bg-primary/10 text-primary"
+              : "border-border text-foreground hover:bg-muted"
+          }`}
+        >
+          {proofTaken ? <Check className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
+          {proofTaken ? "Photo prête" : step.proof.label}
+          {step.proof.requirement === "optional" && !proofTaken && (
+            <span className="text-[10px] text-muted-foreground ml-1">(facultatif)</span>
+          )}
+        </button>
+      )}
+
+      {!terminal && step && (
+        <Button
+          className="w-full h-12"
+          onClick={handleNext}
+          disabled={busy || (step.proof?.requirement === "required" && !proofTaken)}
+        >
+          {step.cta}
         </Button>
       )}
 

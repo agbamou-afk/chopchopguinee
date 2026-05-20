@@ -1,16 +1,8 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Mission, MissionState } from "@/lib/missions/types";
-
-const CUSTOMER_MESSAGES: Partial<Record<MissionState, string>> = {
-  heading_to_pickup: "Un coursier a accepté votre livraison.",
-  picked_up: "Votre commande a été récupérée.",
-  heading_to_dropoff: "Votre commande est en route.",
-  arrived_dropoff: "Le coursier est arrivé.",
-  delivered: "Commande livrée. Bon appétit !",
-  failed: "Un problème a été signalé sur votre livraison.",
-};
+import type { Mission } from "@/lib/missions/types";
+import { customerMessage } from "@/lib/missions/pipelines";
 
 /**
  * Customer-side calm alerts on their own missions. Deduped per (id,state)
@@ -35,7 +27,7 @@ export function useCustomerMissionAlerts(userId: string | null) {
           const m = payload.new as Mission;
           const prev = payload.old as Mission | null;
           if (!m || prev?.state === m.state) return;
-          const msg = CUSTOMER_MESSAGES[m.state];
+          const msg = customerMessage(m);
           if (!msg) return;
           const key = `${m.id}:${m.state}`;
           if (seen.current.has(key)) return;
