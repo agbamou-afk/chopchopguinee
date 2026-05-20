@@ -66,6 +66,9 @@ const FieldTestingPanel = lazy(() =>
 const DemoTestPanel = lazy(() =>
   import("./components/devtools/DemoTestPanel").then(m => ({ default: m.DemoTestPanel }))
 );
+const SandboxOpsPanel = lazy(() =>
+  import("./components/devtools/SandboxOpsPanel").then(m => ({ default: m.SandboxOpsPanel }))
+);
 
 const queryClient = new QueryClient();
 
@@ -109,6 +112,11 @@ const App = () => {
           (typeof window !== "undefined" &&
             /[?&](field|sandbox|debug)=1/.test(window.location.search))) && (
           <Suspense fallback={null}><DemoTestPanel /></Suspense>
+        )}
+        {(isSandboxMode() ||
+          (typeof window !== "undefined" &&
+            /[?&](sandbox|debug)=1/.test(window.location.search))) && (
+          <Suspense fallback={null}><SandboxOpsPanel /></Suspense>
         )}
         <Routes>
           <Route path="/" element={<Index />} />
