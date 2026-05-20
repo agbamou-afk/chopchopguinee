@@ -534,6 +534,7 @@ export type Database = {
           accept_rate: number
           approved_at: string | null
           approved_by: string | null
+          capabilities: string[]
           cash_debt_gnf: number
           created_at: string
           debt_limit_gnf: number
@@ -556,6 +557,7 @@ export type Database = {
           accept_rate?: number
           approved_at?: string | null
           approved_by?: string | null
+          capabilities?: string[]
           cash_debt_gnf?: number
           created_at?: string
           debt_limit_gnf?: number
@@ -578,6 +580,7 @@ export type Database = {
           accept_rate?: number
           approved_at?: string | null
           approved_by?: string | null
+          capabilities?: string[]
           cash_debt_gnf?: number
           created_at?: string
           debt_limit_gnf?: number
@@ -1541,6 +1544,128 @@ export type Database = {
           },
         ]
       }
+      mission_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event: string
+          id: string
+          mission_id: string
+          note: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          mission_id: string
+          note?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          mission_id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_events_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          courier_id: string | null
+          created_at: string
+          customer_id: string
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_reason: string | null
+          merchant_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        Insert: {
+          courier_id?: string | null
+          created_at?: string
+          customer_id: string
+          dropoff_address?: string | null
+          dropoff_confirmed_at?: string | null
+          dropoff_confirmed_by?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          estimated_distance_m?: number | null
+          estimated_duration_s?: number | null
+          estimated_earning_gnf?: number
+          id?: string
+          issue_reason?: string | null
+          merchant_id?: string | null
+          payload_summary?: string | null
+          pickup_address?: string | null
+          pickup_confirmed_at?: string | null
+          pickup_confirmed_by?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          ref_food_order_id?: string | null
+          ref_market_order_id?: string | null
+          ref_ride_id?: string | null
+          state?: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at?: string
+        }
+        Update: {
+          courier_id?: string | null
+          created_at?: string
+          customer_id?: string
+          dropoff_address?: string | null
+          dropoff_confirmed_at?: string | null
+          dropoff_confirmed_by?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          estimated_distance_m?: number | null
+          estimated_duration_s?: number | null
+          estimated_earning_gnf?: number
+          id?: string
+          issue_reason?: string | null
+          merchant_id?: string | null
+          payload_summary?: string | null
+          pickup_address?: string | null
+          pickup_confirmed_at?: string | null
+          pickup_confirmed_by?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          ref_food_order_id?: string | null
+          ref_market_order_id?: string | null
+          ref_ride_id?: string | null
+          state?: Database["public"]["Enums"]["mission_state"]
+          type?: Database["public"]["Enums"]["mission_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_log: {
         Row: {
           channel: Database["public"]["Enums"]["notification_channel"]
@@ -2495,6 +2620,7 @@ export type Database = {
           accept_rate: number
           approved_at: string | null
           approved_by: string | null
+          capabilities: string[]
           cash_debt_gnf: number
           created_at: string
           debt_limit_gnf: number
@@ -2617,6 +2743,7 @@ export type Database = {
           accept_rate: number
           approved_at: string | null
           approved_by: string | null
+          capabilities: string[]
           cash_debt_gnf: number
           created_at: string
           debt_limit_gnf: number
@@ -3354,6 +3481,20 @@ export type Database = {
         | "driver_assigned"
         | "delivery_completed"
         | "suspicious_activity"
+      mission_state:
+        | "assigned"
+        | "heading_to_pickup"
+        | "arrived_pickup"
+        | "picked_up"
+        | "heading_to_dropoff"
+        | "arrived_dropoff"
+        | "delivered"
+        | "failed"
+      mission_type:
+        | "ride"
+        | "food_delivery"
+        | "marketplace_delivery"
+        | "package_delivery"
       notification_channel: "email" | "sms" | "whatsapp" | "push" | "inapp"
       notification_priority: "critical" | "high" | "normal" | "low"
       notification_status:
@@ -3618,6 +3759,22 @@ export const Constants = {
         "driver_assigned",
         "delivery_completed",
         "suspicious_activity",
+      ],
+      mission_state: [
+        "assigned",
+        "heading_to_pickup",
+        "arrived_pickup",
+        "picked_up",
+        "heading_to_dropoff",
+        "arrived_dropoff",
+        "delivered",
+        "failed",
+      ],
+      mission_type: [
+        "ride",
+        "food_delivery",
+        "marketplace_delivery",
+        "package_delivery",
       ],
       notification_channel: ["email", "sms", "whatsapp", "push", "inapp"],
       notification_priority: ["critical", "high", "normal", "low"],

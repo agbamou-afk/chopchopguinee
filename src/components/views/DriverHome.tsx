@@ -14,6 +14,8 @@ import { Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { formatGNF } from "@/lib/format";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
+import { MissionsPanel } from "@/components/driver/MissionsPanel";
+import { CapabilityPicker } from "@/components/driver/CapabilityPicker";
 
 interface DriverHomeProps {
   onToggleDriverMode: () => void;
@@ -302,6 +304,17 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
               </Button>
             </div>
           </Card>
+        )}
+
+        {/* Unified missions (deliveries + future ride missions) */}
+        {user && <MissionsPanel userId={user.id} />}
+
+        {/* Capability picker — drivers opt into delivery work */}
+        {user && profile && (
+          <CapabilityPicker
+            userId={user.id}
+            capabilities={profile.capabilities ?? ["rides_moto"]}
+          />
         )}
       </div>
 

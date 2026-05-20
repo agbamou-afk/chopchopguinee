@@ -10,6 +10,13 @@ import {
 } from "@/lib/marche/interests";
 import { listMyFoodOrders } from "@/lib/repas/orders";
 import { FOOD_ORDER_STATE_LABEL, type FoodOrder } from "@/lib/repas/types";
+import { listCustomerMissions, listCourierMissions } from "@/lib/missions/missions";
+import {
+  MISSION_STATE_LABEL,
+  MISSION_TYPE_SHORT,
+  isTerminalState,
+  type Mission,
+} from "@/lib/missions/types";
 
 type RideRow = {
   id: string;
@@ -143,6 +150,7 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
   const [loadingRides, setLoadingRides] = useState(true);
   const [interests, setInterests] = useState<ListingInterest[]>([]);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>([]);
+  const [missions, setMissions] = useState<Mission[]>([]);
 
   const loadRides = useCallback(async (uid: string | null) => {
     if (!uid) {
@@ -196,6 +204,21 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
     };
   }, [userId, partyType]);
 
+  useEffect(() => {
+    if (!userId) {
+      setMissions([]);
+      return;
+    }
+    let alive = true;
+    const fetcher = partyType === "driver" ? listCourierMissions : listCustomerMissions;
+    fetcher(userId)
+      .then((rows) => alive && setMissions(rows))
+      .catch(() => alive && setMissions([]));
+    return () => {
+      alive = false;
+    };
+  }, [userId, partyType]);
+
   const items = useMemo<ActivityItem[]>(() => {
     const wId = wallet?.id ?? "";
     const txItems = wId
@@ -232,10 +255,38 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
       entityId: o.id,
       meta: { foodOrder: o },
     }));
-    return [...txItems, ...rideItems, ...interestItems, ...foodItems].sort(
+    const missionItems: ActivityItem[] = missions.map((m) => {
+      const kind: ActivityKind =
+        m.type === "food_delivery"
+          ? "food_order"
+          : m.type === "marketplace_delivery"
+            ? "market_order"
+            : "ride";
+      const status: ActivityStatus =
+        m.state === "delivered"
+          ? "completed"
+          : m.state === "failed"
+            ? "failed"
+            : isTerminalState(m.state)
+              ? "completed"
+              : "in_progress";
+      return {
+        id: `mission:${m.id}`,
+        kind,
+        title: `${MISSION_TYPE_SHORT[m.type]} · livraison`,
+        subtitle: MISSION_STATE_LABEL[m.state],
+        amount: partyType === "driver" && m.state === "delivered" ? m.estimated_earning_gnf : undefined,
+        status,
+        occurredAt: m.updated_at ?? m.created_at,
+        entityId: m.id,
+        badge: status === "in_progress" ? "live" : undefined,
+        meta: { mission: m },
+      };
+    });
+    return [...txItems, ...rideItems, ...interestItems, ...foodItems, ...missionItems].sort(
       (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
     );
-  }, [wallet?.id, transactions, rides, interests, foodOrders, partyType]);
+  }, [wallet?.id, transactions, rides, interests, foodOrders, missions, partyType]);
 
   const refresh = useCallback(() => {
     refreshWallet();
