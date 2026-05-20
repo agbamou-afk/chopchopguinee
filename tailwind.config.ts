@@ -69,6 +69,26 @@ export default {
           "yellow-muted": "hsl(var(--brand-yellow-muted))",
           "red-muted": "hsl(var(--brand-red-muted))",
         },
+        "accent-moto": {
+          DEFAULT: "hsl(var(--accent-moto))",
+          foreground: "hsl(var(--accent-moto-foreground))",
+        },
+        "accent-toktok": {
+          DEFAULT: "hsl(var(--accent-toktok))",
+          foreground: "hsl(var(--accent-toktok-foreground))",
+        },
+        "accent-repas": {
+          DEFAULT: "hsl(var(--accent-repas))",
+          foreground: "hsl(var(--accent-repas-foreground))",
+        },
+        "accent-marche": {
+          DEFAULT: "hsl(var(--accent-marche))",
+          foreground: "hsl(var(--accent-marche-foreground))",
+        },
+        "accent-envoyer": {
+          DEFAULT: "hsl(var(--accent-envoyer))",
+          foreground: "hsl(var(--accent-envoyer-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
