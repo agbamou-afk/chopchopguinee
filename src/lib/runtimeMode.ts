@@ -1,18 +1,22 @@
 /**
  * Runtime mode helper.
  *
- * The CHOP CHOP super-app runs in three distinct runtime modes. The mode
- * controls how strict the pickup handshake is, whether demo bypass affordances
- * are visible, and whether internal debug tooling is mounted.
+ * Production runtime modes are intentionally minimal:
  *
- *  - "live"    : real production users. Full pickup security, no bypass.
- *  - "demo"    : presentation flow (linked client+driver demo accounts).
- *                Smooth one-tap pickup confirm, no scanner required.
- *  - "sandbox" : internal/admin/dev. All debug panels + force-phase tools.
+ *  - "public"  : visitor with no session. Public exploration only.
+ *  - "live"    : signed-in non-admin human (live_client or live_driver
+ *                depending on the in-app role/mode toggle).
+ *  - "admin"   : signed-in admin user. Lands on /admin by default.
+ *  - "sandbox" : internal/dev/QA. Debug panels + force-phase tools.
+ *                Only enabled when explicitly requested (?sandbox=1,
+ *                ?debug=1, localStorage flag, or DEV builds).
+ *
+ * The legacy "demo" runtime concept (demo client / demo driver showroom
+ * accounts with auto-rotating fake missions and pickup bypass) has been
+ * removed — public users get the same onboarding, and sandbox covers
+ * internal testing.
  */
-export type RuntimeMode = "live" | "demo" | "sandbox";
-
-const DEMO_EMAILS = new Set(["demo.client@chopchop.gn", "demo.driver@chopchop.gn"]);
+export type RuntimeMode = "public" | "live" | "admin" | "sandbox";
 
 function urlMatches(re: RegExp): boolean {
   if (typeof window === "undefined") return false;
@@ -33,47 +37,34 @@ export function isSandboxMode(): boolean {
   return false;
 }
 
-/** Demo mode — used for the linked two-account presentation flow. */
-export function isDemoMode(email?: string | null): boolean {
-  if (email && DEMO_EMAILS.has(email.toLowerCase())) return true;
-  if (urlMatches(/[?&]demo=(1|linked|driver)/)) return true;
-  return false;
-}
-
-/** Driver demo flavour — used to force the chauffeur first-run path. */
-export function isDemoDriverMode(email?: string | null): boolean {
-  if (email?.toLowerCase() === "demo.driver@chopchop.gn") return true;
-  if (urlMatches(/[?&]demo=driver\b/)) return true;
-  return false;
-}
-
 /**
- * Resolve the active runtime mode. Sandbox wins over demo wins over live so
- * that a developer hitting `?sandbox=1` while logged in as a demo account
- * still gets the full debug surface.
+ * Resolve the active runtime mode. Sandbox always wins so an engineer
+ * hitting `?sandbox=1` still gets the full debug surface regardless of
+ * which account they are signed in as.
  */
-export function getRuntimeMode(email?: string | null): RuntimeMode {
+export function getRuntimeMode(
+  user?: { email?: string | null } | null,
+  roles?: readonly string[] | null,
+): RuntimeMode {
   if (isSandboxMode()) return "sandbox";
-  if (isDemoMode(email)) return "demo";
+  if (!user) return "public";
+  if (isAdminRole(roles)) return "admin";
   return "live";
 }
 
-export function isLiveMode(email?: string | null): boolean {
-  return getRuntimeMode(email) === "live";
-}
-
-/** True for any non-live mode (demo or sandbox) — handy for soft gating. */
-export function isNonLiveMode(email?: string | null): boolean {
-  return getRuntimeMode(email) !== "live";
+export function isLiveMode(
+  user?: { email?: string | null } | null,
+  roles?: readonly string[] | null,
+): boolean {
+  return getRuntimeMode(user, roles) === "live";
 }
 
 /**
  * Lightweight role/user helpers used by Index/AppShell to decide what kind
  * of content is appropriate for the current session.
  *
- *  - PUBLIC : not signed in. Showroom placeholders allowed.
- *  - DEMO   : demo client/driver account or `?demo=` flag. Demo placeholders allowed.
- *  - LIVE   : signed-in non-demo human. Real data or empty states only.
+ *  - PUBLIC : not signed in. Public exploration surfaces allowed.
+ *  - LIVE   : signed-in non-admin human. Real data or empty states only.
  *  - ADMIN  : signed-in admin. Default landing is /admin.
  */
 const ADMIN_ROLE_NAMES = new Set([
@@ -92,16 +83,11 @@ export function isPublicMode(user: { email?: string | null } | null | undefined)
   return !user;
 }
 
-export function isDemoUser(user: { email?: string | null } | null | undefined): boolean {
-  return isDemoMode(user?.email ?? null);
-}
-
 export function isLiveUser(
   user: { email?: string | null } | null | undefined,
   roles?: readonly string[] | null,
 ): boolean {
   if (!user) return false;
-  if (isDemoUser(user)) return false;
   if (isAdminRole(roles)) return false;
   return true;
 }
