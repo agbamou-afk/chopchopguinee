@@ -52,7 +52,7 @@ export const MISSION_IDENTITY: Record<MissionType, MissionTypeIdentity> = {
   },
   food_delivery: {
     label: "Livraison Repas",
-    subtitle: "Commande prête · restaurant confirmé",
+    subtitle: "Commande repas à récupérer",
     trustHint: "Photo au restaurant + photo livraison",
     icon: UtensilsCrossed,
     acceptCta: "Accepter la livraison",
@@ -68,7 +68,7 @@ export const MISSION_IDENTITY: Record<MissionType, MissionTypeIdentity> = {
   },
   marketplace_delivery: {
     label: "Livraison Marché",
-    subtitle: "Boutique vérifiée · article prêt",
+    subtitle: "Article vendeur à récupérer",
     trustHint: "Article vendeur à vérifier",
     icon: ShoppingBag,
     acceptCta: "Accepter la mission",
@@ -84,7 +84,7 @@ export const MISSION_IDENTITY: Record<MissionType, MissionTypeIdentity> = {
   },
   package_delivery: {
     label: "Envoyer colis",
-    subtitle: "Colis sécurisé · point relais",
+    subtitle: "Colis à transporter",
     trustHint: "Colis suivi par CHOP CHOP",
     icon: Package,
     acceptCta: "Prendre le colis",
