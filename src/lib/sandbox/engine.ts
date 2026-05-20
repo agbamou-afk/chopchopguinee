@@ -33,6 +33,7 @@ import type {
 const MAX_EVENTS = 200;
 const MAX_WALLET = 200;
 const MAX_RUNS = 40;
+const NOTIFY_DEDUPE_MS = 2000;
 
 function rid(prefix: string): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-3)}`;
@@ -156,8 +157,30 @@ class SandboxEngine {
     });
   }
 
-  notify(message: string, opts?: { level?: SandboxEventLevel; refId?: string }) {
-    this.log(`🔔 ${message}`, { scope: "notification", level: opts?.level, refId: opts?.refId });
+  /**
+   * Emit an operational notification. Collapses identical consecutive
+   * messages emitted within {@link NOTIFY_DEDUPE_MS} into a single event
+   * row with an `×N` suffix — matches the dedupe behaviour we want in
+   * live notification surfaces.
+   *
+   * Returns `true` when the call collapsed into an existing event.
+   */
+  notify(message: string, opts?: { level?: SandboxEventLevel; refId?: string }): boolean {
+    const base = `🔔 ${message}`;
+    const last = this.events[0];
+    if (last && last.scope === "notification" && Date.now() - last.ts < NOTIFY_DEDUPE_MS) {
+      const stripped = last.message.replace(/ ×\d+$/, "");
+      if (stripped === base) {
+        const m = last.message.match(/ ×(\d+)$/);
+        const n = m ? parseInt(m[1], 10) + 1 : 2;
+        last.message = `${stripped} ×${n}`;
+        last.ts = Date.now();
+        this.emit();
+        return true;
+      }
+    }
+    this.log(base, { scope: "notification", level: opts?.level, refId: opts?.refId });
+    return false;
   }
 
   clear() {
@@ -220,9 +243,13 @@ class SandboxEngine {
         run.counts.wallet += 1;
       },
       notify: (msg, o) => {
-        this.notify(msg, o);
-        run.counts.notifications += 1;
-        run.notificationMessages!.push(msg);
+        const deduped = this.notify(msg, o);
+        if (!deduped) {
+          run.counts.notifications += 1;
+          run.notificationMessages!.push(msg);
+        } else {
+          run.dedupedNotifications = (run.dedupedNotifications ?? 0) + 1;
+        }
       },
       log: (msg, o) => this.log(msg, o),
       wait: (ms) => new Promise((r) => setTimeout(r, ms)),
