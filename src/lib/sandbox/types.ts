@@ -6,7 +6,7 @@
  * dispatch, real wallet, or live presence code paths.
  */
 
-import type { DistrictKey } from "@/lib/districts";
+type DistrictKey = string;
 
 export type SyntheticActorKind =
   | "rider"
