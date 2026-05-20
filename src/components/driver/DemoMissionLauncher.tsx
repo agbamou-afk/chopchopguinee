@@ -41,14 +41,14 @@ export function DemoMissionLauncher() {
     });
   };
 
-  const handleAccept = () => {
+  const handleAccept = (_id: string) => {
     if (!pending) return;
     setActive({ ...pending, state: "heading_to_pickup", courier_id: "demo-courier" });
     setPending(null);
     toast.success("Mission acceptée (démo)");
   };
 
-  const handleDecline = () => {
+  const handleDecline = (_id: string) => {
     setPending(null);
     toast("Mission ignorée");
   };
