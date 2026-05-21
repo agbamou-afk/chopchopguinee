@@ -222,7 +222,7 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
                   <p className="text-xs text-muted-foreground">
-                    En attente du paiement Orange Money…
+                    Recharge Orange Money demandée. Confirmez sur votre téléphone.
                   </p>
                 </>
               )}

@@ -778,3 +778,111 @@ SANDBOX_SCENARIOS.push(
     },
   },
 );
+
+// ──────────────────────────────────────────────────────────────────────
+// Orange Money provider readiness scenarios (in-memory only).
+// These walk the same lifecycle a real OM webhook will drive, but make
+// no Supabase writes — they exist to exercise the adapter contract.
+// ──────────────────────────────────────────────────────────────────────
+const OM_TOPUP = 50_000;
+
+SANDBOX_SCENARIOS.push(
+  {
+    id: "om_topup_pending",
+    title: "OM · top-up pending",
+    description: "Intent Orange Money créé, en attente confirmation client.",
+    family: "wallet",
+    expected: { notifications: 1 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "OM payer", district: "Kaloum" });
+      ctx.notify("Recharge Orange Money demandée. Confirmez sur votre téléphone.", { refId: user.id });
+    },
+  },
+  {
+    id: "om_topup_confirmed",
+    title: "OM · top-up confirmé",
+    description: "Webhook OM confirme → wallet crédité.",
+    family: "wallet",
+    expected: { wallet: 1, notifications: 2 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "OM payer", district: "Kaloum" });
+      ctx.notify("Recharge Orange Money demandée.", { refId: user.id });
+      await ctx.wait(200);
+      ctx.walletEntry({ actorId: user.id, kind: "receipt", amountGnf: OM_TOPUP, note: "intent:wallet_topup:om:confirmed" });
+      ctx.notify("Recharge confirmée · disponible dans WONGO Wallet.", { level: "success", refId: user.id });
+    },
+  },
+  {
+    id: "om_topup_failed",
+    title: "OM · paiement échoué",
+    description: "OM signale échec — aucun crédit wallet.",
+    family: "wallet",
+    expected: { wallet: 0, notifications: 2 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "OM payer", district: "Ratoma" });
+      ctx.notify("Recharge Orange Money demandée.", { refId: user.id });
+      await ctx.wait(150);
+      ctx.notify("Paiement Orange Money échoué. Réessayez.", { level: "warn", refId: user.id });
+    },
+  },
+  {
+    id: "om_topup_duplicate",
+    title: "OM · doublon idempotent",
+    description: "Second event 'confirmed' ignoré — pas de double crédit.",
+    family: "wallet",
+    expected: { wallet: 1, notifications: 2 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "OM dup payer", district: "Matam" });
+      ctx.walletEntry({ actorId: user.id, kind: "receipt", amountGnf: OM_TOPUP, note: "intent:wallet_topup:om:confirmed" });
+      ctx.notify("Recharge confirmée · disponible dans WONGO Wallet.", { level: "success", refId: user.id });
+      await ctx.wait(150);
+      ctx.notify("Doublon webhook OM ignoré (idempotent).", { level: "info", refId: user.id });
+    },
+  },
+  {
+    id: "om_topup_wrong_amount",
+    title: "OM · montant incohérent",
+    description: "Webhook arrive avec un montant ≠ intent → rejet validation.",
+    family: "failure",
+    expected: { wallet: 0, notifications: 1 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "OM mismatch", district: "Kipé" });
+      ctx.notify("Webhook OM rejeté: amount_mismatch.", { level: "warn", refId: user.id });
+    },
+  },
+  {
+    id: "om_topup_expired",
+    title: "OM · expiration confirmation",
+    description: "Client n'a pas confirmé à temps → intent expiré.",
+    family: "wallet",
+    expected: { wallet: 0, notifications: 1 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "OM expirer", district: "Matoto" });
+      ctx.notify("Recharge Orange Money expirée. Recommencez.", { level: "warn", refId: user.id });
+    },
+  },
+  {
+    id: "om_topup_unknown_ref",
+    title: "OM · référence inconnue",
+    description: "Webhook OM avec internal_reference inconnu → rejet sans effet.",
+    family: "failure",
+    expected: { wallet: 0, notifications: 1 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "OM ghost", district: "Kaloum" });
+      ctx.notify("Webhook OM rejeté: unknown_reference.", { level: "warn", refId: user.id });
+    },
+  },
+  {
+    id: "om_confirm_after_failed",
+    title: "OM · confirm après failed",
+    description: "Webhook 'confirmed' arrive après que l'intent soit déjà failed → rejet already_terminal.",
+    family: "failure",
+    expected: { wallet: 0, notifications: 2 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "OM late", district: "Ratoma" });
+      ctx.notify("Paiement Orange Money échoué.", { level: "warn", refId: user.id });
+      await ctx.wait(150);
+      ctx.notify("Webhook OM tardif rejeté: already_terminal.", { level: "info", refId: user.id });
+    },
+  },
+);
