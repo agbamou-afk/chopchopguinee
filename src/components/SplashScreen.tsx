@@ -10,9 +10,9 @@ interface SplashScreenProps {
 export function SplashScreen({ onFinish }: SplashScreenProps) {
   const [introDone, setIntroDone] = useState(false);
   const words = [
-    { text: "Tout.", color: "text-destructive" },
-    { text: "Partout.", color: "text-secondary" },
-    { text: "Pour Tous.", color: "text-primary" },
+    { text: "W'ONKHAI.", color: "text-destructive" },
+    { text: "LET'S", color: "text-secondary" },
+    { text: "GO.", color: "text-primary" },
   ];
   const introTotal = 0.6 + words.length * 0.45 + 0.4;
   return (
