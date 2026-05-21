@@ -11,7 +11,7 @@ import {
   XCircle,
   History,
 } from "lucide-react";
-import logo from "@/assets/logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 const fmt = (n: number) => formatGNF(n);
 
@@ -127,7 +127,7 @@ export default function AgentDashboard() {
     <div className="min-h-screen bg-background pb-24">
       <header className="gradient-primary p-4 pb-10 rounded-b-3xl">
         <div className="max-w-md mx-auto flex items-center gap-3">
-          <img loading="lazy" decoding="async" src={logo} alt="WONGO" className="h-9 w-auto object-contain" />
+          <BrandLogo loading="lazy" decoding="async" alt="WONGO" className="h-9 w-auto object-contain" />
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-primary-foreground truncate">
               {agent!.business_name}

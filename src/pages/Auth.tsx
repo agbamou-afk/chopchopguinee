@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Seo } from "@/components/Seo";
-import logo from "@/assets/logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 const phoneSchema = z.string().trim().regex(/^\+?[0-9\s]{8,15}$/, "Téléphone invalide");
 const emailSchema = z.string().trim().email("Email invalide").max(255);
@@ -184,8 +184,7 @@ export default function Auth() {
       />
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
         <div className="flex flex-col items-center mb-6">
-          <img
-            src={logo}
+          <BrandLogo
             alt="WONGO"
             className="h-12 w-auto object-contain mb-2"
           />

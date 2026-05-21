@@ -22,7 +22,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { QrScanner } from "@/components/scanner/QrScanner";
-import logo from "@/assets/logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 type Step = "lookup" | "amount" | "confirm" | "done";
 
@@ -230,7 +230,7 @@ export default function AgentTopup() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <img loading="lazy" decoding="async" src={logo} alt="WONGO" className="h-8 w-auto object-contain" />
+          <BrandLogo loading="lazy" decoding="async" alt="WONGO" className="h-8 w-auto object-contain" />
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-primary-foreground leading-tight">Recharge agent</h1>
             <p className="text-xs text-primary-foreground/80 truncate">

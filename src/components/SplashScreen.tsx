@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import logo from "@/assets/logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import skyline from "@/assets/splash-skyline.png";
 
 interface SplashScreenProps {
@@ -64,8 +64,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
         transition={{ duration: 1.6, ease: "easeOut" }}
         className="flex flex-col items-center relative"
       >
-        <motion.img
-          src={logo}
+        <BrandLogo
           alt="WONGO"
           className="w-44 h-auto object-contain"
           initial={{ y: 10 }}
