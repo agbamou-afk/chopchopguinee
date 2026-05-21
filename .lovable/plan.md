@@ -1,92 +1,80 @@
-## CHOP Merchant Operations Layer — v1
+## WONGO Payments Foundation — Internal Ledger + Rail Readiness
 
-Goal: ship a single, mobile-first **Merchant Hub** surface that gives Repas restaurants and Marché sellers/stores lightweight operational control. No ERP, no dashboards, no kitchen-display complexity. One scroll, calm tone, Conakry Contemporary.
+Goal: prepare the ledger, payment-intent model, provider abstraction, sandbox simulator, and receipt continuity so WONGO Wallet can plug in Orange Money / MTN / cash / manual later without re-plumbing. **No live money movement. No new live providers.**
 
-### Scope (this iteration)
+### Current baseline (already exists)
+- `wallets` (party_type, balance_gnf, held_gnf) and `wallet_transactions` (with WONGO-style `reference`, `txn_status`, `txn_type`).
+- `topup_requests` with `provider` text (`agent`, `orange_money`) and a rich `topup_status` enum.
+- `payment_provider_events` table for inbound provider webhooks, with matching/credited lifecycle.
+- `wallet_topup_om_create` RPC powering the existing Orange Money sheet.
+- `txn_status` enum: `pending | completed | failed | reversed | cancelled` (no `processing`, `confirmed`, `refunded`, `expired`).
 
-Build the hub shell + 6 stacked operational sections, gated to verified merchants only. Wire to existing tables (`merchant_stores`, `marketplace_listings`, `listing_interests`, `food_restaurants`, `food_orders`, `food_order_items`, `missions`). No new tables.
+The base is already strong — the gap is **standardization, a unified intent model, a provider enum, sandbox tooling, and receipt copy**.
 
-### Surface
+### Scope of this sprint
 
-New route mounted inside the existing app shell (entry from ProfileView + auto-detected on UserHome if the signed-in user owns a store or restaurant):
+1. **Standardized payment-state vocabulary** (DB-level, no breaking writes)
+   - New `payment_state` enum: `pending | processing | confirmed | failed | cancelled | refunded | reversed | expired`.
+   - Used by the new `payment_intents` table and surfaced in UI mappers. Existing `txn_status` and `topup_status` stay intact; a TS mapper translates them to `payment_state` for receipts/notifications.
 
-```
-/merchant  →  <MerchantHub />
-```
+2. **`payment_provider` enum**
+   - Values: `orange_money | mtn_money | cash | manual | internal | agent`.
+   - Added as a Postgres enum and a TS const used in `topup_requests`, intents, and future flows. `topup_requests.provider` stays text for compatibility; a CHECK is widened to accept the new values.
 
-Single vertical scroll, each section is a calm card:
+3. **`payment_intents` table** (new, additive)
+   - Columns: `id`, `user_id`, `amount_gnf bigint`, `currency text default 'GNF'`, `purpose` (enum: `wallet_topup | repas_payment | marche_payment | courier_payout | merchant_settlement | refund`), `state payment_state`, `provider payment_provider`, `provider_reference text`, `internal_reference text unique` (`WNG-YYYY-NNNNNN`), `related_order_id`, `related_mission_id`, `related_listing_id`, `related_store_id`, `metadata jsonb`, `created_at`, `updated_at`.
+   - Triggers: `updated_at`, auto-generate `internal_reference` via a sequence + helper `next_wongo_reference()`.
+   - RLS: users read own; admins manage; finance/ops admins manage by role.
+   - Wallet credit rule enforced in a `confirm_payment_intent` SQL function — only flips state to `confirmed` and credits/holds wallet via existing ledger primitives (admin / sandbox only for now; no public RPC).
 
-```
-[Identity strip]   name · type chip · Ouvert/Fermé toggle
-[Commandes]        Repas: order queue by state pill
-                   Marché: listing interests + delivery requests
-[Disponibilité]    Ouvert · Livraison · Retrait · Stock limité
-[Produits / Menu]  list + quick toggle is_available, edit later
-[Livraison]        active missions tied to this merchant (read-only)
-[CHOPPay]          recent incoming activity (light)
-[Activité]         vues · sauvegardes · commandes · revenus estimés
-```
+4. **`payment_reconciliation_events` table** (new, additive, append-only)
+   - Columns: `id`, `intent_id`, `event_type` (enum: `intent_created | provider_pending | provider_confirmed | provider_failed | wallet_credited | payout_queued | payout_paid | refund_created | refund_completed`), `provider`, `provider_reference`, `payload jsonb`, `created_at`, `actor_user_id`.
+   - RLS: admin-read only; inserts via SECURITY DEFINER helpers used by the intent functions.
 
-### Files
+5. **Provider abstraction layer (TS)**
+   - `src/lib/payments/types.ts` — `PaymentState`, `PaymentProvider`, `PaymentPurpose`, `PaymentIntent`, `ReconciliationEvent` types mirrored from the DB enums.
+   - `src/lib/payments/state.ts` — `mapTxnStatus()`, `mapTopupStatus()` → `PaymentState`; status label/colour helpers in FR.
+   - `src/lib/payments/providers.ts` — provider registry: `{ id, label, kind: 'mobile_money' | 'cash' | 'manual' | 'internal', supports: { topup, payment, payout } }`. Replaces hardcoded Orange-only assumptions in the top-up sheet's text but keeps the existing OM flow as the only currently-enabled provider.
+   - `src/lib/payments/intents.ts` — thin client around new RPCs: `createIntent`, `getIntent`, `listIntents`, `simulateConfirm` (sandbox-only, see §7).
+   - `src/lib/payments/reference.ts` — formats `WNG-YYYY-NNNNNN` for display.
 
-New:
-- `src/components/merchant/MerchantHub.tsx` — shell + section composition
-- `src/components/merchant/MerchantIdentityStrip.tsx`
-- `src/components/merchant/OrdersSection.tsx` — branches Repas vs Marché
-- `src/components/merchant/AvailabilitySection.tsx` — toggles
-- `src/components/merchant/CatalogSection.tsx` — listings or menu items
-- `src/components/merchant/DeliverySection.tsx` — missions list
-- `src/components/merchant/ChopPayActivitySection.tsx`
-- `src/components/merchant/AnalyticsStrip.tsx`
-- `src/hooks/useMerchantIdentity.ts` — resolves whether the current user has a store, restaurant, or both
-- `src/lib/merchant/operations.ts` — small read/update helpers (toggle open, availability, advance order state, mark listing reserved/sold)
-- `src/pages/Merchant.tsx` — route entry
+6. **Receipt continuity**
+   - Update `src/components/wallet/TransactionReceiptSheet.tsx` to render:
+     - WONGO reference (existing `reference`, displayed as `WNG-…` when present)
+     - provider label (from registry; fallback "Interne")
+     - normalized payment state chip + FR copy:
+       - pending → "Paiement en attente de confirmation."
+       - confirmed → "Paiement confirmé."
+       - failed → "Paiement échoué. Réessayez."
+       - refunded/reversed/cancelled/expired → matching FR strings
+     - linked mission/order/listing/store summary line when `related_*` is present.
 
-Edited:
-- `src/App.tsx` — add `/merchant` route (lazy)
-- `src/components/views/ProfileView.tsx` — show "Espace marchand" entry when `useMerchantIdentity` returns a merchant
-- `src/components/views/UserHome.tsx` — optional small "Tableau marchand" chip when merchant detected (non-intrusive)
+7. **Sandbox payment scenarios** (no DB writes)
+   - Extend `src/lib/sandbox/scenarios.ts` + `engine.ts` with:
+     - `wallet_topup_pending`, `wallet_topup_confirmed`, `provider_failure`, `duplicate_provider_confirmation`, `refund`, `merchant_settlement_pending`, `courier_payout_pending`, `courier_payout_confirmed`.
+   - Each scenario emits in-memory intents + reconciliation events the sandbox panel can render. UI hook lives in the existing sandbox ops panel (no schema impact, no Supabase writes).
 
-### Data model use (no migrations)
+8. **Notifications (calm copy)**
+   - Update `src/lib/notifications/walletNotifier.ts` keys/labels to the FR strings in the spec (Recharge demandée / confirmée, Paiement confirmé / échoué, Gain confirmé, Remboursement traité). Add a dedupe key `${intent_id}:${state}` so identical state transitions don't double-notify.
 
-- Availability:
-  - Repas → `food_restaurants.is_open`, `delivery_available`, `pickup_available`
-  - Marché → `merchant_stores.delivery_available`, `marketplace_listings.availability`/`status`
-- Orders:
-  - Repas → `food_orders` filtered by `restaurant_id IN (owner)` with state transitions `placed → confirmed → preparing → ready → handed_off → completed` (use existing `food_order_state` enum values; only expose those that exist)
-  - Marché → `listing_interests` joined to owner's listings (states: pending / accepted / declined / fulfilled)
-- Delivery → `missions` where `merchant_id = auth.uid()` (read-only list, status chips reuse `MISSION_IDENTITY`)
-- CHOPPay activity → existing wallet/transactions read for incoming credits tagged to merchant (best-effort; render empty state when unavailable)
-- Analytics → `listing_metrics` aggregated for the seller; Repas: counts from `food_orders` last 7d
+9. **Admin readiness (light)**
+   - Add an admin module entry `payments` (route stub `/admin/payments`) listing pending `payment_intents` with reference, provider, state, amount, related entity. Buttons "Confirmer (test)" / "Marquer échec" are gated to `god_admin` and call the new SECURITY DEFINER functions. No bulk tooling, no dashboard polish.
 
-### Gating
+### Explicit non-goals
+- No live Orange Money / MTN integration, no API keys, no webhook endpoints beyond the existing `payment_provider_events` ingestion.
+- No changes to existing wallet balances or to the live `wallet_topup_om_create` RPC behaviour.
+- No crypto, remittance, bank rails, or KYC flows.
+- No new public RPC that can credit a wallet from the client.
 
-`useMerchantIdentity` returns `{ store, restaurant }`. Hub renders nothing (redirect to `/`) if neither exists. Profile entry hidden otherwise. No new roles table.
-
-### UX
-
-- Cream surfaces, soft elevation, large operational CTAs (use existing tokens, no new colors)
-- All state changes optimistic with toast on error
-- No maps, no charts, no spreadsheet grids
-- French copy throughout
-
-### Out of scope (explicit)
-
-- Payouts, accounting, invoicing
-- Inventory math, low-stock alerts
-- Ad/promotion management
-- Kitchen display, prep timers
-- Live courier map
-- Multi-staff roles
-- Desktop layouts
+### Technical notes
+- All schema work goes in **one migration** that is purely additive (new enums, tables, functions, RLS). Existing tables only get a relaxed CHECK on `topup_requests.provider` to accept `mtn_money | cash | manual | internal`.
+- All new SQL functions are `SECURITY DEFINER` with explicit `search_path = public` and role checks (`is_any_admin` or `has_admin_role(..., 'god_admin')`).
+- TS additions are tree-shakable and don't touch `src/integrations/supabase/*`.
+- Receipt + notifications changes are pure presentation; existing data continues to render correctly via the status mappers.
 
 ### Acceptance check
-
-After build:
-1. Signed-in store owner sees "Espace marchand" in profile and `/merchant` renders Marché orders, availability, listings, delivery, CHOPPay, analytics.
-2. Signed-in restaurant owner sees Repas orders queue with state advance buttons.
-3. Toggling Ouvert/Fermé updates the relevant row and reflects in client surfaces on next read.
-4. Non-merchant users see no merchant surfaces.
-5. No changes to rides, dispatch, or demo layers. Build clean.
-
-Proceed?
+- Migration applies cleanly; `payment_intents`, `payment_reconciliation_events`, enums exist with RLS.
+- `payment_intents` can be inserted (admin) and confirmed via the new function; wallet balance only moves on confirmation; reconciliation rows are written.
+- Receipts show WONGO ref, provider, normalized state + FR copy.
+- Sandbox panel can run all listed scenarios without any Supabase write.
+- Existing wallet, top-up, Repas, Marché, and ride flows continue to work unchanged (no regressions in current RPCs).
