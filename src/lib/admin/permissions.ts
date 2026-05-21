@@ -22,7 +22,8 @@ export type AdminModule =
   | "settings"
   | "admins"
   | "audit"
-  | "analytics";
+  | "analytics"
+  | "payments";
 
 export type Capability = "view" | "edit" | "approve" | "export" | "delete";
 
@@ -34,6 +35,7 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     vendors: ALL, wallet: ALL, pricing: ALL, orders: ALL, repas: ALL, marche: ALL,
     support: ALL, risk: ALL, notifications: ALL, promotions: ALL, reports: ALL,
     zones: ALL, flags: ALL, settings: ALL, admins: ALL, audit: ALL, analytics: ALL,
+    payments: ALL,
   },
   operations_admin: {
     dashboard: ["view"],
@@ -71,6 +73,7 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     reports: ["view", "export"],
     audit: ["view"],
     analytics: ["view"],
+    payments: ["view", "edit", "approve"],
   },
 };
 

@@ -54,6 +54,7 @@ const SettingsAdmin = lazy(() => import("./pages/admin/SettingsAdmin"));
 const AdminsAdmin = lazy(() => import("./pages/admin/AdminsAdmin"));
 const AuditAdmin = lazy(() => import("./pages/admin/AuditAdmin"));
 const AnalyticsAdmin = lazy(() => import("./pages/admin/AnalyticsAdmin"));
+const PaymentsAdmin = lazy(() => import("./pages/admin/PaymentsAdmin"));
 const DriverApply = lazy(() => import("./pages/DriverApply"));
 const MerchantQR = lazy(() => import("./pages/MerchantQR"));
 const Merchant = lazy(() => import("./pages/Merchant"));
@@ -147,6 +148,7 @@ const App = () => {
             <Route path="admins" element={<AdminsAdmin />} />
             <Route path="audit" element={<AuditAdmin />} />
             <Route path="analytics" element={<AnalyticsAdmin />} />
+            <Route path="payments" element={<PaymentsAdmin />} />
           </Route>
           <Route path="/agent" element={<AgentDashboard />} />
           <Route path="/agent/topup" element={<AgentTopup />} />

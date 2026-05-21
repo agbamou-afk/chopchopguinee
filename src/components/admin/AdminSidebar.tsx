@@ -41,6 +41,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
       { title: "Agents de recharge", url: "/admin/vendors", icon: Coins, module: "vendors" },
       { title: "Wallet / Ledger", url: "/admin/wallet", icon: Wallet, module: "wallet" },
       { title: "Réconciliation OM", url: "/admin/wallet/reconciliation", icon: Scale, module: "wallet" },
+      { title: "Paiements (intents)", url: "/admin/payments", icon: Coins, module: "payments" },
       { title: "Tarification", url: "/admin/pricing", icon: Tag, module: "pricing" },
       { title: "Rapports", url: "/admin/reports", icon: BarChart3, module: "reports" },
       { title: "Analytique IA", url: "/admin/analytics", icon: Sparkles, module: "analytics" },
