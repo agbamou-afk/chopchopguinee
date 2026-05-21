@@ -8,7 +8,6 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAppEnv } from "@/contexts/AppEnvContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PrimaryActionGrid, type PrimaryAction } from "@/components/home/PrimaryActionGrid";
 import { WalletHero } from "@/components/home/WalletHero";
 import { RecentActivityPeek } from "@/components/activity/RecentActivityPeek";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
@@ -71,12 +70,9 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
   const walletStatus: "active" | "frozen" | "restricted" =
     wallet?.status === "frozen" ? "frozen" : wallet?.status === "restricted" ? "restricted" : "active";
 
-  const handlePrimary = (a: PrimaryAction) => {
-    Analytics.track("home.primary_action.clicked", { metadata: { action: a } });
-    if (a === "topup") onActionClick("wallet");
-    else if (a === "ride") onActionClick("moto");
-    else if (a === "order") onActionClick("food");
-    else if (a === "market") onActionClick("market");
+  const handleTopUp = () => {
+    Analytics.track("home.primary_action.clicked", { metadata: { action: "topup" } });
+    onActionClick("wallet");
   };
 
   return (
@@ -108,12 +104,9 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
           loading={walletLoading}
           error={walletError}
           status={walletStatus}
-          onTopUp={() => handlePrimary("topup")}
+          onTopUp={handleTopUp}
           onHistory={() => onActionClick("wallet")}
         />
-
-        {/* 2 — Four primary actions, visible above the fold */}
-        <PrimaryActionGrid onAction={handlePrimary} />
 
         {/* Ecosystem continuity — last operational event */}
         <RecentActivityPeek onSeeAll={() => onActionClick("orders")} />

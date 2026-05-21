@@ -511,6 +511,34 @@
       radial-gradient(circle at 70% 70%, hsl(var(--primary) / 0.18) 0%, transparent 60%),
       hsl(var(--muted));
   }
+
+  /* === Service icon system ===
+     Shared holder + asset classes so every service tile (Moto, TokTok, Repas,
+     Marché, Scanner, WONGO Wallet…) renders at the same scale, padding and
+     optical weight. Used by QuickActions and any future service grid. */
+  .service-icon-holder {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    border-radius: 20px;
+    background: hsl(38 38% 96%);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid hsl(38 30% 88%);
+  }
+  .dark .service-icon-holder {
+    background: hsl(40 33% 95%);
+    border-color: hsl(40 18% 80%);
+  }
+  .service-icon-asset {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    transform: scale(1.18);
+  }
 }
 
 @layer utilities {
