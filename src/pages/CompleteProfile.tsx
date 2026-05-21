@@ -88,7 +88,7 @@ export default function CompleteProfile() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
         <div className="flex flex-col items-center mb-6">
-          <img loading="lazy" decoding="async" src={logo} alt="WONGO" className="h-16 w-auto object-contain mb-2 mix-blend-multiply" />
+          <img loading="lazy" decoding="async" src={logo} alt="WONGO" className="h-10 w-auto object-contain mb-2" />
           <h1 className="text-xl font-bold">Complétez votre profil</h1>
           <p className="text-sm text-muted-foreground text-center">
             Quelques informations pour finaliser votre compte WONGO.

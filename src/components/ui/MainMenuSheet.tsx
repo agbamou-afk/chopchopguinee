@@ -88,10 +88,10 @@ export function MenuButton({
               decoding="async"
               src={logo}
               alt="WONGO"
-              className="h-24 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
-            <p className="text-xs font-medium text-muted-foreground italic">
-              Tout, Part Tout, Pour Tout
+            <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
+              W'ONKHAI. LET'S GO.
             </p>
           </div>
         </SheetHeader>

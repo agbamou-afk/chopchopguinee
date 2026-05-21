@@ -157,9 +157,9 @@ export function AppHeader({
               <SheetHeader>
                 <SheetTitle className="sr-only">Menu WONGO</SheetTitle>
                 <div className="flex flex-col items-center gap-2 pt-2">
-                  <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="WONGO" className="h-24 w-auto object-contain" />
-                  <p className="text-xs font-medium text-muted-foreground italic">
-                    Tout, Part Tout, Pour Tout
+                  <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="WONGO" className="h-12 w-auto object-contain" />
+                  <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
+                    W'ONKHAI. LET'S GO.
                   </p>
                 </div>
               </SheetHeader>
@@ -231,7 +231,7 @@ export function AppHeader({
             </SheetContent>
           </Sheet>
 
-          <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="WONGO" className="h-14 w-auto object-contain mix-blend-multiply dark:mix-blend-screen" />
+          <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="WONGO" className="h-8 w-auto object-contain" />
 
           <button
             className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors relative"

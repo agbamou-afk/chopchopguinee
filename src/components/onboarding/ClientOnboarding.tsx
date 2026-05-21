@@ -75,7 +75,7 @@ function FinalScene() {
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         src={logo}
         alt="WONGO"
-        className="w-20 h-20 rounded-2xl shadow-elevated mb-3 bg-white/95 p-2"
+        className="h-10 w-auto object-contain mb-3 brightness-0 invert"
       />
       <p className="text-lg font-extrabold tracking-tight">WONGO</p>
       <p className="text-sm opacity-90 mt-1">One platform. Every move.</p>
