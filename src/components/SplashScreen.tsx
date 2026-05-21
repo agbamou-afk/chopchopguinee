@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import logo from "@/assets/logo.png";
+import { useBrandLogo } from "@/components/brand/BrandLogo";
 import skyline from "@/assets/splash-skyline.png";
 
 interface SplashScreenProps {
@@ -9,6 +9,7 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onFinish }: SplashScreenProps) {
   const [introDone, setIntroDone] = useState(false);
+  const logo = useBrandLogo();
   const words = [
     { text: "W'ONKHAI.", color: "text-destructive" },
     { text: "LET'S", color: "text-secondary" },

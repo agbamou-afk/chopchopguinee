@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Bell, Menu, Wallet, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing, MapPin, Plus } from "lucide-react";
+import { Bell, Menu, Wallet, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing, MapPin, Plus, Moon, Sun } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { notifications } from "@/lib/notifications";
 import logo from "@/assets/logo.png";
+import logoDark from "@/assets/logo-dark.png";
+import { useTheme } from "@/hooks/useTheme";
 
 interface AppHeaderProps {
   isDriverMode: boolean;
@@ -52,6 +54,8 @@ export function AppHeader({
   const [unread, setUnread] = useState(0);
   const [profileName, setProfileName] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
+  const brandLogo = isDark ? logoDark : logo;
 
   useEffect(() => {
     const loadProfile = async (userId: string) => {
@@ -157,7 +161,7 @@ export function AppHeader({
               <SheetHeader>
                 <SheetTitle className="sr-only">Menu WONGO</SheetTitle>
                 <div className="flex flex-col items-center gap-2 pt-2">
-                  <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="WONGO" className="h-12 w-auto object-contain" />
+                  <img loading="eager" fetchPriority="high" decoding="async" src={brandLogo} alt="WONGO" className="h-12 w-auto object-contain" />
                   <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
                     W'ONKHAI. LET'S GO.
                   </p>
@@ -185,6 +189,26 @@ export function AppHeader({
                       setMenuOpen(false);
                     }}
                   />
+                </div>
+
+                {/* Dark mode toggle */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      {isDark ? (
+                        <Moon className="w-5 h-5 text-primary" />
+                      ) : (
+                        <Sun className="w-5 h-5 text-primary" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">Mode sombre</p>
+                      <p className="text-xs text-muted-foreground">
+                        {isDark ? "Activé" : "Désactivé"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch checked={isDark} onCheckedChange={toggleTheme} aria-label="Basculer le mode sombre" />
                 </div>
 
                 {menuItems.map((item) => (
@@ -231,7 +255,7 @@ export function AppHeader({
             </SheetContent>
           </Sheet>
 
-          <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="WONGO" className="h-8 w-auto object-contain" />
+          <img loading="eager" fetchPriority="high" decoding="async" src={brandLogo} alt="WONGO" className="h-8 w-auto object-contain" />
 
           <button
             className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors relative"

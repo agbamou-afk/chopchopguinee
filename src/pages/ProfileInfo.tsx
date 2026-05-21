@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import logo from "@/assets/logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Seo } from "@/components/Seo";
 
 export default function ProfileInfo() {
@@ -87,7 +87,7 @@ export default function ProfileInfo() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <img loading="lazy" decoding="async" src={logo} alt="WONGO" className="h-8 w-auto object-contain" />
+          <BrandLogo loading="lazy" decoding="async" alt="WONGO" className="h-8 w-auto object-contain" />
           <h1 className="text-lg font-bold">Mon profil</h1>
         </div>
       </header>

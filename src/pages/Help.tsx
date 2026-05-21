@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Seo } from "@/components/Seo";
 
 const FAQS = [
@@ -125,7 +125,7 @@ export default function Help() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <img loading="lazy" decoding="async" src={logo} alt="WONGO" className="h-8 w-auto object-contain" />
+          <BrandLogo loading="lazy" decoding="async" alt="WONGO" className="h-8 w-auto object-contain" />
           <h1 className="text-lg font-bold">Aide & FAQ</h1>
         </div>
       </header>

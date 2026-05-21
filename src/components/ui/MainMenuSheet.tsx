@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 interface MenuButtonProps {
   isDriverMode?: boolean;
@@ -83,10 +83,9 @@ export function MenuButton({
         <SheetHeader>
           <SheetTitle className="sr-only">Menu WONGO</SheetTitle>
           <div className="flex flex-col items-center gap-2 pt-2">
-            <img
+            <BrandLogo
               loading="eager"
               decoding="async"
-              src={logo}
               alt="WONGO"
               className="h-12 w-auto object-contain"
             />

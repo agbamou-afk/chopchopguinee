@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import logo from "@/assets/logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 const schema = z.object({
   first_name: z.string().trim().min(1, "Prénom requis").max(60),
@@ -88,7 +88,7 @@ export default function CompleteProfile() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
         <div className="flex flex-col items-center mb-6">
-          <img loading="lazy" decoding="async" src={logo} alt="WONGO" className="h-10 w-auto object-contain mb-2" />
+          <BrandLogo loading="lazy" decoding="async" alt="WONGO" className="h-10 w-auto object-contain mb-2" />
           <h1 className="text-xl font-bold">Complétez votre profil</h1>
           <p className="text-sm text-muted-foreground text-center">
             Quelques informations pour finaliser votre compte WONGO.
