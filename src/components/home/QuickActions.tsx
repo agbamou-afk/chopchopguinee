@@ -15,12 +15,12 @@ interface QuickActionsProps {
 // inside the shared holder. Values tuned visually, not mathematically.
 type IconTuning = { scale: number; x: number; y: number };
 const SERVICE_ICON_TUNING: Record<string, IconTuning> = {
-  moto:    { scale: 1.32, x: 0, y: 2 },
-  toktok:  { scale: 1.18, x: 0, y: 0 },
-  food:    { scale: 1.34, x: 0, y: 3 },
-  market:  { scale: 1.24, x: 0, y: -2 },
-  scan:    { scale: 1.02, x: 0, y: 0 },
-  wallet:  { scale: 1.22, x: 0, y: 1 },
+  moto:    { scale: 1.57, x: 0, y: 0 },
+  toktok:  { scale: 1.43, x: 0, y: 0 },
+  food:    { scale: 1.59, x: 0, y: 0 },
+  market:  { scale: 1.49, x: 0, y: 0 },
+  scan:    { scale: 1.27, x: 0, y: 0 },
+  wallet:  { scale: 1.47, x: 0, y: 0 },
 };
 
 const actions = [
