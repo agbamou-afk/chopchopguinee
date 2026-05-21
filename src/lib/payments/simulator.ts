@@ -56,7 +56,7 @@ export async function simulateProviderForIntent(
   });
 
   if (!validation.ok) {
-    return { event, applied: "ignored", reason: validation.reason };
+    return { event, applied: "ignored", reason: (validation as { reason: string }).reason };
   }
 
   if (event.state === "confirmed") {
