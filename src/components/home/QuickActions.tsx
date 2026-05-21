@@ -10,15 +10,26 @@ interface QuickActionsProps {
   onActionClick: (action: string) => void;
 }
 
-// Normalized service-tile system: every tile shares the same holder size,
-// background, padding and icon scale so the grid reads as one set.
+// Per-icon optical tuning. Each artwork has a slightly different inner
+// bounding box, so we balance the family by adjusting scale + nudges
+// inside the shared holder. Values tuned visually, not mathematically.
+type IconTuning = { scale: number; x: number; y: number };
+const SERVICE_ICON_TUNING: Record<string, IconTuning> = {
+  moto:    { scale: 1.32, x: 0, y: 2 },
+  toktok:  { scale: 1.18, x: 0, y: 0 },
+  food:    { scale: 1.34, x: 0, y: 3 },
+  market:  { scale: 1.24, x: 0, y: -2 },
+  scan:    { scale: 1.02, x: 0, y: 0 },
+  wallet:  { scale: 1.22, x: 0, y: 1 },
+};
+
 const actions = [
-  { id: "moto", img: motoIcon, label: "Moto", alt: "Réserver une moto-taxi" },
-  { id: "toktok", img: toktokIcon, label: "TokTok", alt: "Réserver un TokTok tricycle" },
-  { id: "food", img: repasIcon, label: "Repas", alt: "Commander un repas à domicile" },
-  { id: "market", img: marcheIcon, label: "Marché", alt: "Acheter au marché en ligne" },
-  { id: "scan", img: scannerIcon, label: "Scanner", alt: "Scanner un QR code marchand" },
-  { id: "wallet", img: walletIcon, label: "WONGO Wallet", alt: "Ouvrir WONGO Wallet" },
+  { id: "moto",   img: motoIcon,    label: "Moto",         alt: "Réserver une moto-taxi" },
+  { id: "toktok", img: toktokIcon,  label: "TokTok",       alt: "Réserver un TokTok tricycle" },
+  { id: "food",   img: repasIcon,   label: "Repas",        alt: "Commander un repas à domicile" },
+  { id: "market", img: marcheIcon,  label: "Marché",       alt: "Acheter au marché en ligne" },
+  { id: "scan",   img: scannerIcon, label: "Scanner",      alt: "Scanner un QR code marchand" },
+  { id: "wallet", img: walletIcon,  label: "WONGO Wallet", alt: "Ouvrir WONGO Wallet" },
 ];
 
 const container = {
@@ -44,7 +55,9 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
       animate="show"
       className="grid grid-cols-3 gap-x-3 gap-y-4"
     >
-      {actions.map((action) => (
+      {actions.map((action) => {
+        const t = SERVICE_ICON_TUNING[action.id] ?? { scale: 1, x: 0, y: 0 };
+        return (
         <motion.button
           key={action.id}
           variants={item}
@@ -61,13 +74,17 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
               width={1024}
               height={1024}
               className="service-icon-asset float-soft"
+              style={{
+                transform: `translate(${t.x}px, ${t.y}px) scale(${t.scale})`,
+              }}
             />
           </div>
           <span className="text-[12px] font-semibold text-foreground text-center leading-tight">
             {action.label}
           </span>
         </motion.button>
-      ))}
+        );
+      })}
     </motion.div>
   );
 }
