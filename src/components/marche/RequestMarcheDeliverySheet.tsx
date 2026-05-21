@@ -66,7 +66,7 @@ export function RequestMarcheDeliverySheet({
         notes: note,
       });
       toast({
-        title: "Livraison CHOP demandée",
+        title: "Livraison WONGO demandée",
         description: "Un coursier va prendre en charge votre demande.",
       });
       onRequested?.(m.id);
@@ -87,7 +87,7 @@ export function RequestMarcheDeliverySheet({
         <SheetHeader className="text-left">
           <SheetTitle className="flex items-center gap-2">
             <Truck className="w-5 h-5 text-primary" />
-            Demander une livraison CHOP
+            Demander une livraison WONGO
           </SheetTitle>
           <SheetDescription>
             Optionnel — votre vendeur peut aussi vous remettre l’article en main propre.

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
  * Hubs are lightweight physical anchors per district: a vendor partner, a
  * restaurant, a fuel station, a kiosk, or — later — an internal CHOP site.
  * This module is groundwork: types + read helpers. No UI surface beyond a
- * single "Point CHOP proche · bientôt" hint on the driver dashboard.
+ * single "Point WONGO proche · bientôt" hint on the driver dashboard.
  */
 
 export type HubPartnerType =

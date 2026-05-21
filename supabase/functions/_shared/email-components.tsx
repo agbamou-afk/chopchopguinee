@@ -62,7 +62,7 @@ export const BrandHeader: React.FC = () => (
               alt={BRAND.name}
               style={logoImg}
             />
-            <div style={logoWordRow}>CHOP&nbsp;CHOP</div>
+            <div style={logoWordRow}>WONGO</div>
           </td>
         </tr>
       </tbody>

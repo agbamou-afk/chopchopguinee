@@ -13,7 +13,7 @@ export function FeaturedBanners() {
           key={i}
           className={`shrink-0 w-72 h-28 rounded-2xl p-4 text-white bg-gradient-to-br ${b.grad} shadow-card flex flex-col justify-between`}
         >
-          <div className="text-xs uppercase tracking-wider opacity-80">CHOP WONGO Marché</div>
+          <div className="text-xs uppercase tracking-wider opacity-80">WONGO Marché</div>
           <div>
             <p className="font-semibold leading-tight">{b.title}</p>
             <p className="text-xs opacity-90 mt-1">{b.sub ?? ""}</p>

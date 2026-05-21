@@ -296,7 +296,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
                 <span className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Zone active</span>
                 <span className={districtChipClasses(meta.tone)}>{meta.name}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground">Point CHOP proche · bientôt</span>
+              <span className="text-[10px] text-muted-foreground">Point WONGO proche · bientôt</span>
             </div>
           );
         })()}

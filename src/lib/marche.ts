@@ -224,7 +224,7 @@ export const availabilityLabel = (id: string) =>
 // Fulfillment options — real local commerce mirrors these patterns.
 export const FULFILLMENT_OPTIONS = [
   { id: "pickup", label: "Retrait sur place" },
-  { id: "chop_delivery", label: "Livraison CHOP" },
+  { id: "chop_delivery", label: "Livraison WONGO" },
   { id: "seller_delivery", label: "Livraison vendeur" },
   { id: "meetup", label: "Rencontre / remise en main" },
   { id: "to_confirm", label: "À confirmer" },
