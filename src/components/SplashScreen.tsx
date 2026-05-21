@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { BrandLogo } from "@/components/brand/BrandLogo";
+import { useBrandLogo } from "@/components/brand/BrandLogo";
 import skyline from "@/assets/splash-skyline.png";
 
 interface SplashScreenProps {
