@@ -15,3 +15,5 @@ project_id = "azbhteplbdwuqdlzadjx"
     verify_jwt = false
   [functions.ai-assistant]
     verify_jwt = true
+  [functions.payment-webhook-orange-money]
+    verify_jwt = false
