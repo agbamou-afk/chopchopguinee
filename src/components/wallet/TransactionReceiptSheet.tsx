@@ -42,7 +42,9 @@ export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: P
   const stateText  = stateLabel(paymentState);
   const statePhrs  = statePhrase(paymentState);
   const toneKey    = stateTone(paymentState);
-  const provider   = providerLabel((tx.metadata as Record<string, unknown> | null)?.provider as string | undefined);
+  const provider   = providerLabel(
+    ((tx as unknown as { metadata?: Record<string, unknown> | null }).metadata ?? null)?.provider as string | undefined,
+  );
   const refIsWongo = isWongoReference(tx.reference);
   const ref = tx.related_entity ?? null;
   const linkedCta = ref ? linkedCtaFor(ref) : null;
@@ -140,8 +142,9 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
   );
 }
 
-function statusTone(tone: "pending" | "failed" | "cancelled" | "ok") {
+function statusTone(tone: import("@/lib/payments").StateTone) {
   if (tone === "pending") return "bg-secondary/15 text-secondary-foreground border-secondary/30";
+  if (tone === "processing") return "bg-secondary/15 text-secondary-foreground border-secondary/30";
   if (tone === "failed") return "bg-destructive/10 text-destructive border-destructive/30";
   if (tone === "cancelled") return "bg-muted text-muted-foreground border-border";
   if (tone === "ok") return "bg-primary/10 text-primary border-primary/30";
