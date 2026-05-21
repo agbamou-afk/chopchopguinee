@@ -66,8 +66,8 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       >
         <motion.img
           src={logo}
-          alt="Wongo"
-          className="w-56 h-56 object-contain mix-blend-multiply dark:mix-blend-screen"
+          alt="WONGO"
+          className="w-44 h-auto object-contain"
           initial={{ y: 10 }}
           animate={{ y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}

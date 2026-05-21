@@ -187,9 +187,8 @@ export default function Auth() {
           <img
             src={logo}
             alt="WONGO"
-            className="h-20 w-auto object-contain mb-2 mix-blend-multiply dark:mix-blend-screen"
+            className="h-12 w-auto object-contain mb-2"
           />
-          <h1 className="text-xl font-bold text-foreground">WONGO</h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signin" ? "Connectez-vous" : "Créer votre compte"}
           </p>
