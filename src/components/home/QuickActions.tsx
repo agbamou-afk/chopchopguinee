@@ -73,7 +73,7 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
               loading="lazy"
               width={1024}
               height={1024}
-              className="service-icon-asset float-soft object-fill my-0 pr-[5px] pl-0 mb-[18px] ml-0 mr-[5px] border-0"
+              className="service-icon-asset float-soft my-0 pl-0 ml-0 border-0 mb-0 mr-0 pr-0 object-contain"
               style={{
                 transform: `translate(${t.x}px, ${t.y}px) scale(${t.scale})`,
               }}
