@@ -1813,6 +1813,63 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_intents: {
+        Row: {
+          amount_gnf: number
+          created_at: string
+          currency: string
+          id: string
+          internal_reference: string
+          metadata: Json
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_gnf: number
+          created_at?: string
+          currency?: string
+          id?: string
+          internal_reference: string
+          metadata?: Json
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_reference?: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id?: string | null
+          related_mission_id?: string | null
+          related_order_id?: string | null
+          related_store_id?: string | null
+          state?: Database["public"]["Enums"]["payment_state"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_gnf?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          internal_reference?: string
+          metadata?: Json
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_reference?: string | null
+          purpose?: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id?: string | null
+          related_mission_id?: string | null
+          related_order_id?: string | null
+          related_store_id?: string | null
+          state?: Database["public"]["Enums"]["payment_state"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_provider_events: {
         Row: {
           amount_gnf: number
@@ -1869,6 +1926,47 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      payment_reconciliation_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event_type: Database["public"]["Enums"]["payment_recon_event"]
+          id: string
+          intent_id: string
+          payload: Json
+          provider: Database["public"]["Enums"]["payment_provider"] | null
+          provider_reference: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type: Database["public"]["Enums"]["payment_recon_event"]
+          id?: string
+          intent_id: string
+          payload?: Json
+          provider?: Database["public"]["Enums"]["payment_provider"] | null
+          provider_reference?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["payment_recon_event"]
+          id?: string
+          intent_id?: string
+          payload?: Json
+          provider?: Database["public"]["Enums"]["payment_provider"] | null
+          provider_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_reconciliation_events_intent_id_fkey"
+            columns: ["intent_id"]
+            isOneToOne: false
+            referencedRelation: "payment_intents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -2664,7 +2762,65 @@ export type Database = {
       can_access_admin: { Args: { _user_id: string }; Returns: boolean }
       can_manage_operations: { Args: { _user_id: string }; Returns: boolean }
       can_manage_wallet: { Args: { _user_id: string }; Returns: boolean }
+      cancel_payment_intent: {
+        Args: { p_intent_id: string; p_reason?: string }
+        Returns: {
+          amount_gnf: number
+          created_at: string
+          currency: string
+          id: string
+          internal_reference: string
+          metadata: Json
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       claim_first_admin: { Args: never; Returns: boolean }
+      confirm_payment_intent: {
+        Args: {
+          p_intent_id: string
+          p_note?: string
+          p_provider_reference?: string
+        }
+        Returns: {
+          amount_gnf: number
+          created_at: string
+          currency: string
+          id: string
+          internal_reference: string
+          metadata: Json
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       current_admin_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["admin_role"]
@@ -2846,6 +3002,33 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      fail_payment_intent: {
+        Args: { p_intent_id: string; p_reason?: string }
+        Returns: {
+          amount_gnf: number
+          created_at: string
+          currency: string
+          id: string
+          internal_reference: string
+          metadata: Json
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       find_user_by_phone: {
         Args: { p_phone: string }
         Returns: {
@@ -2913,6 +3096,7 @@ export type Database = {
         }
         Returns: number
       }
+      next_wongo_reference: { Args: never; Returns: string }
       om_auto_match: { Args: { p_event_id: string }; Returns: Json }
       om_pending_topups_for_event: {
         Args: { p_event_id: string }
@@ -3581,6 +3765,39 @@ export type Database = {
         | "suppressed"
         | "skipped"
       party_type: "client" | "driver" | "merchant" | "agent" | "master"
+      payment_provider:
+        | "orange_money"
+        | "mtn_money"
+        | "cash"
+        | "manual"
+        | "internal"
+        | "agent"
+      payment_purpose:
+        | "wallet_topup"
+        | "repas_payment"
+        | "marche_payment"
+        | "courier_payout"
+        | "merchant_settlement"
+        | "refund"
+      payment_recon_event:
+        | "intent_created"
+        | "provider_pending"
+        | "provider_confirmed"
+        | "provider_failed"
+        | "wallet_credited"
+        | "payout_queued"
+        | "payout_paid"
+        | "refund_created"
+        | "refund_completed"
+      payment_state:
+        | "pending"
+        | "processing"
+        | "confirmed"
+        | "failed"
+        | "cancelled"
+        | "refunded"
+        | "reversed"
+        | "expired"
       rating_direction: "client_to_driver" | "driver_to_client"
       report_status: "open" | "reviewed" | "actioned" | "dismissed"
       ride_mode: "moto" | "toktok" | "food"
@@ -3863,6 +4080,43 @@ export const Constants = {
         "skipped",
       ],
       party_type: ["client", "driver", "merchant", "agent", "master"],
+      payment_provider: [
+        "orange_money",
+        "mtn_money",
+        "cash",
+        "manual",
+        "internal",
+        "agent",
+      ],
+      payment_purpose: [
+        "wallet_topup",
+        "repas_payment",
+        "marche_payment",
+        "courier_payout",
+        "merchant_settlement",
+        "refund",
+      ],
+      payment_recon_event: [
+        "intent_created",
+        "provider_pending",
+        "provider_confirmed",
+        "provider_failed",
+        "wallet_credited",
+        "payout_queued",
+        "payout_paid",
+        "refund_created",
+        "refund_completed",
+      ],
+      payment_state: [
+        "pending",
+        "processing",
+        "confirmed",
+        "failed",
+        "cancelled",
+        "refunded",
+        "reversed",
+        "expired",
+      ],
       rating_direction: ["client_to_driver", "driver_to_client"],
       report_status: ["open", "reviewed", "actioned", "dismissed"],
       ride_mode: ["moto", "toktok", "food"],

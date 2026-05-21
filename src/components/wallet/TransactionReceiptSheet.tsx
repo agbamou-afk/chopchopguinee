@@ -11,12 +11,19 @@ import { formatGNF } from "@/lib/format";
 import type { WalletTransaction } from "@/hooks/useWallet";
 import {
   txLabel,
-  txStatusCopy,
   txContext,
   payoutAvailabilityCopy,
   MISSION_KIND_LABEL,
   type TxDirection,
 } from "@/lib/wallet/labels";
+import {
+  mapTxnStatus,
+  stateLabel,
+  statePhrase,
+  stateTone,
+  providerLabel,
+  isWongoReference,
+} from "@/lib/payments";
 
 interface Props {
   tx: WalletTransaction | null;
@@ -31,7 +38,14 @@ interface Props {
  */
 export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: Props) {
   if (!tx) return null;
-  const status = txStatusCopy(tx.status);
+  const paymentState = mapTxnStatus(tx.status);
+  const stateText  = stateLabel(paymentState);
+  const statePhrs  = statePhrase(paymentState);
+  const toneKey    = stateTone(paymentState);
+  const provider   = providerLabel(
+    ((tx as unknown as { metadata?: Record<string, unknown> | null }).metadata ?? null)?.provider as string | undefined,
+  );
+  const refIsWongo = isWongoReference(tx.reference);
   const ref = tx.related_entity ?? null;
   const linkedCta = ref ? linkedCtaFor(ref) : null;
   const ctx = txContext(tx);
@@ -61,11 +75,10 @@ export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: P
             <p className={`text-3xl font-extrabold tabular-nums mt-1 ${direction === "in" ? "text-[hsl(160_55%_28%)]" : "text-foreground"}`}>
               {direction === "in" ? "+" : "-"}{formatGNF(Math.abs(tx.amount_gnf))}
             </p>
-            {status && (
-              <span className={`inline-block mt-2 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusTone(status.tone)}`}>
-                {status.label}
-              </span>
-            )}
+            <span className={`inline-block mt-2 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusTone(toneKey)}`}>
+              {stateText}
+            </span>
+            <p className="mt-1 text-[11px] text-muted-foreground">{statePhrs}</p>
             <p className={`mt-2 text-[11px] ${availabilityTone(availability.tone)}`}>
               {availability.label}
             </p>
@@ -99,9 +112,9 @@ export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: P
 
           <div className="bg-card rounded-2xl border border-border/60 p-4 space-y-2.5 shadow-card">
             <Row label="Date" value={dateStr} />
-            <Row label="Méthode" value="WONGO Wallet" />
+            <Row label="Méthode" value={provider} />
             {tx.description && <Row label="Détail" value={tx.description} />}
-            <Row label="Référence" value={tx.reference} mono />
+            <Row label={refIsWongo ? "Référence WONGO" : "Référence"} value={tx.reference} mono />
           </div>
 
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground justify-center">
@@ -129,9 +142,12 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
   );
 }
 
-function statusTone(tone: "pending" | "failed" | "cancelled" | "ok") {
+function statusTone(tone: import("@/lib/payments").StateTone) {
   if (tone === "pending") return "bg-secondary/15 text-secondary-foreground border-secondary/30";
+  if (tone === "processing") return "bg-secondary/15 text-secondary-foreground border-secondary/30";
   if (tone === "failed") return "bg-destructive/10 text-destructive border-destructive/30";
+  if (tone === "cancelled") return "bg-muted text-muted-foreground border-border";
+  if (tone === "ok") return "bg-primary/10 text-primary border-primary/30";
   return "bg-muted text-muted-foreground border-border";
 }
 

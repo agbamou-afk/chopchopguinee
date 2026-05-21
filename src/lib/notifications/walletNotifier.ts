@@ -20,7 +20,10 @@ export type WalletEvent =
   | "topup_credited"
   | "refund_processed"
   | "wallet_frozen"
-  | "payout_sent";
+  | "payout_sent"
+  | "payment_confirmed"
+  | "payment_failed"
+  | "earning_confirmed";
 
 export interface WalletEventPayload {
   /**
@@ -68,19 +71,19 @@ function copy(p: WalletEventPayload): { title: string; body: string; tone: "succ
   switch (p.event) {
     case "topup_created":
       return {
-        title: "Recharge initiée",
+        title: "Recharge demandée",
         body: `Votre recharge${amount ? ` de ${amount}` : ""}${ref} a été créée.`,
         tone: "info",
       };
     case "topup_credited":
       return {
-        title: "Recharge créditée",
+        title: "Recharge confirmée",
         body: `${amount ? `${amount} ` : ""}ajoutés à votre portefeuille${ref}.`,
         tone: "success",
       };
     case "refund_processed":
       return {
-        title: "Remboursement effectué",
+        title: "Remboursement traité",
         body: `Remboursement${amount ? ` de ${amount}` : ""}${ref} reçu sur votre portefeuille.`,
         tone: "success",
       };
@@ -96,6 +99,24 @@ function copy(p: WalletEventPayload): { title: string; body: string; tone: "succ
       return {
         title: "Virement envoyé",
         body: `Votre virement${amount ? ` de ${amount}` : ""}${ref} a été envoyé.`,
+        tone: "success",
+      };
+    case "payment_confirmed":
+      return {
+        title: "Paiement confirmé",
+        body: `${amount ? `${amount} ` : ""}débités de votre portefeuille${ref}.`,
+        tone: "success",
+      };
+    case "payment_failed":
+      return {
+        title: "Paiement échoué",
+        body: `Le paiement${amount ? ` de ${amount}` : ""}${ref} a échoué. Réessayez.`,
+        tone: "error",
+      };
+    case "earning_confirmed":
+      return {
+        title: "Gain confirmé",
+        body: `${amount ? `${amount} ` : ""}crédités à votre portefeuille${ref}.`,
         tone: "success",
       };
   }
