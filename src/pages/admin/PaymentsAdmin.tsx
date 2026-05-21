@@ -9,9 +9,12 @@ import {
   listIntents,
   confirmIntent,
   failIntent,
+  simulateProviderForIntent,
+  maskMsisdn,
   stateLabel,
   providerLabel,
   type PaymentIntent,
+  type SimulatedKind,
 } from "@/lib/payments";
 import { formatGNF } from "@/lib/format";
 
@@ -41,6 +44,18 @@ export default function PaymentsAdmin() {
     try { await failIntent(id, "admin marked failed"); await load(); }
     catch (e) { toast({ title: "Erreur", description: (e as Error).message }); }
   };
+  const onSimulate = async (id: string, kind: SimulatedKind) => {
+    try {
+      const r = await simulateProviderForIntent(id, kind);
+      toast({
+        title: `Simulation Orange · ${kind}`,
+        description: r.applied === "ignored" ? `Ignoré (${r.reason})` : `Appliqué: ${r.applied}`,
+      });
+      await load();
+    } catch (e) {
+      toast({ title: "Erreur", description: (e as Error).message });
+    }
+  };
 
   return (
     <ModulePage module="payments" title="Paiements (intents)" subtitle="Suivi des intents et états provider WONGO">
@@ -59,11 +74,25 @@ export default function PaymentsAdmin() {
                 <p className="text-xs text-muted-foreground">
                   {formatGNF(it.amount_gnf)} · {stateLabel(it.state)} · {new Date(it.created_at).toLocaleString("fr-FR")}
                 </p>
+                {(it.metadata as { phone_number?: string } | null)?.phone_number && (
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                    {maskMsisdn((it.metadata as { phone_number?: string }).phone_number)}
+                  </p>
+                )}
               </div>
               {(it.state === "pending" || it.state === "processing") && isSuperAdmin && (
-                <div className="flex gap-2 shrink-0">
-                  <Button size="sm" variant="outline" onClick={() => onConfirm(it.id)}>Confirmer (test)</Button>
-                  <Button size="sm" variant="ghost" onClick={() => onFail(it.id)}>Marquer échec</Button>
+                <div className="flex flex-wrap gap-1.5 shrink-0 justify-end max-w-[60%]">
+                  <Button size="sm" variant="outline" onClick={() => onConfirm(it.id)}>Confirmer</Button>
+                  <Button size="sm" variant="ghost" onClick={() => onFail(it.id)}>Échec</Button>
+                  {it.provider === "orange_money" && (
+                    <>
+                      <Button size="sm" variant="secondary" onClick={() => onSimulate(it.id, "confirmed")}>Sim OM confirm</Button>
+                      <Button size="sm" variant="secondary" onClick={() => onSimulate(it.id, "failed")}>Sim OM échec</Button>
+                      <Button size="sm" variant="secondary" onClick={() => onSimulate(it.id, "expired")}>Sim expiration</Button>
+                      <Button size="sm" variant="secondary" onClick={() => onSimulate(it.id, "duplicate")}>Sim doublon</Button>
+                      <Button size="sm" variant="secondary" onClick={() => onSimulate(it.id, "wrong_amount")}>Sim montant ≠</Button>
+                    </>
+                  )}
                 </div>
               )}
             </Card>
