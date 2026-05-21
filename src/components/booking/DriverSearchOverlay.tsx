@@ -27,7 +27,7 @@ interface Props {
 
 /**
  * Full-screen overlay shown after the user requests a ride.
- * Animates a CHOP-branded search pulse, then resolves to a matched
+ * Animates a WONGO-branded search pulse, then resolves to a matched
  * driver card or a "no driver available" state with retry.
  */
 const REASSURANCE: string[] = [

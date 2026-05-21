@@ -41,7 +41,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   // Rotating activity hints — short, operational, glanceable.
   const ACTIVITY_HINTS = [
     "Analyse de la zone…",
-    "Réseau CHOP CHOP synchronisé",
+    "Réseau WONGO synchronisé",
     "Détection des courses proches…",
   ];
   const [hintIdx, setHintIdx] = useState(0);
@@ -63,7 +63,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
       ? {
           icon: ShieldCheck,
           tone: "text-primary",
-          title: "Devenez chauffeur CHOP CHOP",
+          title: "Devenez chauffeur WONGO",
           desc: "Soumettez votre dossier pour commencer à recevoir des courses.",
           cta: "Commencer ma demande",
           to: "/driver/apply",
@@ -296,7 +296,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
                 <span className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Zone active</span>
                 <span className={districtChipClasses(meta.tone)}>{meta.name}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground">Point CHOP proche · bientôt</span>
+              <span className="text-[10px] text-muted-foreground">Point WONGO proche · bientôt</span>
             </div>
           );
         })()}

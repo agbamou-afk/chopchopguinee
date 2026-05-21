@@ -24,7 +24,7 @@ export function RestaurantOnboardingSheet({
   const [cuisine, setCuisine] = useState<string>("");
   const [district, setDistrict] = useState<string>("");
   const [delivery, setDelivery] = useState(false);
-  const [choppay, setChoppay] = useState(false);
+  const [choppay, setWongoPay] = useState(false);
   const [busy, setBusy] = useState(false);
   const [existing, setExisting] = useState<FoodRestaurant | null>(null);
 
@@ -41,7 +41,7 @@ export function RestaurantOnboardingSheet({
         setCuisine(own.cuisine ?? "");
         setDistrict(own.district ?? "");
         setDelivery(own.delivery_available);
-        setChoppay(own.choppay_enabled);
+        setWongoPay(own.choppay_enabled);
       }
     })();
   }, [open]);
@@ -129,17 +129,17 @@ export function RestaurantOnboardingSheet({
           </div>
           <label className="flex items-center justify-between p-3 rounded-2xl bg-card shadow-card">
             <div>
-              <p className="text-sm font-medium">Livraison CHOP disponible</p>
+              <p className="text-sm font-medium">Livraison WONGO disponible</p>
               <p className="text-[11px] text-muted-foreground">Activez pour recevoir des commandes en livraison.</p>
             </div>
             <Switch checked={delivery} onCheckedChange={setDelivery} />
           </label>
           <label className="flex items-center justify-between p-3 rounded-2xl bg-card shadow-card">
             <div>
-              <p className="text-sm font-medium">CHOPPay accepté</p>
-              <p className="text-[11px] text-muted-foreground">Affiche un badge CHOPPay sur votre restaurant.</p>
+              <p className="text-sm font-medium">WONGO Pay accepté</p>
+              <p className="text-[11px] text-muted-foreground">Affiche un badge WONGO Pay sur votre restaurant.</p>
             </div>
-            <Switch checked={choppay} onCheckedChange={setChoppay} />
+            <Switch checked={choppay} onCheckedChange={setWongoPay} />
           </label>
           <Button onClick={submit} disabled={busy} className="w-full">
             {busy ? "Enregistrement…" : existing ? "Mettre à jour" : "Créer mon restaurant"}

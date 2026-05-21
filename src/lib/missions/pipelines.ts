@@ -85,7 +85,7 @@ export const MISSION_IDENTITY: Record<MissionType, MissionTypeIdentity> = {
   package_delivery: {
     label: "Envoyer colis",
     subtitle: "Colis à transporter",
-    trustHint: "Colis suivi par CHOP CHOP",
+    trustHint: "Colis suivi par WONGO",
     icon: Package,
     acceptCta: "Prendre le colis",
     endpointLabels: { pickup: "Expéditeur", dropoff: "Destinataire" },

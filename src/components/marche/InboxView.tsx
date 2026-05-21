@@ -74,7 +74,7 @@ export function InboxView({ onBack }: { onBack: () => void }) {
       ) : (
         <ul className="divide-y">
           {convs.map((c) => {
-            const peerName = (c.buyer?.full_name ?? c.seller?.full_name) || "Utilisateur CHOP CHOP";
+            const peerName = (c.buyer?.full_name ?? c.seller?.full_name) || "Utilisateur WONGO";
             return (
               <li key={c.id}>
                 <button onClick={() => setOpenId(c.id)} className="w-full text-left p-4 hover:bg-muted/50">

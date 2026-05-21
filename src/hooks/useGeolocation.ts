@@ -28,7 +28,7 @@ interface UseGeolocationOptions {
 }
 
 /**
- * Single source of truth for browser geolocation in CHOP CHOP.
+ * Single source of truth for browser geolocation in WONGO.
  * Models the real permission lifecycle (denied vs blocked, low accuracy…)
  * and emits analytics so we can track field testing behavior in Conakry.
  */

@@ -196,7 +196,7 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
       }
       setShowScanner(null);
       setPhase("inTrip");
-      toast({ title: "Course démarrée", description: "Bon voyage avec CHOP CHOP." });
+      toast({ title: "Course démarrée", description: "Bon voyage avec WONGO." });
     } else if (showScanner === "end") {
       if (code !== endCode.toUpperCase()) {
         toast({ title: "QR invalide", description: "Ce code ne correspond pas à la fin de course." });
@@ -482,7 +482,7 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
               </div>
               <p className="font-semibold text-foreground">Transaction terminée</p>
               <p className="text-sm text-muted-foreground mb-4">
-                Merci d'avoir voyagé avec CHOP CHOP
+                Merci d'avoir voyagé avec WONGO
               </p>
               <Button onClick={onClose} className="w-full h-12 gradient-primary">
                 Retour à l'accueil

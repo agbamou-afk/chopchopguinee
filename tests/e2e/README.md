@@ -1,4 +1,4 @@
-# CHOP CHOP — End-to-End Tests (Playwright)
+# WONGO — End-to-End Tests (Playwright)
 
 Internal QA infrastructure. **Never** point these at production accounts or live data.
 

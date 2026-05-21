@@ -2,7 +2,7 @@ import { toast as sonnerToast } from "sonner";
 import type { ExternalToast } from "sonner";
 
 /**
- * Unified CHOP CHOP feedback toasts.
+ * Unified WONGO feedback toasts.
  *
  * Variants share consistent timing, spacing, and mobile positioning
  * (configured globally on <Sonner /> in src/components/ui/sonner.tsx).

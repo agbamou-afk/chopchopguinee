@@ -91,9 +91,9 @@ export async function createFoodOrder(input: CreateOrderInput): Promise<CreateOr
 
         const payMethodLabel =
           input.paymentMethod === "wallet"
-            ? "CHOPWallet"
+            ? "WONGO Wallet"
             : input.paymentMethod === "choppay"
-              ? "CHOPPay"
+              ? "WONGO Pay"
               : "Espèces";
         const summary = [
           r.name,

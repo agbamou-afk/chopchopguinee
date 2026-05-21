@@ -106,7 +106,7 @@ export function AppHeader({
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setMenuOpen(false);
-    toast({ title: "Déconnecté", description: "À bientôt sur CHOP CHOP" });
+    toast({ title: "Déconnecté", description: "À bientôt sur WONGO" });
   };
 
   const formatted = formatGNF(amountValue);
@@ -155,9 +155,9 @@ export function AppHeader({
             <SheetContent side="left" className="w-80 drawer-warm overflow-hidden">
               <div className="kente-stripe pointer-events-none absolute inset-x-0 top-0 h-[3px] opacity-80" aria-hidden />
               <SheetHeader>
-                <SheetTitle className="sr-only">Menu CHOP CHOP</SheetTitle>
+                <SheetTitle className="sr-only">Menu WONGO</SheetTitle>
                 <div className="flex flex-col items-center gap-2 pt-2">
-                  <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="CHOP CHOP" className="h-24 w-auto object-contain" />
+                  <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="WONGO" className="h-24 w-auto object-contain" />
                   <p className="text-xs font-medium text-muted-foreground italic">
                     Tout, Part Tout, Pour Tout
                   </p>
@@ -231,7 +231,7 @@ export function AppHeader({
             </SheetContent>
           </Sheet>
 
-          <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="CHOP CHOP" className="h-14 w-auto object-contain mix-blend-multiply dark:mix-blend-screen" />
+          <img loading="eager" fetchPriority="high" decoding="async" src={logo} alt="WONGO" className="h-14 w-auto object-contain mix-blend-multiply dark:mix-blend-screen" />
 
           <button
             className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors relative"
@@ -295,7 +295,7 @@ export function AppHeader({
             <div className="min-w-0">
               <div className="flex items-center gap-2 opacity-90">
                 <Wallet className="w-4 h-4" strokeWidth={2} />
-                <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">CHOPWallet</span>
+                <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">WONGO Wallet</span>
               </div>
               {amountLoading ? (
                 <div className="mt-1 h-7 w-32 rounded bg-white/20 animate-pulse" aria-label="Chargement du solde" />

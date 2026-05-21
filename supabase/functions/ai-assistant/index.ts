@@ -1,4 +1,4 @@
-// CHOP CHOP — AI Assistant edge function.
+// WONGO — AI Assistant edge function.
 // Single secure entry point for every AI call. Validates the caller's JWT,
 // enforces admin gating per prompt, applies per-user rate limits, runs the
 // configured prompt through the provider abstraction, and writes an audit row.

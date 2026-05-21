@@ -53,7 +53,7 @@ export function MenuButton({
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setOpen(false);
-    toast({ title: "Déconnecté", description: "À bientôt sur CHOP CHOP" });
+    toast({ title: "Déconnecté", description: "À bientôt sur WONGO" });
   };
 
   const items = [
@@ -81,13 +81,13 @@ export function MenuButton({
       <SheetContent side="left" className="w-80 drawer-warm overflow-hidden">
         <div className="kente-stripe pointer-events-none absolute inset-x-0 top-0 h-[3px] opacity-80" aria-hidden />
         <SheetHeader>
-          <SheetTitle className="sr-only">Menu CHOP CHOP</SheetTitle>
+          <SheetTitle className="sr-only">Menu WONGO</SheetTitle>
           <div className="flex flex-col items-center gap-2 pt-2">
             <img
               loading="eager"
               decoding="async"
               src={logo}
-              alt="CHOP CHOP"
+              alt="WONGO"
               className="h-24 w-auto object-contain"
             />
             <p className="text-xs font-medium text-muted-foreground italic">

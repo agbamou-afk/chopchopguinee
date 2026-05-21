@@ -11,7 +11,7 @@ export type TrustCueKey = "verified" | "choppay" | "live" | "support" | "merchan
 
 const SPECS: Record<TrustCueKey, { icon: typeof ShieldCheck; label: string }> = {
   verified: { icon: BadgeCheck, label: "Chauffeur vérifié" },
-  choppay: { icon: Lock, label: "Paiement sécurisé · CHOPPay" },
+  choppay: { icon: Lock, label: "Paiement sécurisé · WONGO Pay" },
   live: { icon: Radio, label: "Course suivie en direct" },
   support: { icon: LifeBuoy, label: "Support 24/7" },
   merchant_verified: { icon: BadgeCheck, label: "Marchand vérifié" },
@@ -33,7 +33,7 @@ export function TrustCues({ cues, className, compact }: Props) {
         "flex flex-wrap items-center gap-1.5",
         className,
       )}
-      aria-label="Garanties CHOP CHOP"
+      aria-label="Garanties WONGO"
     >
       {cues.map((k) => {
         const { icon: Icon, label } = SPECS[k];
@@ -54,7 +54,7 @@ export function TrustCues({ cues, className, compact }: Props) {
   );
 }
 
-/** Single inline secured-by-CHOPPay line (used in receipts). */
+/** Single inline secured-by-WONGO Pay line (used in receipts). */
 export function SecuredByChopPay({ className }: { className?: string }) {
   return (
     <p
@@ -64,7 +64,7 @@ export function SecuredByChopPay({ className }: { className?: string }) {
       )}
     >
       <ShieldCheck className="w-3.5 h-3.5 text-success" aria-hidden />
-      Paiement sécurisé par <span className="font-semibold text-foreground">CHOPPay</span>
+      Paiement sécurisé par <span className="font-semibold text-foreground">WONGO Pay</span>
     </p>
   );
 }

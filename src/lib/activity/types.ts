@@ -1,8 +1,8 @@
 /**
- * CHOP CHOP — Unified ecosystem activity model.
+ * WONGO — Unified ecosystem activity model.
  *
  * The timeline is NOT a social feed. It is operational history: rides,
- * CHOPPay merchant payments, CHOPWallet recharges, transfers, future Repas
+ * WONGO Pay merchant payments, WONGO Wallet recharges, transfers, future Repas
  * & Marché orders. Every surface that talks about "history" should consume
  * `ActivityItem` so the ecosystem feels like one continuous log.
  */
@@ -25,7 +25,7 @@ export type ActivityStatus = "completed" | "pending" | "failed" | "cancelled" | 
 export interface ActivityItem {
   id: string;
   kind: ActivityKind;
-  /** Concise headline — e.g. "Course CHOP CHOP". */
+  /** Concise headline — e.g. "Course WONGO". */
   title: string;
   /** One-line context — e.g. "Kaloum → Ratoma" or merchant name. */
   subtitle?: string;
@@ -38,7 +38,7 @@ export interface ActivityItem {
   reference?: string;
   /** Foreign entity (merchant id, ride id, etc.) for receipt expansion. */
   entityId?: string;
-  /** Optional badge — verified merchant, CHOPPay seal, live ride. */
+  /** Optional badge — verified merchant, WONGO Pay seal, live ride. */
   badge?: "choppay" | "verified" | "live";
   /** District continuity — e.g. "Kipé → Ratoma" or "Dixinn". */
   district?: string;

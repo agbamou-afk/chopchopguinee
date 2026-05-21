@@ -78,8 +78,8 @@ export default function ProfileInfo() {
   return (
     <div className="min-h-screen bg-background pb-12">
       <Seo
-        title="Mon profil — CHOP CHOP"
-        description="Gérez vos informations personnelles, votre photo de profil et la sécurité de votre compte CHOP CHOP."
+        title="Mon profil — WONGO"
+        description="Gérez vos informations personnelles, votre photo de profil et la sécurité de votre compte WONGO."
         canonical="/profile"
       />
       <header className="gradient-primary text-primary-foreground rounded-b-3xl px-4 pt-6 pb-8">
@@ -87,7 +87,7 @@ export default function ProfileInfo() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <img loading="lazy" decoding="async" src={logo} alt="CHOP CHOP" className="h-10 w-auto" />
+          <img loading="lazy" decoding="async" src={logo} alt="WONGO" className="h-10 w-auto" />
           <h1 className="text-lg font-bold">Mon profil</h1>
         </div>
       </header>

@@ -58,12 +58,12 @@ export function SellerTrustChips({
       )}
       {chopDeliveryAvailable && (
         <span className={`${baseChip} bg-muted border-border text-foreground/80`}>
-          <Truck className="w-3 h-3" /> Livraison CHOP
+          <Truck className="w-3 h-3" /> Livraison WONGO
         </span>
       )}
       {choppayEnabled && (
         <span className={`${baseChip} bg-muted border-border text-foreground/80`}>
-          <CreditCard className="w-3 h-3" /> CHOPPay
+          <CreditCard className="w-3 h-3" /> WONGO Pay
         </span>
       )}
       {district && (

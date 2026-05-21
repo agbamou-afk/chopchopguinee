@@ -22,7 +22,7 @@ export function OrdersView() {
     <div className="max-w-md mx-auto">
       <ScreenHeader
         title="Activité"
-        subtitle="Courses, paiements, recharges — votre fil CHOP CHOP"
+        subtitle="Courses, paiements, recharges — votre fil WONGO"
       />
 
       <div className="mt-4">

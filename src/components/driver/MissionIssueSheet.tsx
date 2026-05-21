@@ -41,7 +41,7 @@ export function MissionIssueSheet({ missionId, open, onOpenChange, onReported }:
       const note = extra.trim() ? `${reason} — ${extra.trim()}` : reason;
       const updated = await reportIssue(missionId, note);
       onReported?.(updated);
-      toast.success("Problème signalé à CHOP CHOP");
+      toast.success("Problème signalé à WONGO");
       onOpenChange(false);
       setReason(null);
       setExtra("");
@@ -61,7 +61,7 @@ export function MissionIssueSheet({ missionId, open, onOpenChange, onReported }:
             Signaler un problème
           </SheetTitle>
           <SheetDescription>
-            Choisissez le motif. CHOP CHOP prend le relais.
+            Choisissez le motif. WONGO prend le relais.
           </SheetDescription>
         </SheetHeader>
 
@@ -101,7 +101,7 @@ export function MissionIssueSheet({ missionId, open, onOpenChange, onReported }:
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Envoyer le signalement"}
         </Button>
         <p className="text-[11px] text-muted-foreground text-center mt-2">
-          Mission suivie par CHOP CHOP · Confirmation requise à chaque étape
+          Mission suivie par WONGO · Confirmation requise à chaque étape
         </p>
       </SheetContent>
     </Sheet>

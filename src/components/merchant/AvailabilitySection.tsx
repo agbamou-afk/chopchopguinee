@@ -58,7 +58,7 @@ export function AvailabilitySection({ store, restaurant, onChanged }: Props) {
   return (
     <SectionCard title="Disponibilité" hint="Contrôle rapide des options">
       <Row
-        label="Livraison CHOP"
+        label="Livraison WONGO"
         hint="Les coursiers reçoivent vos missions"
         checked={delivery}
         onChange={updateDelivery}

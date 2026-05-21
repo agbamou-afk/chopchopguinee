@@ -66,7 +66,7 @@ export function ClientTripReceipt({
         >
           <CheckCircle2 className="w-12 h-12 mx-auto mb-2" />
         </motion.div>
-        <p className="text-sm opacity-90">Merci d'avoir voyagé avec CHOP CHOP</p>
+        <p className="text-sm opacity-90">Merci d'avoir voyagé avec WONGO</p>
         <motion.p
           key={fareGnf}
           initial={{ y: 8, opacity: 0 }}
@@ -78,7 +78,7 @@ export function ClientTripReceipt({
         </motion.p>
         <p className="text-xs opacity-80 mt-1">Total payé · {paymentLabel}</p>
         <p className="text-[11px] opacity-90 mt-1 inline-flex items-center gap-1 justify-center">
-          <ShieldCheck className="w-3 h-3" /> Paiement confirmé · CHOPPay
+          <ShieldCheck className="w-3 h-3" /> Paiement confirmé · WONGO Pay
         </p>
       </div>
 
@@ -132,7 +132,7 @@ export function ClientTripReceipt({
                 </motion.div>
                 <p className="text-sm font-semibold">Merci pour votre avis !</p>
                 <p className="text-xs text-muted-foreground">
-                  Votre note aide la communauté CHOP CHOP à grandir.
+                  Votre note aide la communauté WONGO à grandir.
                 </p>
               </motion.div>
             ) : (
@@ -147,7 +147,7 @@ export function ClientTripReceipt({
                   <h3 className="text-sm font-semibold">
                     Notez votre chauffeur{driverName ? ` (${driverName})` : ""}
                   </h3>
-                  <p className="text-xs text-muted-foreground">Votre avis aide la communauté CHOP CHOP.</p>
+                  <p className="text-xs text-muted-foreground">Votre avis aide la communauté WONGO.</p>
                 </div>
                 <div className="flex justify-center gap-1">
                   {[1, 2, 3, 4, 5].map((i) => (

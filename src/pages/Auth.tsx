@@ -178,18 +178,18 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Seo
-        title="Connexion & inscription — CHOP CHOP"
-        description="Connectez-vous ou créez votre compte CHOP CHOP par téléphone pour accéder aux courses, livraisons, marché et portefeuille en GNF."
+        title="Connexion & inscription — WONGO"
+        description="Connectez-vous ou créez votre compte WONGO par téléphone pour accéder aux courses, livraisons, marché et portefeuille en GNF."
         canonical="/auth"
       />
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
         <div className="flex flex-col items-center mb-6">
           <img
             src={logo}
-            alt="CHOP CHOP"
+            alt="WONGO"
             className="h-20 w-auto object-contain mb-2 mix-blend-multiply dark:mix-blend-screen"
           />
-          <h1 className="text-xl font-bold text-foreground">CHOP CHOP</h1>
+          <h1 className="text-xl font-bold text-foreground">WONGO</h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signin" ? "Connectez-vous" : "Créer votre compte"}
           </p>

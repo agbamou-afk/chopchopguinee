@@ -39,7 +39,7 @@ export function AdminLayout() {
               <SidebarTrigger className="shrink-0" />
               <div className="flex items-baseline gap-2 min-w-0">
                 <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
-                  CHOP · Console
+                  WONGO · Console
                 </span>
                 <span className="hidden sm:inline-flex h-1 w-1 rounded-full bg-secondary/80" />
                 <span className="hidden sm:inline font-mono text-[10px] tracking-wider uppercase text-muted-foreground/70">

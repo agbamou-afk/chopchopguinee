@@ -11,7 +11,7 @@ interface Props {
 }
 
 /**
- * Wires the QR scanner to the CHOPPay payment sheet:
+ * Wires the QR scanner to the WONGO Pay payment sheet:
  *  1. open=true → camera scanner mounts
  *  2. on decode → parse payload, open payment sheet
  *  3. on close (either) → onClose()
@@ -26,7 +26,7 @@ export function ChopPayLauncher({ open, onClose }: Props) {
       Analytics.track("qr.scan_invalid", { metadata: { sample: text.slice(0, 32) } });
       try {
         toast.error("QR non reconnu", {
-          description: "Ce code n'est pas un QR de paiement CHOPPay.",
+          description: "Ce code n'est pas un QR de paiement WONGO Pay.",
         });
       } catch {}
       return;
@@ -46,8 +46,8 @@ export function ChopPayLauncher({ open, onClose }: Props) {
       {open && !sheetOpen && (
         <QrScanner
           title="Scanner pour payer"
-          subtitle="CHOPPay · marchand"
-          expectedHint="Code marchand CHOPPay"
+          subtitle="WONGO Pay · marchand"
+          expectedHint="Code marchand WONGO Pay"
           onResult={onScan}
           onClose={onClose}
         />
