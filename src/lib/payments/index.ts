@@ -5,6 +5,7 @@ export * from "./reference";
 export * from "./intents";
 export * from "./webhooks";
 export * from "./simulator";
+export * from "./review";
 export { getProviderAdapter, listProviderAdapters, orangeMoneyAdapter } from "./providers/registry";
 export { isLikelyOrangeMsisdn, maskMsisdn, ORANGE_MONEY_CAPABILITIES } from "./providers/orangeMoney";
 export type {
