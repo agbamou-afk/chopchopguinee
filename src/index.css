@@ -479,12 +479,12 @@
   .kente-stripe {
     background-image: linear-gradient(
       90deg,
-      hsl(var(--primary)) 0%,
-      hsl(var(--primary)) 33%,
+      hsl(var(--destructive)) 0%,
+      hsl(var(--destructive)) 33%,
       hsl(var(--secondary)) 33%,
       hsl(var(--secondary)) 66%,
-      hsl(var(--destructive)) 66%,
-      hsl(var(--destructive)) 100%
+      hsl(var(--primary)) 66%,
+      hsl(var(--primary)) 100%
     );
   }
 
