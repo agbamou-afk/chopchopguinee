@@ -99,14 +99,14 @@ export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: P
 
           <div className="bg-card rounded-2xl border border-border/60 p-4 space-y-2.5 shadow-card">
             <Row label="Date" value={dateStr} />
-            <Row label="Méthode" value="CHOPWallet" />
+            <Row label="Méthode" value="WONGO Wallet" />
             {tx.description && <Row label="Détail" value={tx.description} />}
             <Row label="Référence" value={tx.reference} mono />
           </div>
 
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground justify-center">
             <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-            Transaction sécurisée par CHOPPay
+            Transaction sécurisée par WONGO Pay
           </div>
 
           {linkedCta && (

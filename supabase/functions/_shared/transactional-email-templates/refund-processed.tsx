@@ -16,7 +16,7 @@ interface Props {
 const RefundProcessedEmail = ({
   amountGnf,
   reference,
-  reason = 'Remboursement CHOP CHOP',
+  reason = 'Remboursement WONGO',
   originalReference,
   occurredAt = new Date().toISOString(),
   firstName,
@@ -25,7 +25,7 @@ const RefundProcessedEmail = ({
     <StatusBadge tone="info">Remboursement effectué</StatusBadge>
     <H1>{firstName ? `Bonjour ${firstName},` : 'Votre remboursement est traité'}</H1>
     <P>
-      Le montant a été recrédité sur votre portefeuille CHOP CHOP. Aucune
+      Le montant a été recrédité sur votre portefeuille WONGO. Aucune
       action de votre part n'est nécessaire.
     </P>
     <AmountDisplay amount={amountGnf} label="Montant remboursé" tone="positive" />

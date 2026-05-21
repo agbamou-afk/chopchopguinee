@@ -135,7 +135,7 @@ export function DriverTripReceipt({
         <section className="rounded-xl border border-border bg-card p-4 space-y-3">
           <div>
             <h3 className="text-sm font-semibold">Notez le client{clientName ? ` (${clientName})` : ""}</h3>
-            <p className="text-xs text-muted-foreground">Aide la communauté CHOP CHOP à rester respectueuse.</p>
+            <p className="text-xs text-muted-foreground">Aide la communauté WONGO à rester respectueuse.</p>
           </div>
           <div className="flex justify-center gap-1">
             {[1, 2, 3, 4, 5].map((i) => (

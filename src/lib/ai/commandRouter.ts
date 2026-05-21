@@ -266,7 +266,7 @@ export function routeQuery(rawQuery: string, opts: { isAdmin?: boolean } = {}): 
   }
 
   if (seen.has("wallet")) {
-    results.push(svc("wallet", "Recharger mon portefeuille", "Agent CHOP CHOP ou mobile money", "compte", 1));
+    results.push(svc("wallet", "Recharger mon portefeuille", "Agent WONGO ou mobile money", "compte", 1));
   }
 
   if (seen.has("scan")) {
@@ -285,7 +285,7 @@ export function routeQuery(rawQuery: string, opts: { isAdmin?: boolean } = {}): 
   if (opts.isAdmin && seen.has("admin")) {
     results.push(
       svc("admin", "Console Administration", "Tableau de bord global", "admin", 0, "/admin"),
-      svc("admin", "CHOPWallet & finances", "Recharges, transactions, audit", "admin", 1, "/admin/wallets"),
+      svc("admin", "WONGO Wallet & finances", "Recharges, transactions, audit", "admin", 1, "/admin/wallets"),
       svc("admin", "Utilisateurs", "Comptes, rôles, KYC", "admin", 2, "/admin/users"),
     );
   }

@@ -97,7 +97,7 @@ export default function DriverApply() {
           </button>
           <div className="flex-1">
             <p className="text-xs text-muted-foreground">Étape {step}/{totalSteps}</p>
-            <h1 className="text-base font-bold text-foreground leading-tight">Devenir chauffeur CHOP CHOP</h1>
+            <h1 className="text-base font-bold text-foreground leading-tight">Devenir chauffeur WONGO</h1>
           </div>
         </div>
         <div className="h-1 bg-muted">
@@ -202,7 +202,7 @@ export default function DriverApply() {
               <Row label="Photo véhicule" value={vehiclePhoto ? "Téléversée" : "Optionnel"} />
             </div>
             <p className="text-xs text-muted-foreground">
-              En soumettant, vous acceptez les conditions chauffeur de CHOP CHOP. Votre dossier sera examiné sous 24-48 h.
+              En soumettant, vous acceptez les conditions chauffeur de WONGO. Votre dossier sera examiné sous 24-48 h.
             </p>
           </Section>
         )}

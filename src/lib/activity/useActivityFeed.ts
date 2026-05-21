@@ -53,21 +53,21 @@ function txnToActivity(tx: WalletTransaction, walletId: string): ActivityItem | 
   const desc = tx.description ?? "";
 
   let kind: ActivityKind = "transfer_out";
-  let title = "Mouvement CHOPWallet";
+  let title = "Mouvement WONGO Wallet";
   let subtitle: string | undefined = desc || undefined;
   let badge: ActivityItem["badge"];
 
   switch (tx.type) {
     case "topup":
       kind = "topup";
-      title = "Recharge CHOPWallet";
+      title = "Recharge WONGO Wallet";
       subtitle = subtitle ?? "Solde crédité";
       break;
     case "payment":
       kind = isIncoming ? "transfer_in" : "merchant_payment";
-      title = isIncoming ? "Paiement reçu" : "Paiement CHOPPay";
+      title = isIncoming ? "Paiement reçu" : "Paiement WONGO Pay";
       badge = "choppay";
-      // Description shape from ChopPaySheet: "Paiement CHOPPay · {merchant}".
+      // Description shape from ChopPaySheet: "Paiement WONGO Pay · {merchant}".
       // Surface the merchant name as the subtitle so the timeline reads as a
       // proper merchant payment row instead of a raw description.
       if (!isIncoming && desc.includes("·")) {
@@ -86,7 +86,7 @@ function txnToActivity(tx: WalletTransaction, walletId: string): ActivityItem | 
     case "payout":
       kind = "payout";
       title = isIncoming ? "Versement chauffeur reçu" : "Versement chauffeur";
-      subtitle = subtitle ?? "Crédité sur CHOPWallet";
+      subtitle = subtitle ?? "Crédité sur WONGO Wallet";
       break;
     case "capture":
     case "release":
@@ -139,7 +139,7 @@ function rideToActivity(ride: RideRow, role: "client" | "driver"): ActivityItem 
   return {
     id: `ride:${ride.id}`,
     kind: "ride",
-    title: isDriver ? `Course ${modeLabel} terminée` : `Course CHOP CHOP · ${modeLabel}`,
+    title: isDriver ? `Course ${modeLabel} terminée` : `Course WONGO · ${modeLabel}`,
     subtitle: district ?? (status === "in_progress" ? "Course en cours" : status === "pending" ? "Recherche d'un chauffeur" : "Trajet terminé"),
     amount: status === "completed" ? amount : undefined,
     status,
@@ -157,7 +157,7 @@ function rideToActivity(ride: RideRow, role: "client" | "driver"): ActivityItem 
  * Aggregate ecosystem activity for the current user.
  *
  * Sources:
- *  - wallet_transactions for the user's `partyType` wallet (CHOPWallet + CHOPPay)
+ *  - wallet_transactions for the user's `partyType` wallet (WONGO Wallet + WONGO Pay)
  *  - rides where user is client (or driver, depending on partyType)
  *
  * Repas / Marché order tables aren't yet wired; once they exist, plug them

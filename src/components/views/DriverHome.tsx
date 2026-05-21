@@ -41,7 +41,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
   // Rotating activity hints — short, operational, glanceable.
   const ACTIVITY_HINTS = [
     "Analyse de la zone…",
-    "Réseau CHOP CHOP synchronisé",
+    "Réseau WONGO synchronisé",
     "Détection des courses proches…",
   ];
   const [hintIdx, setHintIdx] = useState(0);
@@ -63,7 +63,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
       ? {
           icon: ShieldCheck,
           tone: "text-primary",
-          title: "Devenez chauffeur CHOP CHOP",
+          title: "Devenez chauffeur WONGO",
           desc: "Soumettez votre dossier pour commencer à recevoir des courses.",
           cta: "Commencer ma demande",
           to: "/driver/apply",

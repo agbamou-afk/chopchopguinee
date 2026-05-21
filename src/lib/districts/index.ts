@@ -1,5 +1,5 @@
 /**
- * CHOP CHOP — district operations registry.
+ * WONGO — district operations registry.
  *
  * Single source of truth for district metadata: human name, slug, color
  * token, optional center coordinates, optional operating status. Kept

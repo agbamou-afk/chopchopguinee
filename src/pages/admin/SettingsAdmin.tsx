@@ -21,7 +21,7 @@ export default function SettingsAdmin() {
   const { role } = useAdminAuth();
   const canEditOM = role === "god_admin" || role === "finance_admin";
   const [omMsisdn, setOmMsisdn] = useState("");
-  const [omName, setOmName] = useState("CHOP CHOP");
+  const [omName, setOmName] = useState("WONGO");
   const [omLoading, setOmLoading] = useState(true);
   const [omSaving, setOmSaving] = useState(false);
 
@@ -34,7 +34,7 @@ export default function SettingsAdmin() {
       .then(({ data }) => {
         const v = (data?.value ?? {}) as { merchant_msisdn?: string; merchant_name?: string };
         setOmMsisdn(v.merchant_msisdn ?? "");
-        setOmName(v.merchant_name ?? "CHOP CHOP");
+        setOmName(v.merchant_name ?? "WONGO");
         setOmLoading(false);
       });
   }, []);
@@ -49,7 +49,7 @@ export default function SettingsAdmin() {
     const merged = {
       ...((existing?.value as Record<string, unknown>) ?? {}),
       merchant_msisdn: omMsisdn.trim(),
-      merchant_name: omName.trim() || "CHOP CHOP",
+      merchant_name: omName.trim() || "WONGO",
       status: omMsisdn.trim() ? "configured" : "missing",
     };
     const { error } = await supabase
@@ -94,7 +94,7 @@ export default function SettingsAdmin() {
               <Input
                 value={omName}
                 onChange={(e) => setOmName(e.target.value)}
-                placeholder="CHOP CHOP"
+                placeholder="WONGO"
                 disabled={!canEditOM}
                 className="mt-1"
               />
@@ -124,7 +124,7 @@ export default function SettingsAdmin() {
       </Card>
       <Card className="p-5">
         <p className="text-sm font-semibold mb-2">Mentions légales & CGU</p>
-        <p className="text-xs text-muted-foreground">CHOP GUINEE LTD — version 2026.05 · dernière mise à jour il y a 12 jours</p>
+        <p className="text-xs text-muted-foreground">WONGO GUINEE LTD — version 2026.05 · dernière mise à jour il y a 12 jours</p>
       </Card>
     </ModulePage>
   );

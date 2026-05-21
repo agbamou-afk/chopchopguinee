@@ -36,7 +36,7 @@ const STATUS_TONE: Record<ActivityItem["status"], string> = {
 
 function Badge({ kind }: { kind: NonNullable<ActivityItem["badge"]> }) {
   const map = {
-    choppay: { Icon: ShieldCheck, label: "CHOPPay", tone: "text-primary bg-primary/10" },
+    choppay: { Icon: ShieldCheck, label: "WONGO Pay", tone: "text-primary bg-primary/10" },
     verified: { Icon: BadgeCheck, label: "Vérifié", tone: "text-primary bg-primary/10" },
     live: { Icon: Radio, label: "En direct", tone: "text-success bg-success/10" },
   } as const;

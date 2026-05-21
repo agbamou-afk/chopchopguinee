@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* CHOP CHOP — Conakry Contemporary v1.1 (storyboard-anchored) */
+    /* WONGO — Conakry Contemporary v1.1 (storyboard-anchored) */
     /* Hex anchors: #178A43 green · #F2821B saffron · #E4483C ember
        #1F2328 graphite · #F7F2E8 cream · #ECE9E2 sand · #D9F1E2 mint */
     --background: 40 53% 94%;           /* #F7F2E8 cream */
@@ -57,7 +57,7 @@
     --input: 42 22% 88%;
     --ring: 142 71% 32%;
 
-    /* CHOP CHOP brand muted variants & neutrals */
+    /* WONGO brand muted variants & neutrals */
     --brand-green: 142 71% 32%;
     --brand-yellow: 28 89% 53%;
     --brand-red: 4 76% 56%;
@@ -74,7 +74,7 @@
     --ease-flow: cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Gradient system — 3 canonical gradients only.
-       1) wallet (deep emerald radial) — CHOPWallet card surfaces
+       1) wallet (deep emerald radial) — WONGO Wallet card surfaces
        2) cta (vertical emerald) — primary CTAs
        3) ambient (subtle warm wash) — backgrounds & section wash
        Plus map-overlay scrim. Avoid introducing more. */
@@ -410,8 +410,8 @@
 }
 
 @layer utilities {
-  /* === CHOPWallet · CHOPPay money-surface language ===
-     Lagoon mint + deep green + saffron highlight. Used across CHOPWallet
+  /* === WONGO Wallet · WONGO Pay money-surface language ===
+     Lagoon mint + deep green + saffron highlight. Used across WONGO Wallet
      card, payment sheet, receipt, QR scan, transaction rows, merchant QR.
      Calm and trustworthy — never neon, never crypto. */
 
@@ -424,7 +424,7 @@
     box-shadow: var(--shadow-card);
   }
 
-  /* Mint chip — secure status indicator (e.g. "CHOPPay sécurisé"). */
+  /* Mint chip — secure status indicator (e.g. "WONGO Pay sécurisé"). */
   .chip-money-secure {
     background: hsl(162 48% 92%);
     color: hsl(160 50% 20%);
@@ -511,7 +511,7 @@
 }
 
 @layer components {
-  /* CHOP CHOP — district identity chips. Subtle by design: a tinted dot +
+  /* WONGO — district identity chips. Subtle by design: a tinted dot +
      muted background. Never used to theme whole screens. */
   .district-chip {
     display: inline-flex; align-items: center; gap: 0.3rem;

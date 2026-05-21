@@ -66,7 +66,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       >
         <motion.img
           src={logo}
-          alt="Chop Chop"
+          alt="Wongo"
           className="w-56 h-56 object-contain mix-blend-multiply dark:mix-blend-screen"
           initial={{ y: 10 }}
           animate={{ y: 0 }}

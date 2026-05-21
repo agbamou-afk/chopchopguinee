@@ -1,6 +1,6 @@
 /// <reference types="npm:@types/react@18.3.1" />
 
-// CHOP CHOP — reusable React Email components, branded.
+// WONGO — reusable React Email components, branded.
 // Used by every auth + transactional template so the look stays consistent.
 
 import * as React from 'npm:react@18.3.1'

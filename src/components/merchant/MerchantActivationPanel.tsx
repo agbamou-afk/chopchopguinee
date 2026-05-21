@@ -51,7 +51,7 @@ export function MerchantActivationPanel({ onActivated, variant = "full" }: Props
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground">Créer une boutique</p>
             <p className="text-xs text-muted-foreground">
-              Vendez vos produits sur CHOP Marché, avec ou sans livraison.
+              Vendez vos produits sur WONGO Marché, avec ou sans livraison.
             </p>
           </div>
         </button>
@@ -82,7 +82,7 @@ export function MerchantActivationPanel({ onActivated, variant = "full" }: Props
             <div className="bg-muted/40 rounded-2xl p-3 flex items-start gap-2">
               <Wallet className="w-4 h-4 text-muted-foreground mt-0.5" />
               <p className="text-[11px] text-muted-foreground leading-snug">
-                CHOPPay s'active depuis l'espace marchand.
+                WONGO Pay s'active depuis l'espace marchand.
               </p>
             </div>
           </div>

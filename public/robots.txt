@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://chopchopguinee.com/sitemap.xml
+Sitemap: https://wongo.app/sitemap.xml

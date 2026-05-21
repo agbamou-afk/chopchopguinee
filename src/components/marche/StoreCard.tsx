@@ -43,7 +43,7 @@ export function StoreCard({
         </div>
       </div>
       {store.choppay_enabled && (
-        <span className="chip-status chip-ok text-[10px] shrink-0">CHOPPay</span>
+        <span className="chip-status chip-ok text-[10px] shrink-0">WONGO Pay</span>
       )}
     </motion.button>
   );

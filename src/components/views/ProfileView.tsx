@@ -57,7 +57,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
     profile?.full_name?.trim() ||
     [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim() ||
     profile?.display_name ||
-    "Utilisateur CHOP CHOP";
+    "Utilisateur WONGO";
   const initials = (
     (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "")
   ).toUpperCase() || (user?.email?.[0]?.toUpperCase() ?? "C");
@@ -65,7 +65,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
 
   const handleLogout = async () => {
     await signOut();
-    toast({ title: "Déconnecté", description: "À bientôt sur CHOP CHOP." });
+    toast({ title: "Déconnecté", description: "À bientôt sur WONGO." });
     navigate("/auth", { replace: true });
   };
 

@@ -1,16 +1,16 @@
 /// <reference types="npm:@types/react@18.3.1" />
 
-// CHOP CHOP — shared brand tokens for all email templates
+// WONGO — shared brand tokens for all email templates
 // (auth + transactional). Kept as plain values so React Email can inline them.
 // Source of truth: src/index.css.
 
 export const BRAND = {
-  name: "CHOP CHOP",
-  legalName: "CHOP GUINEE LTD",
+  name: "WONGO",
+  legalName: "WONGO GUINEE LTD",
   tagline: "L'infrastructure de confiance pour la mobilité et le commerce en Guinée.",
-  url: "https://chopchopguinee.com",
-  logoUrl: "https://chopchopguinee.com/favicon.png",
-  supportEmail: "support@chopchopguinee.com",
+  url: "https://wongo.app",
+  logoUrl: "https://wongo.app/favicon.png",
+  supportEmail: "support@wongo.app",
   supportPhone: "+224 621 00 00 00",
   address: "Conakry, République de Guinée",
 } as const;

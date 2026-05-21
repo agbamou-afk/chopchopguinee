@@ -1,4 +1,4 @@
-// CHOP CHOP — send-message edge function.
+// WONGO — send-message edge function.
 // Provider adapter registry. Currently ships:
 //  - WhatsApp Business Cloud API (env: WHATSAPP_TOKEN, WHATSAPP_PHONE_ID)
 //  - Twilio SMS                  (env: TWILIO_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM)
@@ -33,7 +33,7 @@ interface SendInput {
   maxRetries?: number;            // per channel, default 1
 }
 
-const SIGN = "CHOP CHOP";
+const SIGN = "WONGO";
 
 function fmtGNF(n: number) {
   const s = Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0");

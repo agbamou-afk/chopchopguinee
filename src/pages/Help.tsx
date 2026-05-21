@@ -16,12 +16,12 @@ import { Seo } from "@/components/Seo";
 
 const FAQS = [
   {
-    q: "Qu'est-ce que CHOP CHOP ?",
-    a: "CHOP CHOP est la super-app guinéenne qui réunit transport (moto, toktok), commande de repas, marché en ligne et transferts d'argent en GNF, dans une seule application.",
+    q: "Qu'est-ce que WONGO ?",
+    a: "WONGO est la super-app guinéenne qui réunit transport (moto, toktok), commande de repas, marché en ligne et transferts d'argent en GNF, dans une seule application.",
   },
   {
     q: "Comment recharger mon portefeuille ?",
-    a: "Rendez-vous chez un agent CHOP CHOP, donnez-lui votre numéro et le montant. Il vous enverra un code de confirmation à 6 chiffres à valider pour créditer votre solde.",
+    a: "Rendez-vous chez un agent WONGO, donnez-lui votre numéro et le montant. Il vous enverra un code de confirmation à 6 chiffres à valider pour créditer votre solde.",
   },
   {
     q: "Comment réserver une moto ou un toktok ?",
@@ -32,12 +32,12 @@ const FAQS = [
     a: "Pendant le suivi de la course, appuyez sur Annuler. Les fonds réservés seront automatiquement libérés sur votre portefeuille.",
   },
   {
-    q: "Comment devenir chauffeur CHOP CHOP ?",
+    q: "Comment devenir chauffeur WONGO ?",
     a: "Activez le Mode Chauffeur depuis le menu, complétez votre profil et soumettez vos documents. Notre équipe validera votre demande sous 48 heures.",
   },
   {
     q: "Comment envoyer de l'argent à un ami ?",
-    a: "Dans CHOPWallet, choisissez Envoyer, saisissez le numéro du destinataire et le montant. La transaction est instantanée et gratuite entre utilisateurs CHOP CHOP.",
+    a: "Dans WONGO Wallet, choisissez Envoyer, saisissez le numéro du destinataire et le montant. La transaction est instantanée et gratuite entre utilisateurs WONGO.",
   },
   {
     q: "Quels sont les frais de service ?",
@@ -53,7 +53,7 @@ const FAQS = [
   },
   {
     q: "Comment commander un repas ?",
-    a: "Allez dans Repas, choisissez un restaurant, ajoutez vos plats au panier et confirmez. Un livreur CHOP CHOP prend en charge votre commande.",
+    a: "Allez dans Repas, choisissez un restaurant, ajoutez vos plats au panier et confirmez. Un livreur WONGO prend en charge votre commande.",
   },
   {
     q: "Que faire si le livreur n'arrive pas ?",
@@ -64,7 +64,7 @@ const FAQS = [
     a: "Appuyez sur le bouton scan central, pointez l'appareil photo vers le QR du marchand et confirmez le montant pour payer.",
   },
   {
-    q: "Puis-je utiliser CHOP CHOP hors connexion ?",
+    q: "Puis-je utiliser WONGO hors connexion ?",
     a: "Une connexion Internet est requise pour la plupart des fonctions (paiements, courses, livraisons). Certaines pages restent consultables hors-ligne.",
   },
   {
@@ -73,7 +73,7 @@ const FAQS = [
   },
   {
     q: "Quelles villes sont couvertes ?",
-    a: "CHOP CHOP est actuellement disponible à Conakry et s'étend progressivement aux autres grandes villes de Guinée (Kankan, Kindia, N'Zérékoré).",
+    a: "WONGO est actuellement disponible à Conakry et s'étend progressivement aux autres grandes villes de Guinée (Kankan, Kindia, N'Zérékoré).",
   },
 ];
 
@@ -107,8 +107,8 @@ export default function Help() {
   return (
     <div className="min-h-screen bg-background pb-12">
       <Seo
-        title="Aide & FAQ — CHOP CHOP"
-        description="Réponses aux questions fréquentes sur CHOP CHOP : recharge portefeuille, courses moto, livraison de repas, transferts d'argent et sécurité."
+        title="Aide & FAQ — WONGO"
+        description="Réponses aux questions fréquentes sur WONGO : recharge portefeuille, courses moto, livraison de repas, transferts d'argent et sécurité."
         canonical="/help"
         jsonLd={{
           "@context": "https://schema.org",
@@ -125,7 +125,7 @@ export default function Help() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <img loading="lazy" decoding="async" src={logo} alt="CHOP CHOP" className="h-10 w-auto" />
+          <img loading="lazy" decoding="async" src={logo} alt="WONGO" className="h-10 w-auto" />
           <h1 className="text-lg font-bold">Aide & FAQ</h1>
         </div>
       </header>

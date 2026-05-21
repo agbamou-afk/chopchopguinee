@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * CHOP CHOP — district hub model (future-ready).
+ * WONGO — district hub model (future-ready).
  *
  * Hubs are lightweight physical anchors per district: a vendor partner, a
  * restaurant, a fuel station, a kiosk, or — later — an internal CHOP site.

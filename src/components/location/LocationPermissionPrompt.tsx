@@ -12,7 +12,7 @@ interface Props {
   compact?: boolean;
 }
 
-const COPY = "CHOP CHOP utilise votre position pour trouver des chauffeurs proches.";
+const COPY = "WONGO utilise votre position pour trouver des chauffeurs proches.";
 
 function statusTitle(status: GeoStatus): string {
   switch (status) {

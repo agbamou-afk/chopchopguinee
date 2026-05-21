@@ -16,7 +16,7 @@ interface BottomNavProps {
 const userTabs: Tab[] = [
   { id: "home", icon: Home, label: "Accueil" },
   { id: "orders", icon: Receipt, label: "Activité" },
-  { id: "wallet", icon: Wallet, label: "CHOPWallet" },
+  { id: "wallet", icon: Wallet, label: "WONGO Wallet" },
   { id: "profile", icon: User, label: "Compte" },
 ];
 
@@ -54,7 +54,7 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
           <div className="flex justify-center">
             <button
               onClick={onScanClick}
-              aria-label="Scanner un QR CHOP CHOP"
+              aria-label="Scanner un QR WONGO"
               className="-mt-7 w-[58px] h-[58px] rounded-full gradient-cta ring-[6px] ring-card flex items-center justify-center active:scale-95 transition-transform hover:scale-[1.03]"
             >
               <ScanLine className="w-6 h-6 text-primary-foreground" />

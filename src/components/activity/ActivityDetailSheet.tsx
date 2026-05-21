@@ -65,7 +65,7 @@ export function ActivityDetailSheet({ item, onClose }: ActivityDetailSheetProps)
           </div>
           {item.badge === "choppay" && (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold text-primary bg-primary/10">
-              <ShieldCheck className="w-3 h-3" /> CHOPPay
+              <ShieldCheck className="w-3 h-3" /> WONGO Pay
             </span>
           )}
         </div>
@@ -103,7 +103,7 @@ export function ActivityDetailSheet({ item, onClose }: ActivityDetailSheetProps)
               }}
             >
               <span className="inline-flex items-center gap-2">
-                <Receipt className="w-4 h-4" /> Voir dans CHOPWallet
+                <Receipt className="w-4 h-4" /> Voir dans WONGO Wallet
               </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Button>

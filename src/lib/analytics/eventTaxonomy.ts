@@ -1,5 +1,5 @@
 /**
- * CHOP CHOP — Event taxonomy.
+ * WONGO — Event taxonomy.
  * Standard format: `category.action.object`
  *
  * NEVER fire an event whose name is not in this file. Add it here first so
@@ -111,7 +111,7 @@ export const EVENTS = {
   "driver.trust_message_viewed": "driver",
   "receipt.viewed": "session",
 
-  // --- CHOPPay merchant QR ---
+  // --- WONGO Pay merchant QR ---
   "qr.payment_sheet_opened": "wallet",
   "qr.payment_confirmed": "wallet",
   "qr.payment_cancelled": "wallet",

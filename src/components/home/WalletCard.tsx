@@ -41,7 +41,7 @@ export function WalletCard({ balance, onSend, onReceive }: WalletCardProps) {
           </div>
           <p className="text-[11px] opacity-80 mt-1 inline-flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-            Sécurisé par CHOPPay · GNF
+            Sécurisé par WONGO Pay · GNF
           </p>
         </div>
         <div className="w-11 h-11 rounded-2xl glass-surface flex items-center justify-center font-extrabold">

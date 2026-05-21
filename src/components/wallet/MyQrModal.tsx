@@ -108,8 +108,8 @@ export function MyQrModal({ open, onClose, userId, phone }: MyQrModalProps) {
             <div className="pointer-events-none absolute inset-x-10 top-0 h-px saffron-seam" aria-hidden />
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground leading-none">CHOPWallet</p>
-                <h2 className="text-lg font-bold text-foreground leading-tight mt-0.5">Mon QR CHOP CHOP</h2>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground leading-none">WONGO Wallet</p>
+                <h2 className="text-lg font-bold text-foreground leading-tight mt-0.5">Mon QR WONGO</h2>
               </div>
               <button onClick={onClose} className="p-1 hover:bg-muted rounded-lg">
                 <X className="w-5 h-5" />

@@ -68,7 +68,7 @@ export function summarizeMarcheDelivery(input: RequestMarcheDeliveryInput): stri
   if (input.listing.category) lines.push(`Catégorie : ${input.listing.category}`);
   if (input.storeName) lines.push(`Boutique : ${input.storeName}`);
   else if (input.sellerName) lines.push(`Vendeur : ${input.sellerName}`);
-  if (input.paymentMethod === "choppay") lines.push("Paiement : CHOPPay");
+  if (input.paymentMethod === "choppay") lines.push("Paiement : WONGO Pay");
   else if (input.paymentMethod === "cash") lines.push("Paiement : Cash à la livraison");
   if (input.notes && input.notes.trim()) lines.push(`Note : ${input.notes.trim()}`);
   return lines.join(" • ");

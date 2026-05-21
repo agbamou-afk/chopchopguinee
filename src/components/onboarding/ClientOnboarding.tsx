@@ -19,8 +19,8 @@ const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
   { key: "ride", title: "Course", caption: "Commandez une moto en quelques secondes." },
   { key: "marche", title: "Marché", caption: "Achetez au Marché et faites livrer." },
   { key: "repas", title: "Repas", caption: "Commandez vos repas préférés." },
-  { key: "wallet", title: "CHOPWallet", caption: "Rechargez votre CHOPWallet et payez simplement avec CHOPPay." },
-  { key: "final", title: "Bienvenue", caption: "Tout. Partout. Pour Tous." },
+  { key: "wallet", title: "WONGO Wallet", caption: "Rechargez votre WONGO Wallet et payez simplement avec WONGO Pay." },
+  { key: "final", title: "Bienvenue", caption: "One platform. Every move." },
 ];
 
 function EditorialScene({ src, alt, animated }: { src: string; alt: string; animated: boolean }) {
@@ -60,7 +60,7 @@ function RepasScene({ animated }: { animated: boolean }) {
   return <EditorialScene src={sceneRepas} alt="Repas livré" animated={animated} />;
 }
 function WalletScene({ animated }: { animated: boolean }) {
-  return <EditorialScene src={sceneWallet} alt="CHOPWallet et CHOPPay" animated={animated} />;
+  return <EditorialScene src={sceneWallet} alt="WONGO Wallet et WONGO Pay" animated={animated} />;
 }
 
 function FinalScene() {
@@ -74,11 +74,11 @@ function FinalScene() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         src={logo}
-        alt="CHOP CHOP"
+        alt="WONGO"
         className="w-20 h-20 rounded-2xl shadow-elevated mb-3 bg-white/95 p-2"
       />
-      <p className="text-lg font-extrabold tracking-tight">CHOP CHOP</p>
-      <p className="text-sm opacity-90 mt-1">Tout. Partout. Pour Tous.</p>
+      <p className="text-lg font-extrabold tracking-tight">WONGO</p>
+      <p className="text-sm opacity-90 mt-1">One platform. Every move.</p>
     </div>
   );
 }
@@ -125,7 +125,7 @@ export function ClientOnboarding({ onDone }: Props) {
 
   return (
     <OnboardingShell
-      ariaLabel="Bienvenue sur CHOP CHOP"
+      ariaLabel="Bienvenue sur WONGO"
       steps={SCENES.length}
       index={index}
       isLast={isLast}
@@ -133,8 +133,8 @@ export function ClientOnboarding({ onDone }: Props) {
       scene={<Scene scene={scene.key} animated={animated} />}
       title={scene.title}
       caption={scene.caption}
-      primaryLabel="Entrer dans CHOP CHOP"
-      footerCaption="CHOP CHOP · Conakry"
+      primaryLabel="Entrer dans WONGO"
+      footerCaption="WONGO · Conakry"
       onNext={next}
       onPrev={prev}
       onClose={skip}
