@@ -24,7 +24,7 @@ export function RestaurantOnboardingSheet({
   const [cuisine, setCuisine] = useState<string>("");
   const [district, setDistrict] = useState<string>("");
   const [delivery, setDelivery] = useState(false);
-  const [choppay, setWONGO Pay] = useState(false);
+  const [choppay, setWongoPay] = useState(false);
   const [busy, setBusy] = useState(false);
   const [existing, setExisting] = useState<FoodRestaurant | null>(null);
 
@@ -41,7 +41,7 @@ export function RestaurantOnboardingSheet({
         setCuisine(own.cuisine ?? "");
         setDistrict(own.district ?? "");
         setDelivery(own.delivery_available);
-        setWONGO Pay(own.choppay_enabled);
+        setWongoPay(own.choppay_enabled);
       }
     })();
   }, [open]);
@@ -139,7 +139,7 @@ export function RestaurantOnboardingSheet({
               <p className="text-sm font-medium">WONGO Pay accepté</p>
               <p className="text-[11px] text-muted-foreground">Affiche un badge WONGO Pay sur votre restaurant.</p>
             </div>
-            <Switch checked={choppay} onCheckedChange={setWONGO Pay} />
+            <Switch checked={choppay} onCheckedChange={setWongoPay} />
           </label>
           <Button onClick={submit} disabled={busy} className="w-full">
             {busy ? "Enregistrement…" : existing ? "Mettre à jour" : "Créer mon restaurant"}

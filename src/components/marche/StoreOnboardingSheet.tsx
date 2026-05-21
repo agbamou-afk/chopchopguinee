@@ -22,7 +22,7 @@ export function StoreOnboardingSheet({
   const [district, setDistrict] = useState<string>("");
   const [bio, setBio] = useState("");
   const [delivery, setDelivery] = useState(true);
-  const [choppay, setWONGO Pay] = useState(false);
+  const [choppay, setWongoPay] = useState(false);
   const [busy, setBusy] = useState(false);
   const [existing, setExisting] = useState<MerchantStore | null>(null);
 
@@ -39,7 +39,7 @@ export function StoreOnboardingSheet({
         setDistrict(own.district ?? "");
         setBio(own.bio ?? "");
         setDelivery(own.delivery_available);
-        setWONGO Pay(own.choppay_enabled);
+        setWongoPay(own.choppay_enabled);
       }
     })();
   }, [open]);
@@ -124,7 +124,7 @@ export function StoreOnboardingSheet({
               <p className="text-sm font-medium">WONGO Pay accepté</p>
               <p className="text-[11px] text-muted-foreground">Affiche un badge WONGO Pay sur votre boutique.</p>
             </div>
-            <Switch checked={choppay} onCheckedChange={setWONGO Pay} />
+            <Switch checked={choppay} onCheckedChange={setWongoPay} />
           </label>
           <Button onClick={submit} disabled={busy} className="w-full">
             {busy ? "Enregistrement…" : existing ? "Mettre à jour" : "Créer ma boutique"}

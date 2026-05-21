@@ -10,7 +10,7 @@ export type TxDirection = "in" | "out";
  */
 export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
   const ctx = txContext(tx);
-  const { isRepas, isMarche, isCourier, isWONGO Pay, missionKind, isPeer } = ctx;
+  const { isRepas, isMarche, isCourier, isWongoPay, missionKind, isPeer } = ctx;
 
   switch (tx.type) {
     case "topup":
@@ -44,12 +44,12 @@ export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
         }
         if (isRepas) return "Paiement Repas reçu";
         if (isMarche) return "Vente Marché reçue";
-        if (isWONGO Pay) return "Paiement WONGO Pay reçu";
+        if (isWongoPay) return "Paiement WONGO Pay reçu";
         return "Paiement reçu";
       }
       if (isRepas) return "Livraison Repas payée";
       if (isMarche) return "Achat Marché payé";
-      if (isWONGO Pay) return "Paiement WONGO Pay";
+      if (isWongoPay) return "Paiement WONGO Pay";
       return "Paiement envoyé";
     }
     default:
@@ -94,7 +94,7 @@ export interface TxContext {
   isRepas: boolean;
   isMarche: boolean;
   isCourier: boolean;
-  isWONGO Pay: boolean;
+  isWongoPay: boolean;
   isPeer: boolean;
   missionKind: MissionKind;
   pickupArea: string | null;
@@ -115,7 +115,7 @@ export function txContext(tx: WalletTransaction): TxContext {
   const isRepas = /repas|food|menu|restaurant|plat/.test(lower) || ref.startsWith("food_") || ref.startsWith("repas:") || ref.includes(":repas:");
   const isMarche = /march[ée]|marketplace|listing|article|vente/.test(lower) || ref.startsWith("listing:") || ref.startsWith("marketplace") || ref.includes(":marche:");
   const isCourier = /coursier|livraison|gain|mission|course/.test(lower) || ref.startsWith("mission:");
-  const isWONGO Pay = /choppay|merchant|marchand/.test(lower);
+  const isWongoPay = /choppay|merchant|marchand/.test(lower);
   const isPeer = ref.startsWith("transfer:peer") || /ami|peer|p2p/.test(lower);
 
   let missionKind: MissionKind = null;
@@ -150,7 +150,7 @@ export function txContext(tx: WalletTransaction): TxContext {
     if (candidate && !arrow) merchantName = candidate;
   }
 
-  return { isRepas, isMarche, isCourier, isWONGO Pay, isPeer, missionKind, pickupArea, dropoffArea, merchantName };
+  return { isRepas, isMarche, isCourier, isWongoPay, isPeer, missionKind, pickupArea, dropoffArea, merchantName };
 }
 
 export const MISSION_KIND_LABEL: Record<Exclude<MissionKind, null>, string> = {
