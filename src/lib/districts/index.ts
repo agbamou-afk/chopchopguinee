@@ -19,7 +19,7 @@ export interface DistrictMeta {
   name: ChopDistrict;
   slug: string;
   /** Tailwind color token suffix (e.g. "emerald", "saffron"). All map to
-   *  existing CHOP brand HSL tokens via the `district-*` utility classes
+   *  existing WONGO brand HSL tokens via the `district-*` utility classes
    *  defined in index.css. */
   tone:
     | "emerald"

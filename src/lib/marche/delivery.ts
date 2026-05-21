@@ -22,7 +22,7 @@ export type MarcheDeliveryEligibilityInput = {
   store?: Pick<MerchantStore, "delivery_available"> | null;
 };
 
-/** Whether a listing can offer CHOP delivery at all. */
+/** Whether a listing can offer WONGO delivery at all. */
 export function isMarcheDeliveryEligible(input: MarcheDeliveryEligibilityInput): boolean {
   if (input.status && input.status !== "active") return false;
   if (input.availability === "sold" || input.availability === "cancelled") return false;

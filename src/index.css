@@ -18,7 +18,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 213 13% 14%;
 
-    --primary: 142 71% 32%;             /* #178A43 CHOP green */
+    --primary: 142 71% 32%;             /* #178A43 WONGO green */
     --primary-foreground: 40 53% 96%;
 
     --secondary: 28 89% 53%;            /* #F2821B saffron */
@@ -39,7 +39,7 @@
     --warning: 28 89% 53%;
     --warning-foreground: 213 13% 14%;
 
-    /* Service accents — drawn ONLY from CHOP green / saffron / ember / graphite */
+    /* Service accents — drawn ONLY from WONGO green / saffron / ember / graphite */
     --accent-moto: 142 71% 32%;
     --accent-moto-foreground: 40 53% 96%;
     --accent-toktok: 28 89% 53%;
@@ -201,7 +201,7 @@
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
- * Proprietary CHOP map skin — applied on top of any underlying Mapbox style
+ * Proprietary WONGO map skin — applied on top of any underlying Mapbox style
  * via a CSS filter on the canvas plus a warm overlay wash. Tones the map down
  * into a warm grayscale so brand markers pop without changing the tile source.
  * ────────────────────────────────────────────────────────────────────────── */

@@ -5,7 +5,7 @@ import { TONE_HSL, type ChopPinTone } from './chopPinTypes';
 
 export type RouteState = 'active' | 'approach' | 'completed';
 
-// Warmer, CHOP-native route palette — emerald → saffron → graphite.
+// Warmer, WONGO-native route palette — emerald → saffron → graphite.
 const COLOR: Record<RouteState, string> = {
   active:    'hsl(146, 70%, 34%)',
   approach:  'hsl(38, 92%, 52%)',
