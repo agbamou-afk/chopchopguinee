@@ -658,4 +658,123 @@ SANDBOX_SCENARIOS.push(
       }
     },
   },
+  // -------- Payment foundation scenarios --------
+  // In-memory only: each scenario emits an intent-style wallet trail and
+  // notifications so the sandbox panel can verify state transitions
+  // without writing to Supabase or moving real money.
+  {
+    id: "wallet_topup_pending",
+    title: "Wallet · top-up en attente",
+    description: "Création d'une demande de recharge (pending) sans confirmation.",
+    family: "wallet",
+    expected: { wallet: 1, notifications: 1 },
+    async run(ctx) {
+      const user = ctx.spawnActor("rider", { label: "Client Kaloum", district: "Kaloum" });
+      ctx.walletEntry({ actorId: user.id, kind: "hold", amountGnf: 50_000, note: "intent:wallet_topup:pending" });
+      ctx.notify("Recharge demandée", { refId: user.id });
+    },
+  },
+  {
+    id: "wallet_topup_confirmed",
+    title: "Wallet · top-up confirmée",
+    description: "Recharge confirmée par le provider, wallet crédité.",
+    family: "wallet",
+    expected: { wallet: 2, notifications: 2 },
+    async run(ctx) {
+      const user = ctx.spawnActor("rider", { label: "Client Ratoma", district: "Ratoma" });
+      ctx.walletEntry({ actorId: user.id, kind: "hold", amountGnf: 50_000, note: "intent:wallet_topup:pending" });
+      ctx.notify("Recharge demandée", { refId: user.id });
+      await ctx.wait(200);
+      ctx.walletEntry({ actorId: user.id, kind: "receipt", amountGnf: 50_000, note: "intent:wallet_topup:confirmed" });
+      ctx.notify("Recharge confirmée", { level: "success", refId: user.id });
+    },
+  },
+  {
+    id: "provider_failure",
+    title: "Wallet · échec provider",
+    description: "Le provider rejette la recharge — aucun crédit wallet.",
+    family: "failure",
+    expected: { wallet: 1, notifications: 2 },
+    async run(ctx) {
+      const user = ctx.spawnActor("rider", { label: "Client Matam", district: "Matam" });
+      ctx.walletEntry({ actorId: user.id, kind: "hold", amountGnf: 25_000, note: "intent:wallet_topup:pending" });
+      ctx.notify("Recharge demandée", { refId: user.id });
+      await ctx.wait(200);
+      ctx.notify("Paiement échoué — réessayez", { level: "error", refId: user.id });
+    },
+  },
+  {
+    id: "duplicate_provider_confirmation",
+    title: "Wallet · double confirmation provider",
+    description: "Deux callbacks pour la même transaction — dédupliqués au crédit.",
+    family: "wallet",
+    expected: { wallet: 2, notifications: 2, maxDuplicateNotifications: 1 },
+    async run(ctx) {
+      const user = ctx.spawnActor("rider", { label: "Client Dixinn", district: "Dixinn" });
+      ctx.walletEntry({ actorId: user.id, kind: "hold", amountGnf: 75_000, note: "intent:wallet_topup:pending" });
+      ctx.notify("Recharge demandée", { refId: user.id });
+      await ctx.wait(120);
+      ctx.walletEntry({ actorId: user.id, kind: "receipt", amountGnf: 75_000, note: "intent:wallet_topup:confirmed" });
+      ctx.notify("Recharge confirmée", { level: "success", refId: user.id });
+      await ctx.wait(80);
+      // Duplicate confirmation — must not double-credit; second notify is deduped by event store.
+      ctx.notify("Recharge confirmée", { level: "success", refId: user.id });
+    },
+  },
+  {
+    id: "refund_flow",
+    title: "Wallet · remboursement",
+    description: "Commande annulée — remboursement crédité au wallet.",
+    family: "wallet",
+    expected: { wallet: 2, notifications: 2 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "Client Kipé", district: "Kipé" });
+      ctx.walletEntry({ actorId: user.id, kind: "receipt", amountGnf: -REPAS_TICKET, note: "intent:repas_payment:confirmed" });
+      ctx.notify("Paiement confirmé", { level: "success", refId: user.id });
+      await ctx.wait(200);
+      ctx.walletEntry({ actorId: user.id, kind: "refund", amountGnf: REPAS_TICKET, note: "intent:refund:completed" });
+      ctx.notify("Remboursement traité", { level: "success", refId: user.id });
+    },
+  },
+  {
+    id: "merchant_settlement_pending",
+    title: "Merchant · règlement en attente",
+    description: "Inflows marchand cumulés en attente du règlement.",
+    family: "merchant",
+    expected: { wallet: 3, notifications: 1 },
+    async run(ctx) {
+      const resto = ctx.spawnActor("restaurant", { label: "Restaurant Damier", district: "Kaloum" });
+      for (let i = 0; i < 3; i++) {
+        ctx.walletEntry({ actorId: resto.id, kind: "merchant_inflow", amountGnf: REPAS_TICKET, note: "intent:repas_payment:confirmed" });
+      }
+      ctx.notify("Règlement marchand programmé", { refId: resto.id });
+    },
+  },
+  {
+    id: "courier_payout_pending",
+    title: "Courier · payout en attente",
+    description: "Earnings courier cumulées, payout pending.",
+    family: "wallet",
+    expected: { wallet: 1, notifications: 1 },
+    async run(ctx) {
+      const courier = ctx.spawnActor("courier", { label: "Moto-payout", district: "Ratoma" });
+      ctx.walletEntry({ actorId: courier.id, kind: "earning", amountGnf: 120_000, note: "intent:courier_payout:pending" });
+      ctx.notify("Gain en attente de virement", { refId: courier.id });
+    },
+  },
+  {
+    id: "courier_payout_confirmed",
+    title: "Courier · payout confirmé",
+    description: "Payout courier exécuté avec succès.",
+    family: "wallet",
+    expected: { wallet: 2, notifications: 2 },
+    async run(ctx) {
+      const courier = ctx.spawnActor("courier", { label: "Moto-paid", district: "Matoto" });
+      ctx.walletEntry({ actorId: courier.id, kind: "earning", amountGnf: 90_000, note: "intent:courier_payout:pending" });
+      ctx.notify("Gain en attente de virement", { refId: courier.id });
+      await ctx.wait(200);
+      ctx.walletEntry({ actorId: courier.id, kind: "receipt", amountGnf: -90_000, note: "intent:courier_payout:paid" });
+      ctx.notify("Gain confirmé — virement effectué", { level: "success", refId: courier.id });
+    },
+  },
 );
