@@ -108,48 +108,152 @@
   }
 
   .dark {
-    --background: 160 25% 8%;
-    --foreground: 150 10% 95%;
+    /* WONGO Dark — reversed-logo direction.
+       Deep charcoal-green base, warm cream foreground, WONGO green accents,
+       Guinea yellow/red preserved as surgical accents. Token-only flip:
+       no scale, layout, or component changes. */
+    --background: 156 32% 5%;            /* #07110E near-black green */
+    --foreground: 40 33% 95%;            /* warm cream #F7F5EF */
 
-    --card: 160 20% 12%;
-    --card-foreground: 150 10% 95%;
+    --card: 160 38% 10%;                 /* #10231C dark forest */
+    --card-foreground: 40 33% 95%;
 
-    --popover: 160 20% 12%;
-    --popover-foreground: 150 10% 95%;
+    --popover: 160 38% 10%;
+    --popover-foreground: 40 33% 95%;
 
-    --primary: 152 70% 45%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 142 78% 36%;              /* WONGO green #159447 */
+    --primary-foreground: 40 33% 96%;
 
-    --secondary: 45 95% 55%;
-    --secondary-foreground: 30 50% 15%;
+    --secondary: 44 95% 51%;             /* Guinea yellow #F4B400 */
+    --secondary-foreground: 160 38% 8%;
 
-    --muted: 160 15% 18%;
-    --muted-foreground: 150 10% 60%;
+    --muted: 158 30% 16%;                /* #1B332A elevated muted */
+    --muted-foreground: 140 10% 70%;     /* sage gray ~ #AAB8AF */
 
-    --accent: 45 95% 55%;
-    --accent-foreground: 30 50% 15%;
+    --accent: 44 95% 51%;
+    --accent-foreground: 160 38% 8%;
 
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 354 84% 48%;          /* Guinea red #CE1126 */
+    --destructive-foreground: 40 33% 96%;
 
-    --success: 152 70% 45%;
-    --success-foreground: 0 0% 100%;
+    --success: 142 78% 40%;
+    --success-foreground: 40 33% 96%;
 
-    --warning: 45 95% 55%;
-    --warning-foreground: 30 50% 15%;
+    --warning: 44 95% 51%;
+    --warning-foreground: 160 38% 8%;
 
-    --border: 160 15% 20%;
-    --input: 160 15% 20%;
-    --ring: 152 70% 45%;
+    --border: 150 18% 22%;
+    --input: 150 18% 22%;
+    --ring: 142 78% 40%;
 
-    --sidebar-background: 160 25% 8%;
-    --sidebar-foreground: 150 10% 95%;
-    --sidebar-primary: 152 70% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 15% 18%;
-    --sidebar-accent-foreground: 150 10% 95%;
-    --sidebar-border: 160 15% 20%;
-    --sidebar-ring: 152 70% 45%;
+    --brand-green: 142 78% 40%;
+    --brand-yellow: 44 95% 51%;
+    --brand-red: 354 84% 48%;
+    --brand-black: 156 32% 5%;
+    --brand-white: 40 33% 95%;
+    --brand-gray: 158 30% 16%;
+    --brand-green-muted: 158 30% 16%;
+    --brand-yellow-muted: 44 40% 18%;
+    --brand-red-muted: 354 35% 18%;
+
+    /* Calmer gradients in dark — preserve identity, lose milkiness */
+    --gradient-primary: linear-gradient(180deg, hsl(142 60% 28%) 0%, hsl(150 70% 16%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(142 60% 28%) 0%, hsl(150 70% 16%) 100%);
+    --gradient-ambient: linear-gradient(180deg, hsl(156 32% 6%) 0%, hsl(160 30% 9%) 100%);
+    --gradient-map-overlay: linear-gradient(180deg, hsl(160 30% 8% / 0) 0%, hsl(160 30% 6% / 0.45) 100%);
+    --gradient-glass: linear-gradient(180deg, hsl(150 25% 18% / 0.40) 0%, hsl(150 25% 12% / 0.10) 100%);
+
+    /* Shadows — softer, deeper, no harsh halos */
+    --shadow-card: 0 2px 10px -4px hsl(0 0% 0% / 0.55);
+    --shadow-soft: 0 6px 22px -12px hsl(0 0% 0% / 0.60);
+    --shadow-elevated: 0 14px 36px -16px hsl(0 0% 0% / 0.70);
+    --shadow-island: 0 0 0 6px hsl(var(--primary) / 0.08), 0 22px 50px -22px hsl(0 0% 0% / 0.75);
+    --shadow-glow-primary: 0 8px 24px -12px hsl(142 78% 36% / 0.45);
+    --shadow-inset-soft: inset 0 1px 0 hsl(40 33% 95% / 0.04), inset 0 -1px 0 hsl(0 0% 0% / 0.35);
+    --shadow-wallet: 0 22px 56px -24px hsl(0 0% 0% / 0.75), 0 6px 16px -10px hsl(142 70% 14% / 0.55);
+    --shadow-press: 0 1px 0 hsl(0 0% 0% / 0.40);
+
+    --sidebar-background: 156 32% 5%;
+    --sidebar-foreground: 40 33% 95%;
+    --sidebar-primary: 142 78% 40%;
+    --sidebar-primary-foreground: 40 33% 96%;
+    --sidebar-accent: 158 30% 14%;
+    --sidebar-accent-foreground: 40 33% 95%;
+    --sidebar-border: 150 18% 22%;
+    --sidebar-ring: 142 78% 40%;
+  }
+
+  /* === Dark-mode overrides for warm/specialty utilities ===
+     These utilities hardcode light cream values; override only colors
+     so layout, spacing, and component scale are preserved. */
+  .dark .bg-app-conakry {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(60% 38% at 8% 0%, hsl(142 78% 36% / 0.10) 0%, transparent 60%),
+      radial-gradient(55% 40% at 100% 100%, hsl(44 95% 51% / 0.06) 0%, transparent 60%),
+      var(--gradient-ambient);
+    background-attachment: fixed;
+  }
+  .dark .surface-warm { background: var(--gradient-ambient); }
+  .dark .card-warm {
+    background: linear-gradient(180deg, hsl(160 38% 11%) 0%, hsl(160 38% 9%) 100%);
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card), var(--shadow-inset-soft);
+  }
+  .dark .drawer-warm {
+    background:
+      radial-gradient(80% 40% at 50% 0%, hsl(142 78% 36% / 0.10) 0%, transparent 70%),
+      linear-gradient(180deg, hsl(160 38% 9%) 0%, hsl(156 32% 6%) 100%);
+  }
+  .dark .halo-conakry {
+    background:
+      radial-gradient(circle at 30% 30%, hsl(44 95% 51% / 0.10) 0%, transparent 60%),
+      radial-gradient(circle at 70% 70%, hsl(142 78% 36% / 0.14) 0%, transparent 60%),
+      hsl(var(--muted));
+  }
+  .dark .surface-money {
+    background: linear-gradient(180deg, hsl(160 40% 12%) 0%, hsl(162 42% 9%) 100%);
+    border: 1px solid hsl(150 18% 22%);
+    box-shadow: var(--shadow-card);
+  }
+  .dark .chip-money-secure {
+    background: hsl(160 40% 14%);
+    color: hsl(150 45% 78%);
+    border: 1px solid hsl(150 25% 28%);
+  }
+  .dark .tx-halo-in {
+    background: hsl(160 40% 14%);
+    color: hsl(150 45% 78%);
+    border: 1px solid hsl(150 25% 26%);
+  }
+  .dark .tx-halo-out {
+    background: hsl(38 30% 14%);
+    color: hsl(38 40% 78%);
+    border: 1px solid hsl(38 25% 26%);
+  }
+  .dark .gradient-wallet,
+  .dark .gradient-wallet-premium {
+    background:
+      radial-gradient(135% 100% at 12% 0%, hsl(162 55% 24%) 0%, hsl(160 60% 14%) 50%, hsl(168 65% 8%) 100%);
+  }
+  .dark .gradient-money-deep {
+    background:
+      radial-gradient(120% 100% at 0% 0%, hsl(162 55% 18%) 0%, hsl(160 60% 11%) 55%, hsl(168 65% 6%) 100%);
+  }
+  .dark .glass-surface {
+    background: linear-gradient(180deg, hsl(150 25% 18% / 0.45) 0%, hsl(150 25% 10% / 0.15) 100%);
+    backdrop-filter: blur(8px);
+  }
+  /* Admin shell — calmer dark slate */
+  .dark .admin-shell {
+    background:
+      linear-gradient(0deg, hsl(160 25% 7%), hsl(160 25% 7%)),
+      repeating-linear-gradient(0deg,  hsl(150 15% 18% / 0.45) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, hsl(150 15% 18% / 0.45) 0 1px, transparent 1px 28px);
+  }
+  /* Map skin — keep warm/readable, just tone down the wash glare */
+  .dark .chop-map-skin .mapboxgl-canvas {
+    filter: saturate(0.6) contrast(0.95) brightness(0.92);
   }
 }
 
