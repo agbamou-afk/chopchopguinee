@@ -241,6 +241,9 @@ export default function PilotCommandCenter() {
 
   const activeMissions = missions.filter(
     (m) => m.state !== "delivered" && m.state !== "failed",
+  ).sort(
+    // Triage: oldest active first (most urgent at top)
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   );
   const completedToday = missions.filter(
     (m) => m.state === "delivered" && m.updated_at >= todayIso,
@@ -260,39 +263,68 @@ export default function PilotCommandCenter() {
     (p) => p.state === "failed" || p.state === "expired",
   );
 
-  const activeCouriers = couriers.filter(
+  // `presence` is best-effort and may be stale — surface as "présence en ligne"
+  // with a partial-data sub-label rather than a hard "active courier" count.
+  const presenceOnline = couriers.filter(
     (c) => c.presence === "online" || c.presence === "on_trip",
   );
-  const openMerchants =
-    restaurants.filter((r) => r.is_open).length + stores.length;
+  // Restaurants expose `is_open`. merchant_stores has no opening-state column —
+  // we therefore only count restaurants here and mark merchants as "actifs"
+  // separately, to avoid implying we know whether stores are open right now.
+  const openRestaurants = restaurants.filter((r) => r.is_open);
+  const activeMerchantsTotal = restaurants.length + stores.length;
 
   /* ---------------- Go / No-Go ---------------- */
 
   const longPending = pendingPayments.filter((p) => ageMin(p.created_at) > 30);
+  // Data-source availability — drives partial-data warnings, never inflates green.
+  const missingSources: string[] = ["File support (à connecter)"];
+  if (!canSeePayments) missingSources.push("Détails paiements (permission requise)");
+  // Courier presence is best-effort; treat it as a partial source whenever
+  // active missions exist but no courier reports presence.
+  const presenceUnreliable =
+    activeMissions.length > 0 && presenceOnline.length === 0;
+  if (presenceUnreliable) missingSources.push("Présence coursier (à connecter)");
+
   let healthTone: Tone = "ok";
-  let healthLabel = "Vert — opérer normalement";
   const healthNotes: string[] = [];
 
   if (failedToday.length > 5) {
     healthTone = "alert";
     healthNotes.push(`${failedToday.length} missions échouées aujourd'hui`);
   }
-  if (reviewNeeded.length > 0) {
-    healthTone = healthTone === "alert" ? "alert" : "alert";
+  if (canSeePayments && reviewNeeded.length > 0) {
+    healthTone = "alert";
     healthNotes.push(`${reviewNeeded.length} paiement(s) à vérifier`);
   }
-  if (activeCouriers.length === 0) {
-    healthTone = "alert";
-    healthNotes.push("Aucun coursier actif");
+  if (presenceUnreliable) {
+    // Active missions but no online courier → at minimum a yellow warning.
+    if (healthTone !== "alert") healthTone = "warn";
+    healthNotes.push("Missions actives mais aucune présence coursier en ligne");
   }
-  if (healthTone !== "alert" && (longPending.length > 0 || pendingPayments.length > 0)) {
+  if (
+    healthTone !== "alert" &&
+    canSeePayments &&
+    (longPending.length > 0 || pendingPayments.length > 0)
+  ) {
     healthTone = "warn";
-    if (longPending.length > 0) healthNotes.push(`${longPending.length} paiement(s) en attente > 30 min`);
+    if (longPending.length > 0)
+      healthNotes.push(`${longPending.length} paiement(s) en attente > 30 min`);
     else healthNotes.push(`${pendingPayments.length} paiement(s) en attente`);
   }
-  if (healthTone === "warn") healthLabel = "Jaune — surveiller";
-  if (healthTone === "alert") healthLabel = "Rouge — action requise";
-  const healthPartial = !canSeePayments;
+
+  // Honesty rule: never claim full green while critical sources are missing.
+  const healthPartial = missingSources.length > 0;
+  if (healthTone === "ok" && healthPartial) healthTone = "muted";
+
+  const healthLabel =
+    healthTone === "alert"
+      ? "Rouge — action requise"
+      : healthTone === "warn"
+      ? "Jaune — surveiller"
+      : healthTone === "ok"
+      ? "Vert — opérer normalement"
+      : "Partiel — données à connecter";
 
   return (
     <ModulePage
@@ -320,11 +352,21 @@ export default function PilotCommandCenter() {
             <PulseStat label="Paiements à vérifier" value={canSeePayments ? reviewNeeded.length : "—"} icon={Wallet}
               tone={canSeePayments && reviewNeeded.length > 0 ? "alert" : "muted"}
               sub={canSeePayments ? undefined : "Permission paiements requise"} />
-            <PulseStat label="Support" value="—" icon={LifeBuoy} tone="muted" sub="File à connecter" />
-            <PulseStat label="Coursiers actifs" value={activeCouriers.length} icon={Bike}
-              tone={activeCouriers.length === 0 ? "alert" : "ok"} />
-            <PulseStat label="Marchands ouverts" value={openMerchants} icon={Store}
-              tone={openMerchants === 0 ? "warn" : "ok"} />
+            <PulseStat label="Support" value="—" icon={LifeBuoy} tone="muted" sub="À connecter" />
+            <PulseStat
+              label="Présence coursier"
+              value={presenceOnline.length}
+              icon={Bike}
+              tone={presenceUnreliable ? "warn" : "muted"}
+              sub="Best-effort · partiel"
+            />
+            <PulseStat
+              label="Marchands actifs"
+              value={activeMerchantsTotal}
+              icon={Store}
+              tone={activeMerchantsTotal === 0 ? "warn" : "ok"}
+              sub={`${openRestaurants.length} resto ouverts · stores sans état`}
+            />
           </div>
         </SectionCard>
 
@@ -585,16 +627,23 @@ export default function PilotCommandCenter() {
             ) : (
               healthNotes.map((n, i) => (
                 <li key={i} className="flex items-start gap-2">
-                  <span className="text-destructive">•</span>
+                  <span className={healthTone === "alert" ? "text-destructive" : "text-amber-600"}>•</span>
                   <span>{n}</span>
                 </li>
               ))
             )}
           </ul>
           {healthPartial && (
-            <p className="text-[11px] text-muted-foreground italic">
-              Health partiel · données paiements non visibles pour votre rôle · file support à connecter
-            </p>
+            <div className="border-t border-border/40 pt-2 mt-2 space-y-0.5">
+              <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/70">
+                Sources manquantes
+              </p>
+              <ul className="text-[11px] text-muted-foreground italic">
+                {missingSources.map((s) => (
+                  <li key={s}>· {s}</li>
+                ))}
+              </ul>
+            </div>
           )}
         </SectionCard>
       </div>
