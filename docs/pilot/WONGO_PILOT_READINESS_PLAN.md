@@ -1,3 +1,5 @@
+> _Note: Previously referred to as WONGO during brand exploration. The consumer-facing brand has been restored to CHOPCHOP. File paths preserved to avoid breaking links._
+
 # CHOPCHOP — Pilot Readiness Plan
 
 **Owner:** CHOP GUINEE LTD
