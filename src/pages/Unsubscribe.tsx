@@ -36,11 +36,11 @@ export default function Unsubscribe() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="max-w-md w-full p-8 text-center space-y-4">
-        <h1 className="text-xl font-bold">Désabonnement WONGO</h1>
+        <h1 className="text-xl font-bold">Désabonnement CHOPCHOP</h1>
         {state === "loading" && <Loader2 className="w-8 h-8 mx-auto animate-spin text-primary" />}
         {state === "valid" && (
           <>
-            <p className="text-muted-foreground">Confirmez le désabonnement des e-mails marketing WONGO. Vous continuerez à recevoir les e-mails essentiels (sécurité, paiements, courses).</p>
+            <p className="text-muted-foreground">Confirmez le désabonnement des e-mails marketing CHOPCHOP. Vous continuerez à recevoir les e-mails essentiels (sécurité, paiements, courses).</p>
             <Button onClick={confirm} className="w-full">Confirmer le désabonnement</Button>
           </>
         )}
@@ -48,7 +48,7 @@ export default function Unsubscribe() {
         {state === "done" && (
           <>
             <CheckCircle2 className="w-10 h-10 mx-auto text-primary" />
-            <p>Vous êtes désabonné. Merci d'avoir fait partie de WONGO.</p>
+            <p>Vous êtes désabonné. Merci d'avoir fait partie de CHOPCHOP.</p>
           </>
         )}
         {state === "already" && (

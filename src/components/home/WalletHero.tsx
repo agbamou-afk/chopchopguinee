@@ -24,7 +24,7 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className="gradient-wallet-premium rounded-[24px] p-4 text-primary-foreground relative overflow-hidden shadow-wallet"
-      aria-label="Solde WONGO Wallet"
+      aria-label="Solde ChopWallet"
     >
       {/* Layered ambient highlights — restrained, no neon */}
       <div className="pointer-events-none absolute -top-20 -right-12 w-56 h-56 rounded-full bg-white/10 blur-3xl" aria-hidden />
@@ -40,8 +40,8 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
             <Wallet className="w-3.5 h-3.5" strokeWidth={2} />
           </span>
           <div className="leading-tight">
-            <p className="text-[10.5px] uppercase tracking-[0.22em] font-semibold">WONGO Wallet</p>
-            <p className="text-[10px] opacity-75 tracking-wide">Compte WONGO · GNF</p>
+            <p className="text-[10.5px] uppercase tracking-[0.22em] font-semibold">ChopWallet</p>
+            <p className="text-[10px] opacity-75 tracking-wide">Compte CHOPCHOP · GNF</p>
           </div>
         </div>
         <button
@@ -69,13 +69,13 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
           <p className="text-[11px] opacity-85 mt-2 inline-flex items-center gap-1.5">
             <Lock className="w-3 h-3" />
             {status === "frozen"
-              ? "WONGO Wallet gelé — contactez le support"
-              : "WONGO Wallet restreint — vérifiez votre profil"}
+              ? "ChopWallet gelé — contactez le support"
+              : "ChopWallet restreint — vérifiez votre profil"}
           </p>
         ) : (
           <span className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/14 ring-1 ring-white/18 text-[10.5px] font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_6px_hsl(var(--secondary)/0.7)]" />
-            {zero ? "Prêt à recharger" : "Disponible · sécurisé par WONGO Pay"}
+            {zero ? "Prêt à recharger" : "Disponible · sécurisé par ChopPay"}
           </span>
         )}
       </div>
@@ -100,7 +100,7 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
         <motion.button
           whileTap={{ scale: 0.985 }}
           onClick={onHistory}
-          aria-label="Mon QR WONGO Pay"
+          aria-label="Mon QR ChopPay"
           className="w-11 flex items-center justify-center py-2.5 rounded-xl bg-secondary/90 text-secondary-foreground ring-1 ring-secondary/40 shadow-card"
         >
           <QrCode className="w-4 h-4" />

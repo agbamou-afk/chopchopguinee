@@ -3,7 +3,7 @@ import { SVGProps } from "react";
 /**
  * SteeringWheel — soft, rounded, mobility-focused glyph.
  * Designed to match the Lucide stroke system (24x24, stroke-2, round caps/joins)
- * so it sits naturally next to other WONGO nav icons.
+ * so it sits naturally next to other CHOPCHOP nav icons.
  */
 export function SteeringWheel({
   size = 24,

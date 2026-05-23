@@ -19,7 +19,7 @@ const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
   { key: "ride", title: "Course", caption: "Commandez une moto en quelques secondes." },
   { key: "marche", title: "Marché", caption: "Achetez au Marché et faites livrer." },
   { key: "repas", title: "Repas", caption: "Commandez vos repas préférés." },
-  { key: "wallet", title: "WONGO Wallet", caption: "Rechargez votre WONGO Wallet et payez simplement avec WONGO Pay." },
+  { key: "wallet", title: "ChopWallet", caption: "Rechargez votre ChopWallet et payez simplement avec ChopPay." },
   { key: "final", title: "Bienvenue", caption: "One platform. Every move." },
 ];
 
@@ -60,7 +60,7 @@ function RepasScene({ animated }: { animated: boolean }) {
   return <EditorialScene src={sceneRepas} alt="Repas livré" animated={animated} />;
 }
 function WalletScene({ animated }: { animated: boolean }) {
-  return <EditorialScene src={sceneWallet} alt="WONGO Wallet et WONGO Pay" animated={animated} />;
+  return <EditorialScene src={sceneWallet} alt="ChopWallet et ChopPay" animated={animated} />;
 }
 
 function FinalScene() {
@@ -74,10 +74,10 @@ function FinalScene() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         src={logo}
-        alt="WONGO"
+        alt="CHOPCHOP"
         className="h-10 w-auto object-contain mb-3 brightness-0 invert"
       />
-      <p className="text-lg font-extrabold tracking-tight">WONGO</p>
+      <p className="text-lg font-extrabold tracking-tight">CHOPCHOP</p>
       <p className="text-sm opacity-90 mt-1">One platform. Every move.</p>
     </div>
   );
@@ -125,7 +125,7 @@ export function ClientOnboarding({ onDone }: Props) {
 
   return (
     <OnboardingShell
-      ariaLabel="Bienvenue sur WONGO"
+      ariaLabel="Bienvenue sur CHOPCHOP"
       steps={SCENES.length}
       index={index}
       isLast={isLast}
@@ -133,8 +133,8 @@ export function ClientOnboarding({ onDone }: Props) {
       scene={<Scene scene={scene.key} animated={animated} />}
       title={scene.title}
       caption={scene.caption}
-      primaryLabel="Entrer dans WONGO"
-      footerCaption="WONGO · Conakry"
+      primaryLabel="Entrer dans CHOPCHOP"
+      footerCaption="CHOPCHOP · Conakry"
       onNext={next}
       onPrev={prev}
       onClose={skip}

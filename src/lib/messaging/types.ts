@@ -1,5 +1,5 @@
 /**
- * WONGO — messaging shared types.
+ * CHOPCHOP — messaging shared types.
  * Channels and templates are mirrored in the `send-message` edge function and
  * in the database enums (public.message_channel / public.message_template).
  */

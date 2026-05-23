@@ -235,7 +235,7 @@ export function CommandBarSheet({ open, onOpenChange, onAction, location }: Prop
               >
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
                   <Sparkles className="w-3.5 h-3.5" />
-                  Assistant WONGO
+                  Assistant CHOPCHOP
                 </div>
                 {aiLoading && (
                   <p className="text-sm text-muted-foreground inline-flex items-center gap-2">

@@ -1,4 +1,4 @@
-// WONGO — AI provider abstraction.
+// CHOPCHOP — AI provider abstraction.
 // All AI calls go through this layer so we can swap Lovable AI Gateway for
 // OpenAI direct, Azure OpenAI, or another provider without touching callers.
 

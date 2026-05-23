@@ -74,7 +74,7 @@ export default function PrivacySettings() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Seo title="Confidentialité — WONGO" description="Vos préférences d'analyse et de personnalisation." canonical="/profile/privacy" />
+      <Seo title="Confidentialité — CHOPCHOP" description="Vos préférences d'analyse et de personnalisation." canonical="/profile/privacy" />
       <header className="sticky top-0 z-10 bg-background border-b border-border/60">
         <div className="max-w-md mx-auto h-14 flex items-center gap-2 px-3">
           <Button size="icon" variant="ghost" onClick={() => navigate(-1)} aria-label="Retour">
@@ -86,7 +86,7 @@ export default function PrivacySettings() {
 
       <main className="max-w-md mx-auto px-4 py-5 space-y-4 pb-20">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          WONGO collecte des signaux opérationnels pour améliorer les courses, les livraisons,
+          CHOPCHOP collecte des signaux opérationnels pour améliorer les courses, les livraisons,
           le marché, la sécurité du portefeuille et la protection contre la fraude. Vous décidez
           ce que vous partagez.
         </p>

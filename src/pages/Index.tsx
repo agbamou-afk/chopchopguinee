@@ -261,7 +261,7 @@ const Index = () => {
     if (!isDriver) {
       toast({
         title: "Devenir chauffeur",
-        description: "Postulez pour commencer à conduire avec WONGO.",
+        description: "Postulez pour commencer à conduire avec CHOPCHOP.",
       });
       navigate("/driver/apply");
       return;
@@ -387,11 +387,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Seo
-        title="WONGO — Transport, livraison et paiements en Guinée"
+        title="CHOPCHOP — Transport, livraison et paiements en Guinée"
         description="La super-app guinéenne : moto et TokTok, livraison de repas, marché en ligne et transferts d'argent en GNF. Tout, partout, pour tous."
         canonical="/"
       />
-      <h1 className="sr-only">WONGO — Vos services de transport, livraison et paiements en Guinée</h1>
+      <h1 className="sr-only">CHOPCHOP — Vos services de transport, livraison et paiements en Guinée</h1>
       <AnimatePresence mode="wait">
         {!onboardingBlocksApp && bookingRide && (
           <RideBooking
@@ -513,7 +513,7 @@ const Index = () => {
 
       {!onboardingBlocksApp && showScanner && (
         <QrScanner
-          title="Scanner un QR WONGO"
+          title="Scanner un QR CHOPCHOP"
           subtitle="Course, paiement ou code marchand"
           onClose={() => setShowScanner(false)}
           onResult={(text) => {

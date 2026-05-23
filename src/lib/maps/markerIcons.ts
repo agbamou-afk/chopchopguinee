@@ -5,7 +5,7 @@ export type MarkerVariant =
 export type MarkerState = 'online' | 'offline' | 'busy' | 'unavailable';
 
 export function markerColor(variant: MarkerVariant, state: MarkerState = 'online'): string {
-  // Warm graphite + saffron states for a WONGO-native, infrastructural feel.
+  // Warm graphite + saffron states for a CHOPCHOP-native, infrastructural feel.
   if (state === 'offline')     return 'hsl(30 8% 55%)';
   if (state === 'unavailable') return 'hsl(30 6% 38%)';
   if (state === 'busy')        return 'hsl(28 92% 52%)';

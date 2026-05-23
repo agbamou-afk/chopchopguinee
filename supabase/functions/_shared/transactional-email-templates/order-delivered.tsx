@@ -13,7 +13,7 @@ interface Props {
 
 const OrderDeliveredEmail = ({
   reference,
-  merchantName = 'Marchand WONGO',
+  merchantName = 'Marchand CHOPCHOP',
   deliveredAt = new Date().toISOString(),
   firstName,
 }: Props) => (

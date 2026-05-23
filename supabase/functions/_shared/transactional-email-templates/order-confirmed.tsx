@@ -17,7 +17,7 @@ interface Props {
 const OrderConfirmedEmail = ({
   totalGnf,
   reference,
-  merchantName = 'Marchand WONGO',
+  merchantName = 'Marchand CHOPCHOP',
   itemCount,
   estimatedDelivery,
   occurredAt = new Date().toISOString(),

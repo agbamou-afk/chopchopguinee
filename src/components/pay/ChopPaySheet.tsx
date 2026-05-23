@@ -47,7 +47,7 @@ function merchantInitials(name: string): string {
 }
 
 /**
- * WONGO Pay payment sheet — opens after a successful merchant-QR scan.
+ * ChopPay payment sheet — opens after a successful merchant-QR scan.
  * Calm, single-purpose surface: merchant identity + amount + one CTA.
  */
 export function ChopPaySheet({ open, payload, onClose }: Props) {
@@ -133,7 +133,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
     const { data, error } = await supabase.rpc("wallet_pay_merchant", {
       p_merchant_id: merchant.id,
       p_amount_gnf: amount,
-      p_description: `Paiement WONGO Pay · ${merchant.name}`,
+      p_description: `Paiement ChopPay · ${merchant.name}`,
     });
     if (error || !data) {
       const msg = mapPayError(error?.message);
@@ -166,8 +166,8 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
       metadata: { merchant_id: merchant.id, amount, tx_id: tx.id },
     });
     try {
-      toast.success("Paiement WONGO Pay confirmé", {
-        description: `${merchant.name} · disponible dans WONGO Wallet`,
+      toast.success("Paiement ChopPay confirmé", {
+        description: `${merchant.name} · disponible dans ChopWallet`,
         duration: 3500,
       });
     } catch {}
@@ -176,7 +176,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
     try {
       notif.push({
         kind: "wallet",
-        title: "Paiement WONGO Pay confirmé",
+        title: "Paiement ChopPay confirmé",
         body: `${merchant.name} · ${formatGNF(amount)}`,
         link: "/?tab=orders",
       });
@@ -211,7 +211,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
                   </div>
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground leading-none">
-                      WONGO Pay
+                      ChopPay
                     </p>
                     <p className="text-sm font-semibold text-foreground leading-tight">
                       Paiement marchand
@@ -290,7 +290,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-medium text-foreground leading-tight">
-                      WONGO Wallet
+                      ChopWallet
                     </p>
                     <p className="text-[11px] text-muted-foreground tabular-nums">
                       Solde disponible · <span className="font-semibold text-foreground">{formatGNF(available)}</span>
@@ -325,7 +325,7 @@ export function ChopPaySheet({ open, payload, onClose }: Props) {
                     ) : (
                       <>
                         <Lock className="w-4 h-4 mr-2" />
-                        Payer avec WONGO Pay
+                        Payer avec ChopPay
                       </>
                     )}
                   </Button>
@@ -387,25 +387,25 @@ function ChopPaySuccess({
       >
         <CheckCircle2 className="w-7 h-7 text-success" />
       </motion.div>
-      <p className="text-base font-semibold text-foreground">Paiement WONGO Pay confirmé</p>
+      <p className="text-base font-semibold text-foreground">Paiement ChopPay confirmé</p>
       <p className="text-xs text-muted-foreground mt-0.5">à {merchant.name}</p>
 
       <p className="mt-4 text-[28px] font-bold text-foreground tracking-tight tabular-nums">
         − {formatGNF(amount)}
       </p>
       <p className="text-[11px] text-muted-foreground mt-1">
-        Nouveau solde WONGO Wallet · <span className="font-semibold text-foreground tabular-nums">{formatGNF(balanceAfter)}</span>
+        Nouveau solde ChopWallet · <span className="font-semibold text-foreground tabular-nums">{formatGNF(balanceAfter)}</span>
       </p>
 
       <div className="w-full mt-5 rounded-2xl surface-money p-3 text-left space-y-1.5">
         <ReceiptRow icon={Receipt} label="Référence" value={reference} mono />
         <ReceiptRow icon={Store} label="Marchand" value={merchant.name} />
         <ReceiptRow icon={Radio} label="Date" value={formatReceiptDate(at)} />
-        <ReceiptRow icon={ShieldCheck} label="Statut" value="Confirmé · WONGO Pay" tone="success" />
+        <ReceiptRow icon={ShieldCheck} label="Statut" value="Confirmé · ChopPay" tone="success" />
       </div>
 
       <p className="mt-4 text-[11px] text-muted-foreground">
-        Disponible dans WONGO Wallet · historique synchronisé
+        Disponible dans ChopWallet · historique synchronisé
       </p>
 
       <div className="mt-3">
@@ -414,7 +414,7 @@ function ChopPaySuccess({
 
       <div className="w-full mt-5 space-y-2">
         <Button className="w-full h-12 gradient-primary" onClick={onClose}>
-          Voir dans WONGO Wallet
+          Voir dans ChopWallet
         </Button>
       </div>
     </motion.div>
@@ -500,8 +500,8 @@ function formatReceiptDate(iso: string) {
 
 function mapPayError(code?: string): string {
   if (!code) return "Une erreur est survenue. Réessayez.";
-  if (/insufficient_funds/i.test(code)) return "Solde WONGO Wallet insuffisant.";
-  if (/wallet_not_found/i.test(code)) return "Activez votre WONGO Wallet pour payer.";
+  if (/insufficient_funds/i.test(code)) return "Solde ChopWallet insuffisant.";
+  if (/wallet_not_found/i.test(code)) return "Activez votre ChopWallet pour payer.";
   if (/merchant_not_found/i.test(code)) return "Marchand introuvable ou inactif.";
   if (/merchant_misconfigured/i.test(code)) return "Marchand non configuré.";
   if (/cannot_pay_self/i.test(code)) return "Vous ne pouvez pas vous payer vous-même.";

@@ -1,6 +1,6 @@
 /**
  * Provider adapter contract — the single interface every mobile-money,
- * cash, agent, or manual rail must implement to plug into WONGO Wallet.
+ * cash, agent, or manual rail must implement to plug into ChopWallet.
  *
  * Adapters are pure, side-effect free shape/normalization helpers. They
  * NEVER credit wallets directly. State transitions always flow through
@@ -14,7 +14,7 @@ import type {
   PaymentState,
 } from "../types";
 
-/** Canonical normalized event the rest of WONGO reasons about. */
+/** Canonical normalized event the rest of CHOPCHOP reasons about. */
 export interface NormalizedProviderEvent {
   provider: PaymentProvider;
   provider_reference: string;
@@ -72,7 +72,7 @@ export interface PaymentProviderAdapter {
   /** Build the request body our server would send to this provider. */
   createPaymentIntentRequest(input: ProviderIntentRequest): Record<string, unknown>;
 
-  /** Map raw provider-side status into WONGO's PaymentState vocabulary. */
+  /** Map raw provider-side status into CHOPCHOP's PaymentState vocabulary. */
   normalizeProviderStatus(raw: string | null | undefined): PaymentState;
 
   /** Light-touch parsing — pulls our canonical shape out of provider JSON. */

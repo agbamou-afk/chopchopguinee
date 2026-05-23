@@ -1,6 +1,6 @@
 /**
  * NotificationService — single client-side entry point for all outbound
- * notifications across WONGO. Delegates each channel to its dedicated
+ * notifications across CHOPCHOP. Delegates each channel to its dedicated
  * edge function:
  *
  *   • email     → send-transactional-email

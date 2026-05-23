@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* WONGO — Conakry Contemporary v1.1 (storyboard-anchored) */
+    /* CHOPCHOP — Conakry Contemporary v1.1 (storyboard-anchored) */
     /* Hex anchors: #178A43 green · #F2821B saffron · #E4483C ember
        #1F2328 graphite · #F7F2E8 cream · #ECE9E2 sand · #D9F1E2 mint */
     --background: 40 53% 94%;           /* #F7F2E8 cream */
@@ -18,7 +18,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 213 13% 14%;
 
-    --primary: 142 71% 32%;             /* #178A43 WONGO green */
+    --primary: 142 71% 32%;             /* #178A43 CHOPCHOP green */
     --primary-foreground: 40 53% 96%;
 
     --secondary: 28 89% 53%;            /* #F2821B saffron */
@@ -39,7 +39,7 @@
     --warning: 28 89% 53%;
     --warning-foreground: 213 13% 14%;
 
-    /* Service accents — drawn ONLY from WONGO green / saffron / ember / graphite */
+    /* Service accents — drawn ONLY from CHOPCHOP green / saffron / ember / graphite */
     --accent-moto: 142 71% 32%;
     --accent-moto-foreground: 40 53% 96%;
     --accent-toktok: 28 89% 53%;
@@ -57,7 +57,7 @@
     --input: 42 22% 88%;
     --ring: 142 71% 32%;
 
-    /* WONGO brand muted variants & neutrals */
+    /* CHOPCHOP brand muted variants & neutrals */
     --brand-green: 142 71% 32%;
     --brand-yellow: 28 89% 53%;
     --brand-red: 4 76% 56%;
@@ -74,7 +74,7 @@
     --ease-flow: cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Gradient system — 3 canonical gradients only.
-       1) wallet (deep emerald radial) — WONGO Wallet card surfaces
+       1) wallet (deep emerald radial) — ChopWallet card surfaces
        2) cta (vertical emerald) — primary CTAs
        3) ambient (subtle warm wash) — backgrounds & section wash
        Plus map-overlay scrim. Avoid introducing more. */
@@ -108,8 +108,8 @@
   }
 
   .dark {
-    /* WONGO Dark — reversed-logo direction.
-       Deep charcoal-green base, warm cream foreground, WONGO green accents,
+    /* CHOPCHOP Dark — reversed-logo direction.
+       Deep charcoal-green base, warm cream foreground, CHOPCHOP green accents,
        Guinea yellow/red preserved as surgical accents. Token-only flip:
        no scale, layout, or component changes. */
     --background: 156 32% 5%;            /* #07110E near-black green */
@@ -121,7 +121,7 @@
     --popover: 160 38% 10%;
     --popover-foreground: 40 33% 95%;
 
-    --primary: 142 78% 36%;              /* WONGO green #159447 */
+    --primary: 142 78% 36%;              /* CHOPCHOP green #159447 */
     --primary-foreground: 40 33% 96%;
 
     --secondary: 44 95% 51%;             /* Guinea yellow #F4B400 */
@@ -305,7 +305,7 @@
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
- * Proprietary WONGO map skin — applied on top of any underlying Mapbox style
+ * Proprietary CHOPCHOP map skin — applied on top of any underlying Mapbox style
  * via a CSS filter on the canvas plus a warm overlay wash. Tones the map down
  * into a warm grayscale so brand markers pop without changing the tile source.
  * ────────────────────────────────────────────────────────────────────────── */
@@ -514,7 +514,7 @@
 
   /* === Service icon system ===
      Shared holder + asset classes so every service tile (Moto, TokTok, Repas,
-     Marché, Scanner, WONGO Wallet…) renders at the same scale, padding and
+     Marché, Scanner, ChopWallet…) renders at the same scale, padding and
      optical weight. Used by QuickActions and any future service grid. */
   .service-icon-holder {
     position: relative;
@@ -543,8 +543,8 @@
 }
 
 @layer utilities {
-  /* === WONGO Wallet · WONGO Pay money-surface language ===
-     Lagoon mint + deep green + saffron highlight. Used across WONGO Wallet
+  /* === ChopWallet · ChopPay money-surface language ===
+     Lagoon mint + deep green + saffron highlight. Used across ChopWallet
      card, payment sheet, receipt, QR scan, transaction rows, merchant QR.
      Calm and trustworthy — never neon, never crypto. */
 
@@ -557,7 +557,7 @@
     box-shadow: var(--shadow-card);
   }
 
-  /* Mint chip — secure status indicator (e.g. "WONGO Pay sécurisé"). */
+  /* Mint chip — secure status indicator (e.g. "ChopPay sécurisé"). */
   .chip-money-secure {
     background: hsl(162 48% 92%);
     color: hsl(160 50% 20%);
@@ -644,7 +644,7 @@
 }
 
 @layer components {
-  /* WONGO — district identity chips. Subtle by design: a tinted dot +
+  /* CHOPCHOP — district identity chips. Subtle by design: a tinted dot +
      muted background. Never used to theme whole screens. */
   .district-chip {
     display: inline-flex; align-items: center; gap: 0.3rem;

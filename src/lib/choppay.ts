@@ -1,5 +1,5 @@
 /**
- * WONGO Pay merchant-QR payload helpers.
+ * ChopPay merchant-QR payload helpers.
  *
  * Two formats are accepted on scan, one is generated:
  *   - URL form  (preferred, human-readable):

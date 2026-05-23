@@ -38,7 +38,7 @@ const RideReceiptEmail = ({
   <EmailLayout preview={`Reçu course ${modeLabel[mode] ?? mode} — ${formatGNF(fareGnf)}`}>
     <StatusBadge tone="success">Course terminée</StatusBadge>
     <H1>{firstName ? `Merci pour la course, ${firstName}` : 'Merci pour la course'}</H1>
-    <P>Voici votre reçu WONGO. Bonne route&nbsp;!</P>
+    <P>Voici votre reçu CHOPCHOP. Bonne route&nbsp;!</P>
     <AmountDisplay amount={fareGnf} label="Total course" />
     <TransactionCard
       title="Détails du trajet"

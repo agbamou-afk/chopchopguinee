@@ -1,5 +1,5 @@
 /**
- * WONGO Sandbox — deterministic scenario library.
+ * CHOPCHOP Sandbox — deterministic scenario library.
  *
  * Scenarios are pure scripted flows: no AI, no randomness beyond ID
  * generation. Each scenario must remain idempotent enough to replay
@@ -520,7 +520,7 @@ SANDBOX_SCENARIOS.push(
     expected: { missions: 1, completed: 1, wallet: 3, notifications: 1 },
     async run(ctx) {
       const customer = ctx.spawnActor("customer", { label: "Customer payeur", district: "Kaloum" });
-      const merchant = ctx.spawnActor("restaurant", { label: "Resto WONGO Pay", district: "Kaloum" });
+      const merchant = ctx.spawnActor("restaurant", { label: "Resto ChopPay", district: "Kaloum" });
       const m = ctx.spawnMission({
         kind: "repas",
         pickupDistrict: "Kaloum",
@@ -539,12 +539,12 @@ SANDBOX_SCENARIOS.push(
   {
     id: "wallet_payment_failed_recovery",
     title: "Wallet · paiement échoué + récupération",
-    description: "Premier paiement refusé, second réussit (récupération WONGO Pay).",
+    description: "Premier paiement refusé, second réussit (récupération ChopPay).",
     family: "wallet",
     expected: { missions: 1, completed: 1, wallet: 4, notifications: 1 },
     async run(ctx) {
       const customer = ctx.spawnActor("customer", { label: "Customer retry", district: "Ratoma" });
-      const merchant = ctx.spawnActor("restaurant", { label: "Resto WONGO Pay", district: "Ratoma" });
+      const merchant = ctx.spawnActor("restaurant", { label: "Resto ChopPay", district: "Ratoma" });
       const m = ctx.spawnMission({
         kind: "repas",
         pickupDistrict: "Ratoma",
@@ -564,12 +564,12 @@ SANDBOX_SCENARIOS.push(
   },
   {
     id: "choppay_merchant_inflow",
-    title: "Wallet · WONGO Pay merchant inflow",
-    description: "3 paiements directs WONGO Pay reçus par un marchand.",
+    title: "Wallet · ChopPay merchant inflow",
+    description: "3 paiements directs ChopPay reçus par un marchand.",
     family: "wallet",
     expected: { missions: 0, wallet: 6 },
     async run(ctx) {
-      const merchant = ctx.spawnActor("restaurant", { label: "Marchand WONGO Pay", district: "Madina" });
+      const merchant = ctx.spawnActor("restaurant", { label: "Marchand ChopPay", district: "Madina" });
       for (let i = 0; i < 3; i++) {
         const customer = ctx.spawnActor("customer", { label: `Payeur ${i + 1}`, district: "Madina" });
         ctx.walletEntry({ actorId: customer.id, kind: "receipt", amountGnf: -REPAS_TICKET });
@@ -809,7 +809,7 @@ SANDBOX_SCENARIOS.push(
       ctx.notify("Recharge Orange Money demandée.", { refId: user.id });
       await ctx.wait(200);
       ctx.walletEntry({ actorId: user.id, kind: "receipt", amountGnf: OM_TOPUP, note: "intent:wallet_topup:om:confirmed" });
-      ctx.notify("Recharge confirmée · disponible dans WONGO Wallet.", { level: "success", refId: user.id });
+      ctx.notify("Recharge confirmée · disponible dans ChopWallet.", { level: "success", refId: user.id });
     },
   },
   {
@@ -834,7 +834,7 @@ SANDBOX_SCENARIOS.push(
     async run(ctx) {
       const user = ctx.spawnActor("customer", { label: "OM dup payer", district: "Matam" });
       ctx.walletEntry({ actorId: user.id, kind: "receipt", amountGnf: OM_TOPUP, note: "intent:wallet_topup:om:confirmed" });
-      ctx.notify("Recharge confirmée · disponible dans WONGO Wallet.", { level: "success", refId: user.id });
+      ctx.notify("Recharge confirmée · disponible dans ChopWallet.", { level: "success", refId: user.id });
       await ctx.wait(150);
       ctx.notify("Doublon webhook OM ignoré (idempotent).", { level: "info", refId: user.id });
     },

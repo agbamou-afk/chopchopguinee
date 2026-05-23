@@ -1,5 +1,5 @@
 /**
- * WONGO Sandbox Operational Testing — type contracts.
+ * CHOPCHOP Sandbox Operational Testing — type contracts.
  *
  * Everything here is INTERNAL, IN-MEMORY, and ISOLATED from production
  * runtime. No types defined in this module should leak into live

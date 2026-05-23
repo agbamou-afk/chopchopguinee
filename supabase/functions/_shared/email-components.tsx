@@ -1,6 +1,6 @@
 /// <reference types="npm:@types/react@18.3.1" />
 
-// WONGO — reusable React Email components, branded.
+// CHOPCHOP — reusable React Email components, branded.
 // Used by every auth + transactional template so the look stays consistent.
 
 import * as React from 'npm:react@18.3.1'
@@ -62,7 +62,7 @@ export const BrandHeader: React.FC = () => (
               alt={BRAND.name}
               style={logoImg}
             />
-            <div style={logoWordRow}>WONGO</div>
+            <div style={logoWordRow}>CHOPCHOP</div>
           </td>
         </tr>
       </tbody>

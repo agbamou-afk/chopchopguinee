@@ -7,16 +7,16 @@ import type { TemplateEntry } from './registry.ts'
 interface Props { code: string; expiresInMinutes?: number }
 
 const OtpFallbackEmail = ({ code, expiresInMinutes = 10 }: Props) => (
-  <EmailLayout preview={`Votre code de vérification WONGO : ${code}`}>
+  <EmailLayout preview={`Votre code de vérification CHOPCHOP : ${code}`}>
     <H1>Votre code de vérification</H1>
     <P>
       Le SMS n'a pas pu être livré sur votre téléphone. Utilisez le code
-      ci-dessous pour vous connecter à WONGO.
+      ci-dessous pour vous connecter à CHOPCHOP.
     </P>
     <div style={codeBox}>{code}</div>
     <P muted>
       Ce code expire dans {expiresInMinutes} minutes. Ne le partagez avec
-      personne, pas même un agent WONGO.
+      personne, pas même un agent CHOPCHOP.
     </P>
     <H2>Vous n'avez rien demandé&nbsp;?</H2>
     <P muted>
@@ -43,7 +43,7 @@ const codeBox: React.CSSProperties = {
 
 export const template = {
   component: OtpFallbackEmail,
-  subject: (d: Record<string, any>) => `Votre code WONGO : ${d.code}`,
+  subject: (d: Record<string, any>) => `Votre code CHOPCHOP : ${d.code}`,
   displayName: 'Code OTP (e-mail de secours)',
   previewData: { code: '482913', expiresInMinutes: 10 },
 } satisfies TemplateEntry

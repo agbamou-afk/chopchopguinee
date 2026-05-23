@@ -39,7 +39,7 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
       <div className={`relative chop-map-fallback rounded-2xl ${className ?? ''}`}>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-            Carte WONGO
+            Carte CHOPCHOP
           </span>
           <span className="text-xs text-muted-foreground mt-1">Mode hors-ligne</span>
         </div>

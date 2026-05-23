@@ -61,7 +61,7 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
     setCode("");
     toast({
       title: "Pickup confirmé",
-      description: "Course démarrée — bon voyage avec WONGO.",
+      description: "Course démarrée — bon voyage avec CHOPCHOP.",
     });
   };
 

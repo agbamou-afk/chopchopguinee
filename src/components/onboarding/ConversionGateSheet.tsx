@@ -14,18 +14,18 @@ interface Props {
 
 /**
  * Shown when a public/demo client tries to take a real action (recharge,
- * confirm a real ride, place an order, message a seller, pay with WONGO Pay).
+ * confirm a real ride, place an order, message a seller, pay with ChopPay).
  * Lets them either create an account, log in, or jump into the driver demo.
  */
 export function ConversionGateSheet({ open, intent, onOpenChange, onExploreDriverDemo }: Props) {
   const navigate = useNavigate();
   const subtitle = (() => {
     switch (intent) {
-      case "wallet": return "Créez un compte pour recharger votre WONGO Wallet.";
+      case "wallet": return "Créez un compte pour recharger votre ChopWallet.";
       case "ride": return "Créez un compte pour confirmer votre course.";
       case "order": return "Créez un compte pour passer commande.";
       case "message": return "Connectez-vous pour discuter avec le vendeur.";
-      case "pay": return "Connectez-vous pour payer avec WONGO Pay.";
+      case "pay": return "Connectez-vous pour payer avec ChopPay.";
       default: return "Connectez-vous ou créez un compte pour continuer.";
     }
   })();
@@ -34,7 +34,7 @@ export function ConversionGateSheet({ open, intent, onOpenChange, onExploreDrive
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-3xl pb-8">
         <SheetHeader className="text-left">
-          <SheetTitle>Prêt à utiliser WONGO ?</SheetTitle>
+          <SheetTitle>Prêt à utiliser CHOPCHOP ?</SheetTitle>
           <SheetDescription>{subtitle}</SheetDescription>
         </SheetHeader>
         <div className="grid gap-2 mt-4">

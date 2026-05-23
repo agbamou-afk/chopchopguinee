@@ -17,7 +17,7 @@ const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
   { key: "online",   title: "Passez en ligne", caption: "Activez votre statut pour recevoir des courses." },
   { key: "accept",   title: "Accepter une course", caption: "Une demande arrive — acceptez en un tap." },
   { key: "pickup",   title: "Prise en charge",  caption: "Confirmez le pickup avec le client." },
-  { key: "complete", title: "Gains & WONGO Wallet", caption: "Recevez vos gains directement dans votre WONGO Wallet via WONGO Pay." },
+  { key: "complete", title: "Gains & ChopWallet", caption: "Recevez vos gains directement dans votre ChopWallet via ChopPay." },
   { key: "heatmap",  title: "Zones actives",    caption: "Placez-vous là où la demande est la plus forte." },
   { key: "final",    title: "Prêt à conduire",  caption: "Conduisez mieux. Gagnez mieux." },
 ];
@@ -144,7 +144,7 @@ function CompleteScene({ animated }: { animated: boolean }) {
         <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" aria-hidden />
         <Wallet className="w-5 h-5" />
         <div className="text-left">
-          <p className="text-[10px] uppercase tracking-[0.22em] opacity-90 font-bold">Gains · WONGO Pay</p>
+          <p className="text-[10px] uppercase tracking-[0.22em] opacity-90 font-bold">Gains · ChopPay</p>
           <p className="text-xl font-extrabold">+ 7 225 GNF</p>
         </div>
       </motion.div>
@@ -198,10 +198,10 @@ function FinalScene() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         src={logo}
-        alt="WONGO"
+        alt="CHOPCHOP"
         className="h-10 w-auto object-contain mb-3 brightness-0 invert"
       />
-      <p className="text-lg font-extrabold tracking-tight">WONGO · Chauffeur</p>
+      <p className="text-lg font-extrabold tracking-tight">CHOPCHOP · Chauffeur</p>
       <p className="text-sm opacity-90 mt-1">Conduisez mieux. Gagnez mieux.</p>
     </div>
   );
@@ -233,7 +233,7 @@ export function DriverOnboarding({ onDone }: Props) {
 
   return (
     <OnboardingShell
-      ariaLabel="Bienvenue chauffeur WONGO"
+      ariaLabel="Bienvenue chauffeur CHOPCHOP"
       steps={SCENES.length}
       index={index}
       isLast={isLast}
@@ -241,8 +241,8 @@ export function DriverOnboarding({ onDone }: Props) {
       scene={<Scene scene={scene.key} animated={animated} />}
       title={scene.title}
       caption={scene.caption}
-      primaryLabel="Entrer dans WONGO"
-      footerCaption="WONGO · Chauffeur · Conakry"
+      primaryLabel="Entrer dans CHOPCHOP"
+      footerCaption="CHOPCHOP · Chauffeur · Conakry"
       onNext={next}
       onPrev={prev}
       onClose={onDone}

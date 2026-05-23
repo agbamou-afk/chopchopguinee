@@ -7,7 +7,7 @@ type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
   variant?: "auto" | "light" | "dark";
 };
 
-export function BrandLogo({ variant = "auto", alt = "WONGO", ...rest }: Props) {
+export function BrandLogo({ variant = "auto", alt = "CHOPCHOP", ...rest }: Props) {
   const { isDark } = useTheme();
   const src =
     variant === "dark" ? logoDark : variant === "light" ? logoLight : isDark ? logoDark : logoLight;

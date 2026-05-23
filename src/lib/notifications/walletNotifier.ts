@@ -89,7 +89,7 @@ function copy(p: WalletEventPayload): { title: string; body: string; tone: "succ
       };
     case "wallet_frozen":
       return {
-        title: "WONGO Wallet gelé",
+        title: "ChopWallet gelé",
         body: p.reason
           ? `Votre portefeuille a été gelé : ${p.reason}.`
           : "Votre portefeuille a été gelé. Contactez le support.",
@@ -178,7 +178,7 @@ export async function notifyWalletEvent(p: WalletEventPayload): Promise<boolean>
     title: c.title,
     body: c.body,
     // Deep-link to the unified activity timeline so the user can find the
-    // matching WONGO Wallet row (recharge, payment, payout) in one tap.
+    // matching ChopWallet row (recharge, payment, payout) in one tap.
     link: "/?tab=orders",
   });
   void queueExternal(p, c);

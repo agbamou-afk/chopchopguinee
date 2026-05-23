@@ -1,5 +1,5 @@
 /**
- * WONGO — In-app notification helpers.
+ * CHOPCHOP — In-app notification helpers.
  * Stored in localStorage for the MVP; swap to a Supabase table when the
  * notification feature graduates from mock to production.
  */

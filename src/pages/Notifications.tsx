@@ -41,7 +41,7 @@ const GROUP_META: Record<
   NotificationGroup,
   { label: string; icon: typeof Bell }
 > = {
-  wallet: { label: "WONGO Wallet", icon: Wallet },
+  wallet: { label: "ChopWallet", icon: Wallet },
   rides: { label: "Courses", icon: Car },
   orders: { label: "Commandes", icon: Package },
   support: { label: "Support", icon: LifeBuoy },
@@ -104,7 +104,7 @@ const NotificationsPage = () => {
 
   return (
     <AppShell withBottomNav={false}>
-      <Seo title="Notifications — WONGO" description="Vos alertes courses, livraisons, paiements et marché." canonical="/notifications" />
+      <Seo title="Notifications — CHOPCHOP" description="Vos alertes courses, livraisons, paiements et marché." canonical="/notifications" />
       <PageHeader
         title="Notifications"
         onBack={() => navigate(-1)}

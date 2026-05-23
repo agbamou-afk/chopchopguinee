@@ -42,7 +42,7 @@ export function SmartSearchBar({
       <button
         onClick={onClick ?? (() => { Analytics.track("commandbar.opened", { metadata: { source: "home" } }); setOpen(true); })}
         className="w-full h-14 flex items-center gap-3 px-4 bg-card rounded-2xl shadow-soft border border-border/60 text-left hover:border-primary/40 transition-colors group"
-        aria-label="Ouvrir l'assistant WONGO"
+        aria-label="Ouvrir l'assistant CHOPCHOP"
       >
         <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
           <Search className="w-4 h-4 text-primary" />

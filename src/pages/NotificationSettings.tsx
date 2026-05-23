@@ -13,7 +13,7 @@ const channels = [
 
 const topics: { key: "topic_otp" | "topic_wallet" | "topic_ride" | "topic_marketing"; label: string; help?: string }[] = [
   { key: "topic_otp", label: "Codes de vérification (OTP)", help: "Toujours recommandé." },
-  { key: "topic_wallet", label: "WONGO Wallet (recharges, paiements)" },
+  { key: "topic_wallet", label: "ChopWallet (recharges, paiements)" },
   { key: "topic_ride", label: "Courses & livraisons" },
   { key: "topic_marketing", label: "Promotions & nouveautés" },
 ];
@@ -25,8 +25,8 @@ const NotificationSettings = () => {
   return (
     <AppShell>
       <Seo
-        title="Préférences de notifications — WONGO"
-        description="Choisissez comment recevoir vos messages WONGO : WhatsApp, SMS, et types d'alertes."
+        title="Préférences de notifications — CHOPCHOP"
+        description="Choisissez comment recevoir vos messages CHOPCHOP : WhatsApp, SMS, et types d'alertes."
         canonical="/settings/notifications"
       />
       <PageHeader title="Notifications" subtitle="Canaux et types d'alertes" onBack={() => navigate(-1)} />

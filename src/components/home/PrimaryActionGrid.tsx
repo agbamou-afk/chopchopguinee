@@ -12,7 +12,7 @@ interface Props {
 
 /**
  * Uniform tile treatment: same card surface, same halo system. All tiles use
- * the canonical WONGO service icon family (raster PNGs) so the grid reads as
+ * the canonical CHOPCHOP service icon family (raster PNGs) so the grid reads as
  * one authored set instead of mixed Lucide/PNG glyphs.
  */
 const ACTIONS: Array<{
@@ -25,10 +25,10 @@ const ACTIONS: Array<{
 }> = [
   {
     id: "topup",
-    label: "WONGO Wallet",
+    label: "ChopWallet",
     subtitle: "Recharger en quelques secondes",
     img: walletIcon,
-    alt: "Recharger WONGO Wallet",
+    alt: "Recharger ChopWallet",
     halo: "bg-primary/12 ring-1 ring-primary/15",
   },
   {

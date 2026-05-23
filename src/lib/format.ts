@@ -1,5 +1,5 @@
 /**
- * WONGO — formatting helpers.
+ * CHOPCHOP — formatting helpers.
  * Money is always rendered with non-breaking spaces and the GNF suffix.
  * Example: formatGNF(2500000) → "2 500 000 GNF"
  */

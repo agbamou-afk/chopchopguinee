@@ -4,7 +4,7 @@
  * This function is intentionally disabled by default. It does NOT process
  * money, NOT credit wallets, NOT trust the payload. It exists so a public
  * URL can be registered later with Orange Money for sandbox testing —
- * gated behind a feature flag until WONGO is contractually live.
+ * gated behind a feature flag until CHOPCHOP is contractually live.
  *
  * Future flow (TODO(live-provider)):
  *   request

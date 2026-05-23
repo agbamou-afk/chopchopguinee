@@ -1,14 +1,14 @@
-# WONGO — Mobile Money Provider Outreach Packet
+# CHOPCHOP — Mobile Money Provider Outreach Packet
 
 > External-facing summary for Orange Money Guinea, MTN Mobile Money, payment aggregators (PSPs), and fintech / legal advisors. Contains **no credentials** and describes **no live integration**.
 
-Contact: WONGO Payments (CHOP GUINEE LTD) — payments@wongo.app
+Contact: ChopPayments (CHOP GUINEE LTD) — payments@wongo.app
 
 ---
 
-## 1. What is WONGO
+## 1. What is CHOPCHOP
 
-WONGO is a district-aware African urban operating platform connecting customers, drivers, couriers, and merchants in one app. It powers:
+CHOPCHOP is a district-aware African urban operating platform connecting customers, drivers, couriers, and merchants in one app. It powers:
 
 - Rides
 - Food delivery (Repas)
@@ -18,41 +18,41 @@ WONGO is a district-aware African urban operating platform connecting customers,
 - A consumer wallet in GNF
 - District-aware local pricing, hubs, and operations
 
-Legal entity: **CHOP GUINEE LTD**. Operating brand: **WONGO**. Initial market: **Republic of Guinea**. Currency: **GNF**.
+Legal entity: **CHOP GUINEE LTD**. Operating brand: **CHOPCHOP**. Initial market: **Republic of Guinea**. Currency: **GNF**.
 
 ---
 
 ## 2. Why Mobile Money Integration
 
-The cash-first reality of Conakry makes mobile money the most accessible rail for daily WONGO usage. WONGO needs a regulated, reliable mobile-money partner to:
+The cash-first reality of Conakry makes mobile money the most accessible rail for daily CHOPCHOP usage. CHOPCHOP needs a regulated, reliable mobile-money partner to:
 
-- Let customers fund their WONGO Wallet from Orange Money / MTN Money.
-- Let merchants collect payments through WONGO without handling cash.
-- Let WONGO disburse courier and driver earnings programmatically.
+- Let customers fund their ChopWallet from Orange Money / MTN Money.
+- Let merchants collect payments through CHOPCHOP without handling cash.
+- Let CHOPCHOP disburse courier and driver earnings programmatically.
 - Provide auditable reconciliation across thousands of small daily transactions.
 
-WONGO is **not** asking to hold customer funds outside the agreed merchant account, and is **not** building remittance, lending, or crypto features.
+CHOPCHOP is **not** asking to hold customer funds outside the agreed merchant account, and is **not** building remittance, lending, or crypto features.
 
 ---
 
-## 3. Payment Flows WONGO Needs
+## 3. Payment Flows CHOPCHOP Needs
 
 | Flow | Description | Direction |
 |------|-------------|-----------|
-| A. Wallet top-up | Customer funds WONGO Wallet from Orange / MTN | Customer → WONGO |
-| B. Merchant collection | Customer pays a restaurant / store via WONGO | Customer → WONGO (held for merchant) |
-| C. Courier payout | WONGO disburses courier earnings | WONGO → Courier MSISDN |
-| D. Merchant settlement | Merchant receives funds after order confirmation | WONGO → Merchant account |
+| A. Wallet top-up | Customer funds ChopWallet from Orange / MTN | Customer → CHOPCHOP |
+| B. Merchant collection | Customer pays a restaurant / store via CHOPCHOP | Customer → CHOPCHOP (held for merchant) |
+| C. Courier payout | CHOPCHOP disburses courier earnings | CHOPCHOP → Courier MSISDN |
+| D. Merchant settlement | Merchant receives funds after order confirmation | CHOPCHOP → Merchant account |
 | E. Refund / reversal | Failed or reversed transactions handled cleanly | Bidirectional |
 | F. Manual / cash fallback | Cash and agent rails remain available during pilot | Offline reconciliation |
 
-All flows are mediated by WONGO's internal `payment_intents` ledger — no flow credits the wallet on request creation.
+All flows are mediated by CHOPCHOP's internal `payment_intents` ledger — no flow credits the wallet on request creation.
 
 ---
 
 ## 4. Security & Reconciliation Statement
 
-WONGO Wallet credits balances **only after** a payment is confirmed by the provider. Every inbound provider callback must pass **all** of these checks before any state change:
+ChopWallet credits balances **only after** a payment is confirmed by the provider. Every inbound provider callback must pass **all** of these checks before any state change:
 
 1. Provider signature verification (HMAC-SHA256 or JWS).
 2. Internal reference (`WNG-YYYY-NNNNNN`) match against an existing intent.
@@ -79,7 +79,7 @@ Wallet crediting only occurs through a server-side, idempotent `confirm_payment_
 
 ## 6. Pilot Proposal
 
-WONGO proposes a controlled pilot before any scale-up:
+CHOPCHOP proposes a controlled pilot before any scale-up:
 
 - **One district** initially (Kaloum or Ratoma).
 - **Limited merchants** (allow-list).
@@ -125,15 +125,15 @@ Goal: prove reliability and reconciliation discipline before broader rollout.
 3. What merchant categories does the platform model fit (aggregator, marketplace, super-app)?
 4. What settlement bank or mobile-money account types are accepted?
 5. What dispute / chargeback workflow applies and what is the SLA?
-6. What technical and commercial support contacts will WONGO have?
+6. What technical and commercial support contacts will CHOPCHOP have?
 7. What AML / transaction-monitoring expectations does the provider have?
 8. Are there per-region or per-district regulatory restrictions to be aware of?
 
 ---
 
-## 9. What WONGO Can Provide Today
+## 9. What CHOPCHOP Can Provide Today
 
-- WONGO business registration (CHOP GUINEE LTD).
+- CHOPCHOP business registration (CHOP GUINEE LTD).
 - Beneficial owner documentation.
 - Technical architecture document and provider adapter contract.
 - Sandbox simulator that exercises the full lifecycle (pending → confirmed / failed / expired / duplicate / amount mismatch).
@@ -165,4 +165,4 @@ These will be stored as Lovable Cloud secrets — never committed, never exposed
 
 ---
 
-_Maintained by WONGO Payments. Pair with the internal `docs/payments/MOBILE_MONEY_PROVIDER_ONBOARDING.md` for full architecture and credential checklist._
+_Maintained by ChopPayments. Pair with the internal `docs/payments/MOBILE_MONEY_PROVIDER_ONBOARDING.md` for full architecture and credential checklist._

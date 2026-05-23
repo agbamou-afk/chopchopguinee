@@ -7,13 +7,13 @@ import type { TemplateEntry } from './registry.ts'
 interface Props { firstName?: string; vehicleType?: string }
 
 const DriverApprovedEmail = ({ firstName, vehicleType = 'moto' }: Props) => (
-  <EmailLayout preview="Votre compte chauffeur WONGO est approuvé">
+  <EmailLayout preview="Votre compte chauffeur CHOPCHOP est approuvé">
     <StatusBadge tone="success">Compte chauffeur activé</StatusBadge>
     <H1>{firstName ? `Bienvenue à bord, ${firstName} 🇬🇳` : 'Bienvenue à bord 🇬🇳'}</H1>
     <P>
       Vos documents ont été vérifiés et approuvés. Votre compte chauffeur
       ({vehicleType}) est désormais actif. Vous pouvez recevoir des courses
-      et gagner avec WONGO.
+      et gagner avec CHOPCHOP.
     </P>
     <CTAButton href={`${BRAND.url}/driver`}>Passer en mode Chauffeur</CTAButton>
     <H2>Bonnes pratiques</H2>
@@ -28,7 +28,7 @@ const DriverApprovedEmail = ({ firstName, vehicleType = 'moto' }: Props) => (
 
 export const template = {
   component: DriverApprovedEmail,
-  subject: 'Votre compte chauffeur WONGO est approuvé',
+  subject: 'Votre compte chauffeur CHOPCHOP est approuvé',
   displayName: 'Chauffeur approuvé',
   previewData: { firstName: 'Ibrahima', vehicleType: 'moto' },
 } satisfies TemplateEntry

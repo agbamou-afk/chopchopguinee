@@ -173,7 +173,7 @@ export function IncomingRequestIsland({
 
               <div className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground px-1">
                 <ShieldCheck className="w-3 h-3 text-success" aria-hidden />
-                Gain crédité automatiquement à votre WONGO Wallet
+                Gain crédité automatiquement à votre ChopWallet
               </div>
 
               <div className="flex gap-2 pt-0.5">

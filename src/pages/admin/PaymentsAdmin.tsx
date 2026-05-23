@@ -189,7 +189,7 @@ export default function PaymentsAdmin() {
   );
 
   return (
-    <ModulePage module="payments" title="Paiements (réconciliation)" subtitle="Centre opérationnel WONGO Wallet" actions={actions}>
+    <ModulePage module="payments" title="Paiements (réconciliation)" subtitle="Centre opérationnel ChopWallet" actions={actions}>
       {/* Internal-only note. Route is admin-gated by ModulePage. */}
       <div className="text-[11px] text-muted-foreground border border-dashed border-border rounded-md px-2 py-1.5">
         Documentation provider : <code>docs/payments/WONGO_PROVIDER_OUTREACH_PACKET.md</code> · <code>docs/payments/MOBILE_MONEY_PROVIDER_ONBOARDING.md</code>
@@ -208,7 +208,7 @@ export default function PaymentsAdmin() {
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
-              placeholder="Réf. WONGO, réf. provider, user, téléphone, montant…"
+              placeholder="Réf. CHOPCHOP, réf. provider, user, téléphone, montant…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-8 h-9"

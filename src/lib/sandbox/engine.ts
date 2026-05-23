@@ -1,5 +1,5 @@
 /**
- * WONGO Sandbox Engine — deterministic in-memory operational simulator.
+ * CHOPCHOP Sandbox Engine — deterministic in-memory operational simulator.
  *
  * Hard rules:
  *   - Pure client-side. No Supabase writes. No realtime channels.

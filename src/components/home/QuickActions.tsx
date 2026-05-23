@@ -29,7 +29,7 @@ const actions = [
   { id: "food",   img: repasIcon,   label: "Repas",        alt: "Commander un repas à domicile" },
   { id: "market", img: marcheIcon,  label: "Marché",       alt: "Acheter au marché en ligne" },
   { id: "scan",   img: scannerIcon, label: "Scanner",      alt: "Scanner un QR code marchand" },
-  { id: "wallet", img: walletIcon,  label: "WONGO Wallet", alt: "Ouvrir WONGO Wallet" },
+  { id: "wallet", img: walletIcon,  label: "ChopWallet", alt: "Ouvrir ChopWallet" },
 ];
 
 const container = {

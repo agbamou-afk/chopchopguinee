@@ -30,7 +30,7 @@ interface Props {
 }
 
 /**
- * Lightweight buyer-facing sheet to ask WONGO for delivery on a Marché
+ * Lightweight buyer-facing sheet to ask CHOPCHOP for delivery on a Marché
  * listing. Stays opt-in and trust-based — no fake ETA, no fake fee.
  */
 export function RequestMarcheDeliverySheet({
@@ -66,7 +66,7 @@ export function RequestMarcheDeliverySheet({
         notes: note,
       });
       toast({
-        title: "Livraison WONGO demandée",
+        title: "Livraison CHOPCHOP demandée",
         description: "Un coursier va prendre en charge votre demande.",
       });
       onRequested?.(m.id);
@@ -87,7 +87,7 @@ export function RequestMarcheDeliverySheet({
         <SheetHeader className="text-left">
           <SheetTitle className="flex items-center gap-2">
             <Truck className="w-5 h-5 text-primary" />
-            Demander une livraison WONGO
+            Demander une livraison CHOPCHOP
           </SheetTitle>
           <SheetDescription>
             Optionnel — votre vendeur peut aussi vous remettre l’article en main propre.
@@ -124,7 +124,7 @@ export function RequestMarcheDeliverySheet({
             />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            WONGO cherche un coursier disponible. Aucun engagement de prix ni d’horaire
+            CHOPCHOP cherche un coursier disponible. Aucun engagement de prix ni d’horaire
             tant que le vendeur n’a pas confirmé.
           </p>
         </div>

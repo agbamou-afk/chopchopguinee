@@ -15,7 +15,7 @@ export function DriverEarningsView() {
   const e = useDriverEarnings();
   const { available: walletBalance } = useWallet("driver");
   // Driver-perspective activity: completed rides (with earning amounts),
-  // WONGO Wallet credits, payouts, refunds. Replaces the legacy "Courses
+  // ChopWallet credits, payouts, refunds. Replaces the legacy "Courses
   // récentes" list with the unified ecosystem timeline.
   const driverFeed = useActivityFeed("driver");
   useEffect(() => {
@@ -36,7 +36,7 @@ export function DriverEarningsView() {
   const handleSettleInfo = () => {
     toast.info(
       e.cashDebtGnf > 0
-        ? `Déposez ${formatMoney(e.cashDebtGnf)} chez un agent WONGO. Le règlement sera enregistré sous 24 h.`
+        ? `Déposez ${formatMoney(e.cashDebtGnf)} chez un agent CHOPCHOP. Le règlement sera enregistré sous 24 h.`
         : "Aucune commission cash à régler.",
     );
   };

@@ -213,7 +213,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
   const sellerPhoneDigits = seller?.phone ? seller.phone.replace(/[^\d]/g, "") : "";
   const whatsappHref = sellerPhoneDigits
     ? `https://wa.me/${sellerPhoneDigits}?text=${encodeURIComponent(
-        `Bonjour, je suis intéressé par votre annonce WONGO : ${listing.title}`,
+        `Bonjour, je suis intéressé par votre annonce CHOPCHOP : ${listing.title}`,
       )}`
     : null;
 
@@ -281,7 +281,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
             )}
             {listing.delivery_available && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
-                <Truck className="w-3 h-3" /> Livraison WONGO
+                <Truck className="w-3 h-3" /> Livraison CHOPCHOP
               </span>
             )}
             <span className="px-2 py-0.5 rounded-full bg-muted text-foreground text-xs">
@@ -342,7 +342,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
               <BadgeCheck className="w-6 h-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold truncate">{seller?.full_name ?? "Vendeur WONGO"}</p>
+              <p className="font-semibold truncate">{seller?.full_name ?? "Vendeur CHOPCHOP"}</p>
               <div className="mt-0.5">
                 <SellerBadge kind={listing.kind} />
               </div>

@@ -16,15 +16,15 @@ interface Props {
 const PaymentReceiptEmail = ({
   amountGnf,
   reference,
-  merchantName = 'Marchand WONGO',
-  paymentMethod = 'Portefeuille WONGO',
+  merchantName = 'Marchand CHOPCHOP',
+  paymentMethod = 'Portefeuille CHOPCHOP',
   occurredAt = new Date().toISOString(),
   firstName,
 }: Props) => (
   <EmailLayout preview={`Reçu de paiement — ${formatGNF(amountGnf)}`}>
     <StatusBadge tone="success">Paiement réussi</StatusBadge>
     <H1>{firstName ? `Merci, ${firstName}` : 'Paiement confirmé'}</H1>
-    <P>Voici votre reçu officiel WONGO. Conservez-le pour vos archives.</P>
+    <P>Voici votre reçu officiel CHOPCHOP. Conservez-le pour vos archives.</P>
     <AmountDisplay amount={amountGnf} label="Montant payé" />
     <TransactionCard
       title="Reçu"
@@ -42,13 +42,13 @@ const PaymentReceiptEmail = ({
 
 export const template = {
   component: PaymentReceiptEmail,
-  subject: (d: Record<string, any>) => `Reçu WONGO — ${formatGNF(d.amountGnf)}`,
+  subject: (d: Record<string, any>) => `Reçu CHOPCHOP — ${formatGNF(d.amountGnf)}`,
   displayName: 'Reçu de paiement',
   previewData: {
     amountGnf: 45000,
     reference: 'CC-PY-XY99ZZ22AB',
     merchantName: 'Boutique Sankarah',
-    paymentMethod: 'Portefeuille WONGO',
+    paymentMethod: 'Portefeuille CHOPCHOP',
     occurredAt: new Date().toISOString(),
     firstName: 'Mariama',
   },

@@ -422,7 +422,7 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
               </div>
               <label className="flex items-center justify-between p-4 rounded-2xl bg-card shadow-card">
                 <div>
-                  <p className="font-medium">Livraison WONGO disponible</p>
+                  <p className="font-medium">Livraison CHOPCHOP disponible</p>
                   <p className="text-xs text-muted-foreground">Un livreur peut récupérer et livrer l'article.</p>
                 </div>
                 <Switch checked={delivery} onCheckedChange={setDelivery} />

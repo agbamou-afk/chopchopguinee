@@ -34,7 +34,7 @@ const FEED = [
 
 export default function AdminDashboard() {
   return (
-    <ModulePage module="dashboard" title="Tableau de bord" subtitle="Vue commande de l'écosystème WONGO">
+    <ModulePage module="dashboard" title="Tableau de bord" subtitle="Vue commande de l'écosystème CHOPCHOP">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {KPIS.map((k) => {
           const negative = k.delta.startsWith("−");

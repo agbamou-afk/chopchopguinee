@@ -133,7 +133,7 @@ export function ChatThread({
       await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: selfId,
-        body: "Livraison WONGO demandée. En attente d’un coursier.",
+        body: "Livraison CHOPCHOP demandée. En attente d’un coursier.",
         kind: "text",
       });
     } catch {
@@ -182,7 +182,7 @@ export function ChatThread({
           {activeMission ? (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
               <Truck className="w-3 h-3" />
-              Livraison WONGO · {MISSION_STATE_LABEL[activeMission.state]}
+              Livraison CHOPCHOP · {MISSION_STATE_LABEL[activeMission.state]}
             </span>
           ) : (
             <Button
@@ -192,7 +192,7 @@ export function ChatThread({
               onClick={() => setDeliveryOpen(true)}
             >
               <Truck className="w-3.5 h-3.5 mr-1" />
-              Demander livraison WONGO
+              Demander livraison CHOPCHOP
             </Button>
           )}
         </div>

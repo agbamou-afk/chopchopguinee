@@ -53,7 +53,7 @@ export function MenuButton({
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setOpen(false);
-    toast({ title: "Déconnecté", description: "À bientôt sur WONGO" });
+    toast({ title: "Déconnecté", description: "À bientôt sur CHOPCHOP" });
   };
 
   const items = [
@@ -81,16 +81,16 @@ export function MenuButton({
       <SheetContent side="left" className="w-80 drawer-warm overflow-hidden">
         <div className="kente-stripe pointer-events-none absolute inset-x-0 top-0 h-[3px] opacity-80" aria-hidden />
         <SheetHeader>
-          <SheetTitle className="sr-only">Menu WONGO</SheetTitle>
+          <SheetTitle className="sr-only">Menu CHOPCHOP</SheetTitle>
           <div className="flex flex-col items-center gap-2 pt-2">
             <BrandLogo
               loading="eager"
               decoding="async"
-              alt="WONGO"
+              alt="CHOPCHOP"
               className="h-12 w-auto object-contain"
             />
             <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
-              W'ONKHAI. LET'S GO.
+              CHOPCHOP. LET'''S GO.
             </p>
           </div>
         </SheetHeader>

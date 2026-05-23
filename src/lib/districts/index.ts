@@ -1,5 +1,5 @@
 /**
- * WONGO — district operations registry.
+ * CHOPCHOP — district operations registry.
  *
  * Single source of truth for district metadata: human name, slug, color
  * token, optional center coordinates, optional operating status. Kept
@@ -19,7 +19,7 @@ export interface DistrictMeta {
   name: ChopDistrict;
   slug: string;
   /** Tailwind color token suffix (e.g. "emerald", "saffron"). All map to
-   *  existing WONGO brand HSL tokens via the `district-*` utility classes
+   *  existing CHOPCHOP brand HSL tokens via the `district-*` utility classes
    *  defined in index.css. */
   tone:
     | "emerald"

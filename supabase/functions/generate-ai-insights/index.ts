@@ -1,4 +1,4 @@
-// WONGO — Generate AI insights from analytics_summary().
+// CHOPCHOP — Generate AI insights from analytics_summary().
 // Admin-only. Calls the Lovable AI Gateway, stores results in `ai_insights`.
 // AI is governance-bounded: it summarizes and recommends, it never decides.
 
@@ -7,7 +7,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
 const MODEL = 'google/gemini-3-flash-preview'
 
-const SYSTEM = `Tu es l'analyste IA de WONGO, super-app guinéenne (mobilité, repas, marché, portefeuille).
+const SYSTEM = `Tu es l'analyste IA de CHOPCHOP, super-app guinéenne (mobilité, repas, marché, portefeuille).
 À partir des métriques agrégées fournies, génère 4 à 8 INSIGHTS concis en français clair, classés par utilité opérationnelle.
 
 Règles strictes :
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
         {
           role: 'user',
           content:
-            `Métriques agrégées WONGO (${days} derniers jours) :\n` +
+            `Métriques agrégées CHOPCHOP (${days} derniers jours) :\n` +
             JSON.stringify(summary, null, 2),
         },
       ],

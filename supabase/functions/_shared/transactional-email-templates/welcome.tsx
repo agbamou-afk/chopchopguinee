@@ -7,14 +7,14 @@ import type { TemplateEntry } from './registry.ts'
 interface Props { firstName?: string }
 
 const WelcomeEmail = ({ firstName }: Props) => (
-  <EmailLayout preview="Bienvenue dans WONGO">
-    <H1>{firstName ? `Bienvenue, ${firstName} 🇬🇳` : 'Bienvenue sur WONGO 🇬🇳'}</H1>
+  <EmailLayout preview="Bienvenue dans CHOPCHOP">
+    <H1>{firstName ? `Bienvenue, ${firstName} 🇬🇳` : 'Bienvenue sur CHOPCHOP 🇬🇳'}</H1>
     <P>
       Votre compte est actif. Vous pouvez désormais commander une moto ou un
       toktok, recharger votre portefeuille auprès d'un agent, payer chez les
       marchands, et explorer le marché local.
     </P>
-    <CTAButton href={BRAND.url}>Ouvrir WONGO</CTAButton>
+    <CTAButton href={BRAND.url}>Ouvrir CHOPCHOP</CTAButton>
     <H2>Prochaines étapes</H2>
     <P muted>
       • Configurez votre code PIN portefeuille pour sécuriser vos paiements.<br />
@@ -27,7 +27,7 @@ const WelcomeEmail = ({ firstName }: Props) => (
 
 export const template = {
   component: WelcomeEmail,
-  subject: 'Bienvenue sur WONGO',
+  subject: 'Bienvenue sur CHOPCHOP',
   displayName: 'Bienvenue',
   previewData: { firstName: 'Mariama' },
 } satisfies TemplateEntry

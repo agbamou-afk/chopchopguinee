@@ -10,7 +10,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 /**
- * WONGO — Langage de Pins Unifié
+ * CHOPCHOP — Langage de Pins Unifié
  * Centralized token + glyph mapping for every pin rendered across the app.
  *
  * Universal color semantics:
