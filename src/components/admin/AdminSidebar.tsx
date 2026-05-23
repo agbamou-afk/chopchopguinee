@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Activity, Users, Bike, Store, Wallet, Coins, Tag,
   ClipboardList, UtensilsCrossed, ShoppingBag, LifeBuoy, ShieldAlert,
   MessageSquare, Megaphone, BarChart3, MapPin, ToggleLeft, Settings,
-  UserCog, ScrollText, Sparkles, Scale,
+  UserCog, ScrollText, Sparkles, Scale, Radar,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -20,6 +20,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
     items: [
       { title: "Tableau de bord", url: "/admin", icon: LayoutDashboard, module: "dashboard" },
       { title: "Live Operations", url: "/admin/live", icon: Activity, module: "live_ops" },
+      { title: "Pilot Command", url: "/admin/pilot-command", icon: Radar, module: "dashboard" },
     ],
   },
   {
