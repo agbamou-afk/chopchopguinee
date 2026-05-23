@@ -1,18 +1,18 @@
-# WONGO — Mobile Money Provider Onboarding Pack
+# CHOPCHOP — Mobile Money Provider Onboarding Pack
 
-> Status: **Readiness only.** No live provider credentials, no real money movement, no public webhook endpoint is wired in this sprint. This document is the package WONGO will share with Orange Money Guinea, MTN Mobile Money, and future payment aggregators (PSPs) to begin technical and commercial onboarding.
+> Status: **Readiness only.** No live provider credentials, no real money movement, no public webhook endpoint is wired in this sprint. This document is the package CHOPCHOP will share with Orange Money Guinea, MTN Mobile Money, and future payment aggregators (PSPs) to begin technical and commercial onboarding.
 
 Audience: provider technical teams, fintech partners, legal/compliance advisors, future investors.
 
 ---
 
-## 1. WONGO Payments Architecture (today)
+## 1. ChopPayments Architecture (today)
 
-WONGO Wallet runs on an **internal ledger + provider adapter** model. No provider is privileged in the codebase — Orange Money, MTN, cash, agent, and manual rails all implement the same contract.
+ChopWallet runs on an **internal ledger + provider adapter** model. No provider is privileged in the codebase — Orange Money, MTN, cash, agent, and manual rails all implement the same contract.
 
 Core building blocks (already shipped, locked as `orange-money-provider-readiness-stable`):
 
-- `payment_intents` — every money movement starts as an intent with a WONGO internal reference (`WNG-YYYY-NNNNNN`).
+- `payment_intents` — every money movement starts as an intent with a CHOPCHOP internal reference (`WNG-YYYY-NNNNNN`).
 - `payment_reconciliation_events` — append-only audit log per intent.
 - `payment_state` enum — `pending | processing | confirmed | failed | cancelled | refunded | reversed | expired`.
 - `payment_provider` enum — `orange_money | mtn_money | cash | manual | internal | agent`.
@@ -46,9 +46,9 @@ Adding a new provider = registering a new adapter. No wallet or UI code changes.
 
 ---
 
-## 2. Information WONGO Needs From The Provider
+## 2. Information CHOPCHOP Needs From The Provider
 
-| # | Item | Why WONGO needs it |
+| # | Item | Why CHOPCHOP needs it |
 |---|------|-------------------|
 | 1 | Merchant account requirements | Eligibility, onboarding documents |
 | 2 | API documentation (PDF + online) | Implementation reference |
@@ -160,9 +160,9 @@ Hard constraints:
 
 | Model | Flow | Status |
 |-------|------|--------|
-| **A. Wallet top-up** | customer → Orange Money → WONGO wallet credit on `confirmed` | Scaffolded, sandbox only |
-| **B. Merchant payment** | customer → WONGO → merchant inflow ledger → settled later | Internal ledger ready, provider rail pending |
-| **C. Courier payout** | WONGO → payout intent → provider payout → confirm | Intent shape ready, payout RPC pending |
+| **A. Wallet top-up** | customer → Orange Money → CHOPCHOP wallet credit on `confirmed` | Scaffolded, sandbox only |
+| **B. Merchant payment** | customer → CHOPCHOP → merchant inflow ledger → settled later | Internal ledger ready, provider rail pending |
+| **C. Courier payout** | CHOPCHOP → payout intent → provider payout → confirm | Intent shape ready, payout RPC pending |
 | **D. Manual / cash fallback** | admin reconciles offline movements | Available via `manual` provider |
 
 Settlement timing, fees, and FX (none today — GNF only) will be captured per provider when contracts are signed.
@@ -171,7 +171,7 @@ Settlement timing, fees, and FX (none today — GNF only) will be captured per p
 
 ## 7. Reconciliation Model
 
-Daily job (future) compares WONGO `payment_intents` against the provider's settlement report.
+Daily job (future) compares CHOPCHOP `payment_intents` against the provider's settlement report.
 
 Buckets to surface:
 
@@ -189,7 +189,7 @@ Output: CSV export per day, retained for audit. Admin UI surface comes later.
 
 ## 8. Payment Failure Playbook
 
-| Scenario | WONGO behavior |
+| Scenario | CHOPCHOP behavior |
 |----------|----------------|
 | Provider timeout | Intent stays `pending`; auto-expire after TTL; user sees calm "en attente" copy |
 | Wrong amount on callback | Reject `amount_mismatch`; intent untouched; flag for admin |
@@ -197,7 +197,7 @@ Output: CSV export per day, retained for audit. Admin UI surface comes later.
 | Confirmed late | Apply normally if not terminal; if expired, route to admin review |
 | Failed after pending | Transition to `failed`; user notified once (deduped) |
 | Reversed after confirmed | New intent of purpose `refund`; wallet debit via reverse RPC |
-| User claims paid, no callback | Admin lookup by phone + WONGO ref; reconcile against provider report |
+| User claims paid, no callback | Admin lookup by phone + CHOPCHOP ref; reconcile against provider report |
 | Provider outage | Disable provider in registry (`liveEnabled: false`); fall back to cash / agent |
 | Webhook delayed | Same validation path; terminal-state protection handles late arrivals |
 | Webhook replayed | Dedupe on `(provider, provider_reference)` |
@@ -234,7 +234,7 @@ Each case must be re-run against provider sandbox before go-live.
 
 Already in `/admin/payments`:
 
-- List of intents with WONGO ref, provider, purpose, amount, state, timestamp.
+- List of intents with CHOPCHOP ref, provider, purpose, amount, state, timestamp.
 - Masked MSISDN for Orange Money.
 - Super Admin: manual confirm / fail, plus Orange sandbox simulations (confirm, fail, expire, duplicate, wrong amount).
 
@@ -255,10 +255,10 @@ No additional admin UI is built in this sprint — only documented.
 
 Operational items likely required:
 
-- WONGO business registration (CHOP GUINEE LTD) shared with provider.
+- CHOPCHOP business registration (CHOP GUINEE LTD) shared with provider.
 - Provider merchant onboarding form + supporting documents.
 - Beneficial owner identification.
-- Settlement bank or mobile money account in WONGO's name.
+- Settlement bank or mobile money account in CHOPCHOP's name.
 - Transaction monitoring (volumes, velocity, anomaly detection).
 - Customer phone verification at signup.
 - Merchant verification before payouts.
@@ -285,7 +285,7 @@ First live pilot must respect:
 
 ## 13. Questions For Orange Money / MTN / Aggregator
 
-1. Do you support wallet top-ups into a platform ledger (WONGO as merchant of record)?
+1. Do you support wallet top-ups into a platform ledger (CHOPCHOP as merchant of record)?
 2. Do you support merchant collections on behalf of sub-merchants?
 3. Do you support bulk payouts (courier disbursements)?
 4. Do you provide signed webhooks? Which algorithm (HMAC-SHA256, JWS, mTLS)?
@@ -332,4 +332,4 @@ First live pilot must respect:
 
 ---
 
-_Maintained by WONGO Payments. Update alongside any change to `src/lib/payments/**` or new provider adapter._
+_Maintained by ChopPayments. Update alongside any change to `src/lib/payments/**` or new provider adapter._

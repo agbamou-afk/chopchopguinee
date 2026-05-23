@@ -1,17 +1,17 @@
-# WONGO — Pilot Readiness Plan
+# CHOPCHOP — Pilot Readiness Plan
 
 **Owner:** CHOP GUINEE LTD
 **Status:** Draft v1 — pre-pilot operational roadmap
-**Scope:** Move WONGO from coherent prototype to a controlled one-district pilot with real users, merchants, couriers, payments, and support.
+**Scope:** Move CHOPCHOP from coherent prototype to a controlled one-district pilot with real users, merchants, couriers, payments, and support.
 **Non-goals:** New features, live mobile-money money movement, dispatch rule changes, wallet rule changes, public marketing, national rollout.
 
 ---
 
 ## 1. Executive Summary
 
-WONGO is the CHOP GUINEE LTD super-app for Conakry: ride-hailing (Moto, TokTok), Repas (restaurant delivery), Marché (boutique browsing + delivery), Envoyer (parcels), and the WONGO Wallet (GNF). The platform foundation — districts, missions, payment intents, reconciliation admin, sandbox engine — is in place. **Live mobile-money is not yet connected.**
+CHOPCHOP is the CHOP GUINEE LTD super-app for Conakry: ride-hailing (Moto, TokTok), Repas (restaurant delivery), Marché (boutique browsing + delivery), Envoyer (parcels), and the ChopWallet (GNF). The platform foundation — districts, missions, payment intents, reconciliation admin, sandbox engine — is in place. **Live mobile-money is not yet connected.**
 
-The pilot's purpose is **not** to prove the product works in code; it is to prove WONGO can be **operated** in one Conakry district with real couriers, real merchants, real customers, and real money — without losing user trust, mishandling payments, or overloading support.
+The pilot's purpose is **not** to prove the product works in code; it is to prove CHOPCHOP can be **operated** in one Conakry district with real couriers, real merchants, real customers, and real money — without losing user trust, mishandling payments, or overloading support.
 
 This plan defines: which zone, which services, how many couriers/merchants/users, what readiness gates must close first, what metrics decide go/no-go for the next phase, and what risks must be mitigated.
 
@@ -61,7 +61,7 @@ District metadata, chips, and hub model already exist in `src/lib/districts/` an
 | Repas (restaurant delivery) | ✅ | Limited to onboarded restaurants |
 | Marché (browsing + delivery request) | ✅ | Manual courier dispatch acceptable |
 | Envoyer (package delivery) | ⚠️ Limited | Same-district only, value-capped |
-| WONGO Wallet (internal ledger) | ✅ | Test-mode / manual top-up / OM via reconciliation admin |
+| ChopWallet (internal ledger) | ✅ | Test-mode / manual top-up / OM via reconciliation admin |
 | Cash payment | ✅ | Fallback for every flow |
 | Live mobile-money processing | ❌ | Not until provider approval |
 
@@ -103,7 +103,7 @@ District metadata, chips, and hub model already exist in `src/lib/districts/` an
 - Realistic prep time per item / category
 - Pickup instructions for courier
 - Declared delivery availability windows
-- CHOP/WONGO Pay acceptance ready (or cash fallback)
+- CHOP/ChopPay acceptance ready (or cash fallback)
 
 ### Marché (boutique)
 - Store/boutique profile
@@ -128,16 +128,16 @@ District metadata, chips, and hub model already exist in `src/lib/districts/` an
 | Rule | State |
 |---|---|
 | Cash supported | ✅ |
-| WONGO Wallet internal ledger active | ✅ |
+| ChopWallet internal ledger active | ✅ |
 | Orange Money / MTN provider conversations | 🟡 In progress (see `WONGO_PROVIDER_OUTREACH_PACKET.md`) |
 | Live mobile-money processing | ❌ Locked until provider approval |
 | Admin-confirmed manual top-ups during pilot | ✅ via `/admin/payments` + `/admin/wallet-reconciliation` |
-| Per-intent WONGO reference required | ✅ Enforced by `payment_intents` |
+| Per-intent CHOPCHOP reference required | ✅ Enforced by `payment_intents` |
 | Wallet credit only via `confirm_payment_intent` RPC | ✅ Enforced |
 | Daily reconciliation review | ✅ Required during pilot |
 | Transaction caps active | ✅ Per-user/day, per-merchant/day |
 
-Pilot payment discipline: **no wallet credit without a confirmed intent**, no provider callback is trusted without validation, every payment has a WONGO ref, admins clear pending/failed/review-needed intents at end of each pilot day.
+Pilot payment discipline: **no wallet credit without a confirmed intent**, no provider callback is trusted without validation, every payment has a CHOPCHOP ref, admins clear pending/failed/review-needed intents at end of each pilot day.
 
 ---
 
@@ -179,7 +179,7 @@ Pilot defines:
 - Vendor partner candidates
 - Support point candidate (where couriers can rest / report issues in person)
 
-**No physical WONGO HQ in pilot.** Identify local partner hubs only: café, fuel station, boutique, pharmacy, restaurant, kiosk. Track via `district_hubs.partner_type`.
+**No physical CHOPCHOP HQ in pilot.** Identify local partner hubs only: café, fuel station, boutique, pharmacy, restaurant, kiosk. Track via `district_hubs.partner_type`.
 
 ---
 
@@ -293,7 +293,7 @@ Keep admin tools lightweight. **Do not build a national ops cockpit before the p
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Payment distrust (customers fear losing money) | High | High | Cash fallback always; visible WONGO ref; daily reconciliation; clear receipts |
+| Payment distrust (customers fear losing money) | High | High | Cash fallback always; visible CHOPCHOP ref; daily reconciliation; clear receipts |
 | Courier unreliability (no-shows, late) | High | High | Vetted onboarding; acceptance-rate tracking; backup courier pool; rest hub |
 | Merchant delays (long prep, out-of-stock) | High | Medium | Prep-time training; availability toggle; courier wait protocol |
 | Support overload | Medium | High | Hours-bounded pilot; capped users; WhatsApp fallback; issue catalog |
@@ -382,4 +382,4 @@ Keep admin tools lightweight. **Do not build a national ops cockpit before the p
 
 ---
 
-_End of WONGO Pilot Readiness Plan v1._
+_End of CHOPCHOP Pilot Readiness Plan v1._

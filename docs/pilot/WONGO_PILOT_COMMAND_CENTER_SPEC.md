@@ -1,4 +1,4 @@
-# WONGO — Pilot Command Center / Ops Dashboard Spec
+# CHOPCHOP — Pilot Command Center / Ops Dashboard Spec
 
 **Owner:** CHOP GUINEE LTD
 **Status:** Draft v1 — specification only (no implementation yet)
@@ -12,7 +12,7 @@
 
 ## 1. Purpose
 
-The Pilot Command Center is the **operational nerve center** for the WONGO district pilot. It exists so the on-duty operator can answer, in seconds:
+The Pilot Command Center is the **operational nerve center** for the CHOPCHOP district pilot. It exists so the on-duty operator can answer, in seconds:
 
 - What is happening right now?
 - What needs attention?
@@ -104,7 +104,7 @@ Summary of the existing `/admin/payments` surface — **link, do not duplicate**
 - Confirmed today
 - Payments pending too long (age threshold, e.g. > 10 min)
 
-**Row fields:** WONGO reference (`internal_reference`), provider, amount (GNF), status chip, user, created time, review signal.
+**Row fields:** CHOPCHOP reference (`internal_reference`), provider, amount (GNF), status chip, user, created time, review signal.
 
 **Row actions:** open payment detail, jump to `/admin/payments` (filtered), `mark reviewed` (later, when supported).
 
@@ -275,4 +275,4 @@ Reuse `AdminGuard` + `useAdminAuth` + `src/lib/admin/permissions.ts`.
 
 ---
 
-_End of WONGO Pilot Command Center Spec v1._
+_End of CHOPCHOP Pilot Command Center Spec v1._

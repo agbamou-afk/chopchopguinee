@@ -1,4 +1,4 @@
-# WONGO — Pilot Execution Checklist
+# CHOPCHOP — Pilot Execution Checklist
 
 **Owner:** CHOP GUINEE LTD
 **Status:** Operator-facing execution checklist v1
@@ -21,7 +21,7 @@
   Dependency: clean main branch
   Notes: must be repeated before every phase transition.
 
-- [ ] WONGO rebrand cleanup verified (no stale "Choper", legacy names, or placeholder copy in user-visible surfaces)
+- [ ] CHOPCHOP rebrand cleanup verified (no stale "Choper", legacy names, or placeholder copy in user-visible surfaces)
   Owner: Tech Lead
   Timing: T-21 days
   Dependency: build green
@@ -133,7 +133,7 @@
   Owner: Payment Lead
   Timing: T-13 days
   Dependency: payment intents flowing
-  Notes: GNF formatting, masked phone, WONGO ref visible.
+  Notes: GNF formatting, masked phone, CHOPCHOP ref visible.
 
 ### Admin / ops tools
 
@@ -593,4 +593,4 @@ Operator playbook for the most common live issues.
 
 ---
 
-_End of WONGO Pilot Execution Checklist v1._
+_End of CHOPCHOP Pilot Execution Checklist v1._
