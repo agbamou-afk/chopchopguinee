@@ -1,30 +1,33 @@
 /**
- * WONGO — central brand source of truth.
+ * CHOPCHOP — central brand source of truth.
  * All user-facing product names, taglines, and palette anchors live here.
  * Imported across UI surfaces so a future rebrand is a single-file change.
  *
- * WONGO comes from W'ONKHAI ("Let's go"), blended with GO.
+ * CHOPCHOP is the consumer-facing brand. WONGO may remain reserved as a
+ * future internal/corporate/infrastructure concept; do not surface it in UI.
  */
 
-import wordmark from "@/assets/brand/wongo-wordmark.png";
-import icon from "@/assets/brand/wongo-icon.png";
+// Asset file names kept stable to avoid breaking imports; the displayed
+// artwork is the CHOPCHOP wordmark/icon, fed through BrandLogo for theming.
+import wordmark from "@/assets/logo.png";
+import icon from "@/assets/logo.png";
 
 export const BRAND = {
-  appName: "WONGO",
-  legalName: "WONGO GUINEE LTD",
-  walletName: "WONGO Wallet",
-  payName: "WONGO Pay",
-  marketplaceName: "WONGO Marché",
-  foodName: "WONGO Repas",
-  deliveryName: "WONGO delivery",
-  missionName: "WONGO mission",
-  brandLine: "W'ONKHAI. LET'S GO.",
+  appName: "CHOPCHOP",
+  legalName: "CHOPCHOP GUINEE LTD",
+  walletName: "ChopWallet",
+  payName: "ChopPay",
+  marketplaceName: "Chop Marché",
+  foodName: "Chop Repas",
+  deliveryName: "Chop Courier",
+  missionName: "Chop mission",
+  brandLine: "CHOPCHOP. LET'S GO.",
   tagline: "One platform. Every move.",
   descriptor: "Urban movement • commerce • logistics • payments",
   domain: "wongo.app",
-  socialHandle: "@WongoApp",
-  securedBy: "Secured by WONGO Pay",
-  trackedBy: "Mission suivie par WONGO",
+  socialHandle: "@ChopChopApp",
+  securedBy: "Secured by ChopPay",
+  trackedBy: "Mission suivie par CHOPCHOP",
   assets: {
     wordmark,
     icon,
