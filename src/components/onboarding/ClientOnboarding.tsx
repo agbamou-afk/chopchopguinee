@@ -1,104 +1,117 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import logo from "@/assets/logo.png";
+import sceneWelcome from "@/assets/onboarding/scene-welcome.jpg";
 import sceneMoto from "@/assets/onboarding/scene-moto.png";
 import sceneMarche from "@/assets/onboarding/scene-marche.png";
 import sceneRepas from "@/assets/onboarding/scene-repas.png";
 import sceneWallet from "@/assets/onboarding/scene-wallet.png";
-import { useLowDataMode } from "@/hooks/useLowDataMode";
+import motoIcon from "@/assets/icons/moto.png";
+import toktokIcon from "@/assets/icons/toktok.png";
+import repasIcon from "@/assets/icons/repas.png";
+import marcheIcon from "@/assets/icons/marche.png";
+import walletIcon from "@/assets/icons/wallet.png";
+import scannerIcon from "@/assets/icons/scanner.png";
+import envoyerIcon from "@/assets/icons/envoyer.png";
+import choppayIcon from "@/assets/icons/choppay.png";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
-import { OnboardingShell } from "./OnboardingShell";
+import { OnboardingStorybook, type StorybookSlide } from "./OnboardingStorybook";
 
 interface Props {
   onDone: () => void;
 }
 
-type SceneKey = "ride" | "marche" | "repas" | "wallet" | "final";
+/**
+ * Ecosystem icon cluster shown over the welcome scene. Uses ONLY the native
+ * CHOPCHOP service icon family (raster PNGs from src/assets/icons), so it
+ * matches the in-app PrimaryActionGrid / QuickActions language.
+ */
+const ECOSYSTEM_ICONS = [
+  { src: motoIcon,    label: "Moto" },
+  { src: toktokIcon,  label: "TokTok" },
+  { src: repasIcon,   label: "Repas" },
+  { src: marcheIcon,  label: "Marché" },
+  { src: walletIcon,  label: "ChopWallet" },
+  { src: scannerIcon, label: "Scanner" },
+  { src: envoyerIcon, label: "Envoyer" },
+  { src: choppayIcon, label: "ChopPay" },
+] as const;
 
-const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
-  { key: "ride", title: "Course", caption: "Commandez une moto en quelques secondes." },
-  { key: "marche", title: "Marché", caption: "Achetez au Marché et faites livrer." },
-  { key: "repas", title: "Repas", caption: "Commandez vos repas préférés." },
-  { key: "wallet", title: "ChopWallet", caption: "Rechargez votre ChopWallet et payez simplement avec ChopPay." },
-  { key: "final", title: "Bienvenue", caption: "One platform. Every move." },
-];
-
-function EditorialScene({ src, alt, animated }: { src: string; alt: string; animated: boolean }) {
+function EcosystemCluster() {
+  // 4×2 grid of floating native CHOPCHOP icons, anchored upper-center so it
+  // never collides with the title block or floating controls below.
   return (
-    <div className="relative w-full h-full rounded-3xl overflow-hidden card-warm">
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam z-10" aria-hidden />
-      <motion.img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        width={1024}
-        height={768}
-        className="absolute inset-0 w-full h-full object-cover"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: animated ? 0.45 : 0, ease: [0.22, 1, 0.36, 1] }}
-      />
-      <div
-        className="pointer-events-none absolute inset-0"
-        aria-hidden
-        style={{
-          background:
-            "linear-gradient(180deg, transparent 55%, hsl(var(--background) / 0.55) 100%)",
-        }}
-      />
-    </div>
-  );
-}
-
-function RideScene({ animated }: { animated: boolean }) {
-  return <EditorialScene src={sceneMoto} alt="Course en moto à Conakry" animated={animated} />;
-}
-function MarcheScene({ animated }: { animated: boolean }) {
-  return <EditorialScene src={sceneMarche} alt="Marché de Conakry" animated={animated} />;
-}
-function RepasScene({ animated }: { animated: boolean }) {
-  return <EditorialScene src={sceneRepas} alt="Repas livré" animated={animated} />;
-}
-function WalletScene({ animated }: { animated: boolean }) {
-  return <EditorialScene src={sceneWallet} alt="ChopWallet et ChopPay" animated={animated} />;
-}
-
-function FinalScene() {
-  return (
-    <div className="relative w-full h-full rounded-3xl overflow-hidden gradient-wallet text-primary-foreground border border-primary/30 flex flex-col items-center justify-center text-center px-6 ring-glow-primary">
-      <div className="pointer-events-none absolute -top-12 -right-10 w-44 h-44 rounded-full bg-secondary/30 blur-3xl" aria-hidden />
-      <div className="pointer-events-none absolute -bottom-12 -left-10 w-40 h-40 rounded-full bg-white/10 blur-3xl" aria-hidden />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] kente-stripe" aria-hidden />
-      <motion.img
-        initial={{ opacity: 0, y: 6 }}
+    <div className="absolute inset-x-0 top-[max(4.5rem,env(safe-area-inset-top))] flex justify-center px-6">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        src={logo}
-        alt="CHOPCHOP"
-        className="h-10 w-auto object-contain mb-3 brightness-0 invert"
-      />
-      <p className="text-lg font-extrabold tracking-tight">CHOPCHOP</p>
-      <p className="text-sm opacity-90 mt-1">One platform. Every move.</p>
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="grid grid-cols-4 gap-2.5 max-w-xs"
+      >
+        {ECOSYSTEM_ICONS.map((icon, i) => (
+          <motion.div
+            key={icon.label}
+            initial={{ opacity: 0, y: 6, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.35, delay: 0.15 + i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+            className="w-14 h-14 rounded-2xl bg-card/85 backdrop-blur border border-border/60 shadow-soft flex items-center justify-center overflow-hidden"
+          >
+            <img
+              src={icon.src}
+              alt={icon.label}
+              loading="lazy"
+              width={1024}
+              height={1024}
+              className="w-12 h-12 object-contain scale-[1.4]"
+            />
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 }
 
-function Scene({ scene, animated }: { scene: SceneKey; animated: boolean }) {
-  switch (scene) {
-    case "ride": return <RideScene animated={animated} />;
-    case "marche": return <MarcheScene animated={animated} />;
-    case "repas": return <RepasScene animated={animated} />;
-    case "wallet": return <WalletScene animated={animated} />;
-    case "final": return <FinalScene />;
-  }
-}
+const SLIDES: StorybookSlide[] = [
+  {
+    id: "welcome",
+    title: "Bienvenue sur CHOPCHOP Conakry",
+    body: "Votre app locale pour vous déplacer, manger, acheter et envoyer — en toute simplicité.",
+    image: sceneWelcome,
+    alt: "Conakry au coucher du soleil",
+    overlay: <EcosystemCluster />,
+  },
+  {
+    id: "ride",
+    title: "Commandez un Moto ou un TokTok",
+    body: "Déplacez-vous vite et en sécurité où que vous alliez à Conakry.",
+    image: sceneMoto,
+    alt: "Moto et TokTok dans les rues de Conakry",
+  },
+  {
+    id: "repas",
+    title: "Commandez avec Chop Repas",
+    body: "Vos plats préférés livrés chauds, rapidement, chez vous.",
+    image: sceneRepas,
+    alt: "Repas chaud livré",
+  },
+  {
+    id: "marche",
+    title: "Faites vos courses avec Chop Marché",
+    body: "Produits frais, boutiques locales et marchés livrés à votre porte.",
+    image: sceneMarche,
+    alt: "Marché de Conakry",
+  },
+  {
+    id: "wallet",
+    title: "Payez, envoyez, gérez avec ChopWallet et ChopPay",
+    body: "Votre portefeuille sécurisé pour payer, envoyer et recevoir partout.",
+    image: sceneWallet,
+    alt: "ChopWallet sur smartphone",
+  },
+];
 
 export function ClientOnboarding({ onDone }: Props) {
   const [index, setIndex] = useState(0);
-  const { low } = useLowDataMode();
-  const animated = !low;
-  const scene = SCENES[index];
-  const isLast = index === SCENES.length - 1;
+  const isLast = index === SLIDES.length - 1;
 
   useEffect(() => {
     Analytics.track("onboarding.viewed");
@@ -106,38 +119,33 @@ export function ClientOnboarding({ onDone }: Props) {
 
   useEffect(() => {
     Analytics.track("onboarding.step.viewed", {
-      metadata: { step: index, key: SCENES[index].key },
+      metadata: { step: index, key: SLIDES[index].id },
     });
   }, [index]);
 
   const next = () => {
     if (isLast) {
-      Analytics.track("onboarding.completed", { metadata: { steps: SCENES.length } });
+      Analytics.track("onboarding.completed", { metadata: { steps: SLIDES.length } });
       onDone();
     } else setIndex((i) => i + 1);
   };
   const prev = () => setIndex((i) => Math.max(0, i - 1));
 
   const skip = () => {
-    Analytics.track("onboarding.skipped", { metadata: { at_step: index, key: SCENES[index].key } });
+    Analytics.track("onboarding.skipped", { metadata: { at_step: index, key: SLIDES[index].id } });
     onDone();
   };
 
   return (
-    <OnboardingShell
+    <OnboardingStorybook
       ariaLabel="Bienvenue sur CHOPCHOP"
-      steps={SCENES.length}
+      slides={SLIDES}
       index={index}
-      isLast={isLast}
-      sceneKey={scene.key}
-      scene={<Scene scene={scene.key} animated={animated} />}
-      title={scene.title}
-      caption={scene.caption}
-      primaryLabel="Entrer dans CHOPCHOP"
+      primaryLabel="Commencer"
       footerCaption="CHOPCHOP · Conakry"
       onNext={next}
       onPrev={prev}
-      onClose={skip}
+      onSkip={skip}
     />
   );
 }
