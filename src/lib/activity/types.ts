@@ -2,7 +2,7 @@
  * WONGO — Unified ecosystem activity model.
  *
  * The timeline is NOT a social feed. It is operational history: rides,
- * WONGO Pay merchant payments, WONGO Wallet recharges, transfers, future Repas
+ * ChopPay merchant payments, ChopWallet recharges, transfers, future Repas
  * & Marché orders. Every surface that talks about "history" should consume
  * `ActivityItem` so the ecosystem feels like one continuous log.
  */
@@ -38,7 +38,7 @@ export interface ActivityItem {
   reference?: string;
   /** Foreign entity (merchant id, ride id, etc.) for receipt expansion. */
   entityId?: string;
-  /** Optional badge — verified merchant, WONGO Pay seal, live ride. */
+  /** Optional badge — verified merchant, ChopPay seal, live ride. */
   badge?: "choppay" | "verified" | "live";
   /** District continuity — e.g. "Kipé → Ratoma" or "Dixinn". */
   district?: string;

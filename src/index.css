@@ -74,7 +74,7 @@
     --ease-flow: cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Gradient system — 3 canonical gradients only.
-       1) wallet (deep emerald radial) — WONGO Wallet card surfaces
+       1) wallet (deep emerald radial) — ChopWallet card surfaces
        2) cta (vertical emerald) — primary CTAs
        3) ambient (subtle warm wash) — backgrounds & section wash
        Plus map-overlay scrim. Avoid introducing more. */
@@ -514,7 +514,7 @@
 
   /* === Service icon system ===
      Shared holder + asset classes so every service tile (Moto, TokTok, Repas,
-     Marché, Scanner, WONGO Wallet…) renders at the same scale, padding and
+     Marché, Scanner, ChopWallet…) renders at the same scale, padding and
      optical weight. Used by QuickActions and any future service grid. */
   .service-icon-holder {
     position: relative;
@@ -543,8 +543,8 @@
 }
 
 @layer utilities {
-  /* === WONGO Wallet · WONGO Pay money-surface language ===
-     Lagoon mint + deep green + saffron highlight. Used across WONGO Wallet
+  /* === ChopWallet · ChopPay money-surface language ===
+     Lagoon mint + deep green + saffron highlight. Used across ChopWallet
      card, payment sheet, receipt, QR scan, transaction rows, merchant QR.
      Calm and trustworthy — never neon, never crypto. */
 
@@ -557,7 +557,7 @@
     box-shadow: var(--shadow-card);
   }
 
-  /* Mint chip — secure status indicator (e.g. "WONGO Pay sécurisé"). */
+  /* Mint chip — secure status indicator (e.g. "ChopPay sécurisé"). */
   .chip-money-secure {
     background: hsl(162 48% 92%);
     color: hsl(160 50% 20%);

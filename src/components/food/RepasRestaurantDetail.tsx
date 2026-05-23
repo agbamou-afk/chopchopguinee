@@ -102,7 +102,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       return;
     }
     if (paymentMethod === "wallet" && available < subtotal) {
-      toast.error("Solde WONGO Wallet insuffisant");
+      toast.error("Solde ChopWallet insuffisant");
       return;
     }
     setSubmitting(true);
@@ -184,7 +184,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
               <TrustChip icon={Clock} label={`Préparation ~${restaurant.prep_time_min} min`} />
               {restaurant.delivery_available && <TrustChip icon={Truck} label="Livraison" />}
               {restaurant.pickup_available && <TrustChip icon={Package} label="Retrait" />}
-              {restaurant.choppay_enabled && <TrustChip icon={ShieldCheck} label="WONGO Pay" tone="primary" />}
+              {restaurant.choppay_enabled && <TrustChip icon={ShieldCheck} label="ChopPay" tone="primary" />}
               {restaurant.verification_state === "verified" && (
                 <TrustChip icon={BadgeCheck} label="Vérifié" tone="primary" />
               )}
@@ -475,7 +475,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         <div className="grid grid-cols-3 gap-2">
                           {(["cash", "wallet", "choppay"] as FoodPaymentMethod[]).map((pm) => {
                             const disabled = pm === "choppay" && !restaurant.choppay_enabled;
-                            const label = pm === "cash" ? "Cash" : pm === "wallet" ? "Wallet" : "WONGO Pay";
+                            const label = pm === "cash" ? "Cash" : pm === "wallet" ? "Wallet" : "ChopPay";
                             return (
                               <button
                                 key={pm}

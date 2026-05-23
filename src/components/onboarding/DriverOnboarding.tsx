@@ -17,7 +17,7 @@ const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
   { key: "online",   title: "Passez en ligne", caption: "Activez votre statut pour recevoir des courses." },
   { key: "accept",   title: "Accepter une course", caption: "Une demande arrive — acceptez en un tap." },
   { key: "pickup",   title: "Prise en charge",  caption: "Confirmez le pickup avec le client." },
-  { key: "complete", title: "Gains & WONGO Wallet", caption: "Recevez vos gains directement dans votre WONGO Wallet via WONGO Pay." },
+  { key: "complete", title: "Gains & ChopWallet", caption: "Recevez vos gains directement dans votre ChopWallet via ChopPay." },
   { key: "heatmap",  title: "Zones actives",    caption: "Placez-vous là où la demande est la plus forte." },
   { key: "final",    title: "Prêt à conduire",  caption: "Conduisez mieux. Gagnez mieux." },
 ];
@@ -144,7 +144,7 @@ function CompleteScene({ animated }: { animated: boolean }) {
         <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" aria-hidden />
         <Wallet className="w-5 h-5" />
         <div className="text-left">
-          <p className="text-[10px] uppercase tracking-[0.22em] opacity-90 font-bold">Gains · WONGO Pay</p>
+          <p className="text-[10px] uppercase tracking-[0.22em] opacity-90 font-bold">Gains · ChopPay</p>
           <p className="text-xl font-extrabold">+ 7 225 GNF</p>
         </div>
       </motion.div>

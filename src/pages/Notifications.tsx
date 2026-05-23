@@ -41,7 +41,7 @@ const GROUP_META: Record<
   NotificationGroup,
   { label: string; icon: typeof Bell }
 > = {
-  wallet: { label: "WONGO Wallet", icon: Wallet },
+  wallet: { label: "ChopWallet", icon: Wallet },
   rides: { label: "Courses", icon: Car },
   orders: { label: "Commandes", icon: Package },
   support: { label: "Support", icon: LifeBuoy },

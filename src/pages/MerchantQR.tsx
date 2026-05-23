@@ -122,7 +122,7 @@ export default function MerchantQR() {
         setPulse(true);
         try {
           toast.success("Paiement reçu", {
-            description: `${formatGNF(list[0].amount_gnf)} via WONGO Pay`,
+            description: `${formatGNF(list[0].amount_gnf)} via ChopPay`,
           });
         } catch {}
         setTimeout(() => setPulse(false), 1800);
@@ -204,7 +204,7 @@ export default function MerchantQR() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Seo title="Marchand WONGO Pay · WONGO" description="Recevez des paiements WONGO Pay via QR." />
+      <Seo title="Marchand ChopPay · WONGO" description="Recevez des paiements ChopPay via QR." />
       <header className="px-4 py-3 flex items-center gap-3 border-b border-border/60">
         <button
           onClick={() => navigate(-1)}
@@ -215,7 +215,7 @@ export default function MerchantQR() {
         </button>
         <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground leading-none">
-            WONGO Pay
+            ChopPay
           </p>
           <h1 className="text-base font-bold text-foreground leading-tight truncate">
             {merchant ? merchant.name : "Espace marchand"}
@@ -287,7 +287,7 @@ export default function MerchantQR() {
                     <Lock className="w-3 h-3 text-primary" />
                     Présenter pour encaisser
                   </div>
-                  <span className="text-[10px] text-muted-foreground">WONGO Pay</span>
+                  <span className="text-[10px] text-muted-foreground">ChopPay</span>
                 </div>
 
                 <div className="mx-auto w-fit p-4 rounded-2xl bg-white shadow-soft ring-1 ring-[hsl(162_30%_82%)]">
@@ -372,7 +372,7 @@ function CreateMerchantForm({
       </div>
       <h2 className="text-lg font-bold text-foreground">Activez votre QR marchand</h2>
       <p className="text-sm text-muted-foreground mt-1">
-        Recevez des paiements WONGO Pay en GNF, créditez votre WONGO Wallet automatiquement.
+        Recevez des paiements ChopPay en GNF, créditez votre ChopWallet automatiquement.
       </p>
       <div className="mt-4 space-y-3">
         <div>
@@ -411,7 +411,7 @@ function CreateMerchantForm({
           Activer mon QR
         </Button>
         <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-          <ShieldCheck className="w-3 h-3 text-success" /> Tous les paiements sont sécurisés par WONGO Pay.
+          <ShieldCheck className="w-3 h-3 text-success" /> Tous les paiements sont sécurisés par ChopPay.
         </p>
       </div>
     </div>
@@ -446,7 +446,7 @@ function RecentPayments({ payments }: { payments: Payment[] }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
-                Paiement WONGO Pay
+                Paiement ChopPay
               </p>
               <p className="text-[11px] text-muted-foreground truncate font-mono">
                 {p.reference}

@@ -37,7 +37,7 @@ const FAQS = [
   },
   {
     q: "Comment envoyer de l'argent à un ami ?",
-    a: "Dans WONGO Wallet, choisissez Envoyer, saisissez le numéro du destinataire et le montant. La transaction est instantanée et gratuite entre utilisateurs WONGO.",
+    a: "Dans ChopWallet, choisissez Envoyer, saisissez le numéro du destinataire et le montant. La transaction est instantanée et gratuite entre utilisateurs WONGO.",
   },
   {
     q: "Quels sont les frais de service ?",

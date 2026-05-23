@@ -1,6 +1,6 @@
 /**
- * WONGO Payments — shared TS types mirroring the DB enums declared in
- * the "WONGO Payments Foundation" migration. Keep these in lock-step
+ * ChopPayments — shared TS types mirroring the DB enums declared in
+ * the "ChopPayments Foundation" migration. Keep these in lock-step
  * with `payment_state`, `payment_provider`, `payment_purpose`,
  * `payment_recon_event` in Postgres.
  */

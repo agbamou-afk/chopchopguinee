@@ -163,7 +163,7 @@ export function AppHeader({
                 <div className="flex flex-col items-center gap-2 pt-2">
                   <img loading="eager" fetchPriority="high" decoding="async" src={brandLogo} alt="WONGO" className="h-12 w-auto object-contain" />
                   <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
-                    W'ONKHAI. LET'S GO.
+                    CHOPCHOP. LET'''S GO.
                   </p>
                 </div>
               </SheetHeader>
@@ -319,7 +319,7 @@ export function AppHeader({
             <div className="min-w-0">
               <div className="flex items-center gap-2 opacity-90">
                 <Wallet className="w-4 h-4" strokeWidth={2} />
-                <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">WONGO Wallet</span>
+                <span className="text-[11px] uppercase tracking-[0.18em] font-semibold">ChopWallet</span>
               </div>
               {amountLoading ? (
                 <div className="mt-1 h-7 w-32 rounded bg-white/20 animate-pulse" aria-label="Chargement du solde" />

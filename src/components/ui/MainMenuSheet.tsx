@@ -90,7 +90,7 @@ export function MenuButton({
               className="h-12 w-auto object-contain"
             />
             <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
-              W'ONKHAI. LET'S GO.
+              CHOPCHOP. LET'''S GO.
             </p>
           </div>
         </SheetHeader>

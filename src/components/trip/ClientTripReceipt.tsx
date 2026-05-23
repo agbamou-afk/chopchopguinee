@@ -78,7 +78,7 @@ export function ClientTripReceipt({
         </motion.p>
         <p className="text-xs opacity-80 mt-1">Total payé · {paymentLabel}</p>
         <p className="text-[11px] opacity-90 mt-1 inline-flex items-center gap-1 justify-center">
-          <ShieldCheck className="w-3 h-3" /> Paiement confirmé · WONGO Pay
+          <ShieldCheck className="w-3 h-3" /> Paiement confirmé · ChopPay
         </p>
       </div>
 

@@ -10,7 +10,7 @@ export type TxDirection = "in" | "out";
  */
 export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
   const ctx = txContext(tx);
-  const { isRepas, isMarche, isCourier, isWongoPay, missionKind, isPeer } = ctx;
+  const { isRepas, isMarche, isCourier, isChopPay, missionKind, isPeer } = ctx;
 
   switch (tx.type) {
     case "topup":
@@ -44,12 +44,12 @@ export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
         }
         if (isRepas) return "Paiement Repas reçu";
         if (isMarche) return "Vente Marché reçue";
-        if (isWongoPay) return "Paiement WONGO Pay reçu";
+        if (isChopPay) return "Paiement ChopPay reçu";
         return "Paiement reçu";
       }
       if (isRepas) return "Livraison Repas payée";
       if (isMarche) return "Achat Marché payé";
-      if (isWongoPay) return "Paiement WONGO Pay";
+      if (isChopPay) return "Paiement ChopPay";
       return "Paiement envoyé";
     }
     default:
@@ -82,8 +82,8 @@ export function payoutAvailabilityCopy(tx: WalletTransaction, dir: TxDirection):
   if (tx.status === "cancelled" || tx.status === "reversed") return { label: "Transaction annulée", tone: "muted" };
   if (dir === "in") {
     const { isCourier } = txContext(tx);
-    if (isCourier) return { label: "Gain confirmé · disponible dans WONGO Wallet", tone: "ok" };
-    return { label: "Disponible dans WONGO Wallet", tone: "ok" };
+    if (isCourier) return { label: "Gain confirmé · disponible dans ChopWallet", tone: "ok" };
+    return { label: "Disponible dans ChopWallet", tone: "ok" };
   }
   return { label: "Paiement confirmé", tone: "ok" };
 }
@@ -94,7 +94,7 @@ export interface TxContext {
   isRepas: boolean;
   isMarche: boolean;
   isCourier: boolean;
-  isWongoPay: boolean;
+  isChopPay: boolean;
   isPeer: boolean;
   missionKind: MissionKind;
   pickupArea: string | null;
@@ -115,7 +115,7 @@ export function txContext(tx: WalletTransaction): TxContext {
   const isRepas = /repas|food|menu|restaurant|plat/.test(lower) || ref.startsWith("food_") || ref.startsWith("repas:") || ref.includes(":repas:");
   const isMarche = /march[ée]|marketplace|listing|article|vente/.test(lower) || ref.startsWith("listing:") || ref.startsWith("marketplace") || ref.includes(":marche:");
   const isCourier = /coursier|livraison|gain|mission|course/.test(lower) || ref.startsWith("mission:");
-  const isWongoPay = /choppay|merchant|marchand/.test(lower);
+  const isChopPay = /choppay|merchant|marchand/.test(lower);
   const isPeer = ref.startsWith("transfer:peer") || /ami|peer|p2p/.test(lower);
 
   let missionKind: MissionKind = null;
@@ -142,7 +142,7 @@ export function txContext(tx: WalletTransaction): TxContext {
     dropoffArea = arrow[2].trim();
   }
 
-  // Merchant name, e.g. "Paiement WONGO Pay · Boutique X" or "Repas · Chez Mama".
+  // Merchant name, e.g. "Paiement ChopPay · Boutique X" or "Repas · Chez Mama".
   let merchantName: string | null = null;
   const sep = desc.split(/\s·\s|\s—\s|\s-\s/);
   if (sep.length > 1) {
@@ -150,7 +150,7 @@ export function txContext(tx: WalletTransaction): TxContext {
     if (candidate && !arrow) merchantName = candidate;
   }
 
-  return { isRepas, isMarche, isCourier, isWongoPay, isPeer, missionKind, pickupArea, dropoffArea, merchantName };
+  return { isRepas, isMarche, isCourier, isChopPay, isPeer, missionKind, pickupArea, dropoffArea, merchantName };
 }
 
 export const MISSION_KIND_LABEL: Record<Exclude<MissionKind, null>, string> = {

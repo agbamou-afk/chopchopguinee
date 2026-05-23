@@ -111,7 +111,7 @@ export const EVENTS = {
   "driver.trust_message_viewed": "driver",
   "receipt.viewed": "session",
 
-  // --- WONGO Pay merchant QR ---
+  // --- ChopPay merchant QR ---
   "qr.payment_sheet_opened": "wallet",
   "qr.payment_confirmed": "wallet",
   "qr.payment_cancelled": "wallet",

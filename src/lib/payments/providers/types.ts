@@ -1,6 +1,6 @@
 /**
  * Provider adapter contract — the single interface every mobile-money,
- * cash, agent, or manual rail must implement to plug into WONGO Wallet.
+ * cash, agent, or manual rail must implement to plug into ChopWallet.
  *
  * Adapters are pure, side-effect free shape/normalization helpers. They
  * NEVER credit wallets directly. State transitions always flow through

@@ -19,7 +19,7 @@ const SCENES: Array<{ key: SceneKey; title: string; caption: string }> = [
   { key: "ride", title: "Course", caption: "Commandez une moto en quelques secondes." },
   { key: "marche", title: "Marché", caption: "Achetez au Marché et faites livrer." },
   { key: "repas", title: "Repas", caption: "Commandez vos repas préférés." },
-  { key: "wallet", title: "WONGO Wallet", caption: "Rechargez votre WONGO Wallet et payez simplement avec WONGO Pay." },
+  { key: "wallet", title: "ChopWallet", caption: "Rechargez votre ChopWallet et payez simplement avec ChopPay." },
   { key: "final", title: "Bienvenue", caption: "One platform. Every move." },
 ];
 
@@ -60,7 +60,7 @@ function RepasScene({ animated }: { animated: boolean }) {
   return <EditorialScene src={sceneRepas} alt="Repas livré" animated={animated} />;
 }
 function WalletScene({ animated }: { animated: boolean }) {
-  return <EditorialScene src={sceneWallet} alt="WONGO Wallet et WONGO Pay" animated={animated} />;
+  return <EditorialScene src={sceneWallet} alt="ChopWallet et ChopPay" animated={animated} />;
 }
 
 function FinalScene() {
@@ -125,7 +125,7 @@ export function ClientOnboarding({ onDone }: Props) {
 
   return (
     <OnboardingShell
-      ariaLabel="Bienvenue sur WONGO"
+      ariaLabel="Bienvenue sur CHOPCHOP"
       steps={SCENES.length}
       index={index}
       isLast={isLast}

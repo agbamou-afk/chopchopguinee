@@ -16,7 +16,7 @@ interface BottomNavProps {
 const userTabs: Tab[] = [
   { id: "home", icon: Home, label: "Accueil" },
   { id: "orders", icon: Receipt, label: "Activité" },
-  { id: "wallet", icon: Wallet, label: "WONGO Wallet" },
+  { id: "wallet", icon: Wallet, label: "ChopWallet" },
   { id: "profile", icon: User, label: "Compte" },
 ];
 

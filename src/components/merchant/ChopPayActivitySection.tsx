@@ -7,14 +7,14 @@ interface Props {
 
 export function ChopPayActivitySection({ enabled }: Props) {
   return (
-    <SectionCard title="WONGO Pay" hint={enabled ? "Encaissements activés" : "Non activé"}>
+    <SectionCard title="ChopPay" hint={enabled ? "Encaissements activés" : "Non activé"}>
       <div className="flex items-center gap-3 rounded-xl bg-muted/40 border border-border/50 p-3">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Wallet className="w-5 h-5 text-primary" />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">
-            {enabled ? "Vos paiements arrivent dans le portefeuille" : "Activez WONGO Pay pour recevoir des paiements"}
+            {enabled ? "Vos paiements arrivent dans le portefeuille" : "Activez ChopPay pour recevoir des paiements"}
           </p>
           <p className="text-xs text-muted-foreground">Historique détaillé bientôt disponible.</p>
         </div>

@@ -124,7 +124,7 @@ export default function SettingsAdmin() {
       </Card>
       <Card className="p-5">
         <p className="text-sm font-semibold mb-2">Mentions légales & CGU</p>
-        <p className="text-xs text-muted-foreground">WONGO GUINEE LTD — version 2026.05 · dernière mise à jour il y a 12 jours</p>
+        <p className="text-xs text-muted-foreground">CHOPCHOP GUINEE LTD — version 2026.05 · dernière mise à jour il y a 12 jours</p>
       </Card>
     </ModulePage>
   );

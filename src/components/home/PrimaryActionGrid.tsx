@@ -25,10 +25,10 @@ const ACTIONS: Array<{
 }> = [
   {
     id: "topup",
-    label: "WONGO Wallet",
+    label: "ChopWallet",
     subtitle: "Recharger en quelques secondes",
     img: walletIcon,
-    alt: "Recharger WONGO Wallet",
+    alt: "Recharger ChopWallet",
     halo: "bg-primary/12 ring-1 ring-primary/15",
   },
   {

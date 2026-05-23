@@ -22,7 +22,7 @@ export type MarcheDeliveryEligibilityInput = {
   store?: Pick<MerchantStore, "delivery_available"> | null;
 };
 
-/** Whether a listing can offer WONGO delivery at all. */
+/** Whether a listing can offer Chop Courier at all. */
 export function isMarcheDeliveryEligible(input: MarcheDeliveryEligibilityInput): boolean {
   if (input.status && input.status !== "active") return false;
   if (input.availability === "sold" || input.availability === "cancelled") return false;
@@ -68,7 +68,7 @@ export function summarizeMarcheDelivery(input: RequestMarcheDeliveryInput): stri
   if (input.listing.category) lines.push(`Catégorie : ${input.listing.category}`);
   if (input.storeName) lines.push(`Boutique : ${input.storeName}`);
   else if (input.sellerName) lines.push(`Vendeur : ${input.sellerName}`);
-  if (input.paymentMethod === "choppay") lines.push("Paiement : WONGO Pay");
+  if (input.paymentMethod === "choppay") lines.push("Paiement : ChopPay");
   else if (input.paymentMethod === "cash") lines.push("Paiement : Cash à la livraison");
   if (input.notes && input.notes.trim()) lines.push(`Note : ${input.notes.trim()}`);
   return lines.join(" • ");

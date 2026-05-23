@@ -189,7 +189,7 @@ export default function PaymentsAdmin() {
   );
 
   return (
-    <ModulePage module="payments" title="Paiements (réconciliation)" subtitle="Centre opérationnel WONGO Wallet" actions={actions}>
+    <ModulePage module="payments" title="Paiements (réconciliation)" subtitle="Centre opérationnel ChopWallet" actions={actions}>
       {/* Internal-only note. Route is admin-gated by ModulePage. */}
       <div className="text-[11px] text-muted-foreground border border-dashed border-border rounded-md px-2 py-1.5">
         Documentation provider : <code>docs/payments/WONGO_PROVIDER_OUTREACH_PACKET.md</code> · <code>docs/payments/MOBILE_MONEY_PROVIDER_ONBOARDING.md</code>

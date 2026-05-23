@@ -62,7 +62,7 @@ export function StoreHeader({
         )}
         <div className="flex flex-wrap gap-2 mt-3">
           {store.choppay_enabled && (
-            <span className="chip-status chip-ok text-[10px]">WONGO Pay accepté</span>
+            <span className="chip-status chip-ok text-[10px]">ChopPay accepté</span>
           )}
           {store.verification_state === "verified" && (
             <span className="chip-status chip-info text-[10px]">Vérifié</span>

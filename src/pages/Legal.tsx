@@ -9,7 +9,7 @@ export default function Legal() {
     <div className="min-h-screen bg-background pb-12">
       <Seo
         title="Mentions légales & CGU — WONGO"
-        description="Conditions générales d'utilisation de WONGO GUINEE LTD : nature du service, responsabilités, données personnelles et droit applicable en Guinée."
+        description="Conditions générales d'utilisation de CHOPCHOP GUINEE LTD : nature du service, responsabilités, données personnelles et droit applicable en Guinée."
         canonical="/legal"
       />
       <header className="gradient-primary text-primary-foreground rounded-b-3xl px-4 pt-6 pb-8">
@@ -23,9 +23,9 @@ export default function Legal() {
       </header>
 
       <article className="px-5 -mt-4 max-w-md mx-auto bg-card rounded-2xl shadow-card p-6 space-y-4 text-sm text-foreground leading-relaxed">
-        <h2 className="text-base font-bold">Conditions Générales d'Utilisation — WONGO GUINEE LTD</h2>
+        <h2 className="text-base font-bold">Conditions Générales d'Utilisation — CHOPCHOP GUINEE LTD</h2>
         <p className="text-xs text-muted-foreground">
-          Dernière mise à jour : 12 mai 2026. Éditeur : <strong>WONGO GUINEE LTD</strong>
+          Dernière mise à jour : 12 mai 2026. Éditeur : <strong>CHOPCHOP GUINEE LTD</strong>
           {" "}(« WONGO », « la Société », « nous »). Marque commerciale : « WONGO ».
         </p>
 
@@ -43,11 +43,11 @@ export default function Legal() {
         <section className="space-y-2">
           <h3 className="font-semibold">2. Nature du service — simple intermédiaire technique</h3>
           <p>
-            WONGO GUINEE LTD agit exclusivement en tant qu'<strong>intermédiaire technologique</strong> mettant en
+            CHOPCHOP GUINEE LTD agit exclusivement en tant qu'<strong>intermédiaire technologique</strong> mettant en
             relation des utilisateurs, des chauffeurs indépendants, des marchands, des restaurants, des livreurs et
-            des agents. WONGO GUINEE LTD <strong>n'est pas</strong> transporteur, restaurateur, vendeur, livreur,
+            des agents. CHOPCHOP GUINEE LTD <strong>n'est pas</strong> transporteur, restaurateur, vendeur, livreur,
             établissement de crédit, ni prestataire de services de paiement au sens réglementaire. Les prestations
-            sont fournies par des tiers indépendants et WONGO GUINEE LTD n'est partie à aucun contrat de transport,
+            sont fournies par des tiers indépendants et CHOPCHOP GUINEE LTD n'est partie à aucun contrat de transport,
             de vente ou de livraison conclu via l'application.
           </p>
         </section>
@@ -55,7 +55,7 @@ export default function Legal() {
         <section className="space-y-2">
           <h3 className="font-semibold">3. Exclusion totale de responsabilité</h3>
           <p>
-            DANS TOUTE LA MESURE PERMISE PAR LA LOI APPLICABLE, WONGO GUINEE LTD, SES DIRIGEANTS, ACTIONNAIRES,
+            DANS TOUTE LA MESURE PERMISE PAR LA LOI APPLICABLE, CHOPCHOP GUINEE LTD, SES DIRIGEANTS, ACTIONNAIRES,
             EMPLOYÉS, AGENTS, FILIALES, PARTENAIRES, FOURNISSEURS ET SOUS-TRAITANTS SONT INTÉGRALEMENT DÉGAGÉS DE
             TOUTE RESPONSABILITÉ, DE QUELQUE NATURE QUE CE SOIT (CONTRACTUELLE, DÉLICTUELLE, QUASI-DÉLICTUELLE OU
             AUTRE), POUR TOUT DOMMAGE DIRECT, INDIRECT, ACCESSOIRE, SPÉCIAL, CONSÉCUTIF, PUNITIF OU EXEMPLAIRE,
@@ -72,7 +72,7 @@ export default function Legal() {
           </ul>
           <p>
             L'Utilisateur reconnaît expressément utiliser l'application <strong>à ses seuls risques et périls</strong>.
-            La responsabilité maximale cumulée de WONGO GUINEE LTD, si elle devait être engagée malgré les présentes,
+            La responsabilité maximale cumulée de CHOPCHOP GUINEE LTD, si elle devait être engagée malgré les présentes,
             est strictement limitée au montant de la dernière transaction litigieuse, plafonnée à
             <strong> 100 000 GNF</strong>.
           </p>
@@ -81,7 +81,7 @@ export default function Legal() {
         <section className="space-y-2">
           <h3 className="font-semibold">4. Garantie d'indemnisation</h3>
           <p>
-            L'Utilisateur s'engage à <strong>indemniser, défendre et tenir indemnes</strong> WONGO GUINEE LTD et ses
+            L'Utilisateur s'engage à <strong>indemniser, défendre et tenir indemnes</strong> CHOPCHOP GUINEE LTD et ses
             affiliés de toute réclamation, plainte, action, demande, perte, dommage, coût ou frais (y compris les
             honoraires d'avocats raisonnables) résultant de ou liés à : (i) son utilisation de l'application,
             (ii) toute violation des présentes conditions, (iii) toute violation d'un droit de tiers, ou
@@ -112,7 +112,7 @@ export default function Legal() {
         <section className="space-y-2">
           <h3 className="font-semibold">7. Données personnelles</h3>
           <p>
-            WONGO GUINEE LTD collecte et traite les données nécessaires au fonctionnement du service (identité,
+            CHOPCHOP GUINEE LTD collecte et traite les données nécessaires au fonctionnement du service (identité,
             téléphone, géolocalisation, transactions). Ces données peuvent être partagées avec des prestataires
             techniques, des autorités compétentes ou en cas de fusion/cession. L'Utilisateur dispose d'un droit
             d'accès, de rectification et de suppression via le formulaire de contact.
@@ -122,7 +122,7 @@ export default function Legal() {
         <section className="space-y-2">
           <h3 className="font-semibold">8. Modification des conditions</h3>
           <p>
-            WONGO GUINEE LTD se réserve le droit de modifier à tout moment et sans préavis les présentes conditions.
+            CHOPCHOP GUINEE LTD se réserve le droit de modifier à tout moment et sans préavis les présentes conditions.
             Les modifications entrent en vigueur dès leur publication dans l'application. La poursuite de
             l'utilisation vaut acceptation des nouvelles conditions.
           </p>
@@ -146,7 +146,7 @@ export default function Legal() {
         </section>
 
         <p className="pt-4 text-xs text-muted-foreground border-t border-border">
-          © 2026 WONGO GUINEE LTD. Tous droits réservés. Pour toute question, contactez-nous via la rubrique Aide.
+          © 2026 CHOPCHOP GUINEE LTD. Tous droits réservés. Pour toute question, contactez-nous via la rubrique Aide.
         </p>
       </article>
     </div>

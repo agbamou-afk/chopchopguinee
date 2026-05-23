@@ -110,7 +110,7 @@ export function WalletView() {
   }, [transactions, filterType, filterRange]);
 
   // Lightweight retention metric — total inflow over the last 30 days
-  // surfaced as "Vous économisez avec WONGO Wallet". No casino mechanics.
+  // surfaced as "Vous économisez avec ChopWallet". No casino mechanics.
   const inflowLast30 = useMemo(() => {
     if (!wallet) return 0;
     const cutoff = Date.now() - 30 * 86400000;
@@ -122,7 +122,7 @@ export function WalletView() {
     }, 0);
   }, [transactions, wallet]);
 
-  // Lightweight "marchands récents" strip — derived from WONGO Pay merchant
+  // Lightweight "marchands récents" strip — derived from ChopPay merchant
   // payments in history. Tapping prompts a fresh scan (calm retention loop,
   // no aggressive rewards or loyalty spam).
   const recentMerchants = useMemo(() => {
@@ -131,8 +131,8 @@ export function WalletView() {
     for (const tx of transactions) {
       if (tx.type !== "payment") continue;
       if (txDirection(tx, wallet.id) !== "out") continue;
-      if (!tx.description?.startsWith("Paiement WONGO Pay")) continue;
-      const name = tx.description.replace(/^Paiement WONGO Pay\s*·\s*/, "").trim();
+      if (!tx.description?.startsWith("Paiement ChopPay")) continue;
+      const name = tx.description.replace(/^Paiement ChopPay\s*·\s*/, "").trim();
       if (!name) continue;
       if (!seen.has(name)) seen.set(name, tx.created_at);
     }
@@ -161,7 +161,7 @@ export function WalletView() {
         <div className="w-16 h-16 rounded-2xl gradient-primary mx-auto flex items-center justify-center mb-4">
           <LogIn className="w-7 h-7 text-primary-foreground" />
         </div>
-        <h2 className="text-xl font-bold text-foreground mb-2">WONGO Wallet</h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">ChopWallet</h2>
         <p className="text-sm text-muted-foreground mb-6">
           Connectez-vous pour activer votre portefeuille et commencer à payer en GNF.
         </p>
@@ -186,7 +186,7 @@ export function WalletView() {
   return (
     <div className="max-w-md mx-auto">
       <ScreenHeader
-        title="WONGO Wallet"
+        title="ChopWallet"
         subtitle={profile?.phone ?? "Vos paiements en GNF"}
       />
 
@@ -205,7 +205,7 @@ export function WalletView() {
           <div className="mt-3 mx-auto max-w-[22rem] flex items-center gap-2 rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1.5">
             <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
             <p className="text-[11px] text-foreground/80">
-              <span className="font-semibold">{formatMoney(inflowLast30)}</span> reçus sur 30 jours via WONGO Wallet
+              <span className="font-semibold">{formatMoney(inflowLast30)}</span> reçus sur 30 jours via ChopWallet
             </p>
           </div>
         )}
@@ -215,7 +215,7 @@ export function WalletView() {
         <div className="mt-5 px-4">
           <div className="flex items-end justify-between mb-2">
             <h2 className="text-sm font-semibold text-foreground">Marchands récents</h2>
-            <span className="text-[10px] text-muted-foreground">WONGO Pay</span>
+            <span className="text-[10px] text-muted-foreground">ChopPay</span>
           </div>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
             {recentMerchants.map((m) => {
@@ -501,11 +501,11 @@ function EmptyHistory({ empty, onTopUp }: { empty: boolean; onTopUp: () => void 
         <CreditCard className="w-5 h-5 text-primary" />
       </div>
       <p className="text-sm font-semibold text-foreground">
-        {empty ? "Bienvenue dans WONGO Wallet" : "Aucune transaction pour ce filtre"}
+        {empty ? "Bienvenue dans ChopWallet" : "Aucune transaction pour ce filtre"}
       </p>
       <p className="text-xs text-muted-foreground mt-1 max-w-[16rem] mx-auto">
         {empty
-          ? "Rechargez chez un agent WONGO pour commencer à payer vos courses et vos repas avec WONGO Pay."
+          ? "Rechargez chez un agent WONGO pour commencer à payer vos courses et vos repas avec ChopPay."
           : "Essayez un autre filtre pour voir vos paiements."}
       </p>
       {empty && (
