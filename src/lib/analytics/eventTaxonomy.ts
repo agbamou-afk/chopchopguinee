@@ -1,5 +1,5 @@
 /**
- * WONGO — Event taxonomy.
+ * CHOPCHOP — Event taxonomy.
  * Standard format: `category.action.object`
  *
  * NEVER fire an event whose name is not in this file. Add it here first so

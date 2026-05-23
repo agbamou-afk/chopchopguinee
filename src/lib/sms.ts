@@ -1,11 +1,11 @@
 /**
- * WONGO — SMS templates.
+ * CHOPCHOP — SMS templates.
  * All messages target Guinean numbers (+224) and stay under 160 chars when possible.
  * These return plain strings; an SMS adapter (Twilio / local provider) actually sends.
  */
 import { formatGNF } from "@/lib/format";
 
-const SIGN = "WONGO";
+const SIGN = "CHOPCHOP";
 
 export const smsTemplates = {
   otpCode: (code: string) =>

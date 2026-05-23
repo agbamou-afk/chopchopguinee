@@ -139,7 +139,7 @@ function rideToActivity(ride: RideRow, role: "client" | "driver"): ActivityItem 
   return {
     id: `ride:${ride.id}`,
     kind: "ride",
-    title: isDriver ? `Course ${modeLabel} terminée` : `Course WONGO · ${modeLabel}`,
+    title: isDriver ? `Course ${modeLabel} terminée` : `Course CHOPCHOP · ${modeLabel}`,
     subtitle: district ?? (status === "in_progress" ? "Course en cours" : status === "pending" ? "Recherche d'un chauffeur" : "Trajet terminé"),
     amount: status === "completed" ? amount : undefined,
     status,

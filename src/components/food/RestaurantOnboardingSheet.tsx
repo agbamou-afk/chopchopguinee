@@ -129,7 +129,7 @@ export function RestaurantOnboardingSheet({
           </div>
           <label className="flex items-center justify-between p-3 rounded-2xl bg-card shadow-card">
             <div>
-              <p className="text-sm font-medium">Livraison WONGO disponible</p>
+              <p className="text-sm font-medium">Livraison CHOPCHOP disponible</p>
               <p className="text-[11px] text-muted-foreground">Activez pour recevoir des commandes en livraison.</p>
             </div>
             <Switch checked={delivery} onCheckedChange={setDelivery} />

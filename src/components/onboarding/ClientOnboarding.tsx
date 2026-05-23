@@ -74,10 +74,10 @@ function FinalScene() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         src={logo}
-        alt="WONGO"
+        alt="CHOPCHOP"
         className="h-10 w-auto object-contain mb-3 brightness-0 invert"
       />
-      <p className="text-lg font-extrabold tracking-tight">WONGO</p>
+      <p className="text-lg font-extrabold tracking-tight">CHOPCHOP</p>
       <p className="text-sm opacity-90 mt-1">One platform. Every move.</p>
     </div>
   );
@@ -133,8 +133,8 @@ export function ClientOnboarding({ onDone }: Props) {
       scene={<Scene scene={scene.key} animated={animated} />}
       title={scene.title}
       caption={scene.caption}
-      primaryLabel="Entrer dans WONGO"
-      footerCaption="WONGO · Conakry"
+      primaryLabel="Entrer dans CHOPCHOP"
+      footerCaption="CHOPCHOP · Conakry"
       onNext={next}
       onPrev={prev}
       onClose={skip}

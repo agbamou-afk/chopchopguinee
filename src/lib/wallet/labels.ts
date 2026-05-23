@@ -20,7 +20,7 @@ export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
     case "refund":
       return dir === "in" ? "Remboursement reçu" : "Remboursement envoyé";
     case "commission":
-      return "Commission WONGO";
+      return "Commission CHOPCHOP";
     case "hold":
       return "Fonds réservés";
     case "release":

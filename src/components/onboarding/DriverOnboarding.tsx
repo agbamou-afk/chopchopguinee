@@ -198,10 +198,10 @@ function FinalScene() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         src={logo}
-        alt="WONGO"
+        alt="CHOPCHOP"
         className="h-10 w-auto object-contain mb-3 brightness-0 invert"
       />
-      <p className="text-lg font-extrabold tracking-tight">WONGO · Chauffeur</p>
+      <p className="text-lg font-extrabold tracking-tight">CHOPCHOP · Chauffeur</p>
       <p className="text-sm opacity-90 mt-1">Conduisez mieux. Gagnez mieux.</p>
     </div>
   );
@@ -233,7 +233,7 @@ export function DriverOnboarding({ onDone }: Props) {
 
   return (
     <OnboardingShell
-      ariaLabel="Bienvenue chauffeur WONGO"
+      ariaLabel="Bienvenue chauffeur CHOPCHOP"
       steps={SCENES.length}
       index={index}
       isLast={isLast}
@@ -241,8 +241,8 @@ export function DriverOnboarding({ onDone }: Props) {
       scene={<Scene scene={scene.key} animated={animated} />}
       title={scene.title}
       caption={scene.caption}
-      primaryLabel="Entrer dans WONGO"
-      footerCaption="WONGO · Chauffeur · Conakry"
+      primaryLabel="Entrer dans CHOPCHOP"
+      footerCaption="CHOPCHOP · Chauffeur · Conakry"
       onNext={next}
       onPrev={prev}
       onClose={onDone}

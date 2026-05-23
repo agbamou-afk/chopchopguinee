@@ -33,7 +33,7 @@ export function TrustCues({ cues, className, compact }: Props) {
         "flex flex-wrap items-center gap-1.5",
         className,
       )}
-      aria-label="Garanties WONGO"
+      aria-label="Garanties CHOPCHOP"
     >
       {cues.map((k) => {
         const { icon: Icon, label } = SPECS[k];

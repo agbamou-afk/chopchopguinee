@@ -26,7 +26,7 @@ const COPY: Record<RideLifecycleEvent, Record<Role, { title: string; body: strin
     driver: { title: "Course démarrée", body: "Trajet en cours.", tone: "info" },
   },
   ride_completed: {
-    client: { title: "Arrivé à destination", body: "Paiement confirmé. Merci d'avoir utilisé WONGO.", tone: "success" },
+    client: { title: "Arrivé à destination", body: "Paiement confirmé. Merci d'avoir utilisé CHOPCHOP.", tone: "success" },
     driver: { title: "Course terminée", body: "Paiement encaissé et crédité à votre portefeuille.", tone: "success" },
   },
   ride_cancelled: {

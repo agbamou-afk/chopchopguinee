@@ -1,4 +1,4 @@
-# WONGO — End-to-End Tests (Playwright)
+# CHOPCHOP — End-to-End Tests (Playwright)
 
 Internal QA infrastructure. **Never** point these at production accounts or live data.
 

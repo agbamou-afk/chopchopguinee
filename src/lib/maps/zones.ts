@@ -1,7 +1,7 @@
 import type { LatLng } from './geo';
 
 /**
- * WONGO — district registry.
+ * CHOPCHOP — district registry.
  * Conakry communes + commonly referenced neighbourhoods. Kept lightweight:
  * we only need a name to label rides, missions, receipts and merchant cards.
  */

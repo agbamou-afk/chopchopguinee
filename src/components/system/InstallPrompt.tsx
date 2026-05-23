@@ -69,9 +69,9 @@ export function InstallPrompt() {
           <Download className="w-5 h-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm">Installer WONGO</p>
+          <p className="font-semibold text-sm">Installer CHOPCHOP</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Installez WONGO sur votre téléphone pour un accès plus rapide.
+            Installez CHOPCHOP sur votre téléphone pour un accès plus rapide.
           </p>
           <div className="flex gap-2 mt-3">
             <Button size="sm" onClick={install}>Installer</Button>

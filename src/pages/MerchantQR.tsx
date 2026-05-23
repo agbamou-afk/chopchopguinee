@@ -194,7 +194,7 @@ export default function MerchantQR() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6 text-center">
         <Store className="w-10 h-10 text-primary mb-3" />
-        <p className="text-base font-semibold">Connectez-vous pour devenir marchand WONGO.</p>
+        <p className="text-base font-semibold">Connectez-vous pour devenir marchand CHOPCHOP.</p>
         <Link to="/auth" className="mt-4">
           <Button className="gradient-primary">Se connecter</Button>
         </Link>
@@ -204,7 +204,7 @@ export default function MerchantQR() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Seo title="Marchand ChopPay · WONGO" description="Recevez des paiements ChopPay via QR." />
+      <Seo title="Marchand ChopPay · CHOPCHOP" description="Recevez des paiements ChopPay via QR." />
       <header className="px-4 py-3 flex items-center gap-3 border-b border-border/60">
         <button
           onClick={() => navigate(-1)}

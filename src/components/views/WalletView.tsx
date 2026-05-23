@@ -269,7 +269,7 @@ export function WalletView() {
           stats={[
             { icon: ShieldCheck, label: "Paiements sécurisés", bg: "bg-primary/10", tone: "text-primary" },
             { icon: Timer, label: "Recharge instantanée", bg: "bg-secondary/20", tone: "text-foreground" },
-            { icon: Users, label: "Réseau d'agents WONGO", bg: "bg-success/10", tone: "text-success" },
+            { icon: Users, label: "Réseau d'agents CHOPCHOP", bg: "bg-success/10", tone: "text-success" },
           ]}
         />
       </div>
@@ -291,7 +291,7 @@ export function WalletView() {
             <div className="flex-1">
               <p className="font-semibold text-foreground text-sm">Solde faible</p>
               <p className="text-xs text-muted-foreground">
-                Rechargez chez un agent WONGO pour continuer à payer vos courses et vos repas.
+                Rechargez chez un agent CHOPCHOP pour continuer à payer vos courses et vos repas.
               </p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setTopUpOpen(true)}>
@@ -478,7 +478,7 @@ export function WalletView() {
           <SheetHeader className="text-left">
             <SheetTitle>Recharger via Orange Money</SheetTitle>
             <SheetDescription>
-              Payez le compte marchand WONGO — votre portefeuille est crédité automatiquement.
+              Payez le compte marchand CHOPCHOP — votre portefeuille est crédité automatiquement.
             </SheetDescription>
           </SheetHeader>
           <div className="mt-4">
@@ -505,7 +505,7 @@ function EmptyHistory({ empty, onTopUp }: { empty: boolean; onTopUp: () => void 
       </p>
       <p className="text-xs text-muted-foreground mt-1 max-w-[16rem] mx-auto">
         {empty
-          ? "Rechargez chez un agent WONGO pour commencer à payer vos courses et vos repas avec ChopPay."
+          ? "Rechargez chez un agent CHOPCHOP pour commencer à payer vos courses et vos repas avec ChopPay."
           : "Essayez un autre filtre pour voir vos paiements."}
       </p>
       {empty && (

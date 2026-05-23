@@ -3,7 +3,7 @@
  * All user-facing product names, taglines, and palette anchors live here.
  * Imported across UI surfaces so a future rebrand is a single-file change.
  *
- * CHOPCHOP is the consumer-facing brand. WONGO may remain reserved as a
+ * CHOPCHOP is the consumer-facing brand. CHOPCHOP may remain reserved as a
  * future internal/corporate/infrastructure concept; do not surface it in UI.
  */
 

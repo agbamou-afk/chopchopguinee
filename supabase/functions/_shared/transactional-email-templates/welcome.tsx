@@ -14,7 +14,7 @@ const WelcomeEmail = ({ firstName }: Props) => (
       toktok, recharger votre portefeuille auprès d'un agent, payer chez les
       marchands, et explorer le marché local.
     </P>
-    <CTAButton href={BRAND.url}>Ouvrir WONGO</CTAButton>
+    <CTAButton href={BRAND.url}>Ouvrir CHOPCHOP</CTAButton>
     <H2>Prochaines étapes</H2>
     <P muted>
       • Configurez votre code PIN portefeuille pour sécuriser vos paiements.<br />

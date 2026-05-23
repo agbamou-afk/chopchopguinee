@@ -1,5 +1,5 @@
 /**
- * Display helpers for WONGO internal references (WNG-YYYY-NNNNNN).
+ * Display helpers for CHOPCHOP internal references (WNG-YYYY-NNNNNN).
  * Generated server-side via the `next_wongo_reference()` SQL function.
  */
 

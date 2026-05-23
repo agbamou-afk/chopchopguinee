@@ -21,7 +21,7 @@ export default function SettingsAdmin() {
   const { role } = useAdminAuth();
   const canEditOM = role === "god_admin" || role === "finance_admin";
   const [omMsisdn, setOmMsisdn] = useState("");
-  const [omName, setOmName] = useState("WONGO");
+  const [omName, setOmName] = useState("CHOPCHOP");
   const [omLoading, setOmLoading] = useState(true);
   const [omSaving, setOmSaving] = useState(false);
 
@@ -34,7 +34,7 @@ export default function SettingsAdmin() {
       .then(({ data }) => {
         const v = (data?.value ?? {}) as { merchant_msisdn?: string; merchant_name?: string };
         setOmMsisdn(v.merchant_msisdn ?? "");
-        setOmName(v.merchant_name ?? "WONGO");
+        setOmName(v.merchant_name ?? "CHOPCHOP");
         setOmLoading(false);
       });
   }, []);
@@ -49,7 +49,7 @@ export default function SettingsAdmin() {
     const merged = {
       ...((existing?.value as Record<string, unknown>) ?? {}),
       merchant_msisdn: omMsisdn.trim(),
-      merchant_name: omName.trim() || "WONGO",
+      merchant_name: omName.trim() || "CHOPCHOP",
       status: omMsisdn.trim() ? "configured" : "missing",
     };
     const { error } = await supabase
@@ -94,7 +94,7 @@ export default function SettingsAdmin() {
               <Input
                 value={omName}
                 onChange={(e) => setOmName(e.target.value)}
-                placeholder="WONGO"
+                placeholder="CHOPCHOP"
                 disabled={!canEditOM}
                 className="mt-1"
               />

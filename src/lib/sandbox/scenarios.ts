@@ -1,5 +1,5 @@
 /**
- * WONGO Sandbox — deterministic scenario library.
+ * CHOPCHOP Sandbox — deterministic scenario library.
  *
  * Scenarios are pure scripted flows: no AI, no randomness beyond ID
  * generation. Each scenario must remain idempotent enough to replay

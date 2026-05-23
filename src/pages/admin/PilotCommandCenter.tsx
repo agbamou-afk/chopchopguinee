@@ -330,7 +330,7 @@ export default function PilotCommandCenter() {
     <ModulePage
       module="dashboard"
       title="Pilot Command"
-      subtitle="Lecture seule · cockpit opérationnel du pilote WONGO"
+      subtitle="Lecture seule · cockpit opérationnel du pilote CHOPCHOP"
       actions={
         <Badge variant="outline" className="font-mono text-[10px] tracking-wider uppercase">
           Phase B · read-only

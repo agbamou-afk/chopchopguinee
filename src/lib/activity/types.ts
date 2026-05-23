@@ -1,5 +1,5 @@
 /**
- * WONGO — Unified ecosystem activity model.
+ * CHOPCHOP — Unified ecosystem activity model.
  *
  * The timeline is NOT a social feed. It is operational history: rides,
  * ChopPay merchant payments, ChopWallet recharges, transfers, future Repas
@@ -25,7 +25,7 @@ export type ActivityStatus = "completed" | "pending" | "failed" | "cancelled" | 
 export interface ActivityItem {
   id: string;
   kind: ActivityKind;
-  /** Concise headline — e.g. "Course WONGO". */
+  /** Concise headline — e.g. "Course CHOPCHOP". */
   title: string;
   /** One-line context — e.g. "Kaloum → Ratoma" or merchant name. */
   subtitle?: string;

@@ -8,7 +8,7 @@ export default function Legal() {
   return (
     <div className="min-h-screen bg-background pb-12">
       <Seo
-        title="Mentions légales & CGU — WONGO"
+        title="Mentions légales & CGU — CHOPCHOP"
         description="Conditions générales d'utilisation de CHOPCHOP GUINEE LTD : nature du service, responsabilités, données personnelles et droit applicable en Guinée."
         canonical="/legal"
       />
@@ -17,7 +17,7 @@ export default function Legal() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <BrandLogo loading="lazy" decoding="async" alt="WONGO" className="h-8 w-auto object-contain" />
+          <BrandLogo loading="lazy" decoding="async" alt="CHOPCHOP" className="h-8 w-auto object-contain" />
           <h1 className="text-lg font-bold">Mentions légales</h1>
         </div>
       </header>
@@ -26,13 +26,13 @@ export default function Legal() {
         <h2 className="text-base font-bold">Conditions Générales d'Utilisation — CHOPCHOP GUINEE LTD</h2>
         <p className="text-xs text-muted-foreground">
           Dernière mise à jour : 12 mai 2026. Éditeur : <strong>CHOPCHOP GUINEE LTD</strong>
-          {" "}(« WONGO », « la Société », « nous »). Marque commerciale : « WONGO ».
+          {" "}(« CHOPCHOP », « la Société », « nous »). Marque commerciale : « CHOPCHOP ».
         </p>
 
         <section className="space-y-2">
           <h3 className="font-semibold">1. Acceptation des conditions</h3>
           <p>
-            En créant un compte, en accédant à l'application WONGO ou en utilisant l'un quelconque de ses services
+            En créant un compte, en accédant à l'application CHOPCHOP ou en utilisant l'un quelconque de ses services
             (transport, livraison de repas, place de marché, portefeuille électronique, transferts d'argent, services
             d'agent, et toute fonctionnalité future), l'Utilisateur reconnaît avoir lu, compris et accepté sans
             réserve l'intégralité des présentes Conditions Générales d'Utilisation. Tout usage de l'application vaut
@@ -93,7 +93,7 @@ export default function Legal() {
           <h3 className="font-semibold">5. Portefeuille et transactions</h3>
           <p>
             Les soldes en GNF affichés représentent une créance de l'Utilisateur exclusivement utilisable au sein
-            de l'écosystème WONGO. Les recharges effectuées via un agent sont définitives une fois confirmées
+            de l'écosystème CHOPCHOP. Les recharges effectuées via un agent sont définitives une fois confirmées
             par le code à 6 chiffres ; aucun remboursement ne peut être exigé pour une recharge confirmée. Les
             transferts entre utilisateurs sont irrévocables une fois validés.
           </p>

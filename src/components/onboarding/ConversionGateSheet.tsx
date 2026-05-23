@@ -34,7 +34,7 @@ export function ConversionGateSheet({ open, intent, onOpenChange, onExploreDrive
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-3xl pb-8">
         <SheetHeader className="text-left">
-          <SheetTitle>Prêt à utiliser WONGO ?</SheetTitle>
+          <SheetTitle>Prêt à utiliser CHOPCHOP ?</SheetTitle>
           <SheetDescription>{subtitle}</SheetDescription>
         </SheetHeader>
         <div className="grid gap-2 mt-4">

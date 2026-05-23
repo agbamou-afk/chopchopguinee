@@ -325,7 +325,7 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
 
       {!terminal && (
         <p className="mt-2 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-          <ShieldCheck className="w-3 h-3 text-primary" /> Mission suivie par WONGO
+          <ShieldCheck className="w-3 h-3 text-primary" /> Mission suivie par CHOPCHOP
         </p>
       )}
 

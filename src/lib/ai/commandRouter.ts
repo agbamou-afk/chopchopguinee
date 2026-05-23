@@ -266,7 +266,7 @@ export function routeQuery(rawQuery: string, opts: { isAdmin?: boolean } = {}): 
   }
 
   if (seen.has("wallet")) {
-    results.push(svc("wallet", "Recharger mon portefeuille", "Agent WONGO ou mobile money", "compte", 1));
+    results.push(svc("wallet", "Recharger mon portefeuille", "Agent CHOPCHOP ou mobile money", "compte", 1));
   }
 
   if (seen.has("scan")) {

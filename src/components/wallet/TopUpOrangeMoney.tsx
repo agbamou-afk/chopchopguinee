@@ -158,7 +158,7 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
             <div className="rounded-3xl bg-card border border-border p-4 space-y-3 shadow-card">
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Compte marchand WONGO
+                  Compte marchand CHOPCHOP
                 </p>
                 <button
                   onClick={() => copy(merchant.replace(/\s/g, ""), "msisdn")}
@@ -215,7 +215,7 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
                 <>
                   <ShieldCheck className="w-4 h-4 text-secondary-foreground shrink-0" />
                   <p className="text-xs text-muted-foreground">
-                    Paiement reçu — en cours de vérification par le support WONGO.
+                    Paiement reçu — en cours de vérification par le support CHOPCHOP.
                   </p>
                 </>
               ) : (

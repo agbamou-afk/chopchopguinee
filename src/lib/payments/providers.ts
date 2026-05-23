@@ -1,5 +1,5 @@
 /**
- * Provider registry — the single source of truth for how WONGO renders
+ * Provider registry — the single source of truth for how CHOPCHOP renders
  * payment providers. Adding a future rail (e.g. MTN Money, bank settlement)
  * means registering it here, not editing top-up sheets or receipts.
  */
@@ -25,9 +25,9 @@ export const PAYMENT_PROVIDERS: Record<PaymentProvider, ProviderConfig> = {
                   liveEnabled: true,  supports: { topup: false, payment: true,  payout: true  } },
   manual:       { id: "manual",       label: "Manuel (admin)", kind: "manual",
                   liveEnabled: true,  supports: { topup: true,  payment: false, payout: true  } },
-  internal:     { id: "internal",     label: "Interne WONGO",  kind: "internal",
+  internal:     { id: "internal",     label: "Interne CHOPCHOP",  kind: "internal",
                   liveEnabled: true,  supports: { topup: false, payment: true,  payout: false } },
-  agent:        { id: "agent",        label: "Agent WONGO",    kind: "agent",
+  agent:        { id: "agent",        label: "Agent CHOPCHOP",    kind: "agent",
                   liveEnabled: true,  supports: { topup: true,  payment: false, payout: false } },
 };
 

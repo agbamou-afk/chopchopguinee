@@ -1,5 +1,5 @@
 /**
- * Status mappers + FR copy for the unified WONGO payment-state vocabulary.
+ * Status mappers + FR copy for the unified CHOPCHOP payment-state vocabulary.
  * Receipts, notifications, and admin lists all funnel through these so the
  * UI stays consistent across wallet_transactions, topup_requests and
  * payment_intents.

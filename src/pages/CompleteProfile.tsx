@@ -88,10 +88,10 @@ export default function CompleteProfile() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
         <div className="flex flex-col items-center mb-6">
-          <BrandLogo loading="lazy" decoding="async" alt="WONGO" className="h-10 w-auto object-contain mb-2" />
+          <BrandLogo loading="lazy" decoding="async" alt="CHOPCHOP" className="h-10 w-auto object-contain mb-2" />
           <h1 className="text-xl font-bold">Complétez votre profil</h1>
           <p className="text-sm text-muted-foreground text-center">
-            Quelques informations pour finaliser votre compte WONGO.
+            Quelques informations pour finaliser votre compte CHOPCHOP.
           </p>
         </div>
         <form onSubmit={submit} className="space-y-3">

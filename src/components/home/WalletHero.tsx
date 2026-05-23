@@ -41,7 +41,7 @@ export function WalletHero({ balance, loading, error, status = "active", onTopUp
           </span>
           <div className="leading-tight">
             <p className="text-[10.5px] uppercase tracking-[0.22em] font-semibold">ChopWallet</p>
-            <p className="text-[10px] opacity-75 tracking-wide">Compte WONGO · GNF</p>
+            <p className="text-[10px] opacity-75 tracking-wide">Compte CHOPCHOP · GNF</p>
           </div>
         </div>
         <button

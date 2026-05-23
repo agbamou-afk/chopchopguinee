@@ -1,6 +1,6 @@
-# WONGO
+# CHOPCHOP
 
-> WONGO (édité par CHOPCHOP GUINEE LTD) est la super-app guinéenne qui réunit transport (moto-taxi, TokTok), livraison de repas, marché en ligne et portefeuille de paiements / transferts en francs guinéens (GNF).
+> CHOPCHOP (édité par CHOPCHOP GUINEE LTD) est la super-app guinéenne qui réunit transport (moto-taxi, TokTok), livraison de repas, marché en ligne et portefeuille de paiements / transferts en francs guinéens (GNF).
 
 ## Pages
 
@@ -11,7 +11,7 @@
 
 ## Marque
 
-- Nom commercial : WONGO
+- Nom commercial : CHOPCHOP
 - Raison sociale : CHOPCHOP GUINEE LTD
 - Pays : République de Guinée
 - Devise : GNF

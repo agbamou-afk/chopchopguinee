@@ -21,11 +21,11 @@ const SecurityAlertEmail = ({
   ipAddress = '—',
   firstName,
 }: Props) => (
-  <EmailLayout preview={`Alerte sécurité WONGO — ${eventType}`}>
+  <EmailLayout preview={`Alerte sécurité CHOPCHOP — ${eventType}`}>
     <StatusBadge tone="warning">Alerte sécurité</StatusBadge>
     <H1>{firstName ? `Bonjour ${firstName},` : 'Activité détectée sur votre compte'}</H1>
     <P>
-      Nous avons détecté une activité importante sur votre compte WONGO.
+      Nous avons détecté une activité importante sur votre compte CHOPCHOP.
       Si c'est bien vous, vous pouvez ignorer cet e-mail.
     </P>
     <TransactionCard

@@ -12,7 +12,7 @@ interface Props {
 
 /**
  * Uniform tile treatment: same card surface, same halo system. All tiles use
- * the canonical WONGO service icon family (raster PNGs) so the grid reads as
+ * the canonical CHOPCHOP service icon family (raster PNGs) so the grid reads as
  * one authored set instead of mixed Lucide/PNG glyphs.
  */
 const ACTIONS: Array<{

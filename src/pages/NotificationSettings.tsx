@@ -25,8 +25,8 @@ const NotificationSettings = () => {
   return (
     <AppShell>
       <Seo
-        title="Préférences de notifications — WONGO"
-        description="Choisissez comment recevoir vos messages WONGO : WhatsApp, SMS, et types d'alertes."
+        title="Préférences de notifications — CHOPCHOP"
+        description="Choisissez comment recevoir vos messages CHOPCHOP : WhatsApp, SMS, et types d'alertes."
         canonical="/settings/notifications"
       />
       <PageHeader title="Notifications" subtitle="Canaux et types d'alertes" onBack={() => navigate(-1)} />

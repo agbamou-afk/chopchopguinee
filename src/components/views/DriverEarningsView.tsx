@@ -36,7 +36,7 @@ export function DriverEarningsView() {
   const handleSettleInfo = () => {
     toast.info(
       e.cashDebtGnf > 0
-        ? `Déposez ${formatMoney(e.cashDebtGnf)} chez un agent WONGO. Le règlement sera enregistré sous 24 h.`
+        ? `Déposez ${formatMoney(e.cashDebtGnf)} chez un agent CHOPCHOP. Le règlement sera enregistré sous 24 h.`
         : "Aucune commission cash à régler.",
     );
   };

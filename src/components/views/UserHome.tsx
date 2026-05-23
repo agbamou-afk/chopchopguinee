@@ -95,7 +95,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         {welcomeBack && (
           <div className="rounded-2xl card-warm px-3 py-2 text-[12px] text-foreground/80 flex items-center gap-2">
             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-            Bon retour sur WONGO — vos services sont prêts à {userLocation}.
+            Bon retour sur CHOPCHOP — vos services sont prêts à {userLocation}.
           </div>
         )}
         {/* 1 — Wallet hero (trust anchor) */}
@@ -246,7 +246,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
             </div>
           )}
           <p className="text-center text-[10px] uppercase tracking-[0.22em] text-muted-foreground/80 mt-6">
-            WONGO · Conakry
+            CHOPCHOP · Conakry
           </p>
         </section>
       </div>

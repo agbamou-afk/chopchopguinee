@@ -104,7 +104,7 @@ const NotificationsPage = () => {
 
   return (
     <AppShell withBottomNav={false}>
-      <Seo title="Notifications — WONGO" description="Vos alertes courses, livraisons, paiements et marché." canonical="/notifications" />
+      <Seo title="Notifications — CHOPCHOP" description="Vos alertes courses, livraisons, paiements et marché." canonical="/notifications" />
       <PageHeader
         title="Notifications"
         onBack={() => navigate(-1)}

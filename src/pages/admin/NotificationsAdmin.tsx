@@ -190,7 +190,7 @@ function NotificationDiagnostics() {
 }
 
 const TEMPLATES = [
-  { name: "OTP", channel: "whatsapp", body: "Votre code WONGO : {{code}}", status: "active" },
+  { name: "OTP", channel: "whatsapp", body: "Votre code CHOPCHOP : {{code}}", status: "active" },
   { name: "Wallet top-up success", channel: "whatsapp", body: "Recharge confirmée : {{amount}} GNF", status: "active" },
   { name: "Ride confirmed", channel: "sms", body: "Course confirmée. Chauffeur arrive dans {{eta}}.", status: "active" },
   { name: "Refund issued", channel: "whatsapp", body: "Remboursement de {{amount}} GNF effectué.", status: "active" },

@@ -17,7 +17,7 @@ interface Props {
 const TopupSuccessEmail = ({
   amountGnf,
   reference,
-  agentName = 'Agent WONGO',
+  agentName = 'Agent CHOPCHOP',
   agentLocation,
   newBalanceGnf,
   occurredAt = new Date().toISOString(),
@@ -27,7 +27,7 @@ const TopupSuccessEmail = ({
     <StatusBadge tone="success">Recharge confirmée</StatusBadge>
     <H1>{firstName ? `Merci, ${firstName} 🇬🇳` : 'Recharge confirmée 🇬🇳'}</H1>
     <P>
-      Votre portefeuille WONGO a été rechargé avec succès. Vous pouvez
+      Votre portefeuille CHOPCHOP a été rechargé avec succès. Vous pouvez
       désormais payer vos courses, commandes et marchands favoris.
     </P>
     <AmountDisplay amount={amountGnf} label="Montant rechargé" tone="positive" />

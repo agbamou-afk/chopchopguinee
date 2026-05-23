@@ -67,7 +67,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       >
         <motion.img
           src={logo}
-          alt="WONGO"
+          alt="CHOPCHOP"
           className="w-44 h-auto object-contain"
           initial={{ y: 10 }}
           animate={{ y: 0 }}

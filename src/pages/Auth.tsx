@@ -178,14 +178,14 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Seo
-        title="Connexion & inscription — WONGO"
-        description="Connectez-vous ou créez votre compte WONGO par téléphone pour accéder aux courses, livraisons, marché et portefeuille en GNF."
+        title="Connexion & inscription — CHOPCHOP"
+        description="Connectez-vous ou créez votre compte CHOPCHOP par téléphone pour accéder aux courses, livraisons, marché et portefeuille en GNF."
         canonical="/auth"
       />
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
         <div className="flex flex-col items-center mb-6">
           <BrandLogo
-            alt="WONGO"
+            alt="CHOPCHOP"
             className="h-12 w-auto object-contain mb-2"
           />
           <p className="text-sm text-muted-foreground">

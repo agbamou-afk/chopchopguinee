@@ -1,12 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * WONGO — district hub model (future-ready).
+ * CHOPCHOP — district hub model (future-ready).
  *
  * Hubs are lightweight physical anchors per district: a vendor partner, a
- * restaurant, a fuel station, a kiosk, or — later — an internal WONGO site.
+ * restaurant, a fuel station, a kiosk, or — later — an internal CHOPCHOP site.
  * This module is groundwork: types + read helpers. No UI surface beyond a
- * single "Point WONGO proche · bientôt" hint on the driver dashboard.
+ * single "Point CHOPCHOP proche · bientôt" hint on the driver dashboard.
  */
 
 export type HubPartnerType =

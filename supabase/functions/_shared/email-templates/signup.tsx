@@ -9,7 +9,7 @@ interface Props {
 }
 
 export const SignupEmail = ({ confirmationUrl }: Props) => (
-  <EmailLayout preview="Confirmez votre compte WONGO">
+  <EmailLayout preview="Confirmez votre compte CHOPCHOP">
     <H1>Bienvenue sur CHOPCHOP 🇬🇳</H1>
     <P>
       Merci d'avoir créé votre compte. Confirmez votre adresse e-mail pour activer
