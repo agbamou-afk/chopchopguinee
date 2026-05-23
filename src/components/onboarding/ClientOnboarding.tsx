@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import sceneWelcome from "@/assets/onboarding/scene-welcome.jpg";
-import sceneMoto from "@/assets/onboarding/scene-moto.png";
-import sceneMarche from "@/assets/onboarding/scene-marche.png";
-import sceneRepas from "@/assets/onboarding/scene-repas.png";
-import sceneWallet from "@/assets/onboarding/scene-wallet.png";
+import sceneMoto from "@/assets/onboarding/scene-moto.jpg";
+import sceneMarche from "@/assets/onboarding/scene-marche.jpg";
+import sceneRepas from "@/assets/onboarding/scene-repas.jpg";
+import sceneWallet from "@/assets/onboarding/scene-wallet.jpg";
 import motoIcon from "@/assets/icons/moto.png";
 import toktokIcon from "@/assets/icons/toktok.png";
 import repasIcon from "@/assets/icons/repas.png";
