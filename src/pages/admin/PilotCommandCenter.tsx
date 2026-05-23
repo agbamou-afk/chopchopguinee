@@ -577,7 +577,7 @@ export default function PilotCommandCenter() {
               const dFailed = failedToday.filter(
                 (m) => inDistrict(m.pickup_address) || inDistrict(m.dropoff_address),
               );
-              const dCouriers = activeCouriers.filter((c) =>
+              const dCouriers = presenceOnline.filter((c) =>
                 [c.current_operating_district, c.last_seen_district, c.preferred_district].some(
                   (x) => x?.toLowerCase() === name.toLowerCase(),
                 ),
