@@ -32,10 +32,9 @@ import {
   DRIVER_ONBOARDING_DONE_KEY,
   DRIVER_ONBOARDING_REPLAY_EVENT,
 } from "@/components/onboarding/DriverOnboarding";
-import { isAdminUser, isLiveUser } from "@/lib/runtimeMode";
+import { isAdminUser, isLiveUser, isSandboxMode } from "@/lib/runtimeMode";
 import { ConversionGateSheet, type ConversionIntent } from "@/components/onboarding/ConversionGateSheet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
-import { isSandboxMode } from "@/lib/runtimeMode";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
