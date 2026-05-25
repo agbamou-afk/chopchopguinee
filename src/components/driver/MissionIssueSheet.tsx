@@ -12,15 +12,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { reportIssue } from "@/lib/missions/missions";
 import { toast } from "sonner";
 import type { Mission } from "@/lib/missions/types";
+import { createSupportIssue } from "@/lib/support/issues";
+import type { IssueType } from "@/lib/support/constants";
 
-const REASONS = [
-  "Restaurant introuvable",
-  "Commande non prête",
-  "Client injoignable",
-  "Adresse incorrecte",
-  "Problème moto",
-  "Autre",
-] as const;
+/**
+ * Driver issue reasons, mapped to support_issues.issue_type so the
+ * operational log captures a structured type without changing the
+ * mission-side reportIssue contract.
+ */
+const REASONS: { label: string; type: IssueType }[] = [
+  { label: "Restaurant introuvable", type: "merchant_not_ready" },
+  { label: "Commande non prête", type: "merchant_not_ready" },
+  { label: "Client injoignable", type: "customer_unreachable" },
+  { label: "Adresse incorrecte", type: "wrong_address" },
+  { label: "Problème moto", type: "app_bug" },
+  { label: "Autre", type: "other" },
+];
 
 interface MissionIssueSheetProps {
   missionId: string;
@@ -30,7 +37,7 @@ interface MissionIssueSheetProps {
 }
 
 export function MissionIssueSheet({ missionId, open, onOpenChange, onReported }: MissionIssueSheetProps) {
-  const [reason, setReason] = useState<string | null>(null);
+  const [reason, setReason] = useState<typeof REASONS[number] | null>(null);
   const [extra, setExtra] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -38,9 +45,20 @@ export function MissionIssueSheet({ missionId, open, onOpenChange, onReported }:
     if (!reason || busy) return;
     setBusy(true);
     try {
-      const note = extra.trim() ? `${reason} — ${extra.trim()}` : reason;
+      const note = extra.trim() ? `${reason.label} — ${extra.trim()}` : reason.label;
       const updated = await reportIssue(missionId, note);
       onReported?.(updated);
+      // Mirror to support_issues. Never-throw — must not break mission flow.
+      await createSupportIssue({
+        type: reason.type,
+        title: reason.label,
+        description: extra.trim() || null,
+        relatedMissionId: missionId,
+        district: (updated as any)?.issue_district ?? null,
+        relatedDriverId: (updated as any)?.courier_id ?? null,
+        relatedCustomerId: (updated as any)?.customer_id ?? null,
+        metadata: { source: "driver_issue_sheet" },
+      });
       toast.success("Problème signalé à CHOPCHOP");
       onOpenChange(false);
       setReason(null);
@@ -67,10 +85,10 @@ export function MissionIssueSheet({ missionId, open, onOpenChange, onReported }:
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           {REASONS.map((r) => {
-            const active = reason === r;
+            const active = reason?.label === r.label;
             return (
               <button
-                key={r}
+                key={r.label}
                 type="button"
                 onClick={() => setReason(r)}
                 className={`text-left text-sm font-medium rounded-xl px-3 py-2.5 border transition-colors ${
@@ -79,7 +97,7 @@ export function MissionIssueSheet({ missionId, open, onOpenChange, onReported }:
                     : "border-border bg-card hover:bg-muted"
                 }`}
               >
-                {r}
+                {r.label}
               </button>
             );
           })}

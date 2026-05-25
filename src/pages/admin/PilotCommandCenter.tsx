@@ -14,6 +14,8 @@ import { DISTRICTS, districtChipClasses, type DistrictMeta } from "@/lib/distric
 import { MISSION_TYPE_SHORT, MISSION_STATE_LABEL, type Mission } from "@/lib/missions/types";
 import { needsReview } from "@/lib/payments/review";
 import type { PaymentIntent } from "@/lib/payments/types";
+import { listAdminIssues, type SupportIssue } from "@/lib/support/issues";
+import { ISSUE_TYPE_LABEL, ISSUE_STATUS_LABEL, ISSUE_SEVERITY_TONE } from "@/lib/support/constants";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
@@ -156,6 +158,14 @@ function useStores() {
   });
 }
 
+function useSupportIssues() {
+  return useQuery({
+    queryKey: ["pilot-cc", "support_issues"],
+    refetchInterval: REFRESH_MS,
+    queryFn: () => listAdminIssues({ limit: 80 }),
+  });
+}
+
 /* -------------------------------------------------------------------------- */
 /* Tiny UI primitives                                                         */
 /* -------------------------------------------------------------------------- */
@@ -228,12 +238,14 @@ export default function PilotCommandCenter() {
   const couriersQ = useCouriers();
   const restaurantsQ = useRestaurants();
   const storesQ = useStores();
+  const issuesQ = useSupportIssues();
 
   const missions = missionsQ.data ?? [];
   const payments = paymentsQ.data ?? [];
   const couriers = couriersQ.data ?? [];
   const restaurants = restaurantsQ.data ?? [];
   const stores = storesQ.data ?? [];
+  const issues: SupportIssue[] = issuesQ.data ?? [];
 
   const todayIso = startOfTodayIso();
 
@@ -278,7 +290,7 @@ export default function PilotCommandCenter() {
 
   const longPending = pendingPayments.filter((p) => ageMin(p.created_at) > 30);
   // Data-source availability — drives partial-data warnings, never inflates green.
-  const missingSources: string[] = ["File support (à connecter)"];
+  const missingSources: string[] = [];
   if (!canSeePayments) missingSources.push("Détails paiements (permission requise)");
   // Courier presence is best-effort; treat it as a partial source whenever
   // active missions exist but no courier reports presence.
@@ -462,7 +474,91 @@ export default function PilotCommandCenter() {
 
         {/* 4. Support */}
         <SectionCard title="Support / Incidents" eyebrow="04 · support">
-          <EmptyRow>File support à connecter — pas de table dédiée pour l'instant.</EmptyRow>
+          {issuesQ.isLoading ? (
+            <EmptyRow>Chargement…</EmptyRow>
+          ) : (() => {
+            const openIssues = issues.filter(
+              (i) => i.status !== "resolved" && i.status !== "cancelled",
+            );
+            const criticalIssues = openIssues.filter((i) => i.severity === "critical");
+            const byType = new Map<string, number>();
+            const byDistrict = new Map<string, number>();
+            for (const i of openIssues) {
+              byType.set(i.issue_type, (byType.get(i.issue_type) ?? 0) + 1);
+              if (i.district) byDistrict.set(i.district, (byDistrict.get(i.district) ?? 0) + 1);
+            }
+            const topTypes = Array.from(byType.entries()).sort((a,b) => b[1]-a[1]).slice(0, 4);
+            const topDistricts = Array.from(byDistrict.entries()).sort((a,b) => b[1]-a[1]).slice(0, 4);
+            const recent = issues.slice(0, 5);
+            return (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <PulseStat label="Ouverts" value={openIssues.length} icon={LifeBuoy}
+                    tone={openIssues.length > 0 ? "warn" : "muted"} />
+                  <PulseStat label="Critiques" value={criticalIssues.length} icon={AlertTriangle}
+                    tone={criticalIssues.length > 0 ? "alert" : "muted"} />
+                  <PulseStat label="Escaladés" value={issues.filter(i => i.status === "escalated").length} icon={AlertTriangle}
+                    tone={issues.some(i => i.status === "escalated") ? "alert" : "muted"} />
+                  <PulseStat label="Total 24h" value={
+                    issues.filter(i => Date.now() - new Date(i.created_at).getTime() < 24*3600*1000).length
+                  } icon={Hourglass} tone="muted" />
+                </div>
+                {(topTypes.length > 0 || topDistricts.length > 0) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[12px]">
+                    {topTypes.length > 0 && (
+                      <div className="p-2 border border-border/60 rounded">
+                        <div className="text-[10px] font-mono uppercase text-muted-foreground mb-1">Par type</div>
+                        <ul className="space-y-0.5">
+                          {topTypes.map(([t, n]) => (
+                            <li key={t} className="flex justify-between">
+                              <span className="truncate">{ISSUE_TYPE_LABEL[t as keyof typeof ISSUE_TYPE_LABEL] ?? t}</span>
+                              <span className="font-mono">{n}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {topDistricts.length > 0 && (
+                      <div className="p-2 border border-border/60 rounded">
+                        <div className="text-[10px] font-mono uppercase text-muted-foreground mb-1">Par district</div>
+                        <ul className="space-y-0.5">
+                          {topDistricts.map(([d, n]) => (
+                            <li key={d} className="flex justify-between">
+                              <span>{d}</span><span className="font-mono">{n}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {recent.length === 0 ? (
+                  <EmptyRow>Aucun incident enregistré.</EmptyRow>
+                ) : (
+                  <div className="space-y-1.5">
+                    {recent.map((i) => (
+                      <Link key={i.id} to="/admin/support"
+                            className="flex items-center gap-2 p-2 border border-border/60 rounded text-[12px] hover:bg-muted/40">
+                        <span className={`w-2 h-2 rounded-full ${
+                          ISSUE_SEVERITY_TONE[i.severity] === "alert" ? "bg-destructive"
+                          : ISSUE_SEVERITY_TONE[i.severity] === "warn" ? "bg-amber-500"
+                          : "bg-muted-foreground/40"
+                        }`} />
+                        <span className="truncate flex-1">{i.title}</span>
+                        <span className="text-[10px] text-muted-foreground">{ISSUE_STATUS_LABEL[i.status]}</span>
+                        {i.district && <span className="text-[10px] text-muted-foreground">· {i.district}</span>}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                <div className="text-right">
+                  <Button asChild size="sm" variant="ghost" className="text-[11px]">
+                    <Link to="/admin/support">Ouvrir support / issues →</Link>
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </SectionCard>
 
         {/* 5. Merchant watch */}
