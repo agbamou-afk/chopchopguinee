@@ -23,8 +23,9 @@ import {
   stepIndex,
 } from "@/lib/missions/pipelines";
 import { MissionIssueSheet } from "./MissionIssueSheet";
-import { ChopMap, RoutePolyline, ChopPin } from "@/components/map";
+import { ChopMap, RoutePolyline, ChopPin, StraightLineFallback } from "@/components/map";
 import { bbox as bboxOf, type LatLng } from "@/lib/maps/geo";
+import { openExternalNavigation } from "@/lib/maps/external";
 import { useEffect, useRef } from "react";
 import type { ChopMapHandle } from "@/components/map/ChopMap";
 import { RoutingService } from "@/lib/maps/RoutingService";
@@ -106,18 +107,21 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
   const initialView = pickup ?? dropoff;
 
   const openDirections = () => {
+    const surface = `mission_card_${mission.type}`;
     if (mission.pickup_lat && mission.pickup_lng && activeIdx <= 1) {
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&destination=${mission.pickup_lat},${mission.pickup_lng}`,
-        "_blank",
-      );
+      openExternalNavigation({
+        destination: { lat: mission.pickup_lat, lng: mission.pickup_lng },
+        surface, missionId: mission.id,
+        metadata: { phase: "pickup", state: mission.state },
+      });
       return;
     }
     if (mission.dropoff_lat && mission.dropoff_lng) {
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&destination=${mission.dropoff_lat},${mission.dropoff_lng}`,
-        "_blank",
-      );
+      openExternalNavigation({
+        destination: { lat: mission.dropoff_lat, lng: mission.dropoff_lng },
+        surface, missionId: mission.id,
+        metadata: { phase: "dropoff", state: mission.state },
+      });
       return;
     }
     toast("Itinéraire indisponible", { description: "Coordonnées manquantes." });
