@@ -5,6 +5,7 @@ import { useMapConfig } from '@/lib/maps';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Analytics } from '@/lib/analytics/AnalyticsService';
 import { useLowDataMode } from '@/hooks/useLowDataMode';
+import { MapFallbackCard } from './MapFallbackCard';
 export interface ChopMapHandle {
   getMap: () => MapRef | null;
   flyTo: (lng: number, lat: number, zoom?: number) => void;
@@ -36,14 +37,11 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
   }));
   if (error) {
     return (
-      <div className={`relative chop-map-fallback rounded-2xl ${className ?? ''}`}>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-            Carte CHOPCHOP
-          </span>
-          <span className="text-xs text-muted-foreground mt-1">Mode hors-ligne</span>
-        </div>
-      </div>
+      <MapFallbackCard
+        className={className}
+        message="Mode hors-ligne — vérifiez votre connexion."
+        onRetry={() => { try { window.location.reload(); } catch {} }}
+      />
     );
   }
   if (!config) return <Skeleton className={`rounded-2xl ${className ?? ''}`} />;

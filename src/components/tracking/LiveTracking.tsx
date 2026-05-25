@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { motion, AnimatePresence } from "framer-motion";
 import { Marker } from "react-map-gl";
-import { ChopMap, type ChopMapHandle, MapMarker, RoutePolyline, PinSet } from "@/components/map";
+import { ChopMap, type ChopMapHandle, MapMarker, RoutePolyline, PinSet, StraightLineFallback, RecenterButton } from "@/components/map";
 import { RidePhaseChip, type CanonicalRidePhase } from "@/components/ride/RidePhaseChip";
 import { RoutingService } from "@/lib/maps";
 import QRCode from "react-qr-code";
@@ -63,6 +63,17 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
   const tickRef = useRef<number | null>(null);
   const settledRef = useRef(false);
   const mapRef = useRef<ChopMapHandle>(null);
+
+  const recenter = () => {
+    const target: [number, number] =
+      phase === "inTrip" || phase === "atDestination"
+        ? (destCoords ?? pickupCoords) : pickupCoords;
+    const minLng = Math.min(driverPos[1], target[1]);
+    const maxLng = Math.max(driverPos[1], target[1]);
+    const minLat = Math.min(driverPos[0], target[0]);
+    const maxLat = Math.max(driverPos[0], target[0]);
+    mapRef.current?.fitBounds([minLng, minLat, maxLng, maxLat], 80);
+  };
 
   const driver = useMemo(() => DRIVERS[Math.floor(Math.random() * DRIVERS.length)], []);
   const driverEmoji = mode === "moto" ? "🛵" : mode === "toktok" ? "🛺" : "🛵";
@@ -302,6 +313,17 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
           initialView={{ longitude: pickupCoords[1], latitude: pickupCoords[0], zoom: 15 }}
         >
           {routePolyline && <RoutePolyline encoded={routePolyline} />}
+          {!routePolyline && phase !== "searching" && (
+            <StraightLineFallback
+              from={{ lat: driverPos[0], lng: driverPos[1] }}
+              to={
+                phase === "inTrip" || phase === "atDestination"
+                  ? { lat: (destCoords ?? pickupCoords)[0], lng: (destCoords ?? pickupCoords)[1] }
+                  : { lat: pickupCoords[0], lng: pickupCoords[1] }
+              }
+              id={`live-${tripId}-fb`}
+            />
+          )}
           <PinSet
             pickup={{ lat: pickupCoords[0], lng: pickupCoords[1] }}
             dropoff={destCoords ? { lat: destCoords[0], lng: destCoords[1] } : undefined}
@@ -319,6 +341,12 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
             </Marker>
           )}
         </ChopMap>
+
+        {phase !== "searching" && (
+          <div className="absolute right-3 bottom-3 z-10">
+            <RecenterButton onClick={recenter} />
+          </div>
+        )}
 
         {/* Status pill */}
         <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5">

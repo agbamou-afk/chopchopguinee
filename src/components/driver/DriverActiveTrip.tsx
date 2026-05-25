@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChopMap, type ChopMapHandle, PinSet, RoutePolyline,
+  ChopMap, type ChopMapHandle, PinSet, RoutePolyline, StraightLineFallback, RecenterButton,
 } from "@/components/map";
 import {
-  bbox as bboxOf, formatDuration, formatDistance, type LatLng,
+  bbox as bboxOf, formatDuration, formatDistance, type LatLng, openExternalNavigation,
 } from "@/lib/maps";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
 import { useRideLifecycleNotifications } from "@/hooks/useRideLifecycleNotifications";
@@ -65,12 +65,20 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   const openInGoogleMaps = () => {
     const target = (phase === "on_trip" || phase === "at_destination") ? dropoff : pickup;
     if (!target) return;
-    const origin = driverPos ? `${driverPos.lat},${driverPos.lng}` : "";
-    const dest = `${target.lat},${target.lng}`;
-    const travel = ride?.mode === "moto" ? "two-wheeler" : "driving";
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=${travel}`;
-    try { Analytics.track("driver.nav.external_open" as any, { metadata: { rideId, phase } }); } catch {}
-    window.open(url, "_blank", "noopener");
+    openExternalNavigation({
+      destination: target,
+      origin: driverPos ? { lat: driverPos.lat, lng: driverPos.lng } : null,
+      mode: ride?.mode === "moto" ? "two_wheeler" : "driving",
+      surface: "driver_active_trip",
+      rideId,
+      metadata: { phase },
+    });
+  };
+
+  const recenter = () => {
+    if (driverPos) mapRef.current?.flyTo(driverPos.lng, driverPos.lat, 15);
+    else if (pickup) mapRef.current?.flyTo(pickup.lng, pickup.lat, 15);
+    else if (!geoReady) requestGeo();
   };
 
   // Sandbox relaxes the strict "wait for client scan" gate for internal QA.
@@ -299,9 +307,17 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
             <RoutePolyline encoded={nav.route.polyline}
               state={phase === "on_trip" || phase === "at_destination" ? "active" : "approach"} animated />
           )}
+          {/* Straight-line fallback when routing is unavailable */}
+          {!nav.route && navOrigin && navDestination && (
+            <StraightLineFallback from={navOrigin} to={navDestination} id={`ride-${rideId}-fb`} />
+          )}
         </ChopMap>
 
         <NavigationHud state={nav} muted={muted} onToggleMute={() => setMuted(m => !m)} />
+
+        <div className="absolute right-3 top-3">
+          <RecenterButton onClick={recenter} />
+        </div>
 
         <div className="absolute left-1/2 bottom-3 -translate-x-1/2">
           <RidePhaseChip phase={deriveRidePhase(ride)} />
