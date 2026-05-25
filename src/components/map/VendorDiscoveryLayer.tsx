@@ -37,7 +37,7 @@ export function VendorDiscoveryLayer({ enabled = true, filters = {} }: Props) {
         >
           <ChopPin
             kind={{ family: 'actor', key: v.kind === 'restaurant' ? 'restaurant' : 'boutique' }}
-            size="md"
+            label={v.name}
           />
         </Marker>
       ))}
