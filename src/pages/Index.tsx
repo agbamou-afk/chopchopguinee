@@ -115,9 +115,22 @@ const Index = () => {
     if (liveUser) {
       onboardingDecidedRef.current = true;
       try {
-        const done = typeof window !== "undefined"
-          && localStorage.getItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`) === "1";
-        if (!done) setShowOnboarding(true);
+        if (typeof window !== "undefined") {
+          // Driver-designated accounts get the driver storybook instead of
+          // the client one, so they never have to go through client onboarding
+          // before reaching their dashboard.
+          if (isDriver) {
+            const dDone = localStorage.getItem(
+              `${DRIVER_ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`,
+            ) === "1";
+            if (!dDone) setShowDriverOnboarding(true);
+          } else {
+            const done = localStorage.getItem(
+              `${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`,
+            ) === "1";
+            if (!done) setShowOnboarding(true);
+          }
+        }
       } catch { /* noop */ }
       return;
     }
@@ -125,7 +138,7 @@ const Index = () => {
       onboardingDecidedRef.current = true;
       setShowOnboarding(true);
     }
-  }, [ready, adminUser, liveUser, publicUser, user?.id]);
+  }, [ready, adminUser, liveUser, publicUser, user?.id, isDriver]);
 
   // If the session changes (login/logout), re-evaluate.
   useEffect(() => {
@@ -188,14 +201,23 @@ const Index = () => {
 
   // After auth resolves, restore the driver-mode preference persisted for
   // this session. Runs once — manual toggles afterwards win.
+  //
+  // Driver-designated accounts (users carrying the `driver` role) land
+  // directly in driver mode unless they explicitly toggled back to client
+  // mode earlier in this browser session ("cc_driver_mode" === "0"). This
+  // removes the "client dashboard flash" before the driver dashboard.
   useEffect(() => {
     if (autoModeAppliedRef.current) return;
-    if (!user) return;
+    if (!ready || !user) return;
     autoModeAppliedRef.current = true;
-    if (typeof window !== "undefined" && sessionStorage.getItem("cc_driver_mode") === "1") {
+    if (typeof window === "undefined") return;
+    const pref = sessionStorage.getItem("cc_driver_mode");
+    if (pref === "1") {
+      setIsDriverMode(true);
+    } else if (pref === null && isDriver) {
       setIsDriverMode(true);
     }
-  }, [user?.id]);
+  }, [ready, user?.id, isDriver]);
 
   // Rides the user has actively dismissed this session — never re-restore them.
   const dismissedRidesRef = useRef<Set<string>>(new Set());
