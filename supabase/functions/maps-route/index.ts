@@ -17,6 +17,60 @@ function validate(body: any): body is Body {
   return ok(body.origin) && ok(body.destination);
 }
 
+/** Decode a Google encoded polyline (precision 1e5). */
+function decodePolyline(str: string): Array<{ lat: number; lng: number }> {
+  let index = 0, lat = 0, lng = 0;
+  const coords: Array<{ lat: number; lng: number }> = [];
+  while (index < str.length) {
+    let b: number, shift = 0, result = 0;
+    do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    const dlat = result & 1 ? ~(result >> 1) : result >> 1;
+    lat += dlat;
+    shift = 0; result = 0;
+    do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    const dlng = result & 1 ? ~(result >> 1) : result >> 1;
+    lng += dlng;
+    coords.push({ lat: lat / 1e5, lng: lng / 1e5 });
+  }
+  return coords;
+}
+
+/** French maneuver dictionary for OSRM fallback. */
+const OSRM_FR: Record<string, string> = {
+  'depart': 'Départ',
+  'continue': 'Continuez tout droit',
+  'turn-left': 'Tournez à gauche',
+  'turn-right': 'Tournez à droite',
+  'turn-slight-left': 'Tournez légèrement à gauche',
+  'turn-slight-right': 'Tournez légèrement à droite',
+  'slight-left': 'Tournez légèrement à gauche',
+  'slight-right': 'Tournez légèrement à droite',
+  'sharp-left': 'Tournez franchement à gauche',
+  'sharp-right': 'Tournez franchement à droite',
+  'turn-sharp-left': 'Tournez franchement à gauche',
+  'turn-sharp-right': 'Tournez franchement à droite',
+  'uturn': 'Faites demi-tour',
+  'roundabout': 'Prenez le rond-point',
+  'rotary': 'Prenez le rond-point',
+  'roundabout-turn': 'Prenez le rond-point',
+  'exit-roundabout': 'Sortez du rond-point',
+  'exit-rotary': 'Sortez du rond-point',
+  'merge': 'Insérez-vous',
+  'fork': 'Restez sur la voie',
+  'end-of-road': 'Au bout de la route',
+  'new-name': 'Continuez',
+  'notification': 'Continuez',
+  'arrive': 'Arrivée à destination',
+};
+function osrmFrenchInstruction(type: string | null | undefined, modifier: string | null | undefined, streetName: string | null | undefined): string {
+  const key = type && modifier && type !== 'turn' ? `${type}-${modifier}` : (type ?? '');
+  const base = OSRM_FR[key] ?? OSRM_FR[type ?? ''] ?? (modifier ? OSRM_FR[`turn-${modifier}`] ?? 'Continuez' : 'Continuez');
+  if (streetName && streetName.trim().length > 0 && type !== 'arrive' && type !== 'depart') {
+    return `${base} sur ${streetName}`;
+  }
+  return base;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   const start = Date.now();
@@ -119,23 +173,59 @@ Deno.serve(async (req) => {
         const od = await or.json();
         const oroute = od?.routes?.[0];
         if (or.ok && oroute) {
-          const fallback = {
-            polyline: oroute.geometry,
-            distanceM: Math.round(oroute.distance ?? 0),
-            durationS: Math.round(oroute.duration ?? 0),
-            bbox: null,
-            steps: (oroute.legs?.[0]?.steps ?? []).map((s: any) => ({
-              instruction: s.maneuver?.instruction ?? s.name ?? '',
+          const rawSteps = oroute.legs?.[0]?.steps ?? [];
+          // First pass: extract start locations + step polylines
+          const stepsBase = rawSteps.map((s: any) => {
+            const start = s.maneuver?.location
+              ? { lat: s.maneuver.location[1], lng: s.maneuver.location[0] }
+              : null;
+            const decoded = s.geometry ? decodePolyline(s.geometry) : [];
+            return { raw: s, start, decoded };
+          });
+          // Second pass: derive endLocation from next step start or own polyline tail or destination
+          const steps = stepsBase.map((entry: any, i: number) => {
+            const next = stepsBase[i + 1];
+            const tail = entry.decoded.length > 0 ? entry.decoded[entry.decoded.length - 1] : null;
+            const end = next?.start ?? tail ?? (i === stepsBase.length - 1 ? body.destination : entry.start);
+            const startLocation = entry.start ?? (entry.decoded[0] ?? null);
+            const s = entry.raw;
+            const streetName = (s.name && String(s.name).trim().length > 0) ? String(s.name) : null;
+            return {
+              instruction: osrmFrenchInstruction(s.maneuver?.type, s.maneuver?.modifier, streetName),
               distanceM: Math.round(s.distance ?? 0),
               durationS: Math.round(s.duration ?? 0),
               polyline: s.geometry,
               maneuver: s.maneuver?.type ?? null,
-              startLocation: s.maneuver?.location
-                ? { lat: s.maneuver.location[1], lng: s.maneuver.location[0] }
-                : null,
-              endLocation: null,
-            })),
-            provider: 'osrm-fallback',
+              startLocation,
+              endLocation: end,
+            };
+          });
+          // Derive bbox from decoded route polyline
+          let derivedBbox: any = null;
+          try {
+            const pts = decodePolyline(oroute.geometry ?? '');
+            if (pts.length > 0) {
+              let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+              for (const p of pts) {
+                if (p.lat < minLat) minLat = p.lat;
+                if (p.lat > maxLat) maxLat = p.lat;
+                if (p.lng < minLng) minLng = p.lng;
+                if (p.lng > maxLng) maxLng = p.lng;
+              }
+              derivedBbox = {
+                northeast: { lat: maxLat, lng: maxLng },
+                southwest: { lat: minLat, lng: minLng },
+              };
+            }
+          } catch { /* tolerate */ }
+          const fallback = {
+            polyline: oroute.geometry,
+            distanceM: Math.round(oroute.distance ?? 0),
+            durationS: Math.round(oroute.duration ?? 0),
+            bbox: derivedBbox,
+            steps,
+            // Normalized to match RouteProvider name; was previously 'osrm-fallback'.
+            provider: 'osrm',
           };
           await logMapsRequest(admin, {
             user_id: userId, provider: 'osrm', action: 'route',

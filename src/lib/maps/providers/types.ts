@@ -8,15 +8,18 @@ export interface RouteStep {
   durationS: number;
   polyline: string;
   maneuver: string | null;
-  startLocation: { lat: number; lng: number };
-  endLocation: { lat: number; lng: number };
+  /** Some providers (OSRM fallback) may omit this. Always guard before use. */
+  startLocation: { lat: number; lng: number } | null;
+  /** Some providers (OSRM fallback) may omit this. Always guard before use. */
+  endLocation: { lat: number; lng: number } | null;
 }
 
 export interface NormalizedRoute {
   polyline: string;
   distanceM: number;
   durationS: number;
-  bbox: { northeast: LatLng; southwest: LatLng };
+  /** Provider fallbacks may not return a viewport; derive from polyline when needed. */
+  bbox: { northeast: LatLng; southwest: LatLng } | null;
   steps: RouteStep[];
   provider: 'google' | 'osrm' | 'graphhopper';
 }

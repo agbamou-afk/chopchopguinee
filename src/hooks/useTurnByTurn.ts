@@ -3,6 +3,7 @@ import { decodePolyline, haversineMeters, type LatLng } from "@/lib/maps/geo";
 import type { NormalizedRoute, RouteStep } from "@/lib/maps/providers/types";
 import { RoutingService } from "@/lib/maps/RoutingService";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
+import { logNavigationEvent } from "@/lib/maps/navigationTelemetry";
 
 export interface TurnByTurnState {
   route: NormalizedRoute | null;
@@ -79,6 +80,13 @@ export function useTurnByTurn(opts: {
         if (!alive) return;
         setRoute(r); setStepIndex(0); setOffRoute(false); offRouteCount.current = 0;
         spokenForStep.current = { idx: -1, far: false, near: false };
+        // Log provider taken + whether steps are usable
+        try {
+          const evt = r.provider === 'google' ? 'nav_provider_google' : 'nav_provider_osrm';
+          logNavigationEvent({ event_name: evt, provider: r.provider, metadata: { mode, steps: r.steps.length } });
+          if (r.provider !== 'google') logNavigationEvent({ event_name: 'nav_fallback_osrm', provider: r.provider, metadata: { steps: r.steps.length } });
+          if (!r.steps || r.steps.length === 0) logNavigationEvent({ event_name: 'route_steps_unavailable', provider: r.provider });
+        } catch { /* noop */ }
       })
       .catch(() => {})
       .finally(() => { if (alive) setRerouting(false); });
@@ -102,6 +110,7 @@ export function useTurnByTurn(opts: {
   };
 
   // Tick: advance step / detect off-route / speak cues
+  // TODO(pilot-nav): decide whether voice cues and reroute remain enabled during pilot.
   useEffect(() => {
     if (!enabled || !route || !driverPos || route.steps.length === 0) return;
 
@@ -121,10 +130,13 @@ export function useTurnByTurn(opts: {
     // Advance steps when close to current step end
     const idx = Math.min(stepIndex, route.steps.length - 1);
     const step = route.steps[idx];
+    // Guard: OSRM fallback may omit endLocation; skip distance/advance logic for that step.
+    if (!step.endLocation) return;
     const distToEnd = haversineMeters(driverPos, step.endLocation);
     if (distToEnd < ADVANCE_RADIUS_M && idx < route.steps.length - 1) {
       setStepIndex(idx + 1);
       spokenForStep.current = { idx: idx + 1, far: false, near: false };
+      try { logNavigationEvent({ event_name: 'nav_step_advanced', metadata: { from: idx, to: idx + 1 } }); } catch {}
       return;
     }
 
@@ -143,7 +155,7 @@ export function useTurnByTurn(opts: {
 
   const currentStep = route?.steps[stepIndex] ?? null;
   const nextStep = route?.steps[stepIndex + 1] ?? null;
-  const distanceToManeuverM = currentStep && driverPos
+  const distanceToManeuverM = currentStep && driverPos && currentStep.endLocation
     ? Math.round(haversineMeters(driverPos, currentStep.endLocation))
     : null;
   const remainingDistanceM = route

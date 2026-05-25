@@ -196,9 +196,11 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
         setRoutePolyline(r.polyline);
         setDistanceKm(r.distanceM / 1000);
         setDurationMin(Math.max(1, Math.round(r.durationS / 60)));
-        // Fit map to route bounds
-        const ne = r.bbox.northeast, sw = r.bbox.southwest;
-        mapRef.current?.fitBounds([sw.lng, sw.lat, ne.lng, ne.lat], 80);
+        // Fit map to route bounds (some providers omit bbox; tolerate that).
+        if (r.bbox) {
+          const ne = r.bbox.northeast, sw = r.bbox.southwest;
+          mapRef.current?.fitBounds([sw.lng, sw.lat, ne.lng, ne.lat], 80);
+        }
       })
       .catch((e) => {
         if (cancelled) return;
