@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChopMap, type ChopMapHandle, PinSet, RoutePolyline, DriverCluster, DraggablePickupPin } from "@/components/map";
 import { RoutingService, decodePolyline, bbox as bboxOf, formatDistance, formatDuration } from "@/lib/maps";
 import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
+import { searchConakryPlaces, categoryLabel, confidenceLabel } from "@/lib/locations/searchPlaces";
+import { logLocationSearchEvent } from "@/lib/locations/locationSearchTelemetry";
 
 function haversineKm(a: [number, number], b: [number, number]): number {
   const R = 6371;
@@ -24,6 +26,11 @@ interface Suggestion {
   sub: string;
   coords: [number, number];
   kind: string;
+  source?: 'gazetteer' | 'nominatim';
+  placeId?: string;
+  confidenceLabel?: string | null;
+  category?: string;
+  district?: string | null;
 }
 
 const POI_KEYWORDS = ["rond-point", "marché", "carrefour", "commune", "quartier", "place"];
@@ -123,13 +130,28 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
     setSearching(true);
     try {
       const [lat, lng] = pickupCoords;
+      // 1) Local Conakry gazetteer first — handles "km5", "kippe", "hamdalaye", etc.
+      const local = searchConakryPlaces(q, { limit: 6 }).filter(
+        (p) => p.latitude != null && p.longitude != null,
+      );
+      const localItems: Suggestion[] = local.map((p) => ({
+        label: p.name,
+        sub: [p.commune, categoryLabel(p.category)].filter(Boolean).join(' · '),
+        coords: [p.latitude as number, p.longitude as number],
+        kind: p.category,
+        source: 'gazetteer',
+        placeId: p.id,
+        confidenceLabel: confidenceLabel(p.confidence),
+        category: categoryLabel(p.category),
+        district: p.commune,
+      }));
       const delta = 0.25;
       const viewbox = `${lng - delta},${lat + delta},${lng + delta},${lat - delta}`;
       const query = q.trim().length < 2 ? POI_KEYWORDS.join(" OR ") : q;
       const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&countrycodes=gn&viewbox=${viewbox}&bounded=1&q=${encodeURIComponent(query)}`;
       const res = await fetch(url, { headers: { "Accept-Language": "fr" } });
       const data = await res.json();
-      const items: Suggestion[] = (data as Array<Record<string, unknown>>).map((d) => {
+      const remote: Suggestion[] = (data as Array<Record<string, unknown>>).map((d) => {
         const a = (d.address ?? {}) as Record<string, string>;
         const sub = [a.suburb, a.city_district, a.city, a.town, a.village, a.county]
           .filter(Boolean)
@@ -140,11 +162,29 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           sub: sub || (d.display_name as string).split(",").slice(1, 3).join(", "),
           coords: [parseFloat(d.lat as string), parseFloat(d.lon as string)],
           kind: (d.type as string) ?? "",
+          source: 'nominatim' as const,
         };
       });
-      setSuggestions(items);
+      // Deduplicate remote rows that duplicate a gazetteer hit by label
+      const localLabels = new Set(localItems.map((i) => i.label.toLowerCase()));
+      const merged = [...localItems, ...remote.filter((r) => !localLabels.has(r.label.toLowerCase()))];
+      setSuggestions(merged);
     } catch {
-      setSuggestions([]);
+      // Network/external geocoder failure — still surface gazetteer matches
+      const local = searchConakryPlaces(q, { limit: 6 }).filter(
+        (p) => p.latitude != null && p.longitude != null,
+      );
+      setSuggestions(local.map((p) => ({
+        label: p.name,
+        sub: [p.commune, categoryLabel(p.category)].filter(Boolean).join(' · '),
+        coords: [p.latitude as number, p.longitude as number],
+        kind: p.category,
+        source: 'gazetteer',
+        placeId: p.id,
+        confidenceLabel: confidenceLabel(p.confidence),
+        category: categoryLabel(p.category),
+        district: p.commune,
+      })));
     } finally {
       setSearching(false);
     }
@@ -170,6 +210,17 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
       setDestination(s.label);
       setDestCoords(s.coords);
     }
+    // Discrete telemetry — never blocks selection
+    logLocationSearchEvent({
+      query: activeField === 'pickup' ? pickup : destination,
+      context: activeField === 'pickup' ? 'pickup' : 'dropoff',
+      selected_place_id: s.placeId ?? null,
+      selected_label: s.label,
+      selected_source: s.source ?? 'typed',
+      district: s.district ?? null,
+      latitude: s.coords[0], longitude: s.coords[1],
+      confidence: s.confidenceLabel ? 'approximate' : null,
+    });
     setSuggestions([]);
     setActiveField(null);
   };
