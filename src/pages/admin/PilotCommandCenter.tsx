@@ -14,6 +14,8 @@ import { DISTRICTS, districtChipClasses, type DistrictMeta } from "@/lib/distric
 import { MISSION_TYPE_SHORT, MISSION_STATE_LABEL, type Mission } from "@/lib/missions/types";
 import { needsReview } from "@/lib/payments/review";
 import type { PaymentIntent } from "@/lib/payments/types";
+import { listAdminIssues, type SupportIssue } from "@/lib/support/issues";
+import { ISSUE_TYPE_LABEL, ISSUE_STATUS_LABEL, ISSUE_SEVERITY_TONE } from "@/lib/support/constants";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
@@ -156,6 +158,14 @@ function useStores() {
   });
 }
 
+function useSupportIssues() {
+  return useQuery({
+    queryKey: ["pilot-cc", "support_issues"],
+    refetchInterval: REFRESH_MS,
+    queryFn: () => listAdminIssues({ limit: 80 }),
+  });
+}
+
 /* -------------------------------------------------------------------------- */
 /* Tiny UI primitives                                                         */
 /* -------------------------------------------------------------------------- */
@@ -228,12 +238,14 @@ export default function PilotCommandCenter() {
   const couriersQ = useCouriers();
   const restaurantsQ = useRestaurants();
   const storesQ = useStores();
+  const issuesQ = useSupportIssues();
 
   const missions = missionsQ.data ?? [];
   const payments = paymentsQ.data ?? [];
   const couriers = couriersQ.data ?? [];
   const restaurants = restaurantsQ.data ?? [];
   const stores = storesQ.data ?? [];
+  const issues: SupportIssue[] = issuesQ.data ?? [];
 
   const todayIso = startOfTodayIso();
 
@@ -278,7 +290,7 @@ export default function PilotCommandCenter() {
 
   const longPending = pendingPayments.filter((p) => ageMin(p.created_at) > 30);
   // Data-source availability — drives partial-data warnings, never inflates green.
-  const missingSources: string[] = ["File support (à connecter)"];
+  const missingSources: string[] = [];
   if (!canSeePayments) missingSources.push("Détails paiements (permission requise)");
   // Courier presence is best-effort; treat it as a partial source whenever
   // active missions exist but no courier reports presence.
