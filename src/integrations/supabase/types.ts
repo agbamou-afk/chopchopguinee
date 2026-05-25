@@ -964,6 +964,8 @@ export type Database = {
           district: string | null
           id: string
           is_open: boolean
+          latitude: number | null
+          longitude: number | null
           name: string
           owner_user_id: string | null
           pickup_available: boolean
@@ -983,6 +985,8 @@ export type Database = {
           district?: string | null
           id?: string
           is_open?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name: string
           owner_user_id?: string | null
           pickup_available?: boolean
@@ -1002,6 +1006,8 @@ export type Database = {
           district?: string | null
           id?: string
           is_open?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           owner_user_id?: string | null
           pickup_available?: boolean
@@ -1228,6 +1234,51 @@ export type Database = {
           },
         ]
       }
+      location_search_events: {
+        Row: {
+          confidence: string | null
+          context: string | null
+          created_at: string
+          district: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          query: string | null
+          selected_label: string | null
+          selected_place_id: string | null
+          selected_source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          confidence?: string | null
+          context?: string | null
+          created_at?: string
+          district?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          query?: string | null
+          selected_label?: string | null
+          selected_place_id?: string | null
+          selected_source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          confidence?: string | null
+          context?: string | null
+          created_at?: string
+          district?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          query?: string | null
+          selected_label?: string | null
+          selected_place_id?: string | null
+          selected_source?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       map_provider_settings: {
         Row: {
           default_lat: number
@@ -1421,6 +1472,8 @@ export type Database = {
           delivery_available: boolean
           district: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           member_since: string
           name: string
           owner_user_id: string
@@ -1439,6 +1492,8 @@ export type Database = {
           delivery_available?: boolean
           district?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           member_since?: string
           name: string
           owner_user_id: string
@@ -1457,6 +1512,8 @@ export type Database = {
           delivery_available?: boolean
           district?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           member_since?: string
           name?: string
           owner_user_id?: string
