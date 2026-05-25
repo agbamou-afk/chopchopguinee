@@ -15,37 +15,37 @@ const SLIDES: StorybookSlide[] = [
   {
     id: "welcome",
     title: "Bienvenue partenaire CHOPCHOP",
-    body: "Rejoignez une communauté de chauffeurs de confiance et gagnez plus chaque jour.",
+    body: "Recevez des courses, livraisons et missions dans votre zone.",
     image: sceneWelcome,
     alt: "Chauffeur CHOPCHOP fier devant son véhicule à Conakry",
   },
   {
     id: "missions",
-    title: "Recevez des courses et missions",
-    body: "Acceptez en un clic. Plus vous roulez, plus vous gagnez.",
+    title: "Acceptez vos missions",
+    body: "Moto, Repas, Marché ou colis — choisissez les missions adaptées à vos capacités.",
     image: sceneMission,
-    alt: "Smartphone avec une nouvelle course à accepter",
+    alt: "Cartes de missions différenciées par type sur smartphone",
   },
   {
     id: "navigate",
-    title: "Naviguez vers votre client",
-    body: "Suivez l'itinéraire, arrivez à l'heure, offrez une meilleure expérience.",
+    title: "Suivez l'itinéraire",
+    body: "Voyez le point de récupération, la destination et ouvrez l'itinéraire si besoin.",
     image: sceneNavigate,
-    alt: "Vue de navigation depuis le tableau de bord",
+    alt: "Carte de navigation avec points de récupération et de dépôt",
   },
   {
-    id: "deliver",
-    title: "Livrez, déposez, envoyez",
-    body: "Livrez des repas, des courses ou des colis avec Marché, Repas et Envoyer.",
+    id: "confirm",
+    title: "Confirmez chaque étape",
+    body: "Récupération, arrivée, livraison — chaque étape protège le client et le coursier.",
     image: sceneDeliver,
-    alt: "Coursier CHOPCHOP livrant des sacs",
+    alt: "Confirmation de récupération et de dépôt par QR ou photo",
   },
   {
     id: "earnings",
-    title: "Vos gains, votre avenir",
-    body: "Recevez vos paiements dans ChopWallet et développez plus d'opportunités.",
+    title: "Suivez vos gains avec ChopWallet",
+    body: "Vos gains restent clairs, visibles et suivis dans votre portefeuille.",
     image: sceneEarnings,
-    alt: "Écran ChopWallet montrant les gains",
+    alt: "Carte ChopWallet montrant les gains du chauffeur",
   },
 ];
 
@@ -82,7 +82,7 @@ export function DriverOnboarding({ onDone }: Props) {
       ariaLabel="Bienvenue chauffeur CHOPCHOP"
       slides={SLIDES}
       index={index}
-      primaryLabel="Commencer"
+      primaryLabel="Commencer à conduire"
       footerCaption="CHOPCHOP · Chauffeur · Conakry"
       onNext={next}
       onPrev={prev}
