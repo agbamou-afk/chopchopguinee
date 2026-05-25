@@ -307,9 +307,17 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
             <RoutePolyline encoded={nav.route.polyline}
               state={phase === "on_trip" || phase === "at_destination" ? "active" : "approach"} animated />
           )}
+          {/* Straight-line fallback when routing is unavailable */}
+          {!nav.route && navOrigin && navDestination && (
+            <StraightLineFallback from={navOrigin} to={navDestination} id={`ride-${rideId}-fb`} />
+          )}
         </ChopMap>
 
         <NavigationHud state={nav} muted={muted} onToggleMute={() => setMuted(m => !m)} />
+
+        <div className="absolute right-3 top-3">
+          <RecenterButton onClick={recenter} />
+        </div>
 
         <div className="absolute left-1/2 bottom-3 -translate-x-1/2">
           <RidePhaseChip phase={deriveRidePhase(ride)} />
