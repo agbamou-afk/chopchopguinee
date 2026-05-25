@@ -362,12 +362,29 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
                   className="w-full flex items-start gap-3 p-3 hover:bg-muted text-left border-b last:border-b-0 border-border/60"
                 >
                   <MapPin className="w-4 h-4 mt-0.5 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{s.label}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium truncate">{s.label}</p>
+                      {s.source === 'gazetteer' && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
+                          Local
+                        </span>
+                      )}
+                    </div>
                     {s.sub && <p className="text-xs text-muted-foreground truncate">{s.sub}</p>}
+                    {s.confidenceLabel && (
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">
+                        {s.confidenceLabel}
+                      </p>
+                    )}
                   </div>
                 </button>
               ))}
+              {!searching && suggestions.length === 0 && activeField && (
+                <div className="p-3 text-xs text-muted-foreground">
+                  Aucun résultat précis. Vous pouvez utiliser cette adresse.
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setActiveField(null)}
