@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { BRAND } from "@/lib/brand";
 import skyline from "@/assets/splash-skyline.png";
 
 interface SplashScreenProps {
@@ -9,10 +10,12 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onFinish }: SplashScreenProps) {
   const [introDone, setIntroDone] = useState(false);
+  // Canonical tagline split into three coloured segments (red / gold / green)
+  // mirroring the Guinean flag accent system used across the brand.
   const words = [
-    { text: "W'ONKHAI.", color: "text-destructive" },
-    { text: "LET'S", color: "text-secondary" },
-    { text: "GO.", color: "text-primary" },
+    { text: "Tout,", color: "text-destructive" },
+    { text: "partout,", color: "text-secondary" },
+    { text: "pour tous.", color: "text-primary" },
   ];
   const introTotal = 0.6 + words.length * 0.45 + 0.4;
   return (
@@ -104,7 +107,8 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       <div className="w-full relative overflow-hidden">
         {!introDone ? (
           <motion.div
-            className="flex items-center justify-center gap-2 text-base sm:text-lg font-extrabold uppercase tracking-wide"
+            aria-label={BRAND.tagline}
+            className="flex items-center justify-center gap-2 text-base sm:text-lg font-extrabold tracking-tight"
             onAnimationComplete={() => setTimeout(() => setIntroDone(true), introTotal * 2000)}
           >
             {words.map((word, i) => (
@@ -122,7 +126,8 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
         ) : (
           <div className="flex whitespace-nowrap">
             <motion.div
-              className="flex shrink-0 gap-2 text-base sm:text-lg font-extrabold uppercase tracking-wide pr-2"
+              aria-hidden
+              className="flex shrink-0 gap-2 text-base sm:text-lg font-extrabold tracking-tight pr-2"
               animate={{ x: ["0%", "-100%"] }}
               transition={{ duration: 24, ease: "linear", repeat: Infinity }}
             >
