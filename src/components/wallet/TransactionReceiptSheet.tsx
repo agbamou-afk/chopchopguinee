@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ShieldCheck, Receipt, MapPin, Store } from "lucide-react";
 import { formatGNF } from "@/lib/format";
 import type { WalletTransaction } from "@/hooks/useWallet";
+import { ReportIssueButton } from "@/components/support/ReportIssueButton";
 import {
   txLabel,
   txContext,
@@ -127,6 +128,21 @@ export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: P
               {linkedCta}
             </Button>
           )}
+
+          <ReportIssueButton
+            className="w-full"
+            issueTypes={["payment_pending", "payment_failed", "other"]}
+            context={{
+              relatedPaymentIntentId:
+                (tx as unknown as { payment_intent_id?: string | null }).payment_intent_id ?? null,
+              metadata: {
+                transaction_id: tx.id,
+                reference: tx.reference,
+                status: tx.status,
+                amount_gnf: tx.amount_gnf,
+              },
+            }}
+          />
         </div>
       </SheetContent>
     </Sheet>
