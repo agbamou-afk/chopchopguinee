@@ -34,6 +34,8 @@ import {
 } from "@/components/onboarding/DriverOnboarding";
 import { isAdminUser, isLiveUser } from "@/lib/runtimeMode";
 import { ConversionGateSheet, type ConversionIntent } from "@/components/onboarding/ConversionGateSheet";
+import { useDriverProfile } from "@/hooks/useDriverProfile";
+import { isSandboxMode } from "@/lib/runtimeMode";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -80,7 +82,21 @@ const Index = () => {
   const [conversionGate, setConversionGate] = useState<{ open: boolean; intent?: ConversionIntent }>({ open: false });
   const { requireAuth } = useAuthGuard();
   const { ready, roles, user } = useAuth();
-  const isDriver = roles.includes("driver");
+  const { profile: driverProfile, loading: driverProfileLoading } = useDriverProfile();
+  // Robust driver-designated check — combines every existing source of truth
+  // so sandbox / hybrid / role-only / profile-only accounts all resolve.
+  const sandbox = typeof window !== "undefined" && isSandboxMode();
+  const sandboxDriverEmail =
+    sandbox && !!user?.email && /(^|[._-])driver([._-]|@)/i.test(user.email);
+  const isDriverDesignated =
+    roles.includes("driver") ||
+    (roles as string[]).includes("courier") ||
+    driverProfile != null ||
+    sandboxDriverEmail;
+  // Routing is "resolving" until we have both roles and (if logged in) the
+  // driver profile lookup. Prevents the client-home flash for drivers.
+  const driverResolving = !ready || (!!user && driverProfileLoading);
+  const isDriver = isDriverDesignated;
   const navigate = useNavigate();
   const adminUser = isAdminUser(user, roles);
   const liveUser = isLiveUser(user, roles);
@@ -100,8 +116,7 @@ const Index = () => {
     navigate("/admin", { replace: true });
   }, [adminUser, navigate]);
   // Public onboarding always shows on launch; live users see it once.
-  const onboardingBlocksApp = !ready || showOnboarding || showDriverOnboarding;
-  const autoModeAppliedRef = useRef(false);
+  const onboardingBlocksApp = driverResolving || showOnboarding || showDriverOnboarding;
 
   // Onboarding rules:
   //   - admin               → never auto-show.
@@ -109,7 +124,7 @@ const Index = () => {
   //   - public (logged-out) → client onboarding (always replays each session).
   const onboardingDecidedRef = useRef(false);
   useEffect(() => {
-    if (!ready) return;
+    if (driverResolving) return;
     if (onboardingDecidedRef.current) return;
     if (adminUser) { onboardingDecidedRef.current = true; return; }
     if (liveUser) {
@@ -119,7 +134,7 @@ const Index = () => {
           // Driver-designated accounts get the driver storybook instead of
           // the client one, so they never have to go through client onboarding
           // before reaching their dashboard.
-          if (isDriver) {
+          if (isDriverDesignated) {
             const dDone = localStorage.getItem(
               `${DRIVER_ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`,
             ) === "1";
@@ -138,7 +153,7 @@ const Index = () => {
       onboardingDecidedRef.current = true;
       setShowOnboarding(true);
     }
-  }, [ready, adminUser, liveUser, publicUser, user?.id, isDriver]);
+  }, [driverResolving, adminUser, liveUser, publicUser, user?.id, isDriverDesignated]);
 
   // If the session changes (login/logout), re-evaluate.
   useEffect(() => {
@@ -183,41 +198,54 @@ const Index = () => {
     setShowScanner(false);
   }, [onboardingBlocksApp]);
 
-  // Logout: clear persisted mode and reset.
+  // Logout: clear explicit-choice flag and reset to client mode.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!user) {
-      sessionStorage.removeItem("cc_driver_mode");
-      autoModeAppliedRef.current = false;
+      sessionStorage.removeItem("cc_driver_mode_choice");
       if (isDriverMode) setIsDriverMode(false);
     }
   }, [user?.id, isDriverMode]);
 
-  // Persist mode changes once a user is signed in.
+  // Auto-mode resolver. Runs whenever driver designation finishes loading.
+  // - If the user explicitly toggled this session, respect their choice.
+  // - Otherwise, driver-designated accounts default to driver mode.
+  // This intentionally has NO one-shot ref: roles/driverProfile load async
+  // (post-login they may arrive after the first render), and we want to
+  // upgrade as soon as the data is available — without flipping back if
+  // the user manually toggled later.
   useEffect(() => {
-    if (typeof window === "undefined" || !user) return;
-    sessionStorage.setItem("cc_driver_mode", isDriverMode ? "1" : "0");
-  }, [user?.id, isDriverMode]);
-
-  // After auth resolves, restore the driver-mode preference persisted for
-  // this session. Runs once — manual toggles afterwards win.
-  //
-  // Driver-designated accounts (users carrying the `driver` role) land
-  // directly in driver mode unless they explicitly toggled back to client
-  // mode earlier in this browser session ("cc_driver_mode" === "0"). This
-  // removes the "client dashboard flash" before the driver dashboard.
-  useEffect(() => {
-    if (autoModeAppliedRef.current) return;
-    if (!ready || !user) return;
-    autoModeAppliedRef.current = true;
-    if (typeof window === "undefined") return;
-    const pref = sessionStorage.getItem("cc_driver_mode");
-    if (pref === "1") {
+    if (driverResolving || !user || typeof window === "undefined") return;
+    const choice = sessionStorage.getItem("cc_driver_mode_choice");
+    if (choice === "client") return;
+    if (choice === "driver" && !isDriverMode) {
       setIsDriverMode(true);
-    } else if (pref === null && isDriver) {
+      return;
+    }
+    if (choice == null && isDriverDesignated && !isDriverMode) {
       setIsDriverMode(true);
     }
-  }, [ready, user?.id, isDriver]);
+  }, [driverResolving, user?.id, isDriverDesignated, isDriverMode]);
+
+  // Wrap mode toggling so we persist the user's explicit choice — and only
+  // their explicit choice. Implicit defaults must not leak into storage.
+  const setDriverMode = useCallbackToggle(setIsDriverMode);
+
+  // Sandbox-only routing debug breadcrumb.
+  useEffect(() => {
+    if (!sandbox) return;
+    // eslint-disable-next-line no-console
+    console.debug("[driver-routing]", {
+      userId: user?.id,
+      roles,
+      hasDriverProfile: !!driverProfile,
+      driverProfileStatus: driverProfile?.status,
+      sandboxDriverEmail,
+      isDriverDesignated,
+      isDriverMode,
+      driverResolving,
+    });
+  }, [sandbox, user?.id, roles, driverProfile, sandboxDriverEmail, isDriverDesignated, isDriverMode, driverResolving]);
 
   // Rides the user has actively dismissed this session — never re-restore them.
   const dismissedRidesRef = useRef<Set<string>>(new Set());
