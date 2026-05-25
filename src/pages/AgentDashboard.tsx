@@ -127,7 +127,7 @@ export default function AgentDashboard() {
     <div className="min-h-screen bg-background pb-24">
       <header className="gradient-primary p-4 pb-10 rounded-b-3xl">
         <div className="max-w-md mx-auto flex items-center gap-3">
-          <BrandLogo loading="lazy" decoding="async" alt="CHOPCHOP" className="h-9 w-auto object-contain" />
+          <BrandLogo size="md" loading="lazy" />
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-primary-foreground truncate">
               {agent!.business_name}

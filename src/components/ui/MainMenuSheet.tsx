@@ -83,12 +83,7 @@ export function MenuButton({
         <SheetHeader>
           <SheetTitle className="sr-only">Menu CHOPCHOP</SheetTitle>
           <div className="flex flex-col items-center gap-2 pt-2">
-            <BrandLogo
-              loading="eager"
-              decoding="async"
-              alt="CHOPCHOP"
-              className="h-12 w-auto object-contain"
-            />
+            <BrandLogo size="lg" />
             <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
               CHOPCHOP. LET'''S GO.
             </p>
