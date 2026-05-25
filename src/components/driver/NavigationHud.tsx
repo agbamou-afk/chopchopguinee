@@ -36,8 +36,27 @@ interface Props {
  */
 export function NavigationHud({ state, muted, onToggleMute }: Props) {
   const { currentStep, nextStep, distanceToManeuverM, remainingDistanceM,
-    remainingDurationS, offRoute, rerouting, reroute } = state;
-  if (!currentStep) return null;
+    remainingDurationS, offRoute, rerouting, reroute, route } = state;
+  // Route line exists but provider returned no step-level instructions
+  // (typical for OSRM fallback edge cases). Surface a calm message instead
+  // of crashing or pretending we have guidance.
+  if (!currentStep) {
+    if (!route) return null;
+    return (
+      <motion.div
+        initial={{ y: -16, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="absolute left-3 right-3 top-3 rounded-2xl border border-border bg-card/95 backdrop-blur shadow-lg px-3 py-2"
+      >
+        <p className="text-sm font-medium leading-tight">
+          Itinéraire disponible · instructions détaillées indisponibles
+        </p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">
+          Utilisez la navigation externe pour les indications détaillées.
+        </p>
+      </motion.div>
+    );
+  }
   const Icon = maneuverIcon(currentStep.maneuver);
 
   return (
