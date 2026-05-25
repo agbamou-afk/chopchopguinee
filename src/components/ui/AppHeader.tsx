@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { notifications } from "@/lib/notifications";
 import { useTheme } from "@/hooks/useTheme";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { BRAND } from "@/lib/brand";
 
 interface AppHeaderProps {
   isDriverMode: boolean;
@@ -161,7 +162,7 @@ export function AppHeader({
                 <div className="flex flex-col items-center gap-2 pt-2">
                   <BrandLogo size="lg" />
                   <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
-                    CHOPCHOP. LET'''S GO.
+                    {BRAND.tagline}
                   </p>
                 </div>
               </SheetHeader>

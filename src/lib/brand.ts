@@ -21,9 +21,12 @@ export const BRAND = {
   foodName: "Chop Repas",
   deliveryName: "Chop Courier",
   missionName: "Chop mission",
-  brandLine: "CHOPCHOP. LET'S GO.",
-  tagline: "One platform. Every move.",
-  descriptor: "Urban movement • commerce • logistics • payments",
+  /** Canonical CHOPCHOP tagline — use everywhere a brand tagline is shown. */
+  tagline: "Tout, partout, pour tous.",
+  /** Product descriptor — distinct from tagline, used where layout supports both. */
+  descriptor: "Déplacements • Commerce • Logistique • Paiements",
+  /** Legacy. Kept for back-compat of any remaining import; mirrors tagline. */
+  brandLine: "Tout, partout, pour tous.",
   domain: "wongo.app",
   socialHandle: "@ChopChopApp",
   securedBy: "Secured by ChopPay",
