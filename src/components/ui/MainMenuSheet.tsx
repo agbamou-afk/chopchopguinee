@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { BRAND } from "@/lib/brand";
 
 interface MenuButtonProps {
   isDriverMode?: boolean;
@@ -85,7 +86,7 @@ export function MenuButton({
           <div className="flex flex-col items-center gap-2 pt-2">
             <BrandLogo size="lg" />
             <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
-              CHOPCHOP. LET'''S GO.
+              {BRAND.tagline}
             </p>
           </div>
         </SheetHeader>
