@@ -1,4 +1,4 @@
-import { MapOff, RefreshCw } from "lucide-react";
+import { MapPinOff, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -26,7 +26,7 @@ export function MapFallbackCard({
   return (
     <div className={cn("relative chop-map-fallback rounded-2xl overflow-hidden", className)}>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 gap-2">
-        <MapOff className="w-5 h-5 text-muted-foreground" aria-hidden />
+        <MapPinOff className="w-5 h-5 text-muted-foreground" aria-hidden />
         <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">{title}</span>
         <span className="text-xs text-muted-foreground max-w-[20rem]">{message}</span>
         {onRetry && (
