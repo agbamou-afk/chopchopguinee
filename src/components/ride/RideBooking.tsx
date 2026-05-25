@@ -351,7 +351,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
               )}
               {!searching && suggestions.length === 0 && (
                 <div className="p-3 text-sm text-muted-foreground">
-                  Tapez un rond-point, marché, commune ou quartier
+                  Tapez un rond-point, marché, KM, commune ou quartier
                 </div>
               )}
               {suggestions.map((s, i) => (
@@ -380,11 +380,6 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
                   </div>
                 </button>
               ))}
-              {!searching && suggestions.length === 0 && activeField && (
-                <div className="p-3 text-xs text-muted-foreground">
-                  Aucun résultat précis. Vous pouvez utiliser cette adresse.
-                </div>
-              )}
               <button
                 type="button"
                 onClick={() => setActiveField(null)}
