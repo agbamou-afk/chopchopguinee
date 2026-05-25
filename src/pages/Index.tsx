@@ -323,7 +323,7 @@ const Index = () => {
       navigate("/driver/apply");
       return;
     }
-    setIsDriverMode(true);
+    setDriverMode(true);
   };
 
   const handleAction = (action: string, params?: { destination?: string }) => {
@@ -408,7 +408,7 @@ const Index = () => {
         return (
           <ProfileView
             isDriverMode={isDriverMode}
-            onToggleDriverMode={() => setIsDriverMode(!isDriverMode)}
+            onToggleDriverMode={() => setDriverMode(!isDriverMode)}
           />
         );
       case "orders":
@@ -433,11 +433,11 @@ const Index = () => {
         return (
           <ProfileView
             isDriverMode={isDriverMode}
-            onToggleDriverMode={() => setIsDriverMode(!isDriverMode)}
+            onToggleDriverMode={() => setDriverMode(!isDriverMode)}
           />
         );
       default:
-        return <DriverHome onToggleDriverMode={() => setIsDriverMode(false)} />;
+        return <DriverHome onToggleDriverMode={() => setDriverMode(false)} />;
     }
   };
 
