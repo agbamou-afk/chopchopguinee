@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { motion, AnimatePresence } from "framer-motion";
 import { Marker } from "react-map-gl";
-import { ChopMap, type ChopMapHandle, MapMarker, RoutePolyline, PinSet } from "@/components/map";
+import { ChopMap, type ChopMapHandle, MapMarker, RoutePolyline, PinSet, StraightLineFallback, RecenterButton } from "@/components/map";
 import { RidePhaseChip, type CanonicalRidePhase } from "@/components/ride/RidePhaseChip";
 import { RoutingService } from "@/lib/maps";
 import QRCode from "react-qr-code";
@@ -63,6 +63,17 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
   const tickRef = useRef<number | null>(null);
   const settledRef = useRef(false);
   const mapRef = useRef<ChopMapHandle>(null);
+
+  const recenter = () => {
+    const target: [number, number] =
+      phase === "inTrip" || phase === "atDestination"
+        ? (destCoords ?? pickupCoords) : pickupCoords;
+    const minLng = Math.min(driverPos[1], target[1]);
+    const maxLng = Math.max(driverPos[1], target[1]);
+    const minLat = Math.min(driverPos[0], target[0]);
+    const maxLat = Math.max(driverPos[0], target[0]);
+    mapRef.current?.fitBounds([minLng, minLat, maxLng, maxLat], 80);
+  };
 
   const driver = useMemo(() => DRIVERS[Math.floor(Math.random() * DRIVERS.length)], []);
   const driverEmoji = mode === "moto" ? "🛵" : mode === "toktok" ? "🛺" : "🛵";
