@@ -13,3 +13,4 @@ export { SurgeZonesLayer } from './SurgeZonesLayer';
 export { DraggablePickupPin } from './DraggablePickupPin';
 export { RecenterButton } from './RecenterButton';
 export { MapFallbackCard } from './MapFallbackCard';
+export { VendorDiscoveryLayer } from './VendorDiscoveryLayer';
