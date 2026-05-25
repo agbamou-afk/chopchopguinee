@@ -313,6 +313,17 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
           initialView={{ longitude: pickupCoords[1], latitude: pickupCoords[0], zoom: 15 }}
         >
           {routePolyline && <RoutePolyline encoded={routePolyline} />}
+          {!routePolyline && phase !== "searching" && (
+            <StraightLineFallback
+              from={{ lat: driverPos[0], lng: driverPos[1] }}
+              to={
+                phase === "inTrip" || phase === "atDestination"
+                  ? { lat: (destCoords ?? pickupCoords)[0], lng: (destCoords ?? pickupCoords)[1] }
+                  : { lat: pickupCoords[0], lng: pickupCoords[1] }
+              }
+              id={`live-${tripId}-fb`}
+            />
+          )}
           <PinSet
             pickup={{ lat: pickupCoords[0], lng: pickupCoords[1] }}
             dropoff={destCoords ? { lat: destCoords[0], lng: destCoords[1] } : undefined}
@@ -330,6 +341,12 @@ export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, ho
             </Marker>
           )}
         </ChopMap>
+
+        {phase !== "searching" && (
+          <div className="absolute right-3 bottom-3 z-10">
+            <RecenterButton onClick={recenter} />
+          </div>
+        )}
 
         {/* Status pill */}
         <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5">
