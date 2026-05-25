@@ -2381,6 +2381,78 @@ export type Database = {
         }
         Relationships: []
       }
+      support_issues: {
+        Row: {
+          assigned_role: Database["public"]["Enums"]["support_issue_role"]
+          created_at: string
+          description: string | null
+          district: string | null
+          id: string
+          issue_type: Database["public"]["Enums"]["support_issue_type"]
+          metadata: Json
+          related_customer_id: string | null
+          related_driver_id: string | null
+          related_food_order_id: string | null
+          related_market_listing_id: string | null
+          related_mission_id: string | null
+          related_payment_intent_id: string | null
+          related_restaurant_id: string | null
+          related_store_id: string | null
+          reporter_user_id: string | null
+          resolved_at: string | null
+          severity: Database["public"]["Enums"]["support_issue_severity"]
+          status: Database["public"]["Enums"]["support_issue_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_role?: Database["public"]["Enums"]["support_issue_role"]
+          created_at?: string
+          description?: string | null
+          district?: string | null
+          id?: string
+          issue_type: Database["public"]["Enums"]["support_issue_type"]
+          metadata?: Json
+          related_customer_id?: string | null
+          related_driver_id?: string | null
+          related_food_order_id?: string | null
+          related_market_listing_id?: string | null
+          related_mission_id?: string | null
+          related_payment_intent_id?: string | null
+          related_restaurant_id?: string | null
+          related_store_id?: string | null
+          reporter_user_id?: string | null
+          resolved_at?: string | null
+          severity?: Database["public"]["Enums"]["support_issue_severity"]
+          status?: Database["public"]["Enums"]["support_issue_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_role?: Database["public"]["Enums"]["support_issue_role"]
+          created_at?: string
+          description?: string | null
+          district?: string | null
+          id?: string
+          issue_type?: Database["public"]["Enums"]["support_issue_type"]
+          metadata?: Json
+          related_customer_id?: string | null
+          related_driver_id?: string | null
+          related_food_order_id?: string | null
+          related_market_listing_id?: string | null
+          related_mission_id?: string | null
+          related_payment_intent_id?: string | null
+          related_restaurant_id?: string | null
+          related_store_id?: string | null
+          reporter_user_id?: string | null
+          resolved_at?: string | null
+          severity?: Database["public"]["Enums"]["support_issue_severity"]
+          status?: Database["public"]["Enums"]["support_issue_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           created_at: string
@@ -3903,6 +3975,37 @@ export type Database = {
         | "cancelled"
       ride_status: "pending" | "in_progress" | "completed" | "cancelled"
       saved_place_kind: "home" | "work" | "favorite"
+      support_issue_role:
+        | "support"
+        | "operations"
+        | "payment"
+        | "merchant"
+        | "courier"
+        | "admin"
+      support_issue_severity: "low" | "medium" | "high" | "critical"
+      support_issue_status:
+        | "open"
+        | "in_review"
+        | "waiting_on_user"
+        | "waiting_on_courier"
+        | "waiting_on_merchant"
+        | "resolved"
+        | "escalated"
+        | "cancelled"
+      support_issue_type:
+        | "payment_pending"
+        | "payment_failed"
+        | "courier_no_show"
+        | "merchant_not_ready"
+        | "customer_unreachable"
+        | "wrong_address"
+        | "package_dispute"
+        | "item_not_available"
+        | "delivery_failed"
+        | "app_bug"
+        | "account_issue"
+        | "safety_concern"
+        | "other"
       topup_status:
         | "pending"
         | "confirmed"
@@ -4223,6 +4326,40 @@ export const Constants = {
       ],
       ride_status: ["pending", "in_progress", "completed", "cancelled"],
       saved_place_kind: ["home", "work", "favorite"],
+      support_issue_role: [
+        "support",
+        "operations",
+        "payment",
+        "merchant",
+        "courier",
+        "admin",
+      ],
+      support_issue_severity: ["low", "medium", "high", "critical"],
+      support_issue_status: [
+        "open",
+        "in_review",
+        "waiting_on_user",
+        "waiting_on_courier",
+        "waiting_on_merchant",
+        "resolved",
+        "escalated",
+        "cancelled",
+      ],
+      support_issue_type: [
+        "payment_pending",
+        "payment_failed",
+        "courier_no_show",
+        "merchant_not_ready",
+        "customer_unreachable",
+        "wrong_address",
+        "package_dispute",
+        "item_not_available",
+        "delivery_failed",
+        "app_bug",
+        "account_issue",
+        "safety_concern",
+        "other",
+      ],
       topup_status: [
         "pending",
         "confirmed",
