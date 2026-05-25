@@ -886,3 +886,89 @@ SANDBOX_SCENARIOS.push(
     },
   },
 );
+
+// ──────────────────────────────────────────────────────────────────────
+// Support / Issues sandbox scenarios — exercise the operational issue
+// spine without touching Supabase. Each scenario raises a notify() with
+// the issue copy that would be logged into `support_issues` in prod.
+// ──────────────────────────────────────────────────────────────────────
+SANDBOX_SCENARIOS.push(
+  {
+    id: "support_courier_no_show",
+    title: "Support · coursier absent",
+    description: "Coursier ne se présente pas au pickup — issue support créée.",
+    family: "failure",
+    expected: { missions: 1, failed: 1, notifications: 2 },
+    async run(ctx) {
+      const rider = ctx.spawnActor("rider", { label: "Rider Kipé", district: "Kipé" });
+      const courier = ctx.spawnActor("courier", { label: "Moto-NoShow", district: "Kipé" });
+      const m = ctx.spawnMission({
+        kind: "moto", pickupDistrict: "Kipé", dropoffDistrict: "Ratoma",
+        actorIds: [rider.id, courier.id], amountGnf: 18_000,
+      });
+      ctx.transitionMission(m.id, "dispatched");
+      await ctx.wait(150);
+      ctx.transitionMission(m.id, "failed");
+      ctx.notify("Issue créée: Coursier absent (Kipé) · assigné Coursier ops.", { level: "warn", refId: m.id });
+      await ctx.wait(80);
+      ctx.notify("Support notifié — escalade si non résolu sous 10 min.", { level: "info", refId: m.id });
+    },
+  },
+  {
+    id: "support_payment_pending",
+    title: "Support · paiement en attente",
+    description: "Client signale paiement non confirmé — issue créée, état paiement intact.",
+    family: "failure",
+    expected: { notifications: 2 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "Client Dixinn", district: "Dixinn" });
+      ctx.notify("Issue créée: Paiement en attente · assigné Paiement.", { level: "warn", refId: user.id });
+      await ctx.wait(120);
+      ctx.notify("Aucune mutation paiement déclenchée — log opérationnel uniquement.", { level: "info", refId: user.id });
+    },
+  },
+  {
+    id: "support_merchant_not_ready",
+    title: "Support · marchand pas prêt",
+    description: "Coursier arrive, commande pas prête — issue créée pour le marchand.",
+    family: "failure",
+    expected: { notifications: 1 },
+    async run(ctx) {
+      const resto = ctx.spawnActor("restaurant", { label: "Resto Kaloum", district: "Kaloum" });
+      ctx.notify("Issue créée: Marchand pas prêt (Kaloum) · assigné Marchand.", { level: "warn", refId: resto.id });
+    },
+  },
+  {
+    id: "support_customer_unreachable",
+    title: "Support · client injoignable",
+    description: "Coursier ne joint pas le client — issue support créée, mission en attente.",
+    family: "failure",
+    expected: { notifications: 1 },
+    async run(ctx) {
+      const customer = ctx.spawnActor("customer", { label: "Client Ratoma", district: "Ratoma" });
+      ctx.notify("Issue créée: Client injoignable (Ratoma) · assigné Support.", { level: "warn", refId: customer.id });
+    },
+  },
+  {
+    id: "support_package_dispute",
+    title: "Support · litige colis",
+    description: "Désaccord livraison — issue créée en sévérité élevée.",
+    family: "failure",
+    expected: { notifications: 1 },
+    async run(ctx) {
+      const customer = ctx.spawnActor("customer", { label: "Client Matoto", district: "Matoto" });
+      ctx.notify("Issue créée: Litige colis (Matoto) · sévérité Élevée · assigné Support.", { level: "warn", refId: customer.id });
+    },
+  },
+  {
+    id: "support_app_bug",
+    title: "Support · bug applicatif",
+    description: "Utilisateur signale un bug — issue créée, sévérité basse.",
+    family: "failure",
+    expected: { notifications: 1 },
+    async run(ctx) {
+      const user = ctx.spawnActor("customer", { label: "Beta tester", district: "Kipé" });
+      ctx.notify("Issue créée: Problème technique · assigné Opérations.", { level: "info", refId: user.id });
+    },
+  },
+);
