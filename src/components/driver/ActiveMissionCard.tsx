@@ -187,6 +187,9 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
                 animated={false}
               />
             )}
+            {!route && pickup && dropoff && (
+              <StraightLineFallback from={pickup} to={dropoff} id={`mission-${mission.id}-fb`} tone={identity.routeTone} />
+            )}
             {pickup && (
               <Marker longitude={pickup.lng} latitude={pickup.lat} anchor="bottom">
                 <ChopPin
