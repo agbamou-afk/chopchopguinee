@@ -14,9 +14,8 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { notifications } from "@/lib/notifications";
-import logo from "@/assets/logo.png";
-import logoDark from "@/assets/logo-dark.png";
 import { useTheme } from "@/hooks/useTheme";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 interface AppHeaderProps {
   isDriverMode: boolean;
@@ -55,7 +54,6 @@ export function AppHeader({
   const [profileName, setProfileName] = useState<string | null>(null);
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
-  const brandLogo = isDark ? logoDark : logo;
 
   useEffect(() => {
     const loadProfile = async (userId: string) => {
@@ -161,7 +159,7 @@ export function AppHeader({
               <SheetHeader>
                 <SheetTitle className="sr-only">Menu CHOPCHOP</SheetTitle>
                 <div className="flex flex-col items-center gap-2 pt-2">
-                  <img loading="eager" fetchPriority="high" decoding="async" src={brandLogo} alt="CHOPCHOP" className="h-12 w-auto object-contain" />
+                  <BrandLogo size="lg" />
                   <p className="text-[11px] font-medium text-muted-foreground tracking-wide">
                     CHOPCHOP. LET'''S GO.
                   </p>
@@ -255,7 +253,7 @@ export function AppHeader({
             </SheetContent>
           </Sheet>
 
-          <img loading="eager" fetchPriority="high" decoding="async" src={brandLogo} alt="CHOPCHOP" className="h-8 w-auto object-contain" />
+          <BrandLogo size="md" />
 
           <button
             className="p-2 -mr-2 rounded-full hover:bg-muted transition-colors relative"

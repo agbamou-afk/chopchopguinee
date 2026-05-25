@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useBrandLogo } from "@/components/brand/BrandLogo";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import skyline from "@/assets/splash-skyline.png";
 
 interface SplashScreenProps {
@@ -9,7 +9,6 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onFinish }: SplashScreenProps) {
   const [introDone, setIntroDone] = useState(false);
-  const logo = useBrandLogo();
   const words = [
     { text: "W'ONKHAI.", color: "text-destructive" },
     { text: "LET'S", color: "text-secondary" },
@@ -65,14 +64,13 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
         transition={{ duration: 1.6, ease: "easeOut" }}
         className="flex flex-col items-center relative"
       >
-        <motion.img
-          src={logo}
-          alt="CHOPCHOP"
-          className="w-44 h-auto object-contain"
+        <motion.div
           initial={{ y: 10 }}
           animate={{ y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
-        />
+        >
+          <BrandLogo size="xl" />
+        </motion.div>
 
         {/* Loading dots */}
         <div className="flex items-center gap-2 mt-8">

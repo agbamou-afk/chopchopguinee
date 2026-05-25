@@ -125,7 +125,7 @@ export default function Help() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <BrandLogo loading="lazy" decoding="async" alt="CHOPCHOP" className="h-8 w-auto object-contain" />
+          <BrandLogo size="md" loading="lazy" />
           <h1 className="text-lg font-bold">Aide & FAQ</h1>
         </div>
       </header>

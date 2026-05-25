@@ -230,7 +230,7 @@ export default function AgentTopup() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <BrandLogo loading="lazy" decoding="async" alt="CHOPCHOP" className="h-8 w-auto object-contain" />
+          <BrandLogo size="md" loading="lazy" />
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-primary-foreground leading-tight">Recharge agent</h1>
             <p className="text-xs text-primary-foreground/80 truncate">

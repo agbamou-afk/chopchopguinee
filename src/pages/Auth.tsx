@@ -184,10 +184,7 @@ export default function Auth() {
       />
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
         <div className="flex flex-col items-center mb-6">
-          <BrandLogo
-            alt="CHOPCHOP"
-            className="h-12 w-auto object-contain mb-2"
-          />
+          <BrandLogo size="lg" className="mb-2" />
           <p className="text-sm text-muted-foreground">
             {mode === "signin" ? "Connectez-vous" : "Créer votre compte"}
           </p>
