@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { AnimatePresence } from "framer-motion";
 import { UserHome } from "@/components/views/UserHome";
@@ -229,7 +229,14 @@ const Index = () => {
 
   // Wrap mode toggling so we persist the user's explicit choice — and only
   // their explicit choice. Implicit defaults must not leak into storage.
-  const setDriverMode = useCallbackToggle(setIsDriverMode);
+  const setDriverMode = useCallback((next: boolean) => {
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("cc_driver_mode_choice", next ? "driver" : "client");
+      } catch { /* noop */ }
+    }
+    setIsDriverMode(next);
+  }, []);
 
   // Sandbox-only routing debug breadcrumb.
   useEffect(() => {
