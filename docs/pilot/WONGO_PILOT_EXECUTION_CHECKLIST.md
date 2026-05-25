@@ -595,4 +595,12 @@ Operator playbook for the most common live issues.
 
 ---
 
+## Support / Issues review (daily)
+
+- Support issues are the operational log for pilot incidents. Review **daily** in `/admin/support` and `/admin/pilot-command`.
+- Triage open + escalated issues by district. Critical issues (safety, payment integrity, app-breaking, serious disputes) must be acknowledged within 1h.
+- Status / severity / assigned role updates happen only in `/admin/support`. Payment state changes remain in `/admin/payments`.
+
+---
+
 _End of CHOPCHOP Pilot Execution Checklist v1._
