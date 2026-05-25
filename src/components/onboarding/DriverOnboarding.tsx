@@ -82,7 +82,7 @@ export function DriverOnboarding({ onDone }: Props) {
       ariaLabel="Bienvenue chauffeur CHOPCHOP"
       slides={SLIDES}
       index={index}
-      primaryLabel="Commencer"
+      primaryLabel="Commencer à conduire"
       footerCaption="CHOPCHOP · Chauffeur · Conakry"
       onNext={next}
       onPrev={prev}
