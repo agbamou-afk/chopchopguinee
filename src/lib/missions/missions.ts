@@ -76,20 +76,11 @@ export async function listAvailableMissions(capabilities: string[]): Promise<Mis
 
 /** Courier claims an unassigned mission. */
 export async function claimMission(missionId: string): Promise<Mission> {
-  const { data: u } = await supabase.auth.getUser();
-  const uid = u.user?.id;
-  if (!uid) throw new Error("not_authenticated");
-  const { data, error } = await supabase
-    .from("missions")
-    .update({ courier_id: uid, state: "heading_to_pickup" })
-    .eq("id", missionId)
-    .is("courier_id", null)
-    .select("*")
-    .single();
+  const { data, error } = await (supabase as any).rpc("mission_claim", { _mission_id: missionId });
   if (error) throw error;
   await logEvent(missionId, "accepted");
   await logEvent(missionId, "en_route_pickup");
-  return data as Mission;
+  return (Array.isArray(data) ? data[0] : data) as Mission;
 }
 
 export async function listMissionEvents(missionId: string): Promise<MissionEvent[]> {
@@ -134,56 +125,34 @@ export async function setMissionState(
   missionId: string,
   state: MissionState,
 ): Promise<Mission> {
-  const { data, error } = await supabase
-    .from("missions")
-    .update({ state })
-    .eq("id", missionId)
-    .select("*")
-    .single();
+  const { data, error } = await (supabase as any).rpc("mission_set_state", {
+    _mission_id: missionId,
+    _state: state,
+  });
   if (error) throw error;
   const ev = missionStateToEvent(state);
   if (ev) await logEvent(missionId, ev);
-  return data as Mission;
+  return (Array.isArray(data) ? data[0] : data) as Mission;
 }
 
 export async function confirmPickup(
   missionId: string,
   method: ConfirmationMethod = "manual",
 ): Promise<Mission> {
-  const { data: u } = await supabase.auth.getUser();
-  const { data, error } = await supabase
-    .from("missions")
-    .update({
-      state: "picked_up",
-      pickup_confirmed_at: new Date().toISOString(),
-      pickup_confirmed_by: u.user?.id ?? null,
-    })
-    .eq("id", missionId)
-    .select("*")
-    .single();
+  const { data, error } = await (supabase as any).rpc("mission_confirm_pickup", { _mission_id: missionId });
   if (error) throw error;
   await logEvent(missionId, "picked_up", `method:${method}`);
-  return data as Mission;
+  return (Array.isArray(data) ? data[0] : data) as Mission;
 }
 
 export async function confirmDropoff(
   missionId: string,
   method: ConfirmationMethod = "manual",
 ): Promise<Mission> {
-  const { data: u } = await supabase.auth.getUser();
-  const { data, error } = await supabase
-    .from("missions")
-    .update({
-      state: "delivered",
-      dropoff_confirmed_at: new Date().toISOString(),
-      dropoff_confirmed_by: u.user?.id ?? null,
-    })
-    .eq("id", missionId)
-    .select("*")
-    .single();
+  const { data, error } = await (supabase as any).rpc("mission_confirm_dropoff", { _mission_id: missionId });
   if (error) throw error;
   await logEvent(missionId, "delivered", `method:${method}`);
-  return data as Mission;
+  return (Array.isArray(data) ? data[0] : data) as Mission;
 }
 
 export async function reportIssue(missionId: string, reason: string): Promise<Mission> {
