@@ -22,9 +22,11 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// Auth note: this function uses verify_jwt = true in config.toml. In addition,
+// we require the caller to be either (a) the service-role key (trusted internal
+// callers like edge functions, webhooks) or (b) an admin user. This prevents any
+// authenticated end-user from sending arbitrary transactional emails from our
+// verified sending domain (anti-spoofing / anti-phishing).
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -44,6 +46,38 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
+  }
+
+  // Authorization gate.
+  // - Service-role callers (internal edge functions, webhooks): full access.
+  // - Admin users: full access (used by ops tooling).
+  // - Regular authenticated users: only allowed to send self-addressed transactional
+  //   emails (recipient must equal their own auth.user.email). This prevents
+  //   spoofing arbitrary recipients from our verified sending domain.
+  const authHeader = req.headers.get('Authorization') || ''
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+  const isServiceRole = !!token && token === supabaseServiceKey
+  let callerUserEmail: string | null = null
+  let callerIsAdmin = false
+  if (!isServiceRole) {
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const authClient = createClient(supabaseUrl, supabaseServiceKey)
+    const { data: userData, error: userErr } = await authClient.auth.getUser(token)
+    const uid = userData?.user?.id
+    callerUserEmail = (userData?.user?.email ?? '').toLowerCase() || null
+    if (userErr || !uid) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const { data: isAdmin } = await authClient.rpc('is_any_admin', { _user_id: uid })
+    callerIsAdmin = !!isAdmin
   }
 
   // Parse request body
@@ -79,6 +113,20 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
+  }
+
+  // Enforce self-only sends for non-admin authenticated users.
+  if (!isServiceRole && !callerIsAdmin) {
+    const recipient = (recipientEmail || '').toLowerCase()
+    if (!recipient || !callerUserEmail || recipient !== callerUserEmail) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: can only send to your own email' }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
+    }
   }
 
   // 1. Look up template from registry (early — needed to resolve recipient)

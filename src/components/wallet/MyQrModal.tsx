@@ -38,16 +38,12 @@ export function MyQrModal({ open, onClose, userId, phone }: MyQrModalProps) {
 
     const fetchPending = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("topup_requests")
-        .select("id, reference, amount_gnf, confirmation_code, expires_at")
-        .eq("client_user_id", userId)
-        .eq("status", "pending")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // confirmation_code is no longer readable from topup_requests directly —
+      // fetch via the security-definer RPC restricted to the row owner.
+      const { data } = await supabase.rpc("get_my_pending_topup");
+      const row = Array.isArray(data) ? data[0] : null;
       if (active) {
-        setPending(data as PendingTopup | null);
+        setPending((row as PendingTopup | null) ?? null);
         setLoading(false);
       }
     };

@@ -3203,6 +3203,16 @@ export type Database = {
       }
       gen_topup_reference: { Args: never; Returns: string }
       get_demo_driver: { Args: never; Returns: string }
+      get_my_pending_topup: {
+        Args: never
+        Returns: {
+          amount_gnf: number
+          confirmation_code: string
+          expires_at: string
+          id: string
+          reference: string
+        }[]
+      }
       has_admin_role: {
         Args: {
           _role: Database["public"]["Enums"]["admin_role"]
