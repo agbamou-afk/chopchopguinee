@@ -48,17 +48,16 @@ Deno.serve(async (req) => {
     )
   }
 
-  // Authorization gate.
+  // Authorization gate (pilot-hardened).
   // - Service-role callers (internal edge functions, webhooks): full access.
   // - Admin users: full access (used by ops tooling).
-  // - Regular authenticated users: only allowed to send self-addressed transactional
-  //   emails (recipient must equal their own auth.user.email). This prevents
-  //   spoofing arbitrary recipients from our verified sending domain.
+  // - Regular authenticated users: REJECTED. Client-side code must not call
+  //   this endpoint directly; otherwise any authenticated user could send
+  //   arbitrary templates (security-alert, payment-receipt, otp-fallback, …)
+  //   to themselves from our verified domain — a phishing/abuse vector.
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.replace(/^Bearer\s+/i, '').trim()
   const isServiceRole = !!token && token === supabaseServiceKey
-  let callerUserEmail: string | null = null
-  let callerIsAdmin = false
   if (!isServiceRole) {
     if (!token) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -69,7 +68,6 @@ Deno.serve(async (req) => {
     const authClient = createClient(supabaseUrl, supabaseServiceKey)
     const { data: userData, error: userErr } = await authClient.auth.getUser(token)
     const uid = userData?.user?.id
-    callerUserEmail = (userData?.user?.email ?? '').toLowerCase() || null
     if (userErr || !uid) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -77,7 +75,15 @@ Deno.serve(async (req) => {
       })
     }
     const { data: isAdmin } = await authClient.rpc('is_any_admin', { _user_id: uid })
-    callerIsAdmin = !!isAdmin
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: transactional email sending is restricted to internal services and admins' }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
+    }
   }
 
   // Parse request body
@@ -113,20 +119,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
-  }
-
-  // Enforce self-only sends for non-admin authenticated users.
-  if (!isServiceRole && !callerIsAdmin) {
-    const recipient = (recipientEmail || '').toLowerCase()
-    if (!recipient || !callerUserEmail || recipient !== callerUserEmail) {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden: can only send to your own email' }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      )
-    }
   }
 
   // 1. Look up template from registry (early — needed to resolve recipient)
