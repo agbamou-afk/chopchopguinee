@@ -13,6 +13,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { ConversionGateSheet } from "@/components/onboarding/ConversionGateSheet";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReportIssueButton } from "@/components/support/ReportIssueButton";
 
 interface Props {
   restaurant: FoodRestaurant;
@@ -49,6 +50,8 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const [deliveryPending, setDeliveryPending] = useState(false);
+  const [lastOrderId, setLastOrderId] = useState<string | null>(null);
+  const [lastMissionId, setLastMissionId] = useState<string | null>(null);
 
   const cart = useRepasCart();
   const { isLoggedIn, requireAuth } = useAuthGuard();
@@ -123,6 +126,8 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
         })),
       });
       setDeliveryPending(fulfillment === "delivery" && result.deliveryPending);
+      setLastOrderId(result.order?.id ?? null);
+      setLastMissionId(result.missionId ?? null);
       cart.clear();
       setStage("confirmed");
     } catch (e: unknown) {
