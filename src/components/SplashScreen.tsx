@@ -72,7 +72,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
           animate={{ y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
         >
-          <BrandLogo size="xl" />
+          <BrandLogo size="xl" variant="light" />
         </motion.div>
 
         {/* Loading dots */}
