@@ -35,6 +35,7 @@ import {
 import { isAdminUser, isLiveUser, isSandboxMode } from "@/lib/runtimeMode";
 import { ConversionGateSheet, type ConversionIntent } from "@/components/onboarding/ConversionGateSheet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
+import { createSupportIssue } from "@/lib/support/issues";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -490,8 +491,38 @@ const Index = () => {
                 p_driver_id: null,
               });
               if (rideErr) {
-                await supabase.rpc("wallet_release", { p_hold_id: holdId, p_reason: "Création course échouée" });
-                toast({ title: "Erreur", description: rideErr.message });
+                const { error: releaseErr } = await supabase.rpc("wallet_release", {
+                  p_hold_id: holdId,
+                  p_reason: "Création course échouée",
+                });
+                if (releaseErr) {
+                  // Double-failure: ride_create failed AND wallet_release failed.
+                  // Log a high-severity support issue so funds can be reconciled
+                  // manually. Never mutate wallet/payment state from here.
+                  await createSupportIssue({
+                    type: "payment_pending",
+                    severity: "high",
+                    assignedRole: "payment",
+                    title: "Fonds à vérifier",
+                    description:
+                      "Réservation course échouée et libération du hold échouée. Vérification manuelle requise.",
+                    metadata: {
+                      source: "ride_booking_hold_release_failure",
+                      holdId,
+                      ride_create_error: rideErr.message,
+                      wallet_release_error: releaseErr.message,
+                      bookingRide,
+                      fare: trip.fare,
+                      holdAmount,
+                    },
+                  });
+                  toast({
+                    title: "Réservation échouée",
+                    description: "Vos fonds sont à vérifier par support.",
+                  });
+                } else {
+                  toast({ title: "Erreur", description: rideErr.message });
+                }
                 return;
               }
               const newRideId = (ride as { id: string }).id;
