@@ -7,6 +7,7 @@ import { QUICK_REPLIES } from "@/lib/marche";
 import { toast } from "@/hooks/use-toast";
 import { RequestMarcheDeliverySheet } from "./RequestMarcheDeliverySheet";
 import { MISSION_STATE_LABEL, isTerminalState, type Mission } from "@/lib/missions/types";
+import { ReportIssueButton } from "@/components/support/ReportIssueButton";
 
 interface Msg {
   id: string;
@@ -178,7 +179,7 @@ export function ChatThread({
         )}
       </header>
       {(canRequestDelivery || activeMission) && (
-        <div className="px-4 py-2 border-b bg-muted/40 flex items-center gap-2">
+        <div className="px-4 py-2 border-b bg-muted/40 flex items-center gap-2 flex-wrap">
           {activeMission ? (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
               <Truck className="w-3 h-3" />
@@ -194,6 +195,32 @@ export function ChatThread({
               <Truck className="w-3.5 h-3.5 mr-1" />
               Demander livraison CHOPCHOP
             </Button>
+          )}
+          {(activeMission || canRequestDelivery) && (
+            <ReportIssueButton
+              variant="ghost"
+              size="sm"
+              label="Signaler"
+              className="h-8 rounded-full text-xs ml-auto"
+              issueTypes={[
+                "package_dispute",
+                "item_not_available",
+                "delivery_failed",
+                "wrong_address",
+                "other",
+              ]}
+              context={{
+                relatedMarketListingId: listingId ?? undefined,
+                relatedStoreId: storeId ?? undefined,
+                relatedMissionId: activeMission?.id ?? undefined,
+                metadata: {
+                  source: "marche_delivery_context",
+                  listing_title: listingTitle,
+                  store_name: storeName ?? null,
+                  delivery_status: activeMission?.state ?? null,
+                },
+              }}
+            />
           )}
         </div>
       )}
