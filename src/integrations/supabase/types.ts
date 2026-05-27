@@ -3203,6 +3203,16 @@ export type Database = {
       }
       gen_topup_reference: { Args: never; Returns: string }
       get_demo_driver: { Args: never; Returns: string }
+      get_my_driver_application_status: {
+        Args: never
+        Returns: {
+          created_at: string
+          decided_at: string
+          decision: Database["public"]["Enums"]["driver_application_decision"]
+          decision_reason: string
+          id: string
+        }[]
+      }
       get_my_pending_topup: {
         Args: never
         Returns: {
@@ -3258,9 +3268,212 @@ export type Database = {
         Args: { p_merchant_id: string }
         Returns: string
       }
+      mission_claim: {
+        Args: { _mission_id: string }
+        Returns: {
+          courier_id: string | null
+          created_at: string
+          customer_id: string
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_district: string | null
+          issue_hub_id: string | null
+          issue_reason: string | null
+          merchant_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mission_confirm_dropoff: {
+        Args: { _mission_id: string }
+        Returns: {
+          courier_id: string | null
+          created_at: string
+          customer_id: string
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_district: string | null
+          issue_hub_id: string | null
+          issue_reason: string | null
+          merchant_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mission_confirm_pickup: {
+        Args: { _mission_id: string }
+        Returns: {
+          courier_id: string | null
+          created_at: string
+          customer_id: string
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_district: string | null
+          issue_hub_id: string | null
+          issue_reason: string | null
+          merchant_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mission_report_issue: {
+        Args: {
+          _district?: string
+          _hub_id?: string
+          _mission_id: string
+          _reason: string
+        }
+        Returns: {
+          courier_id: string | null
+          created_at: string
+          customer_id: string
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_district: string | null
+          issue_hub_id: string | null
+          issue_reason: string | null
+          merchant_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       mission_required_capability: {
         Args: { _type: Database["public"]["Enums"]["mission_type"] }
         Returns: string
+      }
+      mission_set_state: {
+        Args: {
+          _mission_id: string
+          _state: Database["public"]["Enums"]["mission_state"]
+        }
+        Returns: {
+          courier_id: string | null
+          created_at: string
+          customer_id: string
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_district: string | null
+          issue_hub_id: string | null
+          issue_reason: string | null
+          merchant_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       move_to_dlq: {
         Args: {
