@@ -34,7 +34,7 @@ export default function Auth() {
   const { ready, isLoggedIn, isAdmin, isProfileComplete } = useAuth();
 
   const [mode, setMode] = useState<Mode>("signin");
-  const [channel, setChannel] = useState<Channel>("phone_password");
+  const [channel, setChannel] = useState<Channel>("email_password");
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
   const [phone, setPhone] = useState("");
@@ -95,28 +95,30 @@ export default function Auth() {
     e.preventDefault();
     if (mode === "signup") {
       const fields = z
-        .object({ first: nameSchema, last: nameSchema, phone: phoneSchema, password: passwordSchema })
-        .safeParse({ first, last, phone, password });
+        .object({
+          first: nameSchema,
+          last: nameSchema,
+          phone: phoneSchema,
+          email: emailSchema,
+          password: passwordSchema,
+        })
+        .safeParse({ first, last, phone, email, password });
       if (!fields.success) {
         toast({ title: "Erreur", description: fields.error.errors[0].message });
-        return;
-      }
-      const emailOk = email ? emailSchema.safeParse(email) : { success: true };
-      if (!emailOk.success) {
-        toast({ title: "Erreur", description: "Email invalide" });
         return;
       }
       setBusy(true);
       const display = `${first.trim()} ${last.trim()}`;
       const { error } = await supabase.auth.signUp({
-        phone: normalizePhone(phone),
+        email: email.trim(),
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             first_name: first.trim(),
             last_name: last.trim(),
             full_name: display,
-            email: email.trim() || null,
+            phone: normalizePhone(phone),
           },
         },
       });
@@ -127,10 +129,10 @@ export default function Auth() {
       }
       toast({
         title: "Compte créé",
-        description: "Vous pouvez maintenant vous connecter.",
+        description: "Vérifiez votre email pour confirmer votre compte.",
       });
       setMode("signin");
-      setChannel("phone_password");
+      setChannel("email_password");
       return;
     }
 
@@ -170,9 +172,8 @@ export default function Auth() {
   };
 
   const channelTabs: { key: Channel; label: string }[] = [
-    { key: "phone_password", label: "Mot de passe" },
-    { key: "phone_otp", label: "Code SMS" },
     { key: "email_password", label: "Email" },
+    { key: "phone_password", label: "Mot de passe" },
   ];
 
   return (
@@ -191,7 +192,7 @@ export default function Auth() {
         </div>
 
         {mode === "signin" && (
-          <div className="grid grid-cols-3 gap-1 p-1 bg-muted rounded-xl mb-4">
+          <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-xl mb-4">
             {channelTabs.map((t) => (
               <button
                 key={t.key}
@@ -225,13 +226,14 @@ export default function Auth() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="email-signup">Email (optionnel)</Label>
+                <Label htmlFor="email-signup">Email</Label>
                 <Input
                   id="email-signup"
                   type="email"
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </>
