@@ -22,9 +22,11 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// Auth note: this function uses verify_jwt = true in config.toml. In addition,
+// we require the caller to be either (a) the service-role key (trusted internal
+// callers like edge functions, webhooks) or (b) an admin user. This prevents any
+// authenticated end-user from sending arbitrary transactional emails from our
+// verified sending domain (anti-spoofing / anti-phishing).
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -44,6 +46,35 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
+  }
+
+  // Authorization gate — service role OR admin user only.
+  const authHeader = req.headers.get('Authorization') || ''
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+  const isServiceRole = !!token && token === supabaseServiceKey
+  if (!isServiceRole) {
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const authClient = createClient(supabaseUrl, supabaseServiceKey)
+    const { data: userData, error: userErr } = await authClient.auth.getUser(token)
+    const uid = userData?.user?.id
+    if (userErr || !uid) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const { data: isAdmin, error: adminErr } = await authClient.rpc('is_any_admin', { _user_id: uid })
+    if (adminErr || !isAdmin) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
   }
 
   // Parse request body
