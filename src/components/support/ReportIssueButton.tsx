@@ -32,6 +32,10 @@ export interface ReportIssueButtonProps {
   /** Optional className for layout. */
   className?: string;
   variant?: "outline" | "ghost" | "secondary";
+  /** Optional default selected issue type (must be in issueTypes). */
+  defaultIssueType?: IssueType;
+  /** Optional button size override. */
+  size?: "default" | "sm" | "lg" | "icon";
 }
 
 export function ReportIssueButton({
@@ -40,9 +44,15 @@ export function ReportIssueButton({
   label = "Signaler un problème",
   className,
   variant = "outline",
+  defaultIssueType,
+  size,
 }: ReportIssueButtonProps) {
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<IssueType>(issueTypes[0]);
+  const [type, setType] = useState<IssueType>(
+    defaultIssueType && issueTypes.includes(defaultIssueType)
+      ? defaultIssueType
+      : issueTypes[0],
+  );
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -74,6 +84,7 @@ export function ReportIssueButton({
       <Button
         type="button"
         variant={variant}
+        size={size}
         className={className}
         onClick={() => setOpen(true)}
       >
