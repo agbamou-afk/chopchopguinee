@@ -131,7 +131,7 @@ export function AppHeader({
   ];
 
   return (
-    <div className="px-4 pt-4">
+    <div className="px-4 pt-[max(1rem,env(safe-area-inset-top))]">
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
