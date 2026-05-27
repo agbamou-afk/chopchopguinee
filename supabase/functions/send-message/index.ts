@@ -269,14 +269,14 @@ Deno.serve(async (req) => {
     }
 
     // ---------------- Per-user rate limit ----------------
-    // 20 messages / 10 min window for normal users (privileged callers: 200).
-    const limit = privileged ? 200 : 20;
-    const windowStart = new Date(Math.floor(Date.now() / (10 * 60_000)) * 10 * 60_000).toISOString();
+    // 5 messages / minute for normal users (privileged callers: 60).
+    const limit = privileged ? 60 : 5;
+    const windowStart = new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString();
     const { data: rateRow } = await admin
       .from("ai_rate_limits")
       .select("count")
       .eq("user_id", user.id)
-      .eq("window_kind", "send_message_10m")
+      .eq("window_kind", "minute")
       .eq("window_start", windowStart)
       .maybeSingle();
     const current = Number((rateRow as { count?: number } | null)?.count ?? 0);
@@ -286,7 +286,7 @@ Deno.serve(async (req) => {
       });
     }
     await admin.from("ai_rate_limits").upsert(
-      { user_id: user.id, window_kind: "send_message_10m", window_start: windowStart, count: current + 1 },
+      { user_id: user.id, window_kind: "minute", window_start: windowStart, count: current + 1 },
       { onConflict: "user_id,window_kind,window_start" },
     );
 
