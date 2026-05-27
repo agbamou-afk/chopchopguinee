@@ -11,9 +11,22 @@ import { toast } from "@/hooks/use-toast";
 import { Seo } from "@/components/Seo";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 
-const phoneSchema = z.string().trim().regex(/^\+?[0-9\s]{8,15}$/, "Téléphone invalide");
-const emailSchema = z.string().trim().email("Email invalide").max(255);
-const passwordSchema = z.string().min(6, "6 caractères minimum").max(72);
+const phoneSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^\+?[0-9\s]{8,15}$/,
+    "Numéro de téléphone invalide. Ajoutez l'indicatif +224 si nécessaire.",
+  );
+const emailSchema = z
+  .string()
+  .trim()
+  .email("Adresse email invalide. Vérifiez l'adresse et réessayez.")
+  .max(255);
+const passwordSchema = z
+  .string()
+  .min(6, "Mot de passe trop faible. Utilisez au moins 6 caractères.")
+  .max(72);
 const nameSchema = z.string().trim().min(1, "Requis").max(60);
 
 function normalizePhone(raw: string): string {
@@ -23,8 +36,33 @@ function normalizePhone(raw: string): string {
   return `+${d}`;
 }
 
+// Pilot launch: email + password only. Phone OTP / phone password are disabled
+// until an SMS provider (Twilio / Messaging Service SID) is configured in
+// Lovable Cloud → Users → Auth → Phone.
 type Mode = "signin" | "signup";
-type Channel = "phone_password" | "phone_otp" | "email_password";
+
+function frenchAuthError(raw: string | undefined): string {
+  const msg = (raw ?? "").toLowerCase();
+  if (!msg) return "Création du compte impossible pour le moment. Contactez le support CHOPCHOP.";
+  if (msg.includes("already") || msg.includes("registered") || msg.includes("exists"))
+    return "Un compte existe déjà avec cette adresse email.";
+  if (msg.includes("invalid login") || msg.includes("invalid credentials"))
+    return "Email ou mot de passe incorrect.";
+  if (msg.includes("email") && msg.includes("invalid"))
+    return "Adresse email invalide. Vérifiez l'adresse et réessayez.";
+  if (msg.includes("password"))
+    return "Mot de passe trop faible. Utilisez au moins 6 caractères.";
+  if (msg.includes("network") || msg.includes("fetch") || msg.includes("timeout"))
+    return "Connexion instable. Réessayez dans quelques instants.";
+  if (msg.includes("rate") || msg.includes("too many"))
+    return "Trop de tentatives. Patientez quelques instants.";
+  if (msg.includes("not confirmed") || msg.includes("confirm"))
+    return "Compte non confirmé. Vérifiez votre email pour activer votre compte.";
+  // Never surface Twilio / SMS internals to the user.
+  if (msg.includes("twilio") || msg.includes("sms") || msg.includes("provider"))
+    return "Connexion par téléphone bientôt disponible. Utilisez votre email pour le moment.";
+  return "Création du compte impossible pour le moment. Contactez le support CHOPCHOP.";
+}
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -34,14 +72,11 @@ export default function Auth() {
   const { ready, isLoggedIn, isAdmin, isProfileComplete } = useAuth();
 
   const [mode, setMode] = useState<Mode>("signin");
-  const [channel, setChannel] = useState<Channel>("email_password");
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // After session is established, route by role + profile completeness.
@@ -57,39 +92,6 @@ export default function Auth() {
     }
     navigate(isAdmin ? "/admin" : "/", { replace: true });
   }, [ready, isLoggedIn, isAdmin, isProfileComplete, safeNext, navigate]);
-
-  const sendOtp = async () => {
-    const v = phoneSchema.safeParse(phone);
-    if (!v.success) {
-      toast({ title: "Erreur", description: v.error.errors[0].message });
-      return;
-    }
-    setBusy(true);
-    const { error } = await supabase.auth.signInWithOtp({ phone: normalizePhone(phone) });
-    setBusy(false);
-    if (error) {
-      toast({ title: "Échec envoi code", description: error.message });
-      return;
-    }
-    setOtpSent(true);
-    toast({ title: "Code envoyé", description: "Vérifiez vos SMS." });
-  };
-
-  const verifyOtp = async () => {
-    if (!otpCode.trim()) return;
-    setBusy(true);
-    const { error } = await supabase.auth.verifyOtp({
-      phone: normalizePhone(phone),
-      token: otpCode.trim(),
-      type: "sms",
-    });
-    setBusy(false);
-    if (error) {
-      toast({ title: "Code invalide", description: error.message });
-      return;
-    }
-    // useEffect routes once session updates.
-  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,63 +126,47 @@ export default function Auth() {
       });
       setBusy(false);
       if (error) {
-        toast({ title: "Échec inscription", description: error.message });
+        toast({ title: "Échec inscription", description: frenchAuthError(error.message) });
         return;
       }
       toast({
         title: "Compte créé",
-        description: "Vérifiez votre email pour confirmer votre compte.",
+        description: "Vérifiez votre email pour confirmer votre inscription.",
       });
       setMode("signin");
-      setChannel("email_password");
       return;
     }
 
-    // signin
-    if (channel === "phone_otp") {
-      if (!otpSent) await sendOtp();
-      else await verifyOtp();
+    // signin — email + password only
+    // If user typed a phone number into the email field, redirect them.
+    if (/^\+?[0-9\s]{8,15}$/.test(email.trim()) && !email.includes("@")) {
+      toast({
+        title: "Email requis",
+        description:
+          "Utilisez votre adresse email pour vous connecter. La connexion par téléphone arrive bientôt.",
+      });
       return;
     }
-    if (channel === "email_password") {
-      const e1 = emailSchema.safeParse(email);
-      const p1 = passwordSchema.safeParse(password);
-      if (!e1.success || !p1.success) {
-        toast({ title: "Erreur", description: "Email ou mot de passe invalide" });
-        return;
-      }
-      setBusy(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setBusy(false);
-      if (error) toast({ title: "Échec", description: error.message });
-      return;
-    }
-    // phone_password
-    const ph = phoneSchema.safeParse(phone);
-    const pw = passwordSchema.safeParse(password);
-    if (!ph.success || !pw.success) {
-      toast({ title: "Erreur", description: "Téléphone ou mot de passe invalide" });
+    const e1 = emailSchema.safeParse(email);
+    const p1 = passwordSchema.safeParse(password);
+    if (!e1.success || !p1.success) {
+      toast({ title: "Erreur", description: "Email ou mot de passe invalide." });
       return;
     }
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({
-      phone: normalizePhone(phone),
+      email: email.trim(),
       password,
     });
     setBusy(false);
-    if (error) toast({ title: "Échec", description: error.message });
+    if (error) toast({ title: "Échec", description: frenchAuthError(error.message) });
   };
-
-  const channelTabs: { key: Channel; label: string }[] = [
-    { key: "email_password", label: "Email" },
-    { key: "phone_password", label: "Mot de passe" },
-  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Seo
         title="Connexion & inscription — CHOPCHOP"
-        description="Connectez-vous ou créez votre compte CHOPCHOP par téléphone pour accéder aux courses, livraisons, marché et portefeuille en GNF."
+        description="Connectez-vous ou créez votre compte CHOPCHOP par email pour accéder aux courses, livraisons, marché et portefeuille en GNF."
         canonical="/auth"
       />
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
@@ -190,27 +176,6 @@ export default function Auth() {
             {mode === "signin" ? "Connectez-vous" : "Créer votre compte"}
           </p>
         </div>
-
-        {mode === "signin" && (
-          <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-xl mb-4">
-            {channelTabs.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => {
-                  setChannel(t.key);
-                  setOtpSent(false);
-                  setOtpCode("");
-                }}
-                className={`py-2 text-xs font-medium rounded-lg transition-colors ${
-                  channel === t.key ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        )}
 
         <form onSubmit={submit} className="space-y-3">
           {mode === "signup" && (
@@ -236,29 +201,26 @@ export default function Auth() {
                   required
                 />
               </div>
+              <div>
+                <Label htmlFor="phone">Téléphone</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+224 6XX XX XX XX"
+                  required
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Indicatif Guinée (+224) ajouté automatiquement.
+                </p>
+              </div>
             </>
           )}
 
-          {(mode === "signup" || channel === "phone_password" || channel === "phone_otp") && (
-            <div>
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+224 6XX XX XX XX"
-                required
-              />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Indicatif Guinée (+224) ajouté automatiquement.
-              </p>
-            </div>
-          )}
-
-          {mode === "signin" && channel === "email_password" && (
+          {mode === "signin" && (
             <div>
               <Label htmlFor="email-signin">Email</Label>
               <Input
@@ -272,67 +234,38 @@ export default function Auth() {
             </div>
           )}
 
-          {(mode === "signup" || channel !== "phone_otp") && (
-            <div>
-              <Label htmlFor="password">Mot de passe</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          {mode === "signin" && channel === "phone_otp" && otpSent && (
-            <div>
-              <Label htmlFor="otp">Code reçu par SMS</Label>
-              <Input
-                id="otp"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value)}
-                maxLength={8}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setOtpSent(false);
-                  setOtpCode("");
-                }}
-                className="text-xs text-muted-foreground mt-1 underline"
-              >
-                Renvoyer le code
-              </button>
-            </div>
-          )}
+          <div>
+            <Label htmlFor="password">Mot de passe</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
           <Button type="submit" disabled={busy} className="w-full h-12 gradient-primary">
             {busy ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : mode === "signup" ? (
               "Créer le compte"
-            ) : channel === "phone_otp" && !otpSent ? (
-              "Envoyer le code"
-            ) : channel === "phone_otp" ? (
-              "Vérifier le code"
             ) : (
               "Se connecter"
             )}
           </Button>
+
+          {mode === "signin" && (
+            <p className="text-[11px] text-muted-foreground text-center pt-1">
+              Connexion par téléphone bientôt disponible.
+            </p>
+          )}
         </form>
 
         <button
           type="button"
-          onClick={() => {
-            setMode(mode === "signin" ? "signup" : "signin");
-            setOtpSent(false);
-            setOtpCode("");
-          }}
+          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
           className="w-full text-sm text-muted-foreground mt-4 hover:text-foreground"
         >
           {mode === "signin" ? "Pas de compte ? S'inscrire" : "Déjà un compte ? Se connecter"}
