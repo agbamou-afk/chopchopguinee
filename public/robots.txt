@@ -12,5 +12,14 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /wallet
+Disallow: /profile
+Disallow: /notifications
+Disallow: /settings
+Disallow: /merchant
+Disallow: /driver
+Disallow: /unsubscribe
 
 Sitemap: https://chopchopguinee.com/sitemap.xml

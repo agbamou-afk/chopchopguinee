@@ -8,7 +8,7 @@ export default function Legal() {
   return (
     <div className="min-h-screen bg-background pb-12">
       <Seo
-        title="Mentions légales & CGU — CHOPCHOP"
+        title="Mentions légales | CHOPCHOP"
         description="Conditions générales d'utilisation de CHOPCHOP GUINEE LTD : nature du service, responsabilités, données personnelles et droit applicable en Guinée."
         canonical="/legal"
       />
