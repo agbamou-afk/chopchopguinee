@@ -226,13 +226,14 @@ export default function Auth() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="email-signup">Email (optionnel)</Label>
+                <Label htmlFor="email-signup">Email</Label>
                 <Input
                   id="email-signup"
                   type="email"
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </>
