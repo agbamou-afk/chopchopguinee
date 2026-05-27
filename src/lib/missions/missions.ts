@@ -187,20 +187,15 @@ export async function reportIssue(missionId: string, reason: string): Promise<Mi
     }
   } catch { /* enrichment is best-effort */ }
 
-  const { data, error } = await supabase
-    .from("missions")
-    .update({
-      state: "failed",
-      issue_reason: reason,
-      ...(issue_district ? { issue_district } : {}),
-      ...(issue_hub_id ? { issue_hub_id } : {}),
-    })
-    .eq("id", missionId)
-    .select("*")
-    .single();
+  const { data, error } = await (supabase as any).rpc("mission_report_issue", {
+    _mission_id: missionId,
+    _reason: reason,
+    _district: issue_district,
+    _hub_id: issue_hub_id,
+  });
   if (error) throw error;
   await logEvent(missionId, "issue", issue_district ? `${reason} · ${issue_district}` : reason);
-  return data as Mission;
+  return (Array.isArray(data) ? data[0] : data) as Mission;
 }
 
 /**
