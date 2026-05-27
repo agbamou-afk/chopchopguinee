@@ -18,9 +18,9 @@ export default function ZonesAdmin() {
       actions={<Button size="sm" className="gradient-primary"><MapPin className="w-4 h-4 mr-1" /> Ajouter zone</Button>}>
       <StatGrid items={[
         { label: "Pays", value: "1", icon: Globe },
-        { label: "Villes", value: "4", icon: Building2, tone: "text-primary" },
-        { label: "Communes", value: "12", icon: Map, tone: "text-emerald-600" },
-        { label: "Quartiers", value: "184", icon: MapPin, tone: "text-amber-600" },
+        { label: "Villes", value: "À connecter", icon: Building2 },
+        { label: "Communes", value: "À connecter", icon: Map },
+        { label: "Quartiers", value: "À connecter", icon: MapPin },
       ]} />
       <div className="space-y-2">
         {ZONES.map((z, i) => (

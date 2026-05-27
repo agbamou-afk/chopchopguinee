@@ -16,10 +16,10 @@ export default function MarcheAdmin() {
   return (
     <ModulePage module="marche" title="Marché Admin" subtitle="Annonces, signalements et modération">
       <StatGrid items={[
-        { label: "Annonces actives", value: "3 921", icon: ShoppingBag, tone: "text-emerald-600" },
-        { label: "Signalements", value: "47", icon: Flag, tone: "text-rose-600" },
-        { label: "Vues 7j", value: "184k", icon: Eye, tone: "text-primary" },
-        { label: "Boostées", value: "23", icon: TrendingUp, tone: "text-amber-600" },
+        { label: "Annonces actives", value: "À connecter", icon: ShoppingBag },
+        { label: "Signalements", value: "À connecter", icon: Flag },
+        { label: "Vues 7j", value: "À connecter", icon: Eye },
+        { label: "Boostées", value: "À connecter", icon: TrendingUp },
       ]} />
       <AdminToolbar placeholder="Rechercher annonce..." />
       <div className="flex gap-2 flex-wrap">

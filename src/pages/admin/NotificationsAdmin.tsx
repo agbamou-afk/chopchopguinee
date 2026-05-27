@@ -206,10 +206,10 @@ export default function NotificationsAdmin() {
   return (
     <ModulePage module="notifications" title="Notifications" subtitle="WhatsApp, SMS, push et campagnes">
       <StatGrid items={[
-        { label: "Envoyés 24h", value: "12 480", icon: Send, tone: "text-primary" },
-        { label: "Délivrés", value: "98.2%", icon: CheckCircle2, tone: "text-emerald-600" },
-        { label: "Échecs", value: "224", icon: XCircle, tone: "text-rose-600" },
-        { label: "Templates actifs", value: "18", icon: MessageSquare, tone: "text-amber-600" },
+        { label: "Envoyés 24h", value: "À connecter", icon: Send },
+        { label: "Délivrés", value: "À connecter", icon: CheckCircle2 },
+        { label: "Échecs", value: "À connecter", icon: XCircle },
+        { label: "Templates actifs", value: "À connecter", icon: MessageSquare },
       ]} />
       <Tabs defaultValue="templates">
         <TabsList>
