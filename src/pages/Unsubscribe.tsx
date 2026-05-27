@@ -60,7 +60,7 @@ export default function Unsubscribe() {
         {(state === "invalid" || state === "error") && (
           <>
             <AlertCircle className="w-10 h-10 mx-auto text-destructive" />
-            <p className="text-muted-foreground">Lien invalide ou expiré. Contactez support@wongo.app pour assistance.</p>
+            <p className="text-muted-foreground">Lien invalide ou expiré. Contactez support@chopchopguinee.com pour assistance.</p>
           </>
         )}
       </Card>

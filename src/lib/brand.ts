@@ -27,7 +27,7 @@ export const BRAND = {
   descriptor: "Déplacements • Commerce • Logistique • Paiements",
   /** Legacy. Kept for back-compat of any remaining import; mirrors tagline. */
   brandLine: "Tout, partout, pour tous.",
-  domain: "wongo.app",
+  domain: "chopchopguinee.com",
   socialHandle: "@ChopChopApp",
   securedBy: "Secured by ChopPay",
   trackedBy: "Mission suivie par CHOPCHOP",
