@@ -354,6 +354,32 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                   <PrimaryButton fullWidth onClick={onClose}>
                     Terminer
                   </PrimaryButton>
+                  <div className="mt-3">
+                    <ReportIssueButton
+                      className="w-full"
+                      variant="ghost"
+                      size="sm"
+                      issueTypes={[
+                        "merchant_not_ready",
+                        "item_not_available",
+                        "delivery_failed",
+                        "wrong_address",
+                        "other",
+                      ]}
+                      context={{
+                        relatedFoodOrderId: lastOrderId ?? undefined,
+                        relatedRestaurantId: restaurant.id,
+                        relatedMissionId: lastMissionId ?? undefined,
+                        district: restaurant.district ?? null,
+                        metadata: {
+                          source: "repas_order_receipt",
+                          restaurant_name: restaurant.name,
+                          fulfillment,
+                          delivery_pending: deliveryPending,
+                        },
+                      }}
+                    />
+                  </div>
                 </div>
               ) : (
                 <>
