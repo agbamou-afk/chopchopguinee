@@ -7,10 +7,10 @@
 export const BRAND = {
   name: "CHOPCHOP",
   legalName: "CHOPCHOP GUINEE LTD",
-  tagline: "L'infrastructure de confiance pour la mobilité et le commerce en Guinée.",
-  url: "https://wongo.app",
-  logoUrl: "https://wongo.app/favicon.png",
-  supportEmail: "support@wongo.app",
+  tagline: "Tout, partout, pour tous.",
+  url: "https://chopchopguinee.com",
+  logoUrl: "https://chopchopguinee.com/favicon.png",
+  supportEmail: "support@chopchopguinee.com",
   supportPhone: "+224 621 00 00 00",
   address: "Conakry, République de Guinée",
 } as const;
