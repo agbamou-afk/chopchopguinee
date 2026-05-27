@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Seo } from "@/components/Seo";
 
 type State = "loading" | "valid" | "already" | "invalid" | "submitting" | "done" | "error";
 
@@ -35,6 +36,11 @@ export default function Unsubscribe() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Seo
+        title="Désabonnement | CHOPCHOP"
+        description="Gérez vos préférences de communication CHOPCHOP."
+        canonical="/unsubscribe"
+      />
       <Card className="max-w-md w-full p-8 text-center space-y-4">
         <h1 className="text-xl font-bold">Désabonnement CHOPCHOP</h1>
         {state === "loading" && <Loader2 className="w-8 h-8 mx-auto animate-spin text-primary" />}

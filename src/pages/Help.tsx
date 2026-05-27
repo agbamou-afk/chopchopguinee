@@ -107,7 +107,7 @@ export default function Help() {
   return (
     <div className="min-h-screen bg-background pb-12">
       <Seo
-        title="Aide & FAQ — CHOPCHOP"
+        title="Aide et support | CHOPCHOP"
         description="Réponses aux questions fréquentes sur CHOPCHOP : recharge portefeuille, courses moto, livraison de repas, transferts d'argent et sécurité."
         canonical="/help"
         jsonLd={{

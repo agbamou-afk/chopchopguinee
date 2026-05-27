@@ -1,0 +1,17 @@
+{
+  "name": "CHOPCHOP Guinée",
+  "short_name": "CHOPCHOP",
+  "description": "Super-app guinéenne pour transport (Moto, TokTok), Chop Repas, Chop Marché et paiements ChopWallet.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#118338",
+  "background_color": "#0F1412",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
