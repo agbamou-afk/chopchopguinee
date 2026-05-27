@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'Confirmez votre compte CHOPCHOP',
+  invite: 'Vous êtes invité sur CHOPCHOP',
+  magiclink: 'Votre lien de connexion CHOPCHOP',
+  recovery: 'Réinitialisez votre mot de passe CHOPCHOP',
+  email_change: 'Confirmez votre nouvelle adresse email',
+  reauthentication: 'Votre code de vérification CHOPCHOP',
 }
 
 // Template mapping
@@ -35,18 +35,18 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   reauthentication: ReauthenticationEmail,
 }
 
-// Configuration
-const SITE_NAME = "wongo"
-const SENDER_DOMAIN = "notify.wongo.app"
-const ROOT_DOMAIN = "wongo.app"
-const FROM_DOMAIN = "wongo.app" // Domain shown in From address (may be root or sender subdomain)
+// Configuration — CHOPCHOP
+const SITE_NAME = "CHOPCHOP"
+const SENDER_DOMAIN = "notify.chopchopguinee.com"
+const ROOT_DOMAIN = "chopchopguinee.com"
+const FROM_DOMAIN = "chopchopguinee.com" // Domain shown in From address
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://wongo.lovable.app"
+const SAMPLE_PROJECT_URL = "https://chopchopguinee.com"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
