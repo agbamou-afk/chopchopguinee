@@ -12,15 +12,14 @@ export const SignupEmail = ({ confirmationUrl }: Props) => (
   <EmailLayout preview="Confirmez votre compte CHOPCHOP">
     <H1>Bienvenue sur CHOPCHOP 🇬🇳</H1>
     <P>
-      Merci d'avoir créé votre compte. Confirmez votre adresse e-mail pour activer
-      votre profil et accéder à la mobilité, au paiement et au commerce dans toute
-      la Guinée.
+      Confirmez votre email pour continuer et activer votre compte CHOPCHOP.
     </P>
     <CTAButton href={confirmationUrl}>Confirmer mon compte</CTAButton>
     <P muted>
       Ce lien est valable 24 heures. Si vous n'êtes pas à l'origine de cette
       inscription, ignorez cet e-mail.
     </P>
+    <P muted>Tout, partout, pour tous.</P>
     <SupportSection />
   </EmailLayout>
 )
