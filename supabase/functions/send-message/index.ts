@@ -212,6 +212,25 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 
+    // Require authentication. Defense-in-depth check in addition to verify_jwt=true.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userClient = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const input = (await req.json()) as SendInput;
     if (!input?.template || !input?.to) {
       return new Response(JSON.stringify({ error: "template and to are required" }), {
@@ -219,6 +238,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // Force userId to the authenticated caller — ignore any client-supplied value.
+    input.userId = user.id;
 
     const body = renderTemplate(input.template, input.vars);
     const prefs = await loadPrefs(admin, input.userId);

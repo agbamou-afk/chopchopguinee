@@ -12,17 +12,27 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  let userId: string | null = null;
+  // Require authentication — these endpoints incur paid Google Maps API costs.
   const authHeader = req.headers.get('Authorization') ?? '';
-  if (authHeader) {
-    const userClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: { user } } = await userClient.auth.getUser();
-    userId = user?.id ?? null;
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
+  const userClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } },
+  );
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const userId: string = user.id;
 
   try {
     const body = await req.json();
@@ -36,14 +46,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (userId) {
-      const rl = await checkMapsRateLimit(admin, userId, 'eta', 120);
-      if (!rl.allowed) {
-        return new Response(JSON.stringify({ error: 'Rate limited' }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+    const rl = await checkMapsRateLimit(admin, userId, 'eta', 120);
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: 'Rate limited' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const key = Deno.env.get('GOOGLE_MAPS_SERVER_KEY');
