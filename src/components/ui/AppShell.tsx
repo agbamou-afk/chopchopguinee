@@ -22,9 +22,13 @@ export function AppShell({
   return (
     <div
       className={cn(
-        "min-h-screen w-full",
+        "min-h-[100dvh] w-full",
         background === "muted" ? "bg-muted/40" : "bg-app-conakry",
       )}
+      style={{
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+      }}
     >
       <div
         className={cn(
