@@ -17,10 +17,10 @@ export default function RiskAdmin() {
   return (
     <ModulePage module="risk" title="Fraude & Risque" subtitle="Détection d'anomalies et actions rapides">
       <StatGrid items={[
-        { label: "Alertes ouvertes", value: "18", icon: ShieldAlert, tone: "text-rose-600" },
-        { label: "Risque élevé", value: "5", icon: AlertTriangle, tone: "text-rose-600" },
-        { label: "Actions 24h", value: "12", icon: Activity, tone: "text-primary" },
-        { label: "Comptes gelés", value: "7", icon: Snowflake, tone: "text-blue-600" },
+        { label: "Alertes ouvertes", value: "À connecter", icon: ShieldAlert },
+        { label: "Risque élevé", value: "À connecter", icon: AlertTriangle },
+        { label: "Actions 24h", value: "À connecter", icon: Activity },
+        { label: "Comptes gelés", value: "À connecter", icon: Snowflake },
       ]} />
       <div className="flex gap-2 flex-wrap">
         {["Tous", "Wallet", "Agents", "Chauffeurs", "Marketplace"].map((x) => (

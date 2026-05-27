@@ -16,10 +16,10 @@ export default function OrdersAdmin() {
   return (
     <ModulePage module="orders" title="Courses & Livraisons" subtitle="Vue temps réel de tous les services">
       <StatGrid items={[
-        { label: "Aujourd'hui", value: "1 842", icon: ClipboardList, tone: "text-primary" },
-        { label: "Complétées", value: "1 612", icon: CheckCircle2, tone: "text-emerald-600" },
-        { label: "Annulées", value: "94", icon: X, tone: "text-rose-600" },
-        { label: "Remboursements", value: "5", icon: RefreshCw, tone: "text-amber-600" },
+        { label: "Aujourd'hui", value: "À connecter", icon: ClipboardList },
+        { label: "Complétées", value: "À connecter", icon: CheckCircle2 },
+        { label: "Annulées", value: "À connecter", icon: X },
+        { label: "Remboursements", value: "À connecter", icon: RefreshCw },
       ]} />
       <AdminToolbar placeholder="Rechercher course / livraison..." />
       <div className="flex gap-2 flex-wrap">

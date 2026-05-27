@@ -17,10 +17,10 @@ export default function UsersAdmin() {
   return (
     <ModulePage module="users" title="Utilisateurs" subtitle="Recherche, KYC, suspensions et notes internes">
       <StatGrid items={[
-        { label: "Total", value: "12 480", icon: Users },
-        { label: "Actifs (30j)", value: "8 932", icon: UserCheck, tone: "text-emerald-600" },
-        { label: "Suspendus", value: "47", icon: UserX, tone: "text-rose-600" },
-        { label: "Risque élevé", value: "12", icon: ShieldAlert, tone: "text-amber-600" },
+        { label: "Total", value: "À connecter", icon: Users },
+        { label: "Actifs (30j)", value: "À connecter", icon: UserCheck },
+        { label: "Suspendus", value: "À connecter", icon: UserX },
+        { label: "Risque élevé", value: "À connecter", icon: ShieldAlert },
       ]} />
       <AdminToolbar placeholder="Rechercher par nom, téléphone, ID..." />
       <div className="flex gap-2 flex-wrap">

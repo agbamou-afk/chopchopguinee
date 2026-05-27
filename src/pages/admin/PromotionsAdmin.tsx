@@ -20,10 +20,10 @@ export default function PromotionsAdmin() {
     <ModulePage module="promotions" title="Promotions" subtitle="Codes promo, campagnes et bonus parrainage"
       actions={<Button size="sm" className="gradient-primary" onClick={() => setShow(!show)}><Megaphone className="w-4 h-4 mr-1" /> Nouveau</Button>}>
       <StatGrid items={[
-        { label: "Codes actifs", value: "12", icon: Tag, tone: "text-primary" },
-        { label: "Utilisations 30j", value: "4 821", icon: TrendingUp, tone: "text-emerald-600" },
-        { label: "Économies clients", value: "18.4 M GNF", icon: Tag, tone: "text-amber-600" },
-        { label: "Expirent ≤ 7j", value: "3", icon: Calendar, tone: "text-rose-600" },
+        { label: "Codes actifs", value: "À connecter", icon: Tag },
+        { label: "Utilisations 30j", value: "À connecter", icon: TrendingUp },
+        { label: "Économies clients", value: "À connecter", icon: Tag },
+        { label: "Expirent ≤ 7j", value: "À connecter", icon: Calendar },
       ]} />
       {show && (
         <Card className="p-5 space-y-3 animate-fade-in">

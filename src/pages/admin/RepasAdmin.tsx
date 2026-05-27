@@ -15,10 +15,10 @@ export default function RepasAdmin() {
   return (
     <ModulePage module="repas" title="Repas Admin" subtitle="Restaurants, menus, commandes et délais">
       <StatGrid items={[
-        { label: "Commandes/jour", value: "612", icon: UtensilsCrossed, tone: "text-orange-600" },
-        { label: "Délai moyen", value: "23 min", icon: Clock, tone: "text-primary" },
-        { label: "Complétées", value: "534", icon: CheckCircle2, tone: "text-emerald-600" },
-        { label: "Litiges", value: "4", icon: AlertTriangle, tone: "text-rose-600" },
+        { label: "Commandes/jour", value: "À connecter", icon: UtensilsCrossed },
+        { label: "Délai moyen", value: "À connecter", icon: Clock },
+        { label: "Complétées", value: "À connecter", icon: CheckCircle2 },
+        { label: "Litiges", value: "À connecter", icon: AlertTriangle },
       ]} />
       <AdminToolbar placeholder="Rechercher restaurant ou commande..." />
       <div className="flex gap-2 flex-wrap">

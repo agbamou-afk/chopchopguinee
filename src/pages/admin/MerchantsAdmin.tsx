@@ -17,10 +17,10 @@ export default function MerchantsAdmin() {
   return (
     <ModulePage module="merchants" title="Marchands" subtitle="Restaurants, boutiques, pharmacies et services">
       <StatGrid items={[
-        { label: "Marchands", value: "186", icon: Store },
-        { label: "Vérifiés", value: "164", icon: CheckCircle2, tone: "text-emerald-600" },
-        { label: "En attente", value: "12", icon: Clock, tone: "text-amber-600" },
-        { label: "CA semaine", value: "48 M GNF", icon: TrendingUp, tone: "text-primary" },
+        { label: "Marchands", value: "À connecter", icon: Store },
+        { label: "Vérifiés", value: "À connecter", icon: CheckCircle2 },
+        { label: "En attente", value: "À connecter", icon: Clock },
+        { label: "CA semaine", value: "À connecter", icon: TrendingUp },
       ]} />
       <AdminToolbar placeholder="Rechercher marchand..." />
       <div className="flex gap-2 flex-wrap">
