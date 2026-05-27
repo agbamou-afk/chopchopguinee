@@ -173,7 +173,7 @@ export default function PaymentsAdmin() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `wongo-payments-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `chopchop-payments-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
