@@ -292,7 +292,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
 
   // Recenter map when pickup changes alone (no destination yet)
   useEffect(() => {
-    if (!destCoords) {
+    if (!destCoords && pickupCoords) {
       mapRef.current?.flyTo(pickupCoords[1], pickupCoords[0], 14);
     }
   }, [pickupCoords, destCoords]);
@@ -422,21 +422,28 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
         <ChopMap
           ref={mapRef}
           className="absolute inset-0 w-full h-full"
-          initialView={{ longitude: pickupCoords[1], latitude: pickupCoords[0], zoom: 14 }}
+          initialView={{ longitude: mapCenter[1], latitude: mapCenter[0], zoom: 14 }}
         >
           {routePolyline && <RoutePolyline encoded={routePolyline} />}
           <DriverCluster variant={type === "toktok" ? "toktok" : "moto"} />
-          {/* Draggable pickup */}
-          <DraggablePickupPin
-            lat={pickupCoords[0]}
-            lng={pickupCoords[1]}
-            onDragEnd={(next) => setPickupCoords([next.lat, next.lng])}
-            size={36}
-          />
+          {/* Draggable pickup — only rendered once we have a real or chosen pickup. */}
+          {pickupCoords && (
+            <DraggablePickupPin
+              lat={pickupCoords[0]}
+              lng={pickupCoords[1]}
+              onDragEnd={(next) => { setPickupCoords([next.lat, next.lng]); setPickupIsReal(true); }}
+              size={36}
+            />
+          )}
           {destCoords && (
             <PinSet dropoff={{ lat: destCoords[0], lng: destCoords[1] }} pulseActive="dropoff" />
           )}
         </ChopMap>
+        {!pickupCoords && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
+            Position non activée — choisissez un point de départ.
+          </div>
+        )}
         <button
           type="button"
           onClick={handleLocateMe}
@@ -488,6 +495,10 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
         {!confirmed ? (
           <Button
             onClick={() => {
+              if (!pickupCoords) {
+                toast({ title: "Point de départ requis", description: "Activez votre localisation ou choisissez un lieu." });
+                return;
+              }
               if (!destCoords) {
                 toast({ title: "Choisissez une destination" });
                 return;
@@ -501,7 +512,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           </Button>
         ) : (
           <Button
-            onClick={() => destCoords && onBook({ pickupCoords, destCoords, fare: estimatedPrice })}
+            onClick={() => pickupCoords && destCoords && onBook({ pickupCoords, destCoords, fare: estimatedPrice })}
             className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
           >
             Réserver pour {formatGNF(Math.round(estimatedPrice))}
