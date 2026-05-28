@@ -45,7 +45,7 @@ export function AppHeader({
   amountLoading = false,
   notificationCount = 0,
   onAmountClick,
-  location = "Kaloum, Conakry",
+  location = "Position non activée",
   onRecharge,
   showWalletCard = true,
 }: AppHeaderProps) {
