@@ -2605,6 +2605,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_legal_consents: {
+        Row: {
+          accepted_at: string
+          accepted_privacy: boolean
+          accepted_terms: boolean
+          created_at: string
+          id: string
+          ip_address: string | null
+          privacy_version: string
+          source: string
+          terms_version: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_privacy?: boolean
+          accepted_terms?: boolean
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          privacy_version: string
+          source?: string
+          terms_version: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          accepted_privacy?: boolean
+          accepted_terms?: boolean
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          privacy_version?: string
+          source?: string
+          terms_version?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_pins: {
         Row: {
           pin_hash: string
@@ -2618,6 +2660,36 @@ export type Database = {
         }
         Update: {
           pin_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          allow_marketing_notifications: boolean
+          allow_personalized_offers: boolean
+          allow_urban_insights: boolean
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_marketing_notifications?: boolean
+          allow_personalized_offers?: boolean
+          allow_urban_insights?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_marketing_notifications?: boolean
+          allow_personalized_offers?: boolean
+          allow_urban_insights?: boolean
+          created_at?: string
+          id?: string
           updated_at?: string
           user_id?: string
         }
