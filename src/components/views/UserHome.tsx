@@ -39,8 +39,14 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
   const { user } = useAuth();
   useCustomerMissionAlerts(user?.id ?? null);
   const { lowDataMode } = useAppEnv();
-  const userLocation = "Kaloum";
-  const userCoords = { lat: 9.5092, lng: -13.7122 };
+  const live = useLiveUserLocation();
+  const mapCenter = live.coords ?? live.fallbackCenter;
+  const userLocation = live.isRealLocation ? "votre zone" : "Conakry";
+  const locationLabel = live.isRealLocation
+    ? "Ma position"
+    : live.status === "requesting"
+      ? "Position en cours…"
+      : "Conakry · position non activée";
   const recents = [
     { icon: HomeIcon, label: "Maison", sub: "Ratoma" },
     { icon: Briefcase, label: "Travail", sub: "Kaloum" },
