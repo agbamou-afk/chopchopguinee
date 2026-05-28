@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   User,
@@ -15,6 +16,7 @@ import {
   Gauge,
   Sparkles,
   Store,
+  Trash2,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +26,7 @@ import { MenuButton } from "@/components/ui/MainMenuSheet";
 import { ONBOARDING_DONE_KEY, ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/ClientOnboarding";
 import { DRIVER_ONBOARDING_DONE_KEY, DRIVER_ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/DriverOnboarding";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
+import { AccountDeletionRequestSheet } from "@/components/account/AccountDeletionRequestSheet";
 
 interface ProfileViewProps {
   isDriverMode: boolean;
@@ -51,6 +54,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
   const navigate = useNavigate();
   const { hasAny: isMerchant } = useMerchantIdentity();
   const isAuthed = !!user;
+  const [deletionOpen, setDeletionOpen] = useState(false);
 
   const isDriver = roles.includes("driver");
   const fullName =
@@ -285,6 +289,17 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
           Se déconnecter
         </motion.button>
 
+        {/* Account deletion request — required for App Store / Play Store */}
+        {isAuthed && (
+          <button
+            onClick={() => setDeletionOpen(true)}
+            className="w-full flex items-center justify-center gap-2 mt-3 px-4 py-3 text-sm text-muted-foreground hover:text-destructive transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Demander la suppression du compte
+          </button>
+        )}
+
         {/* Admin link — only when the user actually has an admin role */}
         {isAdmin && (
           <Link
@@ -301,6 +316,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
           Version 1.0.0
         </p>
       </div>
+      <AccountDeletionRequestSheet open={deletionOpen} onOpenChange={setDeletionOpen} />
     </div>
   );
 }
