@@ -47,6 +47,13 @@ export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
 
 /**
+ * Public (logged-out) client onboarding completion flag. Separate from the
+ * per-user `cc_client_onboarding_done:<id>` key so we never mix anonymous
+ * completion with authenticated completion.
+ */
+const PUBLIC_ONBOARDING_DONE_KEY = "cc_public_client_onboarding_done";
+
+/**
  * Renders the global driver ride-alert banner. Lives inside the provider so it
  * can read the current offer and surface it from any tab.
  */
