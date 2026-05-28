@@ -124,14 +124,17 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
 
         {/* 4 — Services secondaires */}
         <section>
-          <div className="flex items-center justify-between mb-2 px-0.5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">
-              Plus de services
-            </h2>
-            <span className="text-[11px] text-white/70">À {userLocation}</span>
-          </div>
-          <div className="services-section-green rounded-3xl p-4 relative overflow-hidden">
+          <div className="services-section-green rounded-3xl p-4 pt-3.5 relative overflow-hidden">
             <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam opacity-70" aria-hidden />
+            <div className="flex items-center justify-between mb-3 px-0.5">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/95">
+                Plus de services
+              </h2>
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-white/85">
+                À {userLocation}
+                <MapPin className="w-3 h-3 text-white/80" />
+              </span>
+            </div>
             <QuickActions onActionClick={onActionClick} />
           </div>
         </section>
