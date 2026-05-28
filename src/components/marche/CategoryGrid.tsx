@@ -17,12 +17,20 @@ export function CategoryGrid({
             key={c.id}
             whileTap={{ scale: 0.94 }}
             onClick={() => onSelect(c.id)}
-            className={`flex flex-col items-center gap-1.5 rounded-2xl p-2 transition ${
+            className={`flex flex-col items-center gap-1.5 rounded-2xl p-1.5 transition ${
               isActive ? "ring-2 ring-primary" : ""
             }`}
           >
-            <div className={`w-12 h-12 rounded-2xl ${c.tint} flex items-center justify-center shadow-card overflow-hidden`}>
-              <img src={c.icon} alt="" className="w-11 h-11 object-contain" loading="lazy" />
+            <div
+              className={`w-14 h-14 rounded-2xl ${c.tint} flex items-center justify-center shadow-card overflow-hidden`}
+            >
+              <img
+                src={c.icon}
+                alt=""
+                className="w-9 h-9 object-contain block"
+                style={{ objectPosition: "center" }}
+                loading="lazy"
+              />
             </div>
             <span className="text-[10px] font-medium text-foreground text-center leading-tight">
               {c.label}
