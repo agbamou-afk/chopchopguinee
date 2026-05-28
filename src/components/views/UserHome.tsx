@@ -176,6 +176,40 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               <Bike className="w-3 h-3 text-primary" />
               <span className="text-[11px] font-semibold text-foreground">En direct</span>
             </div>
+            {!live.isRealLocation && !lowDataMode && (
+              <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 bg-card/95 backdrop-blur rounded-2xl px-3 py-2 shadow-card">
+                <div className="flex items-center gap-2 text-left min-w-0">
+                  <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold text-foreground truncate">
+                      Position non activée
+                    </p>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      Carte centrée sur Conakry
+                    </p>
+                  </div>
+                </div>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    void live.requestLocation();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      void live.requestLocation();
+                    }
+                  }}
+                  className="text-[11px] font-semibold text-primary shrink-0 px-2 py-1 rounded-full bg-primary/10"
+                >
+                  Activer
+                </span>
+              </div>
+            )}
           </button>
         </section>
 
