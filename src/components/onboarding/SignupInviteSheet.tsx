@@ -1,9 +1,10 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Sparkles } from "lucide-react";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { useEffect } from "react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
+import conakryScene from "@/assets/brand/conakry-street-scene.jpg";
 
 interface Props {
   open: boolean;
@@ -29,6 +30,12 @@ export function SignupInviteSheet({ open, onOpenChange, onDismiss }: Props) {
     navigate("/auth?intent=client&next=/");
   };
 
+  const handleSignin = () => {
+    Analytics.track("signup_invite_signin_clicked");
+    onOpenChange(false);
+    navigate("/auth?next=/");
+  };
+
   const handleDismiss = () => {
     Analytics.track("signup_invite_dismissed");
     onDismiss();
@@ -45,28 +52,61 @@ export function SignupInviteSheet({ open, onOpenChange, onDismiss }: Props) {
     >
       <SheetContent
         side="bottom"
-        className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+1.5rem)] bg-card border-t border-border/60"
+        className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+1.5rem)] bg-card border-t border-border/60 overflow-hidden px-5"
       >
-        <div className="mx-auto w-12 h-1.5 rounded-full bg-muted mb-4" aria-hidden />
-        <div className="flex items-center justify-center mb-3">
-          <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center shadow-soft">
-            <Sparkles className="w-7 h-7 text-primary-foreground" />
+        {/* Subtle branded Conakry background illustration */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-no-repeat bg-bottom bg-contain opacity-[0.08]"
+          style={{ backgroundImage: `url(${conakryScene})` }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-card via-card/95 to-card/70"
+        />
+
+        <div className="relative">
+          <div className="mx-auto w-12 h-1.5 rounded-full bg-muted mb-5" aria-hidden />
+
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-background ring-1 ring-border/60 shadow-card flex items-center justify-center">
+              <BrandLogo size="md" className="!h-10" />
+            </div>
           </div>
-        </div>
-        <SheetHeader className="text-center">
-          <SheetTitle className="text-xl">Prêt à tout faire avec CHOPCHOP ?</SheetTitle>
-          <SheetDescription className="text-sm leading-relaxed">
-            Créez votre compte pour réserver une course, commander un repas,
-            acheter au marché et suivre vos paiements dans ChopWallet.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="grid gap-2 mt-5">
-          <Button className="h-12 gradient-cta text-primary-foreground font-semibold" onClick={handleCreate}>
-            Créer mon compte
-          </Button>
-          <Button variant="ghost" className="h-11 text-muted-foreground" onClick={handleDismiss}>
-            Continuer à explorer
-          </Button>
+
+          <SheetHeader className="text-center px-1">
+            <SheetTitle className="text-[20px] leading-tight font-bold text-foreground">
+              Créez votre compte pour tout faire avec CHOPCHOP
+            </SheetTitle>
+            <SheetDescription className="text-sm leading-relaxed text-muted-foreground mx-auto max-w-[34ch]">
+              Un compte vous permet de réserver une course, commander un repas,
+              acheter au marché, recharger ChopWallet et suivre vos opérations
+              en toute simplicité.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="grid gap-2.5 mt-6">
+            <Button
+              className="h-12 gradient-cta text-primary-foreground font-semibold shadow-elevated"
+              onClick={handleCreate}
+            >
+              Créer mon compte
+            </Button>
+            <Button
+              variant="outline"
+              className="h-12 border-primary/30 text-primary hover:bg-primary/5 font-medium"
+              onClick={handleSignin}
+            >
+              J'ai déjà un compte
+            </Button>
+            <Button
+              variant="ghost"
+              className="h-10 text-muted-foreground text-sm"
+              onClick={handleDismiss}
+            >
+              Continuer à explorer
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
