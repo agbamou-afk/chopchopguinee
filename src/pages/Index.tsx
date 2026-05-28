@@ -34,6 +34,12 @@ import {
 } from "@/components/onboarding/DriverOnboarding";
 import { isAdminUser, isLiveUser, isSandboxMode } from "@/lib/runtimeMode";
 import { ConversionGateSheet, type ConversionIntent } from "@/components/onboarding/ConversionGateSheet";
+import {
+  SignupInviteSheet,
+  shouldSkipSignupInvite,
+  markSignupInviteDismissed,
+  markSignupInviteSeenSession,
+} from "@/components/onboarding/SignupInviteSheet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
 import { createSupportIssue } from "@/lib/support/issues";
 
@@ -80,6 +86,7 @@ const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showDriverOnboarding, setShowDriverOnboarding] = useState(false);
   const [conversionGate, setConversionGate] = useState<{ open: boolean; intent?: ConversionIntent }>({ open: false });
+  const [signupInviteOpen, setSignupInviteOpen] = useState(false);
   const { requireAuth } = useAuthGuard();
   const { ready, roles, user } = useAuth();
   const { profile: driverProfile, loading: driverProfileLoading } = useDriverProfile();
@@ -179,6 +186,14 @@ const Index = () => {
       try {
         localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
       } catch { /* noop */ }
+    }
+    // Gentle signup invite for logged-out visitors only.
+    if (publicUser && !adminUser && !shouldSkipSignupInvite()) {
+      const delay = 2000 + Math.floor(Math.random() * 2000);
+      setTimeout(() => {
+        setSignupInviteOpen(true);
+        markSignupInviteSeenSession();
+      }, delay);
     }
   };
 
@@ -628,6 +643,11 @@ const Index = () => {
           setShowOnboarding(false);
           setShowDriverOnboarding(true);
         }}
+      />
+      <SignupInviteSheet
+        open={signupInviteOpen}
+        onOpenChange={setSignupInviteOpen}
+        onDismiss={markSignupInviteDismissed}
       />
     </div>
   );
