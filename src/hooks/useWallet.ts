@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Wallet = {
@@ -35,7 +35,6 @@ export function useWallet(partyType: "client" | "driver" = "client") {
   const [profile, setProfile] = useState<WalletProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const load = useCallback(async (uid: string | null) => {
     if (!uid) {
