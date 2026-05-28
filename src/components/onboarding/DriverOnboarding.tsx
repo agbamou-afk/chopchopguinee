@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import sceneWelcome from "@/assets/onboarding/scene-driver-welcome.jpg";
-import sceneMission from "@/assets/onboarding/scene-driver-mission.jpg";
-import sceneNavigate from "@/assets/onboarding/scene-driver-navigate.jpg";
-import sceneDeliver from "@/assets/onboarding/scene-driver-deliver.jpg";
-import sceneEarnings from "@/assets/onboarding/scene-driver-earnings.jpg";
+import sceneWelcome from "@/assets/onboarding/scene-driver-welcome.webp";
+import sceneMission from "@/assets/onboarding/scene-driver-mission.webp";
+import sceneNavigate from "@/assets/onboarding/scene-driver-navigate.webp";
+import sceneDeliver from "@/assets/onboarding/scene-driver-deliver.webp";
+import sceneEarnings from "@/assets/onboarding/scene-driver-earnings.webp";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { OnboardingStorybook, type StorybookSlide } from "./OnboardingStorybook";
 
