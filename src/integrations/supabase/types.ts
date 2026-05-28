@@ -3128,6 +3128,41 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      driver_set_capabilities: {
+        Args: { _caps: string[] }
+        Returns: {
+          accept_rate: number
+          approved_at: string | null
+          approved_by: string | null
+          capabilities: string[]
+          cash_debt_gnf: number
+          created_at: string
+          current_operating_district: string | null
+          debt_limit_gnf: number
+          driver_photo_url: string | null
+          id_doc_url: string | null
+          last_seen_at: string | null
+          last_seen_district: string | null
+          plate_number: string | null
+          preferred_district: string | null
+          presence: Database["public"]["Enums"]["driver_presence"]
+          rating: number
+          rejected_reason: string | null
+          status: Database["public"]["Enums"]["driver_status"]
+          suspended_reason: string | null
+          updated_at: string
+          user_id: string
+          vehicle_photo_url: string | null
+          vehicle_type: Database["public"]["Enums"]["driver_vehicle_type"]
+          zones: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       driver_set_status: {
         Args: { p_status: Database["public"]["Enums"]["driver_presence"] }
         Returns: {
