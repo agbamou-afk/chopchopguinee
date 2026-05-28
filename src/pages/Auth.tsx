@@ -279,6 +279,27 @@ export default function Auth() {
             )}
           </Button>
 
+          {mode === "signup" && (
+            <label className="flex items-start gap-2 text-[12px] text-muted-foreground pt-1">
+              <Checkbox
+                checked={acceptLegal}
+                onCheckedChange={(v) => setAcceptLegal(v === true)}
+                className="mt-0.5"
+              />
+              <span>
+                J'accepte les{" "}
+                <Link to="/terms" target="_blank" className="text-primary underline">
+                  Conditions d'utilisation
+                </Link>{" "}
+                et la{" "}
+                <Link to="/privacy" target="_blank" className="text-primary underline">
+                  Politique de confidentialité
+                </Link>{" "}
+                de CHOPCHOP.
+              </span>
+            </label>
+          )}
+
           {mode === "signin" && (
             <p className="text-[11px] text-muted-foreground text-center pt-1">
               Connexion par téléphone bientôt disponible.
