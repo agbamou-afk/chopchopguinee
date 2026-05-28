@@ -241,6 +241,55 @@ Deno.serve(async (req) => {
     // Force userId to the authenticated caller — ignore any client-supplied value.
     input.userId = user.id;
 
+    // ---------------- Authorization gate ----------------
+    // Caller must be either an admin/agent (privileged) OR sending to their own
+    // verified phone number. Sensitive templates (otp_code, suspicious_activity)
+    // are admin/service-only and cannot be triggered by regular users.
+    const SENSITIVE: TemplateKey[] = ["otp_code", "suspicious_activity"];
+    const [{ data: isAdmin }, { data: agentRow }, { data: profileRow }] = await Promise.all([
+      admin.rpc("is_any_admin", { _user_id: user.id }),
+      admin.from("agent_profiles").select("id").eq("user_id", user.id).eq("status", "active").maybeSingle(),
+      admin.from("profiles").select("phone").eq("user_id", user.id).maybeSingle(),
+    ]);
+    const privileged = Boolean(isAdmin) || Boolean(agentRow?.id);
+    const normalize = (p: string) => String(p ?? "").replace(/[^\d+]/g, "");
+    const callerPhone = normalize((profileRow as { phone?: string } | null)?.phone ?? "");
+    const targetPhone = normalize(input.to);
+    const isSelf = !!callerPhone && callerPhone === targetPhone;
+
+    if (SENSITIVE.includes(input.template) && !privileged) {
+      return new Response(JSON.stringify({ ok: false, error: "forbidden_template" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!privileged && !isSelf) {
+      return new Response(JSON.stringify({ ok: false, error: "recipient_must_be_self" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ---------------- Per-user rate limit ----------------
+    // 5 messages / minute for normal users (privileged callers: 60).
+    const limit = privileged ? 60 : 5;
+    const windowStart = new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString();
+    const { data: rateRow } = await admin
+      .from("ai_rate_limits")
+      .select("count")
+      .eq("user_id", user.id)
+      .eq("window_kind", "minute")
+      .eq("window_start", windowStart)
+      .maybeSingle();
+    const current = Number((rateRow as { count?: number } | null)?.count ?? 0);
+    if (current >= limit) {
+      return new Response(JSON.stringify({ ok: false, error: "rate_limited" }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    await admin.from("ai_rate_limits").upsert(
+      { user_id: user.id, window_kind: "minute", window_start: windowStart, count: current + 1 },
+      { onConflict: "user_id,window_kind,window_start" },
+    );
+
     const body = renderTemplate(input.template, input.vars);
     const prefs = await loadPrefs(admin, input.userId);
     const order = channelOrder(prefs, input.channelHint);
