@@ -1,9 +1,18 @@
 import { Marker } from "react-map-gl";
 import { ChopMap, DriverCluster, MapMarker, VendorDiscoveryLayer } from "@/components/map";
 
-interface Props { lng: number; lat: number; }
+interface Props {
+  lng: number;
+  lat: number;
+  /**
+   * True only when (lng, lat) reflects the user's real device location.
+   * When false, the map is centered on a fallback (e.g. Conakry) and we
+   * MUST NOT render a "Vous" pin pretending the user is there.
+   */
+  userPresent?: boolean;
+}
 
-export default function NearbyDriversMap({ lng, lat }: Props) {
+export default function NearbyDriversMap({ lng, lat, userPresent = false }: Props) {
   return (
     <ChopMap
       className="absolute inset-0 w-full h-full"
@@ -13,9 +22,11 @@ export default function NearbyDriversMap({ lng, lat }: Props) {
       <DriverCluster variant="moto" />
       {/* Customer-only: nearby public restaurants & boutiques (with coords). */}
       <VendorDiscoveryLayer enabled filters={{ restaurants: true, stores: true }} />
-      <Marker longitude={lng} latitude={lat} anchor="center">
-        <MapMarker variant="pickup" pulse size={28} label="Vous" />
-      </Marker>
+      {userPresent && (
+        <Marker longitude={lng} latitude={lat} anchor="center">
+          <MapMarker variant="pickup" pulse size={28} label="Vous" />
+        </Marker>
+      )}
     </ChopMap>
   );
 }
