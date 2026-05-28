@@ -205,10 +205,13 @@ export async function updateDriverCapabilities(
   userId: string,
   capabilities: string[],
 ): Promise<void> {
-  const { error } = await supabase
-    .from("driver_profiles")
-    .update({ capabilities })
-    .eq("user_id", userId);
+  // Route through SECURITY DEFINER RPC: drivers can only toggle within the
+  // capability set their admin already granted. `userId` is kept for API
+  // compatibility but ignored server-side (RPC uses auth.uid()).
+  void userId;
+  const { error } = await (supabase as any).rpc("driver_set_capabilities", {
+    _caps: capabilities,
+  });
   if (error) throw error;
 }
 
