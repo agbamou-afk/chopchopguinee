@@ -201,8 +201,9 @@
     box-shadow: var(--shadow-card), var(--shadow-inset-soft);
   }
   .dark .services-section-green {
-    background: var(--gradient-primary);
-    box-shadow: var(--shadow-glow-primary);
+    background:
+      linear-gradient(160deg, hsl(160 42% 14%) 0%, hsl(150 38% 18%) 55%, hsl(146 34% 22%) 100%);
+    box-shadow: 0 12px 32px -16px hsl(160 60% 6% / 0.7), inset 0 1px 0 hsl(40 33% 95% / 0.05);
   }
   .dark .services-section-green .service-icon-holder {
     background: hsl(40 33% 95% / 0.92);
@@ -528,13 +529,16 @@
 
   /* Green section surface — matches CHOPWallet identity, holds service tiles */
   .services-section-green {
-    background: var(--gradient-primary);
-    box-shadow: var(--shadow-glow-primary);
+    background:
+      linear-gradient(160deg, hsl(160 42% 18%) 0%, hsl(150 38% 22%) 55%, hsl(146 34% 26%) 100%);
+    box-shadow: 0 12px 32px -16px hsl(160 50% 10% / 0.55), inset 0 1px 0 hsl(40 53% 96% / 0.06);
   }
   .services-section-green .service-icon-holder {
     background: hsl(40 53% 96% / 0.95);
     border-color: hsl(40 30% 88% / 0.55);
     box-shadow: 0 2px 8px -2px hsl(142 40% 18% / 0.14);
+    width: 72px;
+    height: 72px;
   }
   .services-section-green span.text-foreground {
     color: hsl(40 53% 96%);
