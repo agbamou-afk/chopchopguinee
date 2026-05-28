@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Loader2, Shield, KeyRound } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Shield, KeyRound, ScrollText, Lock, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,6 +148,33 @@ export default function ProfileInfo() {
             <KeyRound className="w-4 h-4 mr-2" />
             Modifier le mot de passe
           </Button>
+        </div>
+
+        <div className="bg-card rounded-2xl shadow-card p-5 space-y-1">
+          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-2">
+            <ScrollText className="w-4 h-4 text-primary" /> Légal & confidentialité
+          </h2>
+          <button
+            onClick={() => navigate("/terms")}
+            className="w-full flex items-center justify-between py-3 text-sm hover:bg-muted/40 rounded-lg px-2"
+          >
+            <span>Conditions d'utilisation</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <button
+            onClick={() => navigate("/privacy")}
+            className="w-full flex items-center justify-between py-3 text-sm hover:bg-muted/40 rounded-lg px-2"
+          >
+            <span>Politique de confidentialité</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <button
+            onClick={() => navigate("/settings/permissions")}
+            className="w-full flex items-center justify-between py-3 text-sm hover:bg-muted/40 rounded-lg px-2"
+          >
+            <span className="flex items-center gap-2"><Lock className="w-4 h-4 text-muted-foreground" /> Permissions & données</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
         </div>
       </div>
     </div>

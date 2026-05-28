@@ -61,6 +61,10 @@ const MerchantQR = lazy(() => import("./pages/MerchantQR"));
 const Merchant = lazy(() => import("./pages/Merchant"));
 import PrivacySettings from "./pages/PrivacySettings";
 import OfflinePage from "./pages/Offline";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import PermissionCenter from "./pages/PermissionCenter";
+import { LegalAcceptanceModal } from "./components/legal/LegalAcceptanceModal";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 const FieldTestingPanel = lazy(() =>
   import("./components/devtools/FieldTestingPanel").then(m => ({ default: m.FieldTestingPanel }))
@@ -105,6 +109,7 @@ const App = () => {
         <ProfileCompletionRedirect />
         <TopupNotificationsMount />
         <InstallPrompt />
+        <LegalAcceptanceModal />
         {(isSandboxMode() ||
           (typeof window !== "undefined" &&
             /[?&](field|sandbox|debug)=1/.test(window.location.search))) && (
@@ -160,6 +165,9 @@ const App = () => {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings/notifications" element={<NotificationSettings />} />
           <Route path="/settings/privacy" element={<PrivacySettings />} />
+          <Route path="/settings/permissions" element={<PermissionCenter />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/offline" element={<OfflinePage />} />
           <Route path="/driver/apply" element={<Suspense fallback={null}><DriverApply /></Suspense>} />
