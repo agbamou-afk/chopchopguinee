@@ -130,7 +130,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
             </h2>
             <span className="text-[11px] text-muted-foreground">À {userLocation}</span>
           </div>
-          <div className="card-warm rounded-3xl p-4 relative overflow-hidden">
+          <div className="card-warm rounded-3xl p-4 relative overflow-hidden bg-green-800 text-green-700">
             <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam opacity-70" aria-hidden />
             <QuickActions onActionClick={onActionClick} />
           </div>
