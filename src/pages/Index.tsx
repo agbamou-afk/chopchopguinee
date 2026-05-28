@@ -192,7 +192,6 @@ const Index = () => {
       const delay = 2000 + Math.floor(Math.random() * 2000);
       setTimeout(() => {
         setSignupInviteOpen(true);
-        markSignupInviteSeenSession();
       }, delay);
     }
   };
