@@ -103,40 +103,20 @@ export function useWallet(partyType: "client" | "driver" = "client") {
   // Realtime: re-load on wallet or transaction changes for this user
   useEffect(() => {
     if (!userId) return;
-    // Pause realtime when tab is hidden, offline, or low-data mode is on,
-    // to spare metered Guinean mobile data and battery.
+    // Financial tables are no longer realtime-published for security; poll
+    // on focus/visibility plus a low-frequency interval to keep UI fresh.
+    const onVisible = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") load(userId);
+    };
+    document.addEventListener("visibilitychange", onVisible);
     const lowData = typeof window !== "undefined" && localStorage.getItem("cc:low_data_mode") === "1";
-    const offline = typeof navigator !== "undefined" && navigator.onLine === false;
-    const hidden = typeof document !== "undefined" && document.visibilityState === "hidden";
-    if (lowData || offline || hidden) {
-      // Still do a one-shot load so the UI is fresh; just don't subscribe.
-      const onVisible = () => {
-        if (document.visibilityState === "visible") load(userId);
-      };
-      document.addEventListener("visibilitychange", onVisible);
-      return () => document.removeEventListener("visibilitychange", onVisible);
-    }
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-    }
-    const ch = supabase
-      .channel(`wallet-${partyType}-${userId}-${Math.random().toString(36).slice(2)}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "wallets", filter: `owner_user_id=eq.${userId}` },
-        () => load(userId),
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "wallet_transactions", filter: `related_user_id=eq.${userId}` },
-        () => load(userId),
-      )
-      .subscribe();
-    channelRef.current = ch;
+    const intervalMs = lowData ? 60_000 : 20_000;
+    const tick = setInterval(() => {
+      if (typeof document === "undefined" || document.visibilityState === "visible") load(userId);
+    }, intervalMs);
     return () => {
-      supabase.removeChannel(ch);
-      channelRef.current = null;
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(tick);
     };
   }, [userId, partyType, load]);
 
