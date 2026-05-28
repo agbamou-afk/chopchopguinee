@@ -91,7 +91,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         amountLabel="Solde portefeuille"
         amountValue={walletBalance}
         amountLoading={walletLoading}
-        notificationCount={1}
+        notificationCount={0}
         onAmountClick={() => onActionClick("send")}
         onRecharge={() => onActionClick("send")}
         location={locationLabel}
