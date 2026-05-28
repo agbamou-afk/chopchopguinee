@@ -88,7 +88,7 @@ export function OnboardingStorybook({
             aria-hidden
             style={{
               background:
-                "linear-gradient(180deg, hsl(var(--background) / 0.15) 0%, hsl(var(--background) / 0) 28%, hsl(var(--background) / 0) 48%, hsl(var(--background) / 0.78) 78%, hsl(var(--background) / 0.96) 100%)",
+                "linear-gradient(180deg, hsl(var(--background) / 0.18) 0%, hsl(var(--background) / 0) 26%, hsl(var(--background) / 0) 42%, hsl(var(--background) / 0.55) 62%, hsl(var(--background) / 0.9) 82%, hsl(var(--background) / 0.98) 100%)",
             }}
           />
           {slide.overlay ? (
@@ -105,7 +105,7 @@ export function OnboardingStorybook({
         {!isLast ? (
           <button
             onClick={onSkip}
-            className="inline-flex items-center h-9 px-4 rounded-full bg-card/85 backdrop-blur text-foreground text-[12px] font-bold border border-border/60 shadow-soft active:scale-95 transition"
+            className="inline-flex items-center h-8 px-3.5 rounded-full bg-card/65 backdrop-blur text-foreground/85 text-[11.5px] font-semibold border border-border/50 shadow-soft active:scale-95 transition"
             aria-label="Passer l'introduction"
           >
             {skipLabel}
@@ -176,14 +176,17 @@ export function OnboardingStorybook({
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <button
-                onClick={onPrev}
-                disabled={index === 0}
-                className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-card/90 backdrop-blur border border-border text-foreground shadow-card disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition"
-                aria-label="Précédent"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
+              {index === 0 ? (
+                <div className="w-14 h-14" aria-hidden />
+              ) : (
+                <button
+                  onClick={onPrev}
+                  className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-card/90 backdrop-blur border border-border text-foreground shadow-card active:scale-95 transition"
+                  aria-label="Précédent"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+              )}
               <button
                 onClick={onNext}
                 className="inline-flex items-center justify-center w-16 h-16 rounded-full gradient-cta text-primary-foreground shadow-wallet active:scale-95 transition"

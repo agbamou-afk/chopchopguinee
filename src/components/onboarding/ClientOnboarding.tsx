@@ -10,9 +10,6 @@ import toktokIcon from "@/assets/icons/toktok.png";
 import repasIcon from "@/assets/icons/repas.png";
 import marcheIcon from "@/assets/icons/marche.png";
 import walletIcon from "@/assets/icons/wallet.png";
-import scannerIcon from "@/assets/icons/scanner.png";
-import envoyerIcon from "@/assets/icons/envoyer.png";
-import choppayIcon from "@/assets/icons/choppay.png";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { OnboardingStorybook, type StorybookSlide } from "./OnboardingStorybook";
 
@@ -26,34 +23,33 @@ interface Props {
  * matches the in-app PrimaryActionGrid / QuickActions language.
  */
 const ECOSYSTEM_ICONS = [
-  { src: motoIcon,    label: "Moto" },
-  { src: toktokIcon,  label: "TokTok" },
-  { src: repasIcon,   label: "Repas" },
-  { src: marcheIcon,  label: "Marché" },
-  { src: walletIcon,  label: "ChopWallet" },
-  { src: scannerIcon, label: "Scanner" },
-  { src: envoyerIcon, label: "Envoyer" },
-  { src: choppayIcon, label: "ChopPay" },
+  { src: motoIcon,   label: "Moto" },
+  { src: toktokIcon, label: "TokTok" },
+  { src: repasIcon,  label: "Repas" },
+  { src: marcheIcon, label: "Marché" },
+  { src: walletIcon, label: "ChopWallet" },
 ] as const;
 
 function EcosystemCluster() {
-  // 4×2 grid of floating native CHOPCHOP icons, anchored upper-center so it
-  // never collides with the title block or floating controls below.
+  // 5 core CHOPCHOP service icons arranged in a soft translucent pill cluster,
+  // anchored well below the Dynamic Island / safe area so it never collides
+  // with the system UI or the floating Skip control.
   return (
-    <div className="absolute inset-x-0 top-[max(4.5rem,env(safe-area-inset-top))] flex justify-center px-6">
+    <div className="absolute inset-x-0 top-[calc(env(safe-area-inset-top)+4.25rem)] flex justify-center px-6">
       <motion.div
-        initial={{ opacity: 0, y: -8 }}
+        initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="grid grid-cols-4 gap-2.5 max-w-xs"
+        className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/80 backdrop-blur-md border border-border/60 shadow-soft"
+        aria-label="Services CHOPCHOP"
       >
         {ECOSYSTEM_ICONS.map((icon, i) => (
           <motion.div
             key={icon.label}
-            initial={{ opacity: 0, y: 6, scale: 0.92 }}
+            initial={{ opacity: 0, y: 4, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.35, delay: 0.15 + i * 0.05, ease: [0.22, 1, 0.36, 1] }}
-            className="w-14 h-14 rounded-2xl bg-card/85 backdrop-blur border border-border/60 shadow-soft flex items-center justify-center overflow-hidden"
+            className="w-11 h-11 rounded-full bg-background/70 border border-border/50 flex items-center justify-center overflow-hidden"
           >
             <img
               src={icon.src}
@@ -61,7 +57,7 @@ function EcosystemCluster() {
               loading="lazy"
               width={1024}
               height={1024}
-              className="w-12 h-12 object-contain scale-[1.4]"
+              className="w-9 h-9 object-contain scale-[1.35]"
             />
           </motion.div>
         ))}
@@ -73,8 +69,8 @@ function EcosystemCluster() {
 const SLIDES: StorybookSlide[] = [
   {
     id: "welcome",
-    title: "Bienvenue sur CHOPCHOP Conakry",
-    body: "Votre app locale pour vous déplacer, manger, acheter et envoyer — en toute simplicité.",
+    title: "Bienvenue sur CHOPCHOP",
+    body: "Moto, repas, marché, colis et paiements — tout dans une seule app.",
     image: sceneWelcome,
     alt: "Conakry au coucher du soleil",
     overlay: <EcosystemCluster />,
@@ -142,7 +138,7 @@ export function ClientOnboarding({ onDone }: Props) {
       slides={SLIDES}
       index={index}
       primaryLabel="Commencer"
-      footerCaption="CHOPCHOP · Conakry"
+      footerCaption="Tout, partout, pour tous."
       onNext={next}
       onPrev={prev}
       onSkip={skip}
