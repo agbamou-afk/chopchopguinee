@@ -190,6 +190,23 @@ const Index = () => {
     return () => window.removeEventListener(DRIVER_ONBOARDING_REPLAY_EVENT, handler);
   }, []);
 
+  // Manual replay from Help: ?replayOnboarding=client|driver. Forces the
+  // storybook to open without clearing the completion flag.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const v = sp.get("replayOnboarding");
+      if (v === "client") setShowOnboarding(true);
+      else if (v === "driver") setShowDriverOnboarding(true);
+      if (v) {
+        sp.delete("replayOnboarding");
+        const qs = sp.toString();
+        window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+      }
+    } catch { /* noop */ }
+  }, []);
+
   // QA / debug: allow forcing the signup invite via window event or
   // ?signupInvite=1 query param. Public users only — no production UI exposes
   // these hooks; they exist for sandbox + e2e testing.
