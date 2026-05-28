@@ -9,6 +9,7 @@ import { ChopMap, type ChopMapHandle, PinSet, RoutePolyline, DriverCluster, Drag
 import { RoutingService, decodePolyline, bbox as bboxOf, formatDistance, formatDuration } from "@/lib/maps";
 import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
 import { searchConakryPlaces, categoryLabel, confidenceLabel } from "@/lib/locations/searchPlaces";
+import { useLiveUserLocation, CONAKRY_FALLBACK } from "@/lib/location/useLiveUserLocation";
 import { logLocationSearchEvent } from "@/lib/locations/locationSearchTelemetry";
 
 function haversineKm(a: [number, number], b: [number, number]): number {
@@ -61,8 +62,12 @@ const rideOptions = {
 export function RideBooking({ type, onClose, onBook, initialDestination }: RideBookingProps) {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState(initialDestination ?? "");
-  // Default: Conakry, Guinea
-  const [pickupCoords, setPickupCoords] = useState<[number, number]>([9.6412, -13.5784]);
+  // Pickup is intentionally null until we have either a real GPS fix or the
+  // user picks a place. The Conakry fallback is ONLY a visual map center —
+  // never a pickup coordinate (see CHOPCHOP_MAP_STRATEGY.md).
+  const live = useLiveUserLocation();
+  const [pickupCoords, setPickupCoords] = useState<[number, number] | null>(null);
+  const [pickupIsReal, setPickupIsReal] = useState(false);
   const [destCoords, setDestCoords] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
   const [activeField, setActiveField] = useState<"pickup" | "destination" | null>(null);
@@ -83,6 +88,24 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const mapRef = useRef<ChopMapHandle>(null);
   const option = rideOptions[type];
   const Icon = option.icon;
+
+  // Visual map center — falls back to Conakry but is never sent as pickup.
+  const mapCenter: [number, number] = pickupCoords
+    ? pickupCoords
+    : live.coords
+      ? [live.coords.lat, live.coords.lng]
+      : [CONAKRY_FALLBACK.lat, CONAKRY_FALLBACK.lng];
+
+  // Auto-prefill pickup from live GPS the first time we get a real fix.
+  useEffect(() => {
+    if (pickupCoords) return;
+    if (live.isRealLocation && live.coords) {
+      setPickupCoords([live.coords.lat, live.coords.lng]);
+      setPickupIsReal(true);
+      if (!pickup) setPickup("Ma position");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live.isRealLocation, live.coords?.lat, live.coords?.lng]);
 
   // Load admin-managed fare for this ride type
   useEffect(() => {
@@ -106,6 +129,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
       async (pos) => {
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         setPickupCoords(coords);
+        setPickupIsReal(true);
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords[0]}&lon=${coords[1]}&zoom=16`,
@@ -129,7 +153,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const runSearch = async (q: string) => {
     setSearching(true);
     try {
-      const [lat, lng] = pickupCoords;
+      const [lat, lng] = pickupCoords ?? [CONAKRY_FALLBACK.lat, CONAKRY_FALLBACK.lng];
       // 1) Local Conakry gazetteer first — handles "km5", "kippe", "hamdalaye", etc.
       const local = searchConakryPlaces(q, { limit: 6 }).filter(
         (p) => p.latitude != null && p.longitude != null,
