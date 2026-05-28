@@ -33,8 +33,8 @@ export function CategoryGrid({
               <img
                 src={c.icon}
                 alt=""
-                className="w-9 h-9 object-contain block"
-                style={{ objectPosition: "center" }}
+                className="w-9 h-9 object-contain block m-auto"
+                style={{ objectPosition: "center", mixBlendMode: "multiply" }}
                 loading="lazy"
               />
             </div>
