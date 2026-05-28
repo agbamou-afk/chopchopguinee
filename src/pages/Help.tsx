@@ -90,12 +90,10 @@ export default function Help() {
     roles.includes("driver") || (roles as string[]).includes("courier");
 
   const replayClientOnboarding = () => {
-    window.dispatchEvent(new Event(ONBOARDING_REPLAY_EVENT));
-    navigate("/");
+    navigate("/?replayOnboarding=client");
   };
   const replayDriverOnboarding = () => {
-    window.dispatchEvent(new Event(DRIVER_ONBOARDING_REPLAY_EVENT));
-    navigate("/");
+    navigate("/?replayOnboarding=driver");
   };
 
   const sendMessage = async () => {
