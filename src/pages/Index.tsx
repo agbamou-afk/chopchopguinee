@@ -178,6 +178,20 @@ const Index = () => {
     return () => window.removeEventListener(DRIVER_ONBOARDING_REPLAY_EVENT, handler);
   }, []);
 
+  // QA / debug: allow forcing the signup invite via window event or
+  // ?signupInvite=1 query param. Public users only — no production UI exposes
+  // these hooks; they exist for sandbox + e2e testing.
+  useEffect(() => {
+    if (!publicUser) return;
+    const force = () => setSignupInviteOpen(true);
+    window.addEventListener("SIGNUP_INVITE_REPLAY_EVENT", force);
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get("signupInvite") === "1") setTimeout(force, 300);
+    } catch { /* noop */ }
+    return () => window.removeEventListener("SIGNUP_INVITE_REPLAY_EVENT", force);
+  }, [publicUser]);
+
   const finishOnboarding = () => {
     setShowOnboarding(false);
     // Only persist completion for signed-in live users. Public onboarding
