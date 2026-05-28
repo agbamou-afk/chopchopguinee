@@ -37,7 +37,7 @@ const ACTIONS: Array<{
     subtitle: "Moto ou TokTok",
     img: motoIcon,
     alt: "Réserver une course",
-    halo: "bg-primary/12 ring-1 ring-primary/15",
+    halo: "bg-secondary/22 ring-1 ring-secondary/25",
   },
   {
     id: "order",
