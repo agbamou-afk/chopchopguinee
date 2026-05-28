@@ -230,6 +230,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
     if (activeField === "pickup") {
       setPickup(s.label);
       setPickupCoords(s.coords);
+      setPickupIsReal(true);
     } else if (activeField === "destination") {
       setDestination(s.label);
       setDestCoords(s.coords);
@@ -251,7 +252,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
 
   // Fetch route via RoutingService (Google Directions proxy) when both ends are set
   useEffect(() => {
-    if (!destCoords) {
+    if (!destCoords || !pickupCoords) {
       setRoutePolyline(null);
       setDistanceKm(null);
       setDurationMin(null);
@@ -281,7 +282,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
         if (cancelled) return;
         setRouteError(e?.message ?? "Itinéraire indisponible");
         // Fallback: straight-line estimate so the user still sees a price
-        const km = haversineKm(pickupCoords, destCoords);
+        const km = haversineKm(pickupCoords!, destCoords);
         setDistanceKm(km);
         setDurationMin(Math.max(2, Math.round((km / option.speedKmh) * 60)));
       })
