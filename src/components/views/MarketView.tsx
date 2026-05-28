@@ -175,7 +175,7 @@ export function MarketView({ onBack }: MarketViewProps) {
   const visible = tab === "saved" ? listings.filter((l) => savedIds.has(l.id)) : listings;
 
   return (
-    <div className="max-w-md mx-auto pb-24">
+    <div className="max-w-md mx-auto pb-40">
       <ScreenHeader
         title="Marché"
         subtitle="Kipé, Conakry · annonces près de vous"
@@ -380,7 +380,8 @@ export function MarketView({ onBack }: MarketViewProps) {
       <motion.button
         whileTap={{ scale: 0.9 }}
         onClick={() => requireAuth(() => setScreen("sell"))}
-        className="fixed bottom-24 right-4 z-40 gradient-primary text-primary-foreground rounded-full px-5 py-3.5 shadow-elevated flex items-center gap-2 font-semibold"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 6.25rem)" }}
+        className="fixed right-4 z-40 gradient-primary text-primary-foreground rounded-full px-5 py-3.5 shadow-elevated flex items-center gap-2 font-semibold"
       >
         <Plus className="w-5 h-5" /> Vendre
       </motion.button>
