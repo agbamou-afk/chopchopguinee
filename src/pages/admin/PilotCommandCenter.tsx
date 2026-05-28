@@ -5,10 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Activity, CheckCircle2, AlertTriangle, Hourglass, Wallet, LifeBuoy,
-  Bike, Store, MapPin, ExternalLink, ShieldCheck,
+  Bike, Store, MapPin, ExternalLink, ShieldCheck, RefreshCw,
 } from "lucide-react";
 import { ModulePage } from "@/components/admin/ModulePage";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DISTRICTS, districtChipClasses, type DistrictMeta } from "@/lib/districts";
 import { MISSION_TYPE_SHORT, MISSION_STATE_LABEL, type Mission } from "@/lib/missions/types";
@@ -232,6 +234,18 @@ function EmptyRow({ children }: { children: React.ReactNode }) {
 export default function PilotCommandCenter() {
   const { can } = useAdminAuth();
   const canSeePayments = can("payments");
+  const queryClient = useQueryClient();
+  const refreshAll = () =>
+    queryClient.invalidateQueries({ queryKey: ["pilot-cc"] });
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") refreshAll();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const missionsQ = useMissions();
   const paymentsQ = usePaymentIntents();
@@ -246,6 +260,11 @@ export default function PilotCommandCenter() {
   const restaurants = restaurantsQ.data ?? [];
   const stores = storesQ.data ?? [];
   const issues: SupportIssue[] = issuesQ.data ?? [];
+
+  const openIssuesAll = issues.filter(
+    (i) => i.status !== "resolved" && i.status !== "cancelled",
+  );
+  const criticalIssuesAll = openIssuesAll.filter((i) => i.severity === "critical");
 
   const todayIso = startOfTodayIso();
 
@@ -341,12 +360,17 @@ export default function PilotCommandCenter() {
   return (
     <ModulePage
       module="dashboard"
-      title="Pilot Command"
-      subtitle="Lecture seule · cockpit opérationnel du pilote CHOPCHOP"
+      title="Centre de commandement CHOPCHOP"
+      subtitle="Cockpit opérationnel — données live"
       actions={
-        <Badge variant="outline" className="font-mono text-[10px] tracking-wider uppercase">
-          Phase B · read-only
-        </Badge>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-[11px]"
+          onClick={refreshAll}
+        >
+          <RefreshCw className="w-3 h-3 mr-1" /> Actualiser
+        </Button>
       }
     >
       <div className="space-y-5">
@@ -364,7 +388,23 @@ export default function PilotCommandCenter() {
             <PulseStat label="Paiements à vérifier" value={canSeePayments ? reviewNeeded.length : "—"} icon={Wallet}
               tone={canSeePayments && reviewNeeded.length > 0 ? "alert" : "muted"}
               sub={canSeePayments ? undefined : "Permission paiements requise"} />
-            <PulseStat label="Support" value="—" icon={LifeBuoy} tone="muted" sub="À connecter" />
+            <PulseStat
+              label="Support ouverts"
+              value={openIssuesAll.length}
+              icon={LifeBuoy}
+              tone={
+                criticalIssuesAll.length > 0
+                  ? "alert"
+                  : openIssuesAll.length > 0
+                  ? "warn"
+                  : "muted"
+              }
+              sub={
+                criticalIssuesAll.length > 0
+                  ? `${criticalIssuesAll.length} critique(s)`
+                  : undefined
+              }
+            />
             <PulseStat
               label="Présence coursier"
               value={presenceOnline.length}
