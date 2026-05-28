@@ -15,9 +15,9 @@ interface SmartSearchBarProps {
 }
 
 const DEFAULT_PROMPTS = [
-  "Où allez-vous ?",
+  "Où allons-nous ?",
   "Rechercher dans Marché",
-  "Commander un repas",
+  "Envoyer, commander, se déplacer",
   "Envoyer un colis",
   "Recharger mon portefeuille",
 ];
