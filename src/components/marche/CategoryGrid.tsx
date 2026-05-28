@@ -22,12 +22,18 @@ export function CategoryGrid({
             }`}
           >
             <div
-              className={`w-[3.75rem] h-[3.75rem] rounded-2xl ${c.tint} flex items-center justify-center shadow-card overflow-hidden`}
+              className="w-[3.75rem] h-[3.75rem] rounded-full flex items-center justify-center"
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 50%, hsl(0 0% 100%) 0%, hsl(0 0% 100%) 56%, hsl(40 18% 92%) 78%, hsl(40 16% 86%) 100%)",
+                boxShadow:
+                  "inset 0 0 0 0.5px hsl(40 14% 84% / 0.6), 0 1px 2px hsl(30 20% 30% / 0.06)",
+              }}
             >
               <img
                 src={c.icon}
                 alt=""
-                className="w-10 h-10 object-contain block"
+                className="w-9 h-9 object-contain block"
                 style={{ objectPosition: "center" }}
                 loading="lazy"
               />
