@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Seo } from "@/components/Seo";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TERMS_VERSION, PRIVACY_VERSION, recordLegalAcceptance } from "@/lib/legal";
 
 const phoneSchema = z
   .string()
@@ -78,6 +80,7 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [acceptLegal, setAcceptLegal] = useState(false);
 
   // After session is established, route by role + profile completeness.
   useEffect(() => {
@@ -96,6 +99,13 @@ export default function Auth() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === "signup") {
+      if (!acceptLegal) {
+        toast({
+          title: "Acceptation requise",
+          description: "Vous devez accepter les Conditions d'utilisation et la Politique de confidentialité.",
+        });
+        return;
+      }
       // Hard block: refuse if "email" field looks like a phone number.
       if (/^\+?[0-9\s]{8,15}$/.test(email.trim()) && !email.includes("@")) {
         toast({
@@ -130,6 +140,8 @@ export default function Auth() {
             last_name: last.trim(),
             full_name: display,
             phone: normalizePhone(phone),
+            terms_version_accepted: TERMS_VERSION,
+            privacy_version_accepted: PRIVACY_VERSION,
           },
         },
       });
@@ -138,6 +150,8 @@ export default function Auth() {
         toast({ title: "Échec inscription", description: frenchAuthError(error.message) });
         return;
       }
+      // Record acceptance immediately if a session was created (auto-confirm).
+      void recordLegalAcceptance({ source: "signup" });
       toast({
         title: "Compte créé",
         description: "Vérifiez votre email pour confirmer votre inscription.",
