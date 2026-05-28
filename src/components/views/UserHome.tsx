@@ -13,6 +13,8 @@ import { RecentActivityPeek } from "@/components/activity/RecentActivityPeek";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { useCustomerMissionAlerts } from "@/hooks/useCustomerMissionAlerts";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLiveUserLocation } from "@/lib/location/useLiveUserLocation";
+import { MapPin } from "lucide-react";
 
 const NearbyDriversMap = lazy(() => import("@/components/home/NearbyDriversMap"));
 
