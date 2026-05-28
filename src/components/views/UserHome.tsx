@@ -13,6 +13,8 @@ import { RecentActivityPeek } from "@/components/activity/RecentActivityPeek";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { useCustomerMissionAlerts } from "@/hooks/useCustomerMissionAlerts";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLiveUserLocation } from "@/lib/location/useLiveUserLocation";
+import { MapPin } from "lucide-react";
 
 const NearbyDriversMap = lazy(() => import("@/components/home/NearbyDriversMap"));
 
@@ -37,8 +39,14 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
   const { user } = useAuth();
   useCustomerMissionAlerts(user?.id ?? null);
   const { lowDataMode } = useAppEnv();
-  const userLocation = "Kaloum";
-  const userCoords = { lat: 9.5092, lng: -13.7122 };
+  const live = useLiveUserLocation();
+  const mapCenter = live.coords ?? live.fallbackCenter;
+  const userLocation = live.isRealLocation ? "votre zone" : "Conakry";
+  const locationLabel = live.isRealLocation
+    ? "Ma position"
+    : live.status === "requesting"
+      ? "Position en cours…"
+      : "Conakry · position non activée";
   const recents = [
     { icon: HomeIcon, label: "Maison", sub: "Ratoma" },
     { icon: Briefcase, label: "Travail", sub: "Kaloum" },
@@ -86,7 +94,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         notificationCount={1}
         onAmountClick={() => onActionClick("send")}
         onRecharge={() => onActionClick("send")}
-        location={`${userLocation}, Conakry`}
+        location={locationLabel}
         showWalletCard={false}
       />
 
@@ -112,7 +120,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         <RecentActivityPeek onSeeAll={() => onActionClick("orders")} />
 
         {/* 3 — Smart command bar */}
-        <SmartSearchBar onAction={onActionClick} location={`${userLocation}, Conakry`} />
+        <SmartSearchBar onAction={onActionClick} location={locationLabel} />
 
         {/* 4 — Services secondaires */}
         <section>
@@ -153,7 +161,11 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               </div>
             ) : (
               <Suspense fallback={<Skeleton className="absolute inset-0 w-full h-full" />}>
-                <NearbyDriversMap lng={userCoords.lng} lat={userCoords.lat} />
+                <NearbyDriversMap
+                  lng={mapCenter.lng}
+                  lat={mapCenter.lat}
+                  userPresent={live.isRealLocation}
+                />
               </Suspense>
             )}
             <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-card/95 backdrop-blur rounded-full px-2.5 py-1 shadow-card">
@@ -164,6 +176,40 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               <Bike className="w-3 h-3 text-primary" />
               <span className="text-[11px] font-semibold text-foreground">En direct</span>
             </div>
+            {!live.isRealLocation && !lowDataMode && (
+              <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 bg-card/95 backdrop-blur rounded-2xl px-3 py-2 shadow-card">
+                <div className="flex items-center gap-2 text-left min-w-0">
+                  <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold text-foreground truncate">
+                      Position non activée
+                    </p>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      Carte centrée sur Conakry
+                    </p>
+                  </div>
+                </div>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    void live.requestLocation();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      void live.requestLocation();
+                    }
+                  }}
+                  className="text-[11px] font-semibold text-primary shrink-0 px-2 py-1 rounded-full bg-primary/10"
+                >
+                  Activer
+                </span>
+              </div>
+            )}
           </button>
         </section>
 
