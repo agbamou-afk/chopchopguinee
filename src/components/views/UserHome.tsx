@@ -161,7 +161,11 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               </div>
             ) : (
               <Suspense fallback={<Skeleton className="absolute inset-0 w-full h-full" />}>
-                <NearbyDriversMap lng={userCoords.lng} lat={userCoords.lat} />
+                <NearbyDriversMap
+                  lng={mapCenter.lng}
+                  lat={mapCenter.lat}
+                  userPresent={live.isRealLocation}
+                />
               </Suspense>
             )}
             <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-card/95 backdrop-blur rounded-full px-2.5 py-1 shadow-card">
