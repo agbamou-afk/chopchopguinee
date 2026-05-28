@@ -125,12 +125,12 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         {/* 4 — Services secondaires */}
         <section>
           <div className="flex items-center justify-between mb-2 px-0.5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">
               Plus de services
             </h2>
-            <span className="text-[11px] text-muted-foreground">À {userLocation}</span>
+            <span className="text-[11px] text-white/70">À {userLocation}</span>
           </div>
-          <div className="card-warm rounded-3xl p-4 relative overflow-hidden">
+          <div className="services-section-green rounded-3xl p-4 relative overflow-hidden">
             <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam opacity-70" aria-hidden />
             <QuickActions onActionClick={onActionClick} />
           </div>
