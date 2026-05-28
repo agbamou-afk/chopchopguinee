@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useLowDataMode } from "@/hooks/useLowDataMode";
@@ -37,6 +37,27 @@ export function OnboardingStorybook({
   const { low } = useLowDataMode();
   const slide = slides[index];
   const isLast = index === slides.length - 1;
+  const [firstReady, setFirstReady] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
+
+  useEffect(() => {
+    // Probe whether the first slide image is already in cache; if not, show a
+    // branded fallback for up to 2.5s while it loads.
+    const img = new Image();
+    let settled = false;
+    const done = () => { if (!settled) { settled = true; setFirstReady(true); } };
+    img.onload = done;
+    img.onerror = done;
+    img.src = slides[0].image;
+    if (img.complete && img.naturalWidth > 0) {
+      done();
+    } else {
+      const t1 = setTimeout(() => setShowFallback(true), 120);
+      const t2 = setTimeout(done, 2500);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -78,8 +99,11 @@ export function OnboardingStorybook({
             src={slide.image}
             alt={slide.alt}
             loading={index === 0 ? "eager" : "lazy"}
-            width={1024}
-            height={1536}
+            decoding="async"
+            // @ts-expect-error fetchpriority is a valid HTML attribute not yet in React types
+            fetchpriority={index === 0 ? "high" : "low"}
+            width={848}
+            height={1264}
             className="absolute inset-0 w-full h-full object-cover"
           />
           {/* Cream wash + bottom gradient for legible overlay text in light + dark */}
@@ -96,6 +120,24 @@ export function OnboardingStorybook({
           ) : null}
         </motion.div>
       </AnimatePresence>
+
+      {/* Branded loading veil — only on first slide, only while loading */}
+      {index === 0 && !firstReady && showFallback ? (
+        <div
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-app-conakry"
+          aria-hidden
+        >
+          <div className="flex flex-col items-center gap-4 px-6 text-center">
+            <div className="w-16 h-16 rounded-2xl gradient-cta flex items-center justify-center shadow-wallet">
+              <span className="text-primary-foreground font-extrabold text-xl tracking-tight">CC</span>
+            </div>
+            <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+            <p className="text-[13px] text-muted-foreground max-w-[24ch]">
+              Préparation de votre expérience CHOPCHOP…
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {/* Kente top seam */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] kente-stripe z-30" aria-hidden />
