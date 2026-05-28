@@ -140,7 +140,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         <section>
           <div className="flex items-center justify-between mb-2 px-0.5">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Chauffeurs près de vous
+              {live.isRealLocation ? "Chauffeurs près de vous" : "Chauffeurs disponibles"}
             </h2>
             <button
               onClick={() => onActionClick("moto")}

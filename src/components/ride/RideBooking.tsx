@@ -9,6 +9,7 @@ import { ChopMap, type ChopMapHandle, PinSet, RoutePolyline, DriverCluster, Drag
 import { RoutingService, decodePolyline, bbox as bboxOf, formatDistance, formatDuration } from "@/lib/maps";
 import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
 import { searchConakryPlaces, categoryLabel, confidenceLabel } from "@/lib/locations/searchPlaces";
+import { useLiveUserLocation, CONAKRY_FALLBACK } from "@/lib/location/useLiveUserLocation";
 import { logLocationSearchEvent } from "@/lib/locations/locationSearchTelemetry";
 
 function haversineKm(a: [number, number], b: [number, number]): number {
@@ -61,8 +62,12 @@ const rideOptions = {
 export function RideBooking({ type, onClose, onBook, initialDestination }: RideBookingProps) {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState(initialDestination ?? "");
-  // Default: Conakry, Guinea
-  const [pickupCoords, setPickupCoords] = useState<[number, number]>([9.6412, -13.5784]);
+  // Pickup is intentionally null until we have either a real GPS fix or the
+  // user picks a place. The Conakry fallback is ONLY a visual map center —
+  // never a pickup coordinate (see CHOPCHOP_MAP_STRATEGY.md).
+  const live = useLiveUserLocation();
+  const [pickupCoords, setPickupCoords] = useState<[number, number] | null>(null);
+  const [pickupIsReal, setPickupIsReal] = useState(false);
   const [destCoords, setDestCoords] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
   const [activeField, setActiveField] = useState<"pickup" | "destination" | null>(null);
@@ -83,6 +88,24 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const mapRef = useRef<ChopMapHandle>(null);
   const option = rideOptions[type];
   const Icon = option.icon;
+
+  // Visual map center — falls back to Conakry but is never sent as pickup.
+  const mapCenter: [number, number] = pickupCoords
+    ? pickupCoords
+    : live.coords
+      ? [live.coords.lat, live.coords.lng]
+      : [CONAKRY_FALLBACK.lat, CONAKRY_FALLBACK.lng];
+
+  // Auto-prefill pickup from live GPS the first time we get a real fix.
+  useEffect(() => {
+    if (pickupCoords) return;
+    if (live.isRealLocation && live.coords) {
+      setPickupCoords([live.coords.lat, live.coords.lng]);
+      setPickupIsReal(true);
+      if (!pickup) setPickup("Ma position");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live.isRealLocation, live.coords?.lat, live.coords?.lng]);
 
   // Load admin-managed fare for this ride type
   useEffect(() => {
@@ -106,6 +129,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
       async (pos) => {
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         setPickupCoords(coords);
+        setPickupIsReal(true);
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords[0]}&lon=${coords[1]}&zoom=16`,
@@ -129,7 +153,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const runSearch = async (q: string) => {
     setSearching(true);
     try {
-      const [lat, lng] = pickupCoords;
+      const [lat, lng] = pickupCoords ?? [CONAKRY_FALLBACK.lat, CONAKRY_FALLBACK.lng];
       // 1) Local Conakry gazetteer first — handles "km5", "kippe", "hamdalaye", etc.
       const local = searchConakryPlaces(q, { limit: 6 }).filter(
         (p) => p.latitude != null && p.longitude != null,
@@ -206,6 +230,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
     if (activeField === "pickup") {
       setPickup(s.label);
       setPickupCoords(s.coords);
+      setPickupIsReal(true);
     } else if (activeField === "destination") {
       setDestination(s.label);
       setDestCoords(s.coords);
@@ -227,7 +252,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
 
   // Fetch route via RoutingService (Google Directions proxy) when both ends are set
   useEffect(() => {
-    if (!destCoords) {
+    if (!destCoords || !pickupCoords) {
       setRoutePolyline(null);
       setDistanceKm(null);
       setDurationMin(null);
@@ -257,7 +282,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
         if (cancelled) return;
         setRouteError(e?.message ?? "Itinéraire indisponible");
         // Fallback: straight-line estimate so the user still sees a price
-        const km = haversineKm(pickupCoords, destCoords);
+        const km = haversineKm(pickupCoords!, destCoords);
         setDistanceKm(km);
         setDurationMin(Math.max(2, Math.round((km / option.speedKmh) * 60)));
       })
@@ -267,7 +292,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
 
   // Recenter map when pickup changes alone (no destination yet)
   useEffect(() => {
-    if (!destCoords) {
+    if (!destCoords && pickupCoords) {
       mapRef.current?.flyTo(pickupCoords[1], pickupCoords[0], 14);
     }
   }, [pickupCoords, destCoords]);
@@ -397,21 +422,28 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
         <ChopMap
           ref={mapRef}
           className="absolute inset-0 w-full h-full"
-          initialView={{ longitude: pickupCoords[1], latitude: pickupCoords[0], zoom: 14 }}
+          initialView={{ longitude: mapCenter[1], latitude: mapCenter[0], zoom: 14 }}
         >
           {routePolyline && <RoutePolyline encoded={routePolyline} />}
           <DriverCluster variant={type === "toktok" ? "toktok" : "moto"} />
-          {/* Draggable pickup */}
-          <DraggablePickupPin
-            lat={pickupCoords[0]}
-            lng={pickupCoords[1]}
-            onDragEnd={(next) => setPickupCoords([next.lat, next.lng])}
-            size={36}
-          />
+          {/* Draggable pickup — only rendered once we have a real or chosen pickup. */}
+          {pickupCoords && (
+            <DraggablePickupPin
+              lat={pickupCoords[0]}
+              lng={pickupCoords[1]}
+              onDragEnd={(next) => { setPickupCoords([next.lat, next.lng]); setPickupIsReal(true); }}
+              size={36}
+            />
+          )}
           {destCoords && (
             <PinSet dropoff={{ lat: destCoords[0], lng: destCoords[1] }} pulseActive="dropoff" />
           )}
         </ChopMap>
+        {!pickupCoords && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
+            Position non activée — choisissez un point de départ.
+          </div>
+        )}
         <button
           type="button"
           onClick={handleLocateMe}
@@ -463,6 +495,10 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
         {!confirmed ? (
           <Button
             onClick={() => {
+              if (!pickupCoords) {
+                toast({ title: "Point de départ requis", description: "Activez votre localisation ou choisissez un lieu." });
+                return;
+              }
               if (!destCoords) {
                 toast({ title: "Choisissez une destination" });
                 return;
@@ -476,7 +512,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           </Button>
         ) : (
           <Button
-            onClick={() => destCoords && onBook({ pickupCoords, destCoords, fare: estimatedPrice })}
+            onClick={() => pickupCoords && destCoords && onBook({ pickupCoords, destCoords, fare: estimatedPrice })}
             className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
           >
             Réserver pour {formatGNF(Math.round(estimatedPrice))}
