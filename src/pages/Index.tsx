@@ -47,6 +47,13 @@ export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
 
 /**
+ * Public (logged-out) client onboarding completion flag. Separate from the
+ * per-user `cc_client_onboarding_done:<id>` key so we never mix anonymous
+ * completion with authenticated completion.
+ */
+const PUBLIC_ONBOARDING_DONE_KEY = "cc_public_client_onboarding_done";
+
+/**
  * Renders the global driver ride-alert banner. Lives inside the provider so it
  * can read the current offer and surface it from any tab.
  */
@@ -158,7 +165,12 @@ const Index = () => {
     }
     if (publicUser) {
       onboardingDecidedRef.current = true;
-      setShowOnboarding(true);
+      try {
+        if (typeof window !== "undefined") {
+          const done = localStorage.getItem(PUBLIC_ONBOARDING_DONE_KEY) === "1";
+          if (!done) setShowOnboarding(true);
+        }
+      } catch { /* noop */ }
     }
   }, [driverResolving, adminUser, liveUser, publicUser, user?.id, isDriverDesignated]);
 
@@ -178,6 +190,23 @@ const Index = () => {
     return () => window.removeEventListener(DRIVER_ONBOARDING_REPLAY_EVENT, handler);
   }, []);
 
+  // Manual replay from Help: ?replayOnboarding=client|driver. Forces the
+  // storybook to open without clearing the completion flag.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const v = sp.get("replayOnboarding");
+      if (v === "client") setShowOnboarding(true);
+      else if (v === "driver") setShowDriverOnboarding(true);
+      if (v) {
+        sp.delete("replayOnboarding");
+        const qs = sp.toString();
+        window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+      }
+    } catch { /* noop */ }
+  }, []);
+
   // QA / debug: allow forcing the signup invite via window event or
   // ?signupInvite=1 query param. Public users only — no production UI exposes
   // these hooks; they exist for sandbox + e2e testing.
@@ -194,16 +223,20 @@ const Index = () => {
 
   const finishOnboarding = () => {
     setShowOnboarding(false);
-    // Only persist completion for signed-in live users. Public onboarding
-    // replays on every visit until the user creates an account.
-    if (typeof window !== "undefined" && liveUser) {
+    if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
+        if (liveUser) {
+          localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
+        } else if (publicUser) {
+          // Public users: persist completion so onboarding never auto-replays
+          // on refresh. Manual replay via Help still works (replay event).
+          localStorage.setItem(PUBLIC_ONBOARDING_DONE_KEY, "1");
+        }
       } catch { /* noop */ }
     }
-    // Gentle signup invite for logged-out visitors only.
+    // Gentle signup invite for logged-out visitors only, 3–5s after close.
     if (publicUser && !adminUser && !shouldSkipSignupInvite()) {
-      const delay = 2000 + Math.floor(Math.random() * 2000);
+      const delay = 3000 + Math.floor(Math.random() * 2000);
       setTimeout(() => {
         setSignupInviteOpen(true);
       }, delay);
