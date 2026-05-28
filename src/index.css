@@ -515,6 +515,20 @@
     box-shadow: var(--shadow-card), var(--shadow-inset-soft);
   }
 
+  /* Green section surface — matches CHOPWallet identity, holds service tiles */
+  .services-section-green {
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-glow-primary);
+  }
+  .services-section-green .service-icon-holder {
+    background: hsl(40 53% 96% / 0.95);
+    border-color: hsl(40 30% 88% / 0.55);
+    box-shadow: 0 2px 8px -2px hsl(142 40% 18% / 0.14);
+  }
+  .services-section-green span.text-foreground {
+    color: hsl(40 53% 96%);
+  }
+
   /* Drawer / sheet warm wash — used inside the menu drawer */
   .drawer-warm {
     background:
