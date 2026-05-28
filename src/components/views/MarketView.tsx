@@ -260,8 +260,8 @@ export function MarketView({ onBack }: MarketViewProps) {
         </div>
 
         {tab !== "stores" && (
-          <section>
-            <h2 className="text-sm font-semibold text-foreground mb-3">Catégories</h2>
+          <section className="pb-1">
+            <h2 className="text-sm font-semibold text-foreground mb-4">Catégories</h2>
             <CategoryGrid active={category} onSelect={(id) => setCategory(category === id ? null : id)} />
           </section>
         )}
