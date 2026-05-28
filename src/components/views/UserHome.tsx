@@ -124,9 +124,9 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
 
         {/* 4 — Services secondaires */}
         <section>
-          <div className="services-section-green rounded-3xl p-4 pt-3.5 relative overflow-hidden">
+          <div className="services-section-green rounded-3xl px-4 pt-4 pb-5 relative overflow-hidden">
             <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam opacity-70" aria-hidden />
-            <div className="flex items-center justify-between mb-3 px-0.5">
+            <div className="flex items-center justify-between mb-4 px-0.5">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/95">
                 Plus de services
               </h2>
