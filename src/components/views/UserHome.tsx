@@ -120,7 +120,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         <RecentActivityPeek onSeeAll={() => onActionClick("orders")} />
 
         {/* 3 — Smart command bar */}
-        <SmartSearchBar onAction={onActionClick} location={`${userLocation}, Conakry`} />
+        <SmartSearchBar onAction={onActionClick} location={locationLabel} />
 
         {/* 4 — Services secondaires */}
         <section>
