@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated can write own topic messages" ON realtime.messages;
