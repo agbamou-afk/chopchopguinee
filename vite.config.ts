@@ -51,11 +51,14 @@ export default defineConfig(({ mode }) => ({
           /\/auth\/v1\//,
           /\/realtime\//,
         ],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.mode === "navigate",
             handler: "NetworkFirst",
-            options: { cacheName: "cc-html", networkTimeoutSeconds: 3 },
+            options: { cacheName: "cc-html", networkTimeoutSeconds: 10 },
           },
           {
             urlPattern: ({ request }) =>
