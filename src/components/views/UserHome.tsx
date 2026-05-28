@@ -94,7 +94,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         notificationCount={1}
         onAmountClick={() => onActionClick("send")}
         onRecharge={() => onActionClick("send")}
-        location={`${userLocation}, Conakry`}
+        location={locationLabel}
         showWalletCard={false}
       />
 
