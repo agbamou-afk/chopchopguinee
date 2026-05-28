@@ -8,9 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
  * (first_name, last_name, phone). Otherwise routes to /complete-profile or /auth.
  */
 export function RequireProfile({ children }: { children: ReactNode }) {
-  const { ready, isLoggedIn, isProfileComplete } = useAuth();
+  const { ready, isLoggedIn, isProfileComplete, profileLoading } = useAuth();
   const location = useLocation();
-  if (!ready) {
+  if (!ready || (isLoggedIn && profileLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
