@@ -37,9 +37,13 @@ toggleable in Permission Center.
 
 ## Account Deletion
 
-In-app account deletion path: Profil → Légal & confidentialité →
-Permissions & données → Supprimer mon compte. Must be operational
-before store submission.
+In-app account-deletion request path: **Profil → "Demander la
+suppression du compte"** (`AccountDeletionRequestSheet`). Creates a
+`support_issues` row of type `account_issue` with
+`metadata.kind = "account_deletion_request"` for admin review. During
+pilot, deletion is processed manually within 7 business days; wallet,
+payment, support and order records may be retained for legal /
+anti-fraud / accounting obligations.
 
 ## Contact
 

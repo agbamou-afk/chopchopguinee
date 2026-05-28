@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
+import { isSandboxMode } from "@/lib/runtimeMode";
 
 const tabLabel: Record<string, string> = {
   home: "Tableau",
@@ -48,9 +49,15 @@ export function DriverOfferDebugPanel({ activeTab }: { activeTab: string }) {
     return () => window.clearInterval(id);
   }, []);
 
-  const sandboxDebug = typeof window !== "undefined"
+  // Store-safe gating: hide in production unless sandbox mode is on, or the
+  // URL explicitly opts in with ?sandbox=1 / ?debug=1. Admin role alone is
+  // NOT enough — we never want a floating orange Bug button on the live App
+  // Store / Play build, even for admin accounts.
+  const urlDebug = typeof window !== "undefined"
     && /[?&](sandbox|debug)=1/.test(window.location.search);
-  if (!sandboxDebug && !isAdmin) return null;
+  const allowDebug = isSandboxMode() || urlDebug || (isAdmin && import.meta.env.DEV);
+  if (!allowDebug) return null;
+  void user;
 
   const hasVisibleOffer = isOnline && queue.length > 0 && !activeTrip && !activeRideId;
   const bottomSheetShouldOpen = hasVisibleOffer && activeTab === "orders";
