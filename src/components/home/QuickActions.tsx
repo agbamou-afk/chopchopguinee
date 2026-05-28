@@ -66,7 +66,7 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
           onClick={() => onActionClick(action.id)}
           className="flex flex-col items-center transition-transform group"
         >
-          <div className="service-icon-holder mb-2">
+          <div className="service-icon-holder mb-2" data-variant={action.variant}>
             <img
               src={action.img}
               alt={action.alt}
