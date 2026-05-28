@@ -24,12 +24,12 @@ const SERVICE_ICON_TUNING: Record<string, IconTuning> = {
 };
 
 const actions = [
-  { id: "moto",   img: motoIcon,    label: "Moto",         alt: "Réserver une moto-taxi",     variant: "primary" as const },
-  { id: "toktok", img: toktokIcon,  label: "TokTok",       alt: "Réserver un TokTok tricycle", variant: "neutral" as const },
-  { id: "food",   img: repasIcon,   label: "Repas",        alt: "Commander un repas à domicile", variant: "neutral" as const },
-  { id: "market", img: marcheIcon,  label: "Marché",       alt: "Acheter au marché en ligne",  variant: "neutral" as const },
-  { id: "scan",   img: scannerIcon, label: "Scanner",      alt: "Scanner un QR code marchand", variant: "neutral" as const },
-  { id: "wallet", img: walletIcon,  label: "ChopWallet", alt: "Ouvrir ChopWallet",           variant: "primary" as const },
+  { id: "moto",   img: motoIcon,    label: "Moto",         alt: "Réserver une moto-taxi" },
+  { id: "toktok", img: toktokIcon,  label: "TokTok",       alt: "Réserver un TokTok tricycle" },
+  { id: "food",   img: repasIcon,   label: "Repas",        alt: "Commander un repas à domicile" },
+  { id: "market", img: marcheIcon,  label: "Marché",       alt: "Acheter au marché en ligne" },
+  { id: "scan",   img: scannerIcon, label: "Scanner",      alt: "Scanner un QR code marchand" },
+  { id: "wallet", img: walletIcon,  label: "ChopWallet", alt: "Ouvrir ChopWallet" },
 ];
 
 const container = {
@@ -66,7 +66,7 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
           onClick={() => onActionClick(action.id)}
           className="flex flex-col items-center transition-transform group"
         >
-          <div className="service-icon-holder mb-2" data-variant={action.variant}>
+          <div className="service-icon-holder mb-2">
             <img
               src={action.img}
               alt={action.alt}
