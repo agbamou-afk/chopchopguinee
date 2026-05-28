@@ -721,6 +721,9 @@ export default function PilotCommandCenter() {
               const dMerchants =
                 restaurants.filter((r) => r.district?.toLowerCase() === name.toLowerCase() && r.is_open).length +
                 stores.filter((s) => s.district?.toLowerCase() === name.toLowerCase()).length;
+              const dSupport = openIssuesAll.filter(
+                (i) => i.district?.toLowerCase() === name.toLowerCase(),
+              ).length;
 
               return (
                 <Card key={name} className="p-3 space-y-2">
@@ -738,7 +741,12 @@ export default function PilotCommandCenter() {
                     <div><div className="text-muted-foreground">Échecs</div><div className="font-semibold tabular-nums">{dFailed.length}</div></div>
                     <div><div className="text-muted-foreground">Coursiers</div><div className="font-semibold tabular-nums">{dCouriers.length}</div></div>
                     <div><div className="text-muted-foreground">Marchands</div><div className="font-semibold tabular-nums">{dMerchants}</div></div>
-                    <div><div className="text-muted-foreground">Support</div><div className="font-semibold text-muted-foreground/60">—</div></div>
+                    <div>
+                      <div className="text-muted-foreground">Support</div>
+                      <div className={`font-semibold tabular-nums ${dSupport > 0 ? "text-amber-600" : ""}`}>
+                        {dSupport}
+                      </div>
+                    </div>
                   </div>
                 </Card>
               );
