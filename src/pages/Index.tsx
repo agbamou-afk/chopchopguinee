@@ -165,7 +165,12 @@ const Index = () => {
     }
     if (publicUser) {
       onboardingDecidedRef.current = true;
-      setShowOnboarding(true);
+      try {
+        if (typeof window !== "undefined") {
+          const done = localStorage.getItem(PUBLIC_ONBOARDING_DONE_KEY) === "1";
+          if (!done) setShowOnboarding(true);
+        }
+      } catch { /* noop */ }
     }
   }, [driverResolving, adminUser, liveUser, publicUser, user?.id, isDriverDesignated]);
 
