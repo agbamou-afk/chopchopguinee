@@ -32,10 +32,14 @@ export function ConversionGateSheet({ open, intent, onOpenChange, onExploreDrive
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl pb-8">
+      <SheetContent
+        side="bottom"
+        className="rounded-t-3xl border-t border-border/60 bg-card p-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] max-h-[85vh] sm:max-w-md sm:mx-auto sm:left-0 sm:right-0"
+      >
+        <div className="mx-auto w-12 h-1.5 rounded-full bg-muted mb-4" aria-hidden />
         <SheetHeader className="text-left">
-          <SheetTitle>Prêt à utiliser CHOPCHOP ?</SheetTitle>
-          <SheetDescription>{subtitle}</SheetDescription>
+          <SheetTitle className="text-[18px] font-bold">Prêt à utiliser CHOPCHOP ?</SheetTitle>
+          <SheetDescription className="text-sm">{subtitle}</SheetDescription>
         </SheetHeader>
         <div className="grid gap-2 mt-4">
           <Button
