@@ -30,6 +30,7 @@ const ADMIN_ROLES: AppRole[] = ["admin", "operations_admin", "finance_admin", "g
 
 interface AuthContextValue {
   ready: boolean;
+  profileLoading: boolean;
   user: User | null;
   session: Session | null;
   profile: ProfileRecord | null;
@@ -47,7 +48,11 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function profileComplete(p: ProfileRecord | null): boolean {
   if (!p) return false;
-  return Boolean(p.first_name?.trim() && p.last_name?.trim() && p.phone?.trim());
+  const hasName =
+    Boolean(p.first_name?.trim() && p.last_name?.trim()) ||
+    Boolean(p.full_name?.trim() || p.display_name?.trim());
+  const hasPhone = Boolean(p.phone?.trim());
+  return hasName && hasPhone;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -55,8 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [ready, setReady] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-  const loadProfileAndRoles = useCallback(async (userId: string) => {
+  const loadProfileAndRoles = useCallback(async (userId: string, authUser?: User | null) => {
+    setProfileLoading(true);
     try {
       const [{ data: prof }, { data: roleRows }] = await Promise.all([
         supabase
@@ -66,18 +73,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
-      setProfile((prof as ProfileRecord) ?? null);
+      let resolved = (prof as ProfileRecord) ?? null;
+      // If the profile row is missing but auth metadata has name/phone,
+      // auto-upsert once so returning users never see CompleteProfile again.
+      if (!resolved && authUser) {
+        const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
+        const first = (meta.first_name as string) || "";
+        const last = (meta.last_name as string) || "";
+        const fullMeta = (meta.full_name as string) || `${first} ${last}`.trim();
+        const phone = (authUser.phone as string) || (meta.phone as string) || "";
+        const email = authUser.email ?? null;
+        if ((first || fullMeta) && phone) {
+          const display = fullMeta || `${first} ${last}`.trim();
+          const { data: upserted } = await supabase
+            .from("profiles")
+            .upsert(
+              {
+                user_id: userId,
+                first_name: first || display.split(" ")[0] || null,
+                last_name: last || display.split(" ").slice(1).join(" ") || null,
+                full_name: display || null,
+                display_name: display || null,
+                phone: phone.startsWith("+") ? phone : `+${phone}`,
+                email,
+              },
+              { onConflict: "user_id" },
+            )
+            .select("user_id,first_name,last_name,display_name,full_name,phone,email,avatar_url,account_status")
+            .maybeSingle();
+          if (upserted) resolved = upserted as ProfileRecord;
+        }
+      }
+      setProfile(resolved);
       setRoles(((roleRows ?? []) as { role: AppRole }[]).map((r) => r.role));
     } catch {
       setProfile(null);
       setRoles([]);
+    } finally {
+      setProfileLoading(false);
     }
   }, []);
 
   const refresh = useCallback(async () => {
     const { data } = await supabase.auth.getSession();
     setSession(data.session ?? null);
-    if (data.session?.user) await loadProfileAndRoles(data.session.user.id);
+    if (data.session?.user) await loadProfileAndRoles(data.session.user.id, data.session.user);
     else {
       setProfile(null);
       setRoles([]);
@@ -92,9 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!active) return;
       setSession(newSession);
       if (newSession?.user) {
+        setProfileLoading(true);
         // Defer Supabase calls to avoid deadlock inside the callback.
         setTimeout(() => {
-          if (active) loadProfileAndRoles(newSession.user.id);
+          if (active) loadProfileAndRoles(newSession.user.id, newSession.user);
         }, 0);
       } else {
         setProfile(null);
@@ -114,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const s = (res as { data: { session: Session | null } }).data.session;
         if (!active) return;
         setSession(s);
-        if (s?.user) await loadProfileAndRoles(s.user.id);
+        if (s?.user) await loadProfileAndRoles(s.user.id, s.user);
       } finally {
         if (active) setReady(true);
       }
@@ -135,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextValue = {
     ready,
+    profileLoading,
     user: session?.user ?? null,
     session,
     profile,
