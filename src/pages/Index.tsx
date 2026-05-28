@@ -206,16 +206,20 @@ const Index = () => {
 
   const finishOnboarding = () => {
     setShowOnboarding(false);
-    // Only persist completion for signed-in live users. Public onboarding
-    // replays on every visit until the user creates an account.
-    if (typeof window !== "undefined" && liveUser) {
+    if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
+        if (liveUser) {
+          localStorage.setItem(`${ONBOARDING_DONE_KEY}:${user?.id ?? "guest"}`, "1");
+        } else if (publicUser) {
+          // Public users: persist completion so onboarding never auto-replays
+          // on refresh. Manual replay via Help still works (replay event).
+          localStorage.setItem(PUBLIC_ONBOARDING_DONE_KEY, "1");
+        }
       } catch { /* noop */ }
     }
-    // Gentle signup invite for logged-out visitors only.
+    // Gentle signup invite for logged-out visitors only, 3–5s after close.
     if (publicUser && !adminUser && !shouldSkipSignupInvite()) {
-      const delay = 2000 + Math.floor(Math.random() * 2000);
+      const delay = 3000 + Math.floor(Math.random() * 2000);
       setTimeout(() => {
         setSignupInviteOpen(true);
       }, delay);
