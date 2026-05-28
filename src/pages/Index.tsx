@@ -644,6 +644,11 @@ const Index = () => {
           setShowDriverOnboarding(true);
         }}
       />
+      <SignupInviteSheet
+        open={signupInviteOpen}
+        onOpenChange={setSignupInviteOpen}
+        onDismiss={markSignupInviteDismissed}
+      />
     </div>
   );
 };
