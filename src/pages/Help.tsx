@@ -13,6 +13,10 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Seo } from "@/components/Seo";
+import { ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/ClientOnboarding";
+import { DRIVER_ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/DriverOnboarding";
+import { useAuth } from "@/contexts/AuthContext";
+import { Play } from "lucide-react";
 
 const FAQS = [
   {
@@ -81,6 +85,18 @@ export default function Help() {
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const { roles } = useAuth();
+  const isDriverDesignated =
+    roles.includes("driver") || (roles as string[]).includes("courier");
+
+  const replayClientOnboarding = () => {
+    window.dispatchEvent(new Event(ONBOARDING_REPLAY_EVENT));
+    navigate("/");
+  };
+  const replayDriverOnboarding = () => {
+    window.dispatchEvent(new Event(DRIVER_ONBOARDING_REPLAY_EVENT));
+    navigate("/");
+  };
 
   const sendMessage = async () => {
     const trimmed = message.trim();
@@ -145,6 +161,23 @@ export default function Help() {
               </AccordionItem>
             ))}
           </Accordion>
+        </div>
+
+        <div className="bg-card rounded-2xl shadow-card p-4 space-y-3">
+          <h2 className="font-semibold text-foreground">Revoir l'introduction</h2>
+          <p className="text-xs text-muted-foreground">
+            Relancez la visite guidée de CHOPCHOP à tout moment.
+          </p>
+          <Button variant="outline" className="w-full justify-start" onClick={replayClientOnboarding}>
+            <Play className="w-4 h-4 mr-2" />
+            Revoir l'introduction client
+          </Button>
+          {isDriverDesignated && (
+            <Button variant="outline" className="w-full justify-start" onClick={replayDriverOnboarding}>
+              <Play className="w-4 h-4 mr-2" />
+              Revoir l'introduction chauffeur
+            </Button>
+          )}
         </div>
 
         <div className="bg-card rounded-2xl shadow-card p-5 space-y-3">
