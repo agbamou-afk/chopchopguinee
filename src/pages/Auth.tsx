@@ -96,6 +96,15 @@ export default function Auth() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === "signup") {
+      // Hard block: refuse if "email" field looks like a phone number.
+      if (/^\+?[0-9\s]{8,15}$/.test(email.trim()) && !email.includes("@")) {
+        toast({
+          title: "Email requis",
+          description:
+            "Utilisez votre adresse email pour créer un compte. La connexion par téléphone arrive bientôt.",
+        });
+        return;
+      }
       const fields = z
         .object({
           first: nameSchema,
