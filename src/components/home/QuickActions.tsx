@@ -53,7 +53,7 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-3 gap-x-3 gap-y-4"
+      className="grid grid-cols-3 gap-x-2 gap-y-5"
     >
       {actions.map((action) => {
         const t = SERVICE_ICON_TUNING[action.id] ?? { scale: 1, x: 0, y: 0 };
@@ -64,9 +64,9 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => onActionClick(action.id)}
-          className="flex flex-col items-center transition-transform group"
+          className="flex flex-col items-center gap-1.5 transition-transform group"
         >
-          <div className="service-icon-holder mb-2">
+          <div className="service-icon-holder">
             <img
               src={action.img}
               alt={action.alt}
@@ -79,7 +79,7 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
               }}
             />
           </div>
-          <span className="text-[12px] font-semibold text-foreground text-center leading-tight">
+          <span className="text-[12.5px] font-semibold text-foreground text-center leading-tight">
             {action.label}
           </span>
         </motion.button>
