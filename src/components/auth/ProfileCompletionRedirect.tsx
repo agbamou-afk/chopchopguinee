@@ -8,16 +8,19 @@ import { useAuth } from "@/contexts/AuthContext";
  * user can actually finish those flows.
  */
 export function ProfileCompletionRedirect() {
-  const { ready, isLoggedIn, isProfileComplete } = useAuth();
+  const { ready, isLoggedIn, isProfileComplete, profileLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!ready || !isLoggedIn || isProfileComplete) return;
+    // Wait until profile fetch finishes — otherwise returning users with a
+    // complete profile briefly look "incomplete" and get bounced to
+    // /complete-profile on every login.
+    if (!ready || profileLoading || !isLoggedIn || isProfileComplete) return;
     const exempt = ["/auth", "/complete-profile", "/no-access"];
     if (exempt.some((p) => location.pathname.startsWith(p))) return;
     navigate("/complete-profile", { replace: true });
-  }, [ready, isLoggedIn, isProfileComplete, location.pathname, navigate]);
+  }, [ready, profileLoading, isLoggedIn, isProfileComplete, location.pathname, navigate]);
 
   return null;
 }
