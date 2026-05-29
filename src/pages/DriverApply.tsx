@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Bike, Car, Package, CheckCircle2, Upload, MapPin, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,12 +18,20 @@ const ZONES = ["Kaloum", "Dixinn", "Ratoma", "Matam", "Matoto", "Kipé", "Bambet
 
 export default function DriverApply() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { profile, refetch } = useDriverProfile();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
-  const [vehicleType, setVehicleType] = useState<DriverVehicle>(profile?.vehicle_type ?? "moto");
+  const intentVehicle = (() => {
+    const raw = searchParams.get("intent");
+    if (raw === "moto" || raw === "toktok" || raw === "livraison") return raw;
+    return null;
+  })();
+  const [vehicleType, setVehicleType] = useState<DriverVehicle>(
+    profile?.vehicle_type ?? intentVehicle ?? "moto",
+  );
   const [plate, setPlate] = useState(profile?.plate_number ?? "");
   const [zones, setZones] = useState<string[]>(profile?.zones ?? []);
   const [driverPhoto, setDriverPhoto] = useState<string | null>(profile?.driver_photo_url ?? null);
@@ -60,6 +68,7 @@ export default function DriverApply() {
 
   const submit = async () => {
     setSubmitting(true);
+    const missingDocuments = !driverPhoto || !idDoc;
     Analytics.track("driver.application.submitted", { metadata: { vehicle_type: vehicleType, zones } });
     const { error } = await supabase.rpc("driver_apply", {
       p_payload: {
@@ -69,6 +78,8 @@ export default function DriverApply() {
         id_doc_url: idDoc,
         vehicle_photo_url: vehiclePhoto,
         zones,
+        missing_documents: missingDocuments,
+        required_documents_status: missingDocuments ? "incomplete" : "submitted",
       },
     });
     setSubmitting(false);
@@ -77,13 +88,28 @@ export default function DriverApply() {
       return;
     }
     await refetch();
-    toast({ title: "Demande envoyée", description: "Votre demande est en cours de vérification." });
+    toast({
+      title: "Demande envoyée",
+      description: missingDocuments
+        ? "Documents manquants : ajoutez votre pièce d'identité et un selfie pour accélérer la vérification."
+        : "Votre demande est en cours de vérification.",
+    });
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("cc_driver_mode_choice", "driver");
+      } catch {
+        /* noop */
+      }
+    }
     navigate("/");
   };
 
   const canNext = (() => {
     if (step === 2) return !!vehicleType;
-    if (step === 4) return !!driverPhoto && !!idDoc;
+    // Documents are optional/skippable at signup — missing docs are flagged
+    // in the application payload and the applicant cannot go online until an
+    // admin verifies them.
+    if (step === 4) return true;
     if (step === 5) return zones.length > 0;
     return true;
   })();
@@ -161,10 +187,19 @@ export default function DriverApply() {
         )}
 
         {step === 4 && (
-          <Section title="Documents" sub="Photo de profil, pièce d'identité et photo du véhicule (max 5 Mo).">
-            <UploadField label="Photo du chauffeur" value={driverPhoto} onChange={(f) => upload(f, "driver").then(setDriverPhoto)} required />
-            <UploadField label="Pièce d'identité" value={idDoc} onChange={(f) => upload(f, "id").then(setIdDoc)} required />
-            <UploadField label="Photo du véhicule" value={vehiclePhoto} onChange={(f) => upload(f, "vehicle").then(setVehiclePhoto)} />
+          <Section
+            title="Vérification chauffeur"
+            sub="Ajoutez une photo de votre pièce d'identité et un selfie. Vous pouvez passer cette étape maintenant, mais votre compte devra être vérifié avant activation."
+          >
+            <UploadField label="Selfie / Photo du chauffeur" value={driverPhoto} onChange={(f) => upload(f, "driver").then(setDriverPhoto)} />
+            <UploadField label="Pièce d'identité" value={idDoc} onChange={(f) => upload(f, "id").then(setIdDoc)} />
+            <UploadField label="Photo du véhicule (optionnel)" value={vehiclePhoto} onChange={(f) => upload(f, "vehicle").then(setVehiclePhoto)} />
+            {(!driverPhoto || !idDoc) && (
+              <p className="text-xs text-muted-foreground">
+                Vous pourrez ajouter vos documents plus tard. Votre compte devra être
+                vérifié avant de recevoir des missions.
+              </p>
+            )}
           </Section>
         )}
 

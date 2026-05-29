@@ -12,6 +12,12 @@ import { Seo } from "@/components/Seo";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TERMS_VERSION, PRIVACY_VERSION, recordLegalAcceptance } from "@/lib/legal";
+import { Bike, Car, Package, ShoppingBag } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type SignupIntent = "client" | "driver";
+type DriverVehicleIntent = "moto" | "toktok" | "livraison";
+const DRIVER_INTENT_STORAGE_KEY = "cc_signup_driver_intent";
 
 const phoneSchema = z
   .string()
@@ -81,6 +87,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [acceptLegal, setAcceptLegal] = useState(false);
+  const [intent, setIntent] = useState<SignupIntent>("client");
+  const [vehicle, setVehicle] = useState<DriverVehicleIntent>("moto");
 
   // After session is established, route by role + profile completeness.
   useEffect(() => {
@@ -88,6 +96,25 @@ export default function Auth() {
     if (!isProfileComplete) {
       navigate("/complete-profile", { replace: true });
       return;
+    }
+    // Honor a stored driver-applicant intent from signup. We route to the
+    // driver application flow and flip the global mode to driver so the
+    // user lands on the driver dashboard pending-review state after.
+    try {
+      const raw =
+        typeof window !== "undefined"
+          ? sessionStorage.getItem(DRIVER_INTENT_STORAGE_KEY)
+          : null;
+      if (raw) {
+        const parsed = JSON.parse(raw) as { vehicle?: DriverVehicleIntent };
+        sessionStorage.removeItem(DRIVER_INTENT_STORAGE_KEY);
+        sessionStorage.setItem("cc_driver_mode_choice", "driver");
+        const v = parsed?.vehicle ?? "moto";
+        navigate(`/driver/apply?intent=${encodeURIComponent(v)}`, { replace: true });
+        return;
+      }
+    } catch {
+      /* noop */
     }
     if (safeNext) {
       navigate(safeNext, { replace: true });
@@ -142,6 +169,8 @@ export default function Auth() {
             phone: normalizePhone(phone),
             terms_version_accepted: TERMS_VERSION,
             privacy_version_accepted: PRIVACY_VERSION,
+            signup_intent: intent,
+            requested_driver_vehicle: intent === "driver" ? vehicle : null,
           },
         },
       });
@@ -150,11 +179,28 @@ export default function Auth() {
         toast({ title: "Échec inscription", description: frenchAuthError(error.message) });
         return;
       }
+      // Persist intent so post-confirmation routing can branch to the
+      // driver application flow. Selecting "driver" never grants any
+      // capability on its own — the application stays pending until an
+      // admin approves it.
+      try {
+        if (intent === "driver" && typeof window !== "undefined") {
+          sessionStorage.setItem(
+            DRIVER_INTENT_STORAGE_KEY,
+            JSON.stringify({ vehicle }),
+          );
+        }
+      } catch {
+        /* noop */
+      }
       // Record acceptance immediately if a session was created (auto-confirm).
       void recordLegalAcceptance({ source: "signup" });
       toast({
         title: "Compte créé",
-        description: "Vérifiez votre email pour confirmer votre inscription.",
+        description:
+          intent === "driver"
+            ? "Vérifiez votre email pour confirmer votre inscription, puis complétez votre demande chauffeur."
+            : "Vérifiez votre email pour confirmer votre inscription.",
       });
       setMode("signin");
       return;
@@ -239,6 +285,83 @@ export default function Auth() {
                 <p className="text-[11px] text-muted-foreground mt-1">
                   Indicatif Guinée (+224) ajouté automatiquement.
                 </p>
+              </div>
+
+              <div className="pt-1">
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Comment souhaitez-vous utiliser CHOPCHOP ?
+                </Label>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIntent("client")}
+                    className={cn(
+                      "flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-colors",
+                      intent === "client"
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card",
+                    )}
+                  >
+                    <ShoppingBag className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Client</span>
+                    <span className="text-[11px] text-muted-foreground leading-snug">
+                      Commander, acheter, envoyer ou vous déplacer.
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIntent("driver")}
+                    className={cn(
+                      "flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-colors",
+                      intent === "driver"
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card",
+                    )}
+                  >
+                    <Bike className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">
+                      Chauffeur / Coursier
+                    </span>
+                    <span className="text-[11px] text-muted-foreground leading-snug">
+                      Recevoir des courses et livraisons après vérification.
+                    </span>
+                  </button>
+                </div>
+
+                {intent === "driver" && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Quel service souhaitez-vous offrir ?
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        { id: "moto" as const, label: "Moto", icon: Bike },
+                        { id: "toktok" as const, label: "TokTok", icon: Car },
+                        { id: "livraison" as const, label: "Livraison", icon: Package },
+                      ]).map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setVehicle(opt.id)}
+                          className={cn(
+                            "flex flex-col items-center gap-1 p-2 rounded-xl border text-xs",
+                            vehicle === opt.id
+                              ? "border-primary bg-primary/5 text-foreground"
+                              : "border-border bg-card text-muted-foreground",
+                          )}
+                        >
+                          <opt.icon className="w-4 h-4" />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Votre compte sera créé en attente de vérification. Vous ne
+                      pourrez recevoir de missions qu'après l'approbation de
+                      l'équipe CHOPCHOP.
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}
