@@ -9,20 +9,19 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { GuineaPhoneInput } from "@/components/ui/guinea-phone-input";
+import {
+  GUINEA_PHONE_INVALID_MESSAGE,
+  extractGuineaLocal,
+  isValidGuineaLocal,
+  normalizeGuineaPhone,
+} from "@/lib/phone/guinea";
 
 const schema = z.object({
   first_name: z.string().trim().min(1, "Prénom requis").max(60),
   last_name: z.string().trim().min(1, "Nom requis").max(60),
-  phone: z.string().trim().regex(/^\+?[0-9\s]{8,15}$/, "Téléphone invalide"),
   email: z.string().trim().email("Email invalide").max(255).optional().or(z.literal("")),
 });
-
-function normalizePhone(raw: string): string {
-  const d = raw.replace(/\s+/g, "");
-  if (d.startsWith("+")) return d;
-  if (d.length <= 9) return `+224${d}`;
-  return `+${d}`;
-}
 
 export default function CompleteProfile() {
   const { ready, isLoggedIn, user, profile, refresh } = useAuth();
@@ -39,16 +38,20 @@ export default function CompleteProfile() {
     if (profile) {
       setFirst(profile.first_name ?? "");
       setLast(profile.last_name ?? "");
-      setPhone(profile.phone ?? user?.phone ?? "");
+      setPhone(extractGuineaLocal(profile.phone ?? user?.phone ?? ""));
       setEmail(profile.email ?? user?.email ?? "");
     }
   }, [ready, isLoggedIn, profile, user, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = schema.safeParse({ first_name: first, last_name: last, phone, email });
+    const parsed = schema.safeParse({ first_name: first, last_name: last, email });
     if (!parsed.success) {
       toast({ title: "Erreur", description: parsed.error.errors[0].message });
+      return;
+    }
+    if (!isValidGuineaLocal(phone)) {
+      toast({ title: "Erreur", description: GUINEA_PHONE_INVALID_MESSAGE });
       return;
     }
     if (!user) return;
@@ -63,7 +66,7 @@ export default function CompleteProfile() {
           last_name: parsed.data.last_name,
           full_name: display,
           display_name: display,
-          phone: normalizePhone(parsed.data.phone),
+          phone: normalizeGuineaPhone(phone),
           email: parsed.data.email || null,
         },
         { onConflict: "user_id" },
@@ -105,7 +108,7 @@ export default function CompleteProfile() {
           </div>
           <div>
             <Label htmlFor="phone">Téléphone</Label>
-            <Input id="phone" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+224 6XX XX XX XX" required />
+            <GuineaPhoneInput id="phone" value={phone} onChange={setPhone} required />
           </div>
           <div>
             <Label htmlFor="email">Email (optionnel)</Label>
