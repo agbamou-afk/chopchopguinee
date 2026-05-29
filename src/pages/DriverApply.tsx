@@ -187,10 +187,19 @@ export default function DriverApply() {
         )}
 
         {step === 4 && (
-          <Section title="Documents" sub="Photo de profil, pièce d'identité et photo du véhicule (max 5 Mo).">
-            <UploadField label="Photo du chauffeur" value={driverPhoto} onChange={(f) => upload(f, "driver").then(setDriverPhoto)} required />
-            <UploadField label="Pièce d'identité" value={idDoc} onChange={(f) => upload(f, "id").then(setIdDoc)} required />
-            <UploadField label="Photo du véhicule" value={vehiclePhoto} onChange={(f) => upload(f, "vehicle").then(setVehiclePhoto)} />
+          <Section
+            title="Vérification chauffeur"
+            sub="Ajoutez une photo de votre pièce d'identité et un selfie. Vous pouvez passer cette étape maintenant, mais votre compte devra être vérifié avant activation."
+          >
+            <UploadField label="Selfie / Photo du chauffeur" value={driverPhoto} onChange={(f) => upload(f, "driver").then(setDriverPhoto)} />
+            <UploadField label="Pièce d'identité" value={idDoc} onChange={(f) => upload(f, "id").then(setIdDoc)} />
+            <UploadField label="Photo du véhicule (optionnel)" value={vehiclePhoto} onChange={(f) => upload(f, "vehicle").then(setVehiclePhoto)} />
+            {(!driverPhoto || !idDoc) && (
+              <p className="text-xs text-muted-foreground">
+                Vous pourrez ajouter vos documents plus tard. Votre compte devra être
+                vérifié avant de recevoir des missions.
+              </p>
+            )}
           </Section>
         )}
 
