@@ -14,18 +14,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { TERMS_VERSION, PRIVACY_VERSION, recordLegalAcceptance } from "@/lib/legal";
 import { Bike, Car, Package, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GuineaPhoneInput } from "@/components/ui/guinea-phone-input";
+import {
+  GUINEA_PHONE_INVALID_MESSAGE,
+  isValidGuineaLocal,
+  normalizeGuineaPhone,
+} from "@/lib/phone/guinea";
 
 type SignupIntent = "client" | "driver";
 type DriverVehicleIntent = "moto" | "toktok" | "livraison";
 const DRIVER_INTENT_STORAGE_KEY = "cc_signup_driver_intent";
 
-const phoneSchema = z
-  .string()
-  .trim()
-  .regex(
-    /^\+?[0-9\s]{8,15}$/,
-    "Numéro de téléphone invalide. Ajoutez l'indicatif +224 si nécessaire.",
-  );
 const emailSchema = z
   .string()
   .trim()
@@ -36,13 +35,6 @@ const passwordSchema = z
   .min(6, "Mot de passe trop faible. Utilisez au moins 6 caractères.")
   .max(72);
 const nameSchema = z.string().trim().min(1, "Requis").max(60);
-
-function normalizePhone(raw: string): string {
-  const d = raw.replace(/\s+/g, "");
-  if (d.startsWith("+")) return d;
-  if (d.length <= 9) return `+224${d}`;
-  return `+${d}`;
-}
 
 // Pilot launch: email + password only. Phone OTP / phone password are disabled
 // until an SMS provider (Twilio / Messaging Service SID) is configured in
@@ -146,13 +138,16 @@ export default function Auth() {
         .object({
           first: nameSchema,
           last: nameSchema,
-          phone: phoneSchema,
           email: emailSchema,
           password: passwordSchema,
         })
-        .safeParse({ first, last, phone, email, password });
+        .safeParse({ first, last, email, password });
       if (!fields.success) {
         toast({ title: "Erreur", description: fields.error.errors[0].message });
+        return;
+      }
+      if (!isValidGuineaLocal(phone)) {
+        toast({ title: "Erreur", description: GUINEA_PHONE_INVALID_MESSAGE });
         return;
       }
       setBusy(true);
@@ -166,7 +161,7 @@ export default function Auth() {
             first_name: first.trim(),
             last_name: last.trim(),
             full_name: display,
-            phone: normalizePhone(phone),
+            phone: normalizeGuineaPhone(phone),
             terms_version_accepted: TERMS_VERSION,
             privacy_version_accepted: PRIVACY_VERSION,
             signup_intent: intent,
@@ -272,18 +267,14 @@ export default function Auth() {
               </div>
               <div>
                 <Label htmlFor="phone">Téléphone</Label>
-                <Input
+                <GuineaPhoneInput
                   id="phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+224 6XX XX XX XX"
+                  onChange={setPhone}
                   required
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Indicatif Guinée (+224) ajouté automatiquement.
+                  Tapez uniquement votre numéro local. L'indicatif +224 est déjà inclus.
                 </p>
               </div>
 

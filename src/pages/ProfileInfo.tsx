@@ -8,6 +8,13 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Seo } from "@/components/Seo";
+import { GuineaPhoneInput } from "@/components/ui/guinea-phone-input";
+import {
+  GUINEA_PHONE_INVALID_MESSAGE,
+  extractGuineaLocal,
+  isValidGuineaLocal,
+  normalizeGuineaPhone,
+} from "@/lib/phone/guinea";
 
 export default function ProfileInfo() {
   const navigate = useNavigate();
@@ -34,7 +41,7 @@ export default function ProfileInfo() {
         .maybeSingle();
       if (prof) {
         setFullName(prof.full_name ?? "");
-        setPhone(prof.phone ?? "");
+        setPhone(extractGuineaLocal(prof.phone ?? ""));
         setAvatarUrl((prof as any).avatar_url ?? null);
       }
       setLoading(false);
@@ -42,12 +49,16 @@ export default function ProfileInfo() {
   }, [navigate]);
 
   const saveProfile = async () => {
+    if (phone && !isValidGuineaLocal(phone)) {
+      toast({ title: "Erreur", description: GUINEA_PHONE_INVALID_MESSAGE });
+      return;
+    }
     setSaving(true);
     const { data: sess } = await supabase.auth.getSession();
     if (!sess.session) return;
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, phone })
+      .update({ full_name: fullName, phone: phone ? normalizeGuineaPhone(phone) : null })
       .eq("user_id", sess.session.user.id);
     setSaving(false);
     if (error) toast({ title: "Erreur", description: error.message });
@@ -121,7 +132,7 @@ export default function ProfileInfo() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Téléphone</Label>
-            <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} />
+            <GuineaPhoneInput id="phone" value={phone} onChange={setPhone} />
           </div>
           <Button onClick={saveProfile} disabled={saving} className="w-full">
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
