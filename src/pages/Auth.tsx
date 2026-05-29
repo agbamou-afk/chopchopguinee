@@ -286,6 +286,83 @@ export default function Auth() {
                   Indicatif Guinée (+224) ajouté automatiquement.
                 </p>
               </div>
+
+              <div className="pt-1">
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Comment souhaitez-vous utiliser CHOPCHOP ?
+                </Label>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIntent("client")}
+                    className={cn(
+                      "flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-colors",
+                      intent === "client"
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card",
+                    )}
+                  >
+                    <ShoppingBag className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Client</span>
+                    <span className="text-[11px] text-muted-foreground leading-snug">
+                      Commander, acheter, envoyer ou vous déplacer.
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIntent("driver")}
+                    className={cn(
+                      "flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-colors",
+                      intent === "driver"
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card",
+                    )}
+                  >
+                    <Bike className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">
+                      Chauffeur / Coursier
+                    </span>
+                    <span className="text-[11px] text-muted-foreground leading-snug">
+                      Recevoir des courses et livraisons après vérification.
+                    </span>
+                  </button>
+                </div>
+
+                {intent === "driver" && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Quel service souhaitez-vous offrir ?
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        { id: "moto" as const, label: "Moto", icon: Bike },
+                        { id: "toktok" as const, label: "TokTok", icon: Car },
+                        { id: "livraison" as const, label: "Livraison", icon: Package },
+                      ]).map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setVehicle(opt.id)}
+                          className={cn(
+                            "flex flex-col items-center gap-1 p-2 rounded-xl border text-xs",
+                            vehicle === opt.id
+                              ? "border-primary bg-primary/5 text-foreground"
+                              : "border-border bg-card text-muted-foreground",
+                          )}
+                        >
+                          <opt.icon className="w-4 h-4" />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Votre compte sera créé en attente de vérification. Vous ne
+                      pourrez recevoir de missions qu'après l'approbation de
+                      l'équipe CHOPCHOP.
+                    </p>
+                  </div>
+                )}
+              </div>
             </>
           )}
 
