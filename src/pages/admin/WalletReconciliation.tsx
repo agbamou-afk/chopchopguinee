@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Check, X, AlertTriangle, FileUp, RefreshCcw, Eye, ShieldAlert } from "lucide-react";
+import { Loader2, Check, X, AlertTriangle, FileUp, RefreshCcw, Eye, ShieldAlert, Inbox, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -42,6 +44,18 @@ type Candidate = {
   phone_match: boolean;
 };
 
+type CustomerTopupRow = {
+  id: string;
+  reference: string;
+  client_user_id: string;
+  amount_gnf: number;
+  status: string;
+  provider: string;
+  user_phone: string | null;
+  created_at: string;
+  expires_at: string;
+};
+
 const STATUS_LABEL: Record<string, string> = {
   received: "Reçu",
   credited: "Crédité",
@@ -58,7 +72,7 @@ function fmtDate(iso: string) {
 }
 
 export default function WalletReconciliation() {
-  const [tab, setTab] = useState("auto");
+  const [tab, setTab] = useState("customer");
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
@@ -67,6 +81,14 @@ export default function WalletReconciliation() {
   const [reviewEvent, setReviewEvent] = useState<Event | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [acting, setActing] = useState(false);
+  const [customerTopups, setCustomerTopups] = useState<CustomerTopupRow[]>([]);
+  const [customerLoading, setCustomerLoading] = useState(true);
+  // Manual OM receipt entry form
+  const [mTxId, setMTxId] = useState("");
+  const [mAmount, setMAmount] = useState<string>("");
+  const [mPhone, setMPhone] = useState("");
+  const [mNote, setMNote] = useState("");
+  const [mSubmitting, setMSubmitting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -80,7 +102,31 @@ export default function WalletReconciliation() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  const loadCustomerTopups = async () => {
+    setCustomerLoading(true);
+    const { data, error } = await supabase
+      .from("topup_requests")
+      .select("id, reference, client_user_id, amount_gnf, status, provider, user_phone, created_at, expires_at")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (error) toast.error(error.message);
+    setCustomerTopups((data ?? []) as CustomerTopupRow[]);
+    setCustomerLoading(false);
+  };
+
+  useEffect(() => { load(); loadCustomerTopups(); }, []);
+
+  // Poll on visibility so admins see new customer requests without reload.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void load();
+        void loadCustomerTopups();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
 
   const filtered = useMemo(() => {
     switch (tab) {
@@ -92,6 +138,52 @@ export default function WalletReconciliation() {
       default: return events;
     }
   }, [events, tab]);
+
+  const customerFiltered = useMemo(() => {
+    // Pending = customer-side requests waiting for an OM receipt/admin action.
+    return customerTopups.filter((t) => t.status === "pending" || t.status === "matched" || t.status === "needs_review");
+  }, [customerTopups]);
+
+  const submitManualReceipt = async () => {
+    const amt = Number(mAmount);
+    if (!mTxId.trim()) { toast.error("Code/Tx OM requis"); return; }
+    if (!amt || amt <= 0) { toast.error("Montant invalide"); return; }
+    setMSubmitting(true);
+    const { data: inserted, error } = await supabase
+      .from("payment_provider_events")
+      .insert({
+        provider: "orange_money",
+        event_type: "payment.received",
+        provider_transaction_id: mTxId.trim().toUpperCase(),
+        payer_phone: mPhone.trim() || null,
+        amount_gnf: amt,
+        status: "successful",
+        raw_payload: { source: "admin_manual_entry", note: mNote || null },
+      })
+      .select("id")
+      .single();
+    if (error) { setMSubmitting(false); toast.error(error.message); return; }
+    // Trigger the existing auto-match (idempotent; secure RPC).
+    const { error: mErr } = await supabase.rpc("om_auto_match", { p_event_id: inserted.id });
+    setMSubmitting(false);
+    if (mErr) { toast.error(mErr.message); return; }
+    toast.success("Reçu OM enregistré · matching lancé");
+    setMTxId(""); setMAmount(""); setMPhone(""); setMNote("");
+    void load();
+    void loadCustomerTopups();
+  };
+
+  const cancelTopup = async (topupId: string) => {
+    setActing(true);
+    const { error } = await supabase.rpc("wallet_topup_cancel", {
+      p_topup_id: topupId,
+      p_reason: "Annulé manuellement par admin",
+    });
+    setActing(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Demande annulée");
+    void loadCustomerTopups();
+  };
 
   const openReview = async (e: Event) => {
     setReviewEvent(e);
@@ -149,7 +241,8 @@ export default function WalletReconciliation() {
   return (
     <ModulePage module="wallet" title="Réconciliation Orange Money" subtitle="Suivi des paiements et rapprochement des recharges">
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="customer">Demandes clients</TabsTrigger>
           <TabsTrigger value="auto">Auto-créditées</TabsTrigger>
           <TabsTrigger value="pending">En attente</TabsTrigger>
           <TabsTrigger value="review">À revoir</TabsTrigger>
@@ -157,6 +250,97 @@ export default function WalletReconciliation() {
           <TabsTrigger value="suspicious">Suspectes</TabsTrigger>
           <TabsTrigger value="import">Import CSV</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="customer" className="mt-4 space-y-4">
+          {/* Manual OM receipt entry */}
+          <Card className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Send className="w-4 h-4 text-primary" />
+              <p className="font-semibold text-sm">Saisie manuelle d'un reçu Orange Money</p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Saisissez ici le code de confirmation reçu sur le téléphone CHOPCHOP. Le système tentera automatiquement de rapprocher avec une demande client en attente du même montant.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+              <div>
+                <Label htmlFor="m-tx" className="text-[11px]">Code OM</Label>
+                <Input id="m-tx" value={mTxId} onChange={(e) => setMTxId(e.target.value)} placeholder="ABC123XYZ" className="font-mono" />
+              </div>
+              <div>
+                <Label htmlFor="m-amt" className="text-[11px]">Montant reçu (GNF)</Label>
+                <Input id="m-amt" inputMode="numeric" value={mAmount} onChange={(e) => setMAmount(e.target.value.replace(/\D/g, ""))} placeholder="50000" />
+              </div>
+              <div>
+                <Label htmlFor="m-ph" className="text-[11px]">Téléphone payeur (optionnel)</Label>
+                <Input id="m-ph" value={mPhone} onChange={(e) => setMPhone(e.target.value)} placeholder="+224 6XX XX XX XX" />
+              </div>
+              <div>
+                <Label htmlFor="m-note" className="text-[11px]">Note (optionnelle)</Label>
+                <Input id="m-note" value={mNote} onChange={(e) => setMNote(e.target.value)} placeholder="Compte OM principal" />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={submitManualReceipt} disabled={mSubmitting || !mTxId.trim() || !mAmount}>
+                {mSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+                Ajouter le reçu
+              </Button>
+            </div>
+          </Card>
+
+          {/* Customer pending requests */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Inbox className="w-4 h-4" />
+              <p className="text-sm font-semibold">Demandes clients en attente</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={loadCustomerTopups} disabled={customerLoading}>
+              <RefreshCcw className={`w-4 h-4 mr-1 ${customerLoading ? "animate-spin" : ""}`} /> Rafraîchir
+            </Button>
+          </div>
+          <Card className="p-0 overflow-hidden">
+            {customerLoading ? (
+              <div className="p-12 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            ) : customerFiltered.length === 0 ? (
+              <div className="p-12 text-center text-muted-foreground text-sm">Aucune demande client en attente.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-left">
+                    <tr>
+                      <th className="p-3">Créée</th>
+                      <th className="p-3">Référence</th>
+                      <th className="p-3">Téléphone client</th>
+                      <th className="p-3 text-right">Montant</th>
+                      <th className="p-3">Statut</th>
+                      <th className="p-3">Expire</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerFiltered.map((t) => (
+                      <tr key={t.id} className="border-t">
+                        <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.created_at)}</td>
+                        <td className="p-3 font-mono text-xs">{t.reference}</td>
+                        <td className="p-3 text-xs">{t.user_phone ?? "—"}</td>
+                        <td className="p-3 text-right font-medium">{formatGNF(t.amount_gnf)}</td>
+                        <td className="p-3"><Badge variant="outline" className="text-[10px]">{t.status}</Badge></td>
+                        <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.expires_at)}</td>
+                        <td className="p-3 text-right">
+                          <Button size="sm" variant="ghost" disabled={acting} onClick={() => cancelTopup(t.id)}>
+                            <X className="w-3.5 h-3.5 mr-1" /> Annuler
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+          <p className="text-[11px] text-muted-foreground">
+            Le crédit du wallet est effectué automatiquement par le backend lorsqu'un reçu OM correspond au montant et à une demande client active. Aucun crédit manuel depuis l'interface.
+          </p>
+        </TabsContent>
 
         {(["auto","pending","review","expired","suspicious"] as const).map((k) => (
           <TabsContent key={k} value={k} className="mt-4">
