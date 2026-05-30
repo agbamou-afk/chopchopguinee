@@ -265,8 +265,9 @@ export default function WalletReconciliation() {
   return (
     <ModulePage module="wallet" title="Réconciliation Orange Money" subtitle="Suivi des paiements et rapprochement des recharges">
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="customer">Demandes clients</TabsTrigger>
+          <TabsTrigger value="accounts">Comptes OM</TabsTrigger>
           <TabsTrigger value="auto">Auto-créditées</TabsTrigger>
           <TabsTrigger value="pending">En attente</TabsTrigger>
           <TabsTrigger value="review">À revoir</TabsTrigger>
@@ -276,6 +277,17 @@ export default function WalletReconciliation() {
         </TabsList>
 
         <TabsContent value="customer" className="mt-4 space-y-4">
+          {activeOMAccounts.length === 0 && (
+            <Card className="p-3 bg-destructive/10 border-destructive/30">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs">
+                  Aucun numéro de réception Orange Money actif. La recharge OM est désactivée côté client.
+                  Configurez un numéro dans l'onglet « Comptes OM ».
+                </p>
+              </div>
+            </Card>
+          )}
           {/* Manual OM receipt entry */}
           <Card className="p-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -285,6 +297,21 @@ export default function WalletReconciliation() {
             <p className="text-xs text-muted-foreground">
               Saisissez ici le code de confirmation reçu sur le téléphone CHOPCHOP. Le système tentera automatiquement de rapprocher avec une demande client en attente du même montant.
             </p>
+            <div>
+              <Label className="text-[11px]">Numéro CHOPCHOP qui a reçu</Label>
+              <Select value={mAccountId} onValueChange={setMAccountId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={activeOMAccounts.length === 0 ? "Aucun numéro actif" : "Choisir un numéro"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeOMAccounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.label} · {a.phone_e164}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
               <div>
                 <Label htmlFor="m-tx" className="text-[11px]">Code OM</Label>
@@ -304,7 +331,7 @@ export default function WalletReconciliation() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button onClick={submitManualReceipt} disabled={mSubmitting || !mTxId.trim() || !mAmount}>
+              <Button onClick={submitManualReceipt} disabled={mSubmitting || !mTxId.trim() || !mAmount || activeOMAccounts.length === 0}>
                 {mSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
                 Ajouter le reçu
               </Button>
@@ -334,6 +361,7 @@ export default function WalletReconciliation() {
                       <th className="p-3">Créée</th>
                       <th className="p-3">Référence</th>
                       <th className="p-3">Téléphone client</th>
+                      <th className="p-3">Compte réception</th>
                       <th className="p-3 text-right">Montant</th>
                       <th className="p-3">Statut</th>
                       <th className="p-3">Expire</th>
@@ -341,11 +369,16 @@ export default function WalletReconciliation() {
                     </tr>
                   </thead>
                   <tbody>
-                    {customerFiltered.map((t) => (
+                    {customerFiltered.map((t) => {
+                      const ra = receivingAccounts.find((a) => a.id === t.receiving_account_id);
+                      return (
                       <tr key={t.id} className="border-t">
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.created_at)}</td>
                         <td className="p-3 font-mono text-xs">{t.reference}</td>
                         <td className="p-3 text-xs">{t.user_phone ?? "—"}</td>
+                        <td className="p-3 text-xs">
+                          {ra ? `${ra.label} · ${ra.phone_e164}` : "—"}
+                        </td>
                         <td className="p-3 text-right font-medium">{formatGNF(t.amount_gnf)}</td>
                         <td className="p-3"><Badge variant="outline" className="text-[10px]">{t.status}</Badge></td>
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.expires_at)}</td>
@@ -355,7 +388,8 @@ export default function WalletReconciliation() {
                           </Button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -364,6 +398,10 @@ export default function WalletReconciliation() {
           <p className="text-[11px] text-muted-foreground">
             Le crédit du wallet est effectué automatiquement par le backend lorsqu'un reçu OM correspond au montant et à une demande client active. Aucun crédit manuel depuis l'interface.
           </p>
+        </TabsContent>
+
+        <TabsContent value="accounts" className="mt-4">
+          <PaymentReceivingAccountsManager onChange={setReceivingAccounts} />
         </TabsContent>
 
         {(["auto","pending","review","expired","suspicious"] as const).map((k) => (
