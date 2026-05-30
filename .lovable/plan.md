@@ -1,67 +1,43 @@
+# CHOPCHOP Launch Readiness Plan
 
+Last updated: 2026-05-30
 
-# Milestone locked
+## Locked milestones (stable, do not regress)
 
-`chopchop-guinea-phone-input-stable` saved to memory.
+- `chopchop-store-readiness-stable` (2026-05-28)
+- `chopchop-guinea-phone-input-stable` (2026-05-30)
+- `chopchop-om-receiving-accounts-stable` (2026-05-30)
+- `chopchop-om-two-sided-reconciliation-queue-stable` (2026-05-30)
+- `chopchop-admin-real-data-purge-stable` (2026-05-30)
 
-# Why a plan first
+## What each milestone guarantees
 
-The new request is genuinely huge: new DB tables + RPCs, a full two-sided manual Orange Money reconciliation queue, a rewrite of the customer Recharger flow, and a sweep of fake/mock data across ~15 admin tabs. Done in one shot it would be hundreds of lines of SQL plus dozens of files — impossible to review or QA confidently. I want to ship it in 3 small, individually verifiable passes, each ending in a stable build.
+### Store Readiness
+Onboarding/signup/ConversionGate verified, images optimized 92%, store foundation in place (account deletion, debug gating, docs).
 
-Before writing code I also need a short audit (Phase 0 of your brief) so we agree on the source of truth and don't create a duplicate top-up path.
+### Guinea Phone Input
++224 prefilled signup phone, shared normalization helpers, profiles stored as +224XXXXXXXXX.
 
-# Pass 1 — Audit (read-only, no code)
+### OM Receiving Accounts
+Admin-configured OM receiving accounts, sanitized customer RPC, topup_requests linked to account.
 
-I'll inspect and report back:
+### OM Two-Sided Reconciliation Queue
+Admin Reconciliation OM UI exposes 5 operational queues (Demandes, Codes clients, Reçus en attente, Réconciliés, Conflits) + Comptes OM + Import CSV. Manual receipt form prefills from customer-code queue. Exact match auto-credits wallet. Conflicts go to review queue. Duplicates cannot double-credit.
 
-- Current Recharger handler (`WalletHero` → ?) and existing `TopUpOrangeMoney` component.
-- Existing `payment_intents` helpers and any `topup_requests` table/RPCs (`create_wallet_topup_intent`, `wallet_topup_om_credit`, `confirm_payment_intent`, etc.).
-- What `PaymentsAdmin` and `WalletReconciliation` currently read.
-- Every admin tab still rendering `MOCK` / hardcoded rows.
-- Whether `payment_intents` alone can be the source of truth (preferred) or if a parallel `topup_requests` table exists and must be linked.
+### Admin Real Data Purge
+All fake/mock/demo data removed from admin UI. Replaced with real Supabase queries, honest empty states, or "À connecter" placeholders across Users, Merchants, Orders, Repas, Marché, Zones, Risk, Promotions, and Settings tabs.
 
-Deliverable: short written report with file:line refs and the chosen source-of-truth model. No code changes.
+## Remaining launch blockers (TODO)
 
-# Pass 2 — Real Recharger + admin visibility (small migration + UI)
+### Security scan warnings (3)
+1. **ADMIN_ROLE_INCONSISTENCY** — `is_admin()` checks `admin_users` while `is_any_admin()` checks `user_roles`. Standardize to single source of truth.
+2. **MISSING_REALTIME_CHANNEL_SCOPING** — Realtime NULL topic branch may allow broadcast channel leakage.
+3. **MISSING_RLS_PROTECTION** — Verify agent_profiles users do not hold `admin` role, else they can read raw confirmation_code values.
 
-Goal: a real customer top-up appears in `/admin/payments` and can be confirmed/failed by finance/god admin via secure RPC.
+### Ops / infra
+- Domain email verification `notify.chopchopguinee.com` (DNS pending)
+- SMS / Twilio configuration
+- Realtime financial events stay off (polling only) — confirm no regressions
 
-- New table `payment_receiving_accounts` (admin-managed OM receiving numbers) + sanitized `get_active_payment_receiving_accounts()` RPC.
-- New RPC `create_wallet_topup_intent(amount, provider, receiving_account_id)` → inserts `payment_intents` row with `purpose = wallet_topup`, status `pending`, public reference. Never credits.
-- Customer: `Recharger` opens a real amount sheet → method picker → shows active OM receiving number → creates intent → shows pending receipt.
-- Admin `PaymentsAdmin`: wire real query of `payment_intents` (it likely already does — confirm and fix filters/refetch). Confirm/Fail buttons call existing `confirm_payment_intent` / `fail_payment_intent` RPCs (already SECURITY DEFINER + admin-gated).
-- Admin settings panel inside `/admin/payments` to CRUD receiving accounts.
-- Polling + manual refresh on both sides (no financial realtime).
-
-# Pass 3 — Two-sided OM reconciliation queue
-
-Goal: customer code + admin OM receipt match automatically and credit wallet idempotently.
-
-- New tables: `om_customer_confirmations`, `om_admin_receipts`, `om_reconciliation_matches` with strict RLS.
-- RPCs (all SECURITY DEFINER, idempotent):
-  - `submit_customer_om_code(payment_intent_id, code)` — owner-only.
-  - `submit_admin_om_receipt(code, amount, receiving_account_id, payer_phone, note)` — finance/god only.
-  - `reconcile_om_topup(...)` — normalizes code, matches code+amount, on success calls existing confirm path to credit wallet via `wallet_transactions`. Conflicts/duplicates marked for review, never credited.
-- Customer UI: after top-up intent, second step "Coller le code Orange Money".
-- Admin UI: new "Réconciliation OM" tab with the 4 queues (waiting admin / waiting customer / matched / conflicts) + quick-entry form.
-- Command Center counts wired to real pending/conflict counts.
-
-# Pass 4 — Admin mock-data sweep
-
-Per-tab pass replacing `MOCK` arrays with real queries or honest `À connecter` empty states. Tabs: `UsersAdmin`, `DriversAdmin`, `MerchantsAdmin`, `OrdersAdmin`, `RepasAdmin`, `MarcheAdmin`, `RiskAdmin`, `PromotionsAdmin`, `ZonesAdmin`, `ReportsAdmin`, `NotificationsAdmin`, `LiveOps`, `AdminDashboard`, `PilotCommandCenter`, `WalletAdmin`. No fake users, ledgers, charts, or `Math.random`.
-
-# Security invariants kept across all passes
-
-- No frontend wallet credit.
-- No self-confirm of own top-ups.
-- Financial realtime stays off — polling + visibilitychange + manual refresh.
-- All new tables: explicit `GRANT`s, RLS enabled, anon has no access to payment data.
-- Existing security scan findings stay fixed; `security--run_security_scan` re-run after each migration.
-
-# What I need from you
-
-1. Approve this 4-pass split (or tell me to collapse / reorder).
-2. Confirm: use `payment_intents` as the single source of truth for wallet top-ups, and treat any existing `topup_requests` table as legacy to deprecate/link — not maintain in parallel.
-3. Confirm Pass 1 (audit) lands first as a written report, no code, so we lock the model before migrations.
-
-Once approved I'll start with the audit and report back before any DB or code changes.
+## Build rule
+Never degrade a locked milestone. Each new pass must leave all prior milestones intact.
