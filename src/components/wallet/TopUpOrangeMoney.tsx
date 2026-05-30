@@ -303,23 +303,47 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
               </ol>
             </div>
 
-            <div className="rounded-2xl bg-muted/40 border border-border/60 p-3 flex items-center gap-2">
-              {review ? (
-                <>
-                  <ShieldCheck className="w-4 h-4 text-secondary-foreground shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Paiement reçu — en cours de vérification par le support CHOPCHOP.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Recharge Orange Money demandée. Confirmez sur votre téléphone.
-                  </p>
-                </>
-              )}
-            </div>
+            {/* Customer OM confirmation code submission */}
+            {!topup.customer_om_code_submitted_at ? (
+              <div className="rounded-3xl bg-card border border-border p-4 space-y-2 shadow-card">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-semibold">Collez votre code Orange Money</p>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Après l'envoi, OM vous donne un code de confirmation. Collez-le ici pour accélérer la vérification.
+                </p>
+                <Input
+                  value={omCode}
+                  onChange={(e) => setOmCode(e.target.value)}
+                  placeholder="ex. ABC123XYZ"
+                  maxLength={40}
+                  className="font-mono"
+                />
+                <Button onClick={submitOmCode} disabled={submittingCode || omCode.trim().length < 4} className="w-full">
+                  {submittingCode ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Envoyer le code
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-muted/40 border border-border/60 p-3 flex items-center gap-2">
+                {review ? (
+                  <>
+                    <ShieldCheck className="w-4 h-4 text-secondary-foreground shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      Recharge en vérification. Le support CHOPCHOP va examiner la transaction.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Hourglass className="w-4 h-4 text-primary shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      Code reçu. Nous attendons la confirmation CHOPCHOP.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
