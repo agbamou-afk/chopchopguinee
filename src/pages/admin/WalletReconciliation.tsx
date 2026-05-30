@@ -106,6 +106,20 @@ export default function WalletReconciliation() {
     }
   }, [activeOMAccounts, mAccountId]);
 
+  // Load receiving accounts at page level so the customer tab can show context
+  // even before the "Comptes OM" tab is opened.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("payment_receiving_accounts")
+        .select("*")
+        .order("updated_at", { ascending: false });
+      if (!cancelled) setReceivingAccounts((data ?? []) as ReceivingAccount[]);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
