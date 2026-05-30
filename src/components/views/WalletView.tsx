@@ -97,6 +97,17 @@ export function WalletView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
+  // Deep-link from the home WalletHero Recharger button: open the top-up
+  // sheet straight away instead of leaving the user on the wallet home.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("cc:open_topup") === "1") {
+        sessionStorage.removeItem("cc:open_topup");
+        setTopUpOpen(true);
+      }
+    } catch {}
+  }, []);
+
   const filteredTransactions = useMemo(() => {
     const now = Date.now();
     return transactions.filter((tx) => {
