@@ -57,6 +57,8 @@ type CustomerTopupRow = {
   created_at: string;
   expires_at: string;
   receiving_account_id: string | null;
+  customer_om_code_submitted_at?: string | null;
+  customer_om_code_normalized?: string | null;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -136,7 +138,7 @@ export default function WalletReconciliation() {
     setCustomerLoading(true);
     const { data, error } = await supabase
       .from("topup_requests")
-      .select("id, reference, client_user_id, amount_gnf, status, provider, user_phone, created_at, expires_at, receiving_account_id")
+      .select("id, reference, client_user_id, amount_gnf, status, provider, user_phone, created_at, expires_at, receiving_account_id, customer_om_code_submitted_at, customer_om_code_normalized")
       .order("created_at", { ascending: false })
       .limit(300);
     if (error) toast.error(error.message);
