@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Copy, Check, Smartphone, Clock, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Loader2, Copy, Check, Smartphone, Clock, ShieldCheck, ArrowLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -17,6 +17,14 @@ type TopupRow = {
   transaction_id: string | null;
 };
 
+type ReceivingAccount = {
+  id: string;
+  provider: string;
+  label: string;
+  phone_e164: string;
+  public_instructions: string | null;
+};
+
 const QUICK_AMOUNTS = [10000, 25000, 50000, 100000, 250000, 500000];
 
 export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
@@ -24,22 +32,38 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
   const [amount, setAmount] = useState<number>(50000);
   const [creating, setCreating] = useState(false);
   const [topup, setTopup] = useState<TopupRow | null>(null);
-  const [merchant, setMerchant] = useState<string>("+224 620 00 00 00");
+  const [accounts, setAccounts] = useState<ReceivingAccount[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [accountsLoading, setAccountsLoading] = useState(true);
   const [copied, setCopied] = useState<"ref" | "msisdn" | null>(null);
   const [now, setNow] = useState(Date.now());
 
-  // Load merchant MSISDN from app_settings.orange_money
+  // Load admin-configured active Orange Money receiving accounts.
   useEffect(() => {
-    supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "orange_money")
-      .maybeSingle()
-      .then(({ data }) => {
-        const v = (data?.value ?? {}) as { merchant_msisdn?: string };
-        if (v.merchant_msisdn && v.merchant_msisdn.trim()) setMerchant(v.merchant_msisdn);
-      });
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc("get_active_payment_receiving_accounts");
+      if (cancelled) return;
+      if (error) {
+        setAccounts([]);
+      } else {
+        const rows = ((data ?? []) as ReceivingAccount[]).filter(
+          (r) => r.provider === "orange_money",
+        );
+        setAccounts(rows);
+        if (rows.length > 0) setSelectedAccountId(rows[0].id);
+      }
+      setAccountsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const activeAccount = useMemo(
+    () => accounts.find((a) => a.id === selectedAccountId) ?? accounts[0] ?? null,
+    [accounts, selectedAccountId],
+  );
 
   // Live status — subscribe to the topup row
   // Live status — financial realtime is disabled for security, so poll on a
@@ -86,12 +110,19 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
       toast.error("Montant minimum: 1 000 GNF");
       return;
     }
+    if (!activeAccount) {
+      toast.error("Recharge Orange Money indisponible pour le moment.");
+      return;
+    }
     if (!ensureOnlineForFinancialAction()) {
       toast.error("Connexion indisponible. Réessayez quand vous serez en ligne.");
       return;
     }
     setCreating(true);
-    const { data, error } = await supabase.rpc("wallet_topup_om_create", { p_amount_gnf: amount });
+    const { data, error } = await supabase.rpc("wallet_topup_om_create", {
+      p_amount_gnf: amount,
+      p_receiving_account_id: activeAccount.id,
+    });
     setCreating(false);
     if (error) {
       toast.error(error.message);
