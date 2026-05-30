@@ -338,18 +338,27 @@ export default function WalletReconciliation() {
   return (
     <ModulePage module="wallet" title="Réconciliation Orange Money" subtitle="Suivi des paiements et rapprochement des recharges">
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="customer">Demandes clients</TabsTrigger>
-          <TabsTrigger value="accounts">Comptes OM</TabsTrigger>
-          <TabsTrigger value="auto">Auto-créditées</TabsTrigger>
-          <TabsTrigger value="pending">En attente</TabsTrigger>
-          <TabsTrigger value="review">À revoir</TabsTrigger>
-          <TabsTrigger value="expired">Expirées</TabsTrigger>
-          <TabsTrigger value="suspicious">Suspectes</TabsTrigger>
-          <TabsTrigger value="import">Import CSV</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 h-auto">
+          <TabsTrigger value="demandes" className="text-[11px]">
+            Demandes <Badge variant="outline" className="ml-1 text-[9px]">{qDemandes.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="code_waiting" className="text-[11px]">
+            Codes clients <Badge variant="outline" className="ml-1 text-[9px]">{qCustomerCodeWaiting.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="receipts_waiting" className="text-[11px]">
+            Reçus en attente <Badge variant="outline" className="ml-1 text-[9px]">{qReceiptsWaiting.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="reconciled" className="text-[11px]">
+            Réconciliés <Badge variant="outline" className="ml-1 text-[9px]">{qReconciled.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="conflicts" className="text-[11px]">
+            Conflits <Badge variant="outline" className="ml-1 text-[9px]">{qConflicts.length + qTopupConflicts.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="accounts" className="text-[11px]">Comptes OM</TabsTrigger>
+          <TabsTrigger value="import" className="text-[11px]">Import CSV</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="customer" className="mt-4 space-y-4">
+        <TabsContent value="demandes" className="mt-4 space-y-4">
           {activeOMAccounts.length === 0 && (
             <Card className="p-3 bg-destructive/10 border-destructive/30">
               <div className="flex items-start gap-2">
@@ -362,7 +371,7 @@ export default function WalletReconciliation() {
             </Card>
           )}
           {/* Manual OM receipt entry */}
-          <Card className="p-4 space-y-3">
+          <Card ref={formRef} className="p-4 space-y-3">
             <div className="flex items-center gap-2">
               <Send className="w-4 h-4 text-primary" />
               <p className="font-semibold text-sm">Saisie manuelle d'un reçu Orange Money</p>
@@ -415,17 +424,17 @@ export default function WalletReconciliation() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Inbox className="w-4 h-4" />
-              <p className="text-sm font-semibold">Demandes clients en attente</p>
+              <p className="text-sm font-semibold">Demandes clients</p>
             </div>
-            <Button variant="outline" size="sm" onClick={loadCustomerTopups} disabled={customerLoading}>
+            <Button variant="outline" size="sm" onClick={refreshAll} disabled={customerLoading}>
               <RefreshCcw className={`w-4 h-4 mr-1 ${customerLoading ? "animate-spin" : ""}`} /> Rafraîchir
             </Button>
           </div>
           <Card className="p-0 overflow-hidden">
             {customerLoading ? (
               <div className="p-12 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
-            ) : customerFiltered.length === 0 ? (
-              <div className="p-12 text-center text-muted-foreground text-sm">Aucune demande client en attente.</div>
+            ) : qDemandes.length === 0 ? (
+              <div className="p-12 text-center text-muted-foreground text-sm">Aucune demande client.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -436,14 +445,15 @@ export default function WalletReconciliation() {
                       <th className="p-3">Téléphone client</th>
                       <th className="p-3">Compte réception</th>
                       <th className="p-3 text-right">Montant</th>
-                      <th className="p-3">Statut</th>
+                      <th className="p-3">Code client</th>
                       <th className="p-3">Expire</th>
                       <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {customerFiltered.map((t) => {
+                    {qDemandes.map((t) => {
                       const ra = receivingAccounts.find((a) => a.id === t.receiving_account_id);
+                      const hasCode = !!t.customer_om_code_submitted_at;
                       return (
                       <tr key={t.id} className="border-t">
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.created_at)}</td>
@@ -453,7 +463,13 @@ export default function WalletReconciliation() {
                           {ra ? `${ra.label} · ${ra.phone_e164}` : "—"}
                         </td>
                         <td className="p-3 text-right font-medium">{formatGNF(t.amount_gnf)}</td>
-                        <td className="p-3"><Badge variant="outline" className="text-[10px]">{t.status}</Badge></td>
+                        <td className="p-3">
+                          {hasCode ? (
+                            <Badge className="text-[10px] bg-primary/15 text-primary border-primary/30">Code client reçu</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px]">Code non reçu</Badge>
+                          )}
+                        </td>
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.expires_at)}</td>
                         <td className="p-3 text-right">
                           <Button size="sm" variant="ghost" disabled={acting} onClick={() => cancelTopup(t.id)}>
@@ -473,46 +489,108 @@ export default function WalletReconciliation() {
           </p>
         </TabsContent>
 
-        <TabsContent value="accounts" className="mt-4">
-          <PaymentReceivingAccountsManager onChange={setReceivingAccounts} />
+        {/* B. Codes clients en attente admin */}
+        <TabsContent value="code_waiting" className="mt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <KeyRound className="w-4 h-4" />
+              <p className="text-sm font-semibold">Codes clients en attente admin</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={refreshAll}>
+              <RefreshCcw className="w-4 h-4 mr-1" /> Rafraîchir
+            </Button>
+          </div>
+          <Card className="p-0 overflow-hidden">
+            {customerLoading ? (
+              <div className="p-12 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            ) : qCustomerCodeWaiting.length === 0 ? (
+              <div className="p-12 text-center text-muted-foreground text-sm">Aucun code client en attente.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-left">
+                    <tr>
+                      <th className="p-3">Soumis</th>
+                      <th className="p-3">Client</th>
+                      <th className="p-3">Code OM</th>
+                      <th className="p-3 text-right">Montant</th>
+                      <th className="p-3">Compte réception</th>
+                      <th className="p-3">Statut</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {qCustomerCodeWaiting.map((t) => {
+                      const ra = receivingAccounts.find((a) => a.id === t.receiving_account_id);
+                      return (
+                        <tr key={t.id} className="border-t">
+                          <td className="p-3 text-xs whitespace-nowrap">
+                            {t.customer_om_code_submitted_at ? fmtDate(t.customer_om_code_submitted_at) : "—"}
+                          </td>
+                          <td className="p-3 text-xs">{t.user_phone ?? "—"}</td>
+                          <td className="p-3 font-mono text-xs">{t.customer_om_code_normalized ?? "—"}</td>
+                          <td className="p-3 text-right font-medium">{formatGNF(t.amount_gnf)}</td>
+                          <td className="p-3 text-xs">{ra ? `${ra.label} · ${ra.phone_e164}` : "—"}</td>
+                          <td className="p-3">
+                            <Badge variant="outline" className="text-[10px]">
+                              {t.status === "matched" ? "Code client reçu" : t.status === "needs_review" ? "À vérifier" : "En attente reçu OM"}
+                            </Badge>
+                          </td>
+                          <td className="p-3 text-right">
+                            <Button size="sm" onClick={() => prefillFromCustomerCode(t)}>
+                              <Send className="w-3.5 h-3.5 mr-1" /> Entrer reçu OM
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
         </TabsContent>
 
-        {(["auto","pending","review","expired","suspicious"] as const).map((k) => (
-          <TabsContent key={k} value={k} className="mt-4">
-            <div className="flex justify-end mb-2">
-              <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-                <RefreshCcw className={`w-4 h-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Rafraîchir
-              </Button>
+        {/* C. Reçus OM en attente client */}
+        <TabsContent value="receipts_waiting" className="mt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              <p className="text-sm font-semibold">Reçus OM en attente client</p>
             </div>
-            <Card className="p-0 overflow-hidden">
-              {loading ? (
-                <div className="p-12 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
-              ) : filtered.length === 0 ? (
-                <div className="p-12 text-center text-muted-foreground text-sm">Aucun élément.</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50 text-left">
-                      <tr>
-                        <th className="p-3">Date</th>
-                        <th className="p-3">Tx ID</th>
-                        <th className="p-3">Téléphone</th>
-                        <th className="p-3 text-right">Montant</th>
-                        <th className="p-3">Statut</th>
-                        <th className="p-3">Notes</th>
-                        <th className="p-3 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filtered.map((e) => (
+            <Button variant="outline" size="sm" onClick={refreshAll}>
+              <RefreshCcw className="w-4 h-4 mr-1" /> Rafraîchir
+            </Button>
+          </div>
+          <Card className="p-0 overflow-hidden">
+            {loading ? (
+              <div className="p-12 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            ) : qReceiptsWaiting.length === 0 ? (
+              <div className="p-12 text-center text-muted-foreground text-sm">Aucun reçu OM en attente client.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-left">
+                    <tr>
+                      <th className="p-3">Reçu le</th>
+                      <th className="p-3">Code OM</th>
+                      <th className="p-3 text-right">Montant</th>
+                      <th className="p-3">Payeur</th>
+                      <th className="p-3">Compte réception</th>
+                      <th className="p-3">Note</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {qReceiptsWaiting.map((e) => {
+                      const ra = receivingAccounts.find((a) => a.id === (e.receiving_account_id ?? (e.raw_payload as { receiving_account_id?: string })?.receiving_account_id));
+                      return (
                         <tr key={e.id} className="border-t">
                           <td className="p-3 text-xs whitespace-nowrap">{fmtDate(e.created_at)}</td>
-                          <td className="p-3 font-mono text-xs">{e.provider_transaction_id}</td>
-                          <td className="p-3 text-xs">{e.payer_phone ?? "—"}</td>
+                          <td className="p-3 font-mono text-xs">{e.om_code_normalized ?? e.provider_transaction_id}</td>
                           <td className="p-3 text-right font-medium">{formatGNF(e.amount_gnf)}</td>
-                          <td className="p-3">
-                            <Badge variant="outline" className="text-[10px]">{STATUS_LABEL[e.processing_status] ?? e.processing_status}</Badge>
-                          </td>
+                          <td className="p-3 text-xs">{e.payer_phone ?? "—"}</td>
+                          <td className="p-3 text-xs">{ra ? `${ra.label} · ${ra.phone_e164}` : "—"}</td>
                           <td className="p-3 text-xs text-muted-foreground max-w-[180px] truncate">{e.notes ?? "—"}</td>
                           <td className="p-3 text-right">
                             <Button size="sm" variant="ghost" onClick={() => openReview(e)}>
@@ -520,14 +598,135 @@ export default function WalletReconciliation() {
                             </Button>
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
-          </TabsContent>
-        ))}
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* D. Réconciliés */}
+        <TabsContent value="reconciled" className="mt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-success" />
+              <p className="text-sm font-semibold">Réconciliés</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={refreshAll}>
+              <RefreshCcw className="w-4 h-4 mr-1" /> Rafraîchir
+            </Button>
+          </div>
+          <Card className="p-0 overflow-hidden">
+            {loading ? (
+              <div className="p-12 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            ) : qReconciled.length === 0 ? (
+              <div className="p-12 text-center text-muted-foreground text-sm">Aucune recharge réconciliée.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-left">
+                    <tr>
+                      <th className="p-3">Crédité le</th>
+                      <th className="p-3">Code OM</th>
+                      <th className="p-3">Payeur</th>
+                      <th className="p-3 text-right">Montant</th>
+                      <th className="p-3">Compte</th>
+                      <th className="p-3">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {qReconciled.map((e) => {
+                      const ra = receivingAccounts.find((a) => a.id === (e.receiving_account_id ?? (e.raw_payload as { receiving_account_id?: string })?.receiving_account_id));
+                      return (
+                        <tr key={e.id} className="border-t">
+                          <td className="p-3 text-xs whitespace-nowrap">{e.processed_at ? fmtDate(e.processed_at) : fmtDate(e.created_at)}</td>
+                          <td className="p-3 font-mono text-xs">{e.om_code_normalized ?? e.provider_transaction_id}</td>
+                          <td className="p-3 text-xs">{e.payer_phone ?? "—"}</td>
+                          <td className="p-3 text-right font-medium">{formatGNF(e.amount_gnf)}</td>
+                          <td className="p-3 text-xs">{ra ? `${ra.label} · ${ra.phone_e164}` : "—"}</td>
+                          <td className="p-3">
+                            <Badge className="text-[10px] bg-success/15 text-success border-success/30">
+                              <Wallet className="w-3 h-3 mr-1" /> Crédité
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* E. Conflits / à vérifier */}
+        <TabsContent value="conflicts" className="mt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-destructive" />
+              <p className="text-sm font-semibold">Conflits / à vérifier</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={refreshAll}>
+              <RefreshCcw className="w-4 h-4 mr-1" /> Rafraîchir
+            </Button>
+          </div>
+          <Card className="p-0 overflow-hidden">
+            {loading ? (
+              <div className="p-12 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            ) : qConflicts.length === 0 && qTopupConflicts.length === 0 ? (
+              <div className="p-12 text-center text-muted-foreground text-sm">Aucun conflit à vérifier.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-left">
+                    <tr>
+                      <th className="p-3">Source</th>
+                      <th className="p-3">Date</th>
+                      <th className="p-3">Code OM</th>
+                      <th className="p-3 text-right">Montant</th>
+                      <th className="p-3">Raison</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {qConflicts.map((e) => (
+                      <tr key={`e-${e.id}`} className="border-t">
+                        <td className="p-3"><Badge variant="outline" className="text-[10px]">Reçu admin</Badge></td>
+                        <td className="p-3 text-xs whitespace-nowrap">{fmtDate(e.created_at)}</td>
+                        <td className="p-3 font-mono text-xs">{e.om_code_normalized ?? e.provider_transaction_id}</td>
+                        <td className="p-3 text-right font-medium">{formatGNF(e.amount_gnf)}</td>
+                        <td className="p-3 text-xs text-muted-foreground max-w-[220px] truncate">{e.notes ?? STATUS_LABEL[e.processing_status] ?? e.processing_status}</td>
+                        <td className="p-3 text-right">
+                          <Button size="sm" variant="ghost" onClick={() => openReview(e)}>
+                            <Eye className="w-3.5 h-3.5 mr-1" /> Détails
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                    {qTopupConflicts.map((t) => (
+                      <tr key={`t-${t.id}`} className="border-t">
+                        <td className="p-3"><Badge variant="outline" className="text-[10px]">Demande client</Badge></td>
+                        <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.created_at)}</td>
+                        <td className="p-3 font-mono text-xs">{t.customer_om_code_normalized ?? "—"}</td>
+                        <td className="p-3 text-right font-medium">{formatGNF(t.amount_gnf)}</td>
+                        <td className="p-3 text-xs text-muted-foreground">À vérifier</td>
+                        <td className="p-3 text-right">
+                          <span className="text-[11px] text-muted-foreground">À traiter manuellement</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="accounts" className="mt-4">
+          <PaymentReceivingAccountsManager onChange={setReceivingAccounts} />
+        </TabsContent>
 
         <TabsContent value="import" className="mt-4">
           <Card className="p-5 space-y-3">
