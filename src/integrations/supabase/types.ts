@@ -4122,6 +4122,70 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      wallet_topup_admin_cancel: {
+        Args: { p_reason?: string; p_topup_id: string }
+        Returns: {
+          agent_user_id: string | null
+          amount_gnf: number
+          cancelled_reason: string | null
+          client_user_id: string
+          confirmation_code: string
+          confirmed_at: string | null
+          created_at: string
+          customer_om_code_normalized: string | null
+          customer_om_code_raw: string | null
+          customer_om_code_submitted_at: string | null
+          expires_at: string
+          id: string
+          matched_provider_transaction_id: string | null
+          notes: string | null
+          provider: string
+          receiving_account_id: string | null
+          reference: string
+          status: Database["public"]["Enums"]["topup_status"]
+          transaction_id: string | null
+          updated_at: string
+          user_phone: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "topup_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wallet_topup_admin_mark_expired: {
+        Args: { p_reason?: string; p_topup_id: string }
+        Returns: {
+          agent_user_id: string | null
+          amount_gnf: number
+          cancelled_reason: string | null
+          client_user_id: string
+          confirmation_code: string
+          confirmed_at: string | null
+          created_at: string
+          customer_om_code_normalized: string | null
+          customer_om_code_raw: string | null
+          customer_om_code_submitted_at: string | null
+          expires_at: string
+          id: string
+          matched_provider_transaction_id: string | null
+          notes: string | null
+          provider: string
+          receiving_account_id: string | null
+          reference: string
+          status: Database["public"]["Enums"]["topup_status"]
+          transaction_id: string | null
+          updated_at: string
+          user_phone: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "topup_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       wallet_topup_cancel: {
         Args: { p_reason?: string; p_topup_id: string }
         Returns: {

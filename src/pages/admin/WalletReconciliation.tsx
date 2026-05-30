@@ -272,13 +272,26 @@ export default function WalletReconciliation() {
 
   const cancelTopup = async (topupId: string) => {
     setActing(true);
-    const { error } = await supabase.rpc("wallet_topup_cancel", {
+    const { error } = await supabase.rpc("wallet_topup_admin_cancel" as never, {
       p_topup_id: topupId,
       p_reason: "Annulé manuellement par admin",
-    });
+    } as never);
     setActing(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Demande annulée");
+    void loadCustomerTopups();
+  };
+
+  const expireTopup = async (topupId: string) => {
+    if (!confirm("Marquer cette demande comme expirée ? Cette action est journalisée.")) return;
+    setActing(true);
+    const { error } = await supabase.rpc("wallet_topup_admin_mark_expired" as never, {
+      p_topup_id: topupId,
+      p_reason: "Marquée expirée par admin",
+    } as never);
+    setActing(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Demande marquée expirée");
     void loadCustomerTopups();
   };
 
@@ -451,10 +464,12 @@ export default function WalletReconciliation() {
                     </tr>
                   </thead>
                   <tbody>
-                    {qDemandes.map((t) => {
-                      const ra = receivingAccounts.find((a) => a.id === t.receiving_account_id);
-                      const hasCode = !!t.customer_om_code_submitted_at;
-                      return (
+                      {qDemandes.map((t) => {
+                       const ra = receivingAccounts.find((a) => a.id === t.receiving_account_id);
+                       const hasCode = !!t.customer_om_code_submitted_at;
+                       const isStale = new Date(t.expires_at).getTime() < Date.now()
+                         || (Date.now() - new Date(t.created_at).getTime()) > 24 * 3600 * 1000;
+                       return (
                       <tr key={t.id} className="border-t">
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.created_at)}</td>
                         <td className="p-3 font-mono text-xs">{t.reference}</td>
@@ -472,9 +487,17 @@ export default function WalletReconciliation() {
                         </td>
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.expires_at)}</td>
                         <td className="p-3 text-right">
-                          <Button size="sm" variant="ghost" disabled={acting} onClick={() => cancelTopup(t.id)}>
-                            <X className="w-3.5 h-3.5 mr-1" /> Annuler
-                          </Button>
+                          {hasCode ? (
+                            <Badge variant="outline" className="text-[10px]">Vérification en cours</Badge>
+                          ) : isStale ? (
+                            <Button size="sm" variant="ghost" disabled={acting} onClick={() => expireTopup(t.id)}>
+                              <Clock className="w-3.5 h-3.5 mr-1" /> Marquer expirée
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="ghost" disabled={acting} onClick={() => cancelTopup(t.id)}>
+                              <X className="w-3.5 h-3.5 mr-1" /> Annuler
+                            </Button>
+                          )}
                         </td>
                       </tr>
                       );
