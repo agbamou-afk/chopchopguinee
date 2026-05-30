@@ -23,3 +23,5 @@ project_id = "azbhteplbdwuqdlzadjx"
     verify_jwt = true
   [functions.maps-eta]
     verify_jwt = true
+  [functions.maps-config]
+    verify_jwt = true
