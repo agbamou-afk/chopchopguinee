@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Activity, Users, Bike, Store, Wallet, Coins, Tag,
-  ClipboardList, UtensilsCrossed, ShoppingBag, LifeBuoy, ShieldAlert,
+  ClipboardList, UtensilsCrossed, ShoppingBag, LifeBuoy, ShieldAlert, Smartphone,
   MessageSquare, Megaphone, BarChart3, MapPin, ToggleLeft, Settings,
   UserCog, ScrollText, Sparkles, Scale, Radar,
 } from "lucide-react";
@@ -42,6 +42,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
       { title: "Agents de recharge", url: "/admin/vendors", icon: Coins, module: "vendors" },
       { title: "Wallet / Ledger", url: "/admin/wallet", icon: Wallet, module: "wallet" },
       { title: "Réconciliation OM", url: "/admin/wallet/reconciliation", icon: Scale, module: "wallet" },
+      { title: "Comptes OM", url: "/admin/wallet/reconciliation?tab=accounts", icon: Smartphone, module: "wallet" },
       { title: "Paiements (intents)", url: "/admin/payments", icon: Coins, module: "payments" },
       { title: "Tarification", url: "/admin/pricing", icon: Tag, module: "pricing" },
       { title: "Rapports", url: "/admin/reports", icon: BarChart3, module: "reports" },
@@ -70,10 +71,22 @@ const GROUPS: { label: string; items: Item[] }[] = [
 export function AdminSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { can } = useAdminAuth();
-  const isActive = (url: string) =>
-    url === "/admin" ? pathname === "/admin" : pathname === url || pathname.startsWith(url + "/");
+  const isActive = (url: string) => {
+    const [path, query] = url.split("?");
+    const currentTab = new URLSearchParams(search).get("tab");
+    if (path === "/admin") return pathname === "/admin";
+    const pathMatch = pathname === path || pathname.startsWith(path + "/");
+    if (!pathMatch) return false;
+    if (query) {
+      const want = new URLSearchParams(query).get("tab");
+      return currentTab === want;
+    }
+    // For the bare path, only active when no tab param is set OR when the
+    // current tab is not one we expose as a separate sidebar entry.
+    return currentTab !== "accounts";
+  };
 
   const handleNav = () => { if (isMobile) setOpenMobile(false); };
 

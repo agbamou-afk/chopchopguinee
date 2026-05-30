@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Loader2, Check, X, AlertTriangle, FileUp, RefreshCcw, Eye, ShieldAlert, Inbox, Send, KeyRound, Clock, CheckCircle2, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -79,7 +80,20 @@ function fmtDate(iso: string) {
 }
 
 export default function WalletReconciliation() {
-  const [tab, setTab] = useState("demandes");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "demandes";
+  const [tab, setTab] = useState(initialTab);
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t && t !== tab) setTab(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+  const onTabChange = (v: string) => {
+    setTab(v);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", v);
+    setSearchParams(next, { replace: true });
+  };
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
@@ -350,7 +364,7 @@ export default function WalletReconciliation() {
 
   return (
     <ModulePage module="wallet" title="Réconciliation Orange Money" subtitle="Suivi des paiements et rapprochement des recharges">
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={onTabChange}>
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 h-auto">
           <TabsTrigger value="demandes" className="text-[11px]">
             Demandes <Badge variant="outline" className="ml-1 text-[9px]">{qDemandes.length}</Badge>
