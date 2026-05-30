@@ -4301,7 +4301,13 @@ export type Database = {
       }
     }
     Enums: {
-      admin_role: "super_admin" | "ops_admin" | "finance_admin"
+      admin_role:
+        | "super_admin"
+        | "ops_admin"
+        | "finance_admin"
+        | "god_admin"
+        | "operations_admin"
+        | "support_admin"
       admin_user_status: "active" | "suspended"
       ai_assistant_kind: "admin" | "support" | "marche" | "fraud"
       ai_request_status: "ok" | "error" | "rate_limited" | "blocked"
@@ -4635,7 +4641,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      admin_role: ["super_admin", "ops_admin", "finance_admin"],
+      admin_role: [
+        "super_admin",
+        "ops_admin",
+        "finance_admin",
+        "god_admin",
+        "operations_admin",
+        "support_admin",
+      ],
       admin_user_status: ["active", "suspended"],
       ai_assistant_kind: ["admin", "support", "marche", "fraud"],
       ai_request_status: ["ok", "error", "rate_limited", "blocked"],
