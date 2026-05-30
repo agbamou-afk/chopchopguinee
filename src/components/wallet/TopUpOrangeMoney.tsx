@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Copy, Check, Smartphone, Clock, ShieldCheck, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Loader2, Copy, Check, Smartphone, Clock, ShieldCheck, ArrowLeft, AlertTriangle, KeyRound, Hourglass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -14,7 +14,7 @@ type TopupRow = {
   amount_gnf: number;
   status: string;
   expires_at: string;
-  transaction_id: string | null;
+  customer_om_code_submitted_at?: string | null;
 };
 
 type ReceivingAccount = {
@@ -37,6 +37,8 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [copied, setCopied] = useState<"ref" | "msisdn" | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [omCode, setOmCode] = useState("");
+  const [submittingCode, setSubmittingCode] = useState(false);
 
   // Load admin-configured active Orange Money receiving accounts.
   useEffect(() => {
@@ -67,20 +69,19 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
 
   // Live status — subscribe to the topup row
   // Live status — financial realtime is disabled for security, so poll on a
-  // gentle interval and on tab visibility changes until the request reaches
-  // a terminal state.
+  // gentle interval (via sanitized SECURITY DEFINER RPC) and on tab
+  // visibility changes until the request reaches a terminal state.
   useEffect(() => {
     if (!topup) return;
     const terminal = ["credited", "expired", "failed", "cancelled"].includes(topup.status);
     if (terminal) return;
     let cancelled = false;
     const refetch = async () => {
-      const { data } = await supabase
-        .from("topup_requests")
-        .select("id, reference, amount_gnf, status, expires_at, transaction_id")
-        .eq("id", topup.id)
-        .maybeSingle();
-      if (!cancelled && data) setTopup(data as TopupRow);
+      const { data } = await supabase.rpc("get_my_topup_om_status", { p_topup_id: topup.id });
+      const row = Array.isArray(data) ? data[0] : null;
+      if (!cancelled && row) {
+        setTopup((prev) => prev ? { ...prev, ...row } : prev);
+      }
     };
     const interval = setInterval(() => {
       if (typeof document === "undefined" || document.visibilityState === "visible") {
@@ -129,7 +130,41 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
       return;
     }
     setTopup(data as unknown as TopupRow);
+    setOmCode("");
     setStep("instructions");
+  };
+
+  const submitOmCode = async () => {
+    if (!topup) return;
+    const code = omCode.trim();
+    if (code.length < 4) {
+      toast.error("Code Orange Money trop court");
+      return;
+    }
+    if (!ensureOnlineForFinancialAction()) {
+      toast.error("Connexion indisponible. Réessayez quand vous serez en ligne.");
+      return;
+    }
+    setSubmittingCode(true);
+    const { data, error } = await supabase.rpc("submit_customer_om_code", {
+      p_topup_request_id: topup.id,
+      p_om_code: code,
+    });
+    setSubmittingCode(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    const result = (data ?? {}) as { status?: string; reason?: string };
+    if (result.status === "needs_review") {
+      toast.warning("Code reçu — vérification nécessaire");
+    } else {
+      toast.success("Code envoyé · en attente de confirmation");
+    }
+    // Refresh status
+    const { data: row } = await supabase.rpc("get_my_topup_om_status", { p_topup_id: topup.id });
+    const r = Array.isArray(row) ? row[0] : null;
+    if (r) setTopup((prev) => prev ? { ...prev, ...r } : prev);
   };
 
   const copy = async (text: string, kind: "ref" | "msisdn") => {
