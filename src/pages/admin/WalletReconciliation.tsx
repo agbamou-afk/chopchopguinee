@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Loader2, Check, X, AlertTriangle, FileUp, RefreshCcw, Eye, ShieldAlert, Inbox, Send, KeyRound, Clock, CheckCircle2, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
