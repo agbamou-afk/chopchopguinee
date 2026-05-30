@@ -364,7 +364,7 @@ export default function WalletReconciliation() {
 
   return (
     <ModulePage module="wallet" title="Réconciliation Orange Money" subtitle="Suivi des paiements et rapprochement des recharges">
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={onTabChange}>
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 h-auto">
           <TabsTrigger value="demandes" className="text-[11px]">
             Demandes <Badge variant="outline" className="ml-1 text-[9px]">{qDemandes.length}</Badge>
