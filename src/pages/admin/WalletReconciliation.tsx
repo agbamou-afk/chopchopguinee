@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { ModulePage } from "@/components/admin/ModulePage";
 import { formatGNF } from "@/lib/format";
 import { toast } from "sonner";
+import { PaymentReceivingAccountsManager, type ReceivingAccount } from "@/components/admin/PaymentReceivingAccountsManager";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Event = {
   id: string;
@@ -54,6 +56,7 @@ type CustomerTopupRow = {
   user_phone: string | null;
   created_at: string;
   expires_at: string;
+  receiving_account_id: string | null;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -89,6 +92,33 @@ export default function WalletReconciliation() {
   const [mPhone, setMPhone] = useState("");
   const [mNote, setMNote] = useState("");
   const [mSubmitting, setMSubmitting] = useState(false);
+  const [mAccountId, setMAccountId] = useState<string>("");
+  const [receivingAccounts, setReceivingAccounts] = useState<ReceivingAccount[]>([]);
+
+  const activeOMAccounts = useMemo(
+    () => receivingAccounts.filter((a) => a.provider === "orange_money" && a.is_active),
+    [receivingAccounts],
+  );
+
+  useEffect(() => {
+    if (!mAccountId && activeOMAccounts.length > 0) {
+      setMAccountId(activeOMAccounts[0].id);
+    }
+  }, [activeOMAccounts, mAccountId]);
+
+  // Load receiving accounts at page level so the customer tab can show context
+  // even before the "Comptes OM" tab is opened.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("payment_receiving_accounts")
+        .select("*")
+        .order("updated_at", { ascending: false });
+      if (!cancelled) setReceivingAccounts((data ?? []) as ReceivingAccount[]);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -106,7 +136,7 @@ export default function WalletReconciliation() {
     setCustomerLoading(true);
     const { data, error } = await supabase
       .from("topup_requests")
-      .select("id, reference, client_user_id, amount_gnf, status, provider, user_phone, created_at, expires_at")
+      .select("id, reference, client_user_id, amount_gnf, status, provider, user_phone, created_at, expires_at, receiving_account_id")
       .order("created_at", { ascending: false })
       .limit(300);
     if (error) toast.error(error.message);
@@ -148,6 +178,8 @@ export default function WalletReconciliation() {
     const amt = Number(mAmount);
     if (!mTxId.trim()) { toast.error("Code/Tx OM requis"); return; }
     if (!amt || amt <= 0) { toast.error("Montant invalide"); return; }
+    const acct = activeOMAccounts.find((a) => a.id === mAccountId) ?? activeOMAccounts[0];
+    if (!acct) { toast.error("Configurez un numéro de réception OM actif"); return; }
     setMSubmitting(true);
     const { data: inserted, error } = await supabase
       .from("payment_provider_events")
@@ -158,7 +190,13 @@ export default function WalletReconciliation() {
         payer_phone: mPhone.trim() || null,
         amount_gnf: amt,
         status: "successful",
-        raw_payload: { source: "admin_manual_entry", note: mNote || null },
+        raw_payload: {
+          source: "admin_manual_entry",
+          note: mNote || null,
+          receiving_account_id: acct.id,
+          receiving_phone: acct.phone_e164,
+          receiving_label: acct.label,
+        },
       })
       .select("id")
       .single();
@@ -241,8 +279,9 @@ export default function WalletReconciliation() {
   return (
     <ModulePage module="wallet" title="Réconciliation Orange Money" subtitle="Suivi des paiements et rapprochement des recharges">
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="customer">Demandes clients</TabsTrigger>
+          <TabsTrigger value="accounts">Comptes OM</TabsTrigger>
           <TabsTrigger value="auto">Auto-créditées</TabsTrigger>
           <TabsTrigger value="pending">En attente</TabsTrigger>
           <TabsTrigger value="review">À revoir</TabsTrigger>
@@ -252,6 +291,17 @@ export default function WalletReconciliation() {
         </TabsList>
 
         <TabsContent value="customer" className="mt-4 space-y-4">
+          {activeOMAccounts.length === 0 && (
+            <Card className="p-3 bg-destructive/10 border-destructive/30">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs">
+                  Aucun numéro de réception Orange Money actif. La recharge OM est désactivée côté client.
+                  Configurez un numéro dans l'onglet « Comptes OM ».
+                </p>
+              </div>
+            </Card>
+          )}
           {/* Manual OM receipt entry */}
           <Card className="p-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -261,6 +311,21 @@ export default function WalletReconciliation() {
             <p className="text-xs text-muted-foreground">
               Saisissez ici le code de confirmation reçu sur le téléphone CHOPCHOP. Le système tentera automatiquement de rapprocher avec une demande client en attente du même montant.
             </p>
+            <div>
+              <Label className="text-[11px]">Numéro CHOPCHOP qui a reçu</Label>
+              <Select value={mAccountId} onValueChange={setMAccountId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={activeOMAccounts.length === 0 ? "Aucun numéro actif" : "Choisir un numéro"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeOMAccounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.label} · {a.phone_e164}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
               <div>
                 <Label htmlFor="m-tx" className="text-[11px]">Code OM</Label>
@@ -280,7 +345,7 @@ export default function WalletReconciliation() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button onClick={submitManualReceipt} disabled={mSubmitting || !mTxId.trim() || !mAmount}>
+              <Button onClick={submitManualReceipt} disabled={mSubmitting || !mTxId.trim() || !mAmount || activeOMAccounts.length === 0}>
                 {mSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
                 Ajouter le reçu
               </Button>
@@ -310,6 +375,7 @@ export default function WalletReconciliation() {
                       <th className="p-3">Créée</th>
                       <th className="p-3">Référence</th>
                       <th className="p-3">Téléphone client</th>
+                      <th className="p-3">Compte réception</th>
                       <th className="p-3 text-right">Montant</th>
                       <th className="p-3">Statut</th>
                       <th className="p-3">Expire</th>
@@ -317,11 +383,16 @@ export default function WalletReconciliation() {
                     </tr>
                   </thead>
                   <tbody>
-                    {customerFiltered.map((t) => (
+                    {customerFiltered.map((t) => {
+                      const ra = receivingAccounts.find((a) => a.id === t.receiving_account_id);
+                      return (
                       <tr key={t.id} className="border-t">
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.created_at)}</td>
                         <td className="p-3 font-mono text-xs">{t.reference}</td>
                         <td className="p-3 text-xs">{t.user_phone ?? "—"}</td>
+                        <td className="p-3 text-xs">
+                          {ra ? `${ra.label} · ${ra.phone_e164}` : "—"}
+                        </td>
                         <td className="p-3 text-right font-medium">{formatGNF(t.amount_gnf)}</td>
                         <td className="p-3"><Badge variant="outline" className="text-[10px]">{t.status}</Badge></td>
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(t.expires_at)}</td>
@@ -331,7 +402,8 @@ export default function WalletReconciliation() {
                           </Button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -340,6 +412,10 @@ export default function WalletReconciliation() {
           <p className="text-[11px] text-muted-foreground">
             Le crédit du wallet est effectué automatiquement par le backend lorsqu'un reçu OM correspond au montant et à une demande client active. Aucun crédit manuel depuis l'interface.
           </p>
+        </TabsContent>
+
+        <TabsContent value="accounts" className="mt-4">
+          <PaymentReceivingAccountsManager onChange={setReceivingAccounts} />
         </TabsContent>
 
         {(["auto","pending","review","expired","suspicious"] as const).map((k) => (
