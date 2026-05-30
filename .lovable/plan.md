@@ -1,89 +1,67 @@
-# CHOPCHOP Permissions, Consent, Terms & Ads-readiness Foundation
 
-A foundation pass for pilot launch. No ads UI is added, no ATT prompt, no tracking. Existing auth/onboarding/payments/wallet/dispatch/maps/admin flows are untouched except where explicitly listed.
 
-## 1. Database (single migration, requires your approval)
+# Milestone locked
 
-Two new tables in `public`:
+`chopchop-guinea-phone-input-stable` saved to memory.
 
-**`user_legal_consents`** — append-only consent log
-- `user_id`, `terms_version`, `privacy_version`, `accepted_terms`, `accepted_privacy`, `accepted_at`, `ip_address` (nullable), `user_agent` (nullable), `source` (default `signup`)
-- RLS: user can `INSERT`/`SELECT` own rows; no `UPDATE`/`DELETE` for users; `service_role` full; admins read via existing `has_role` check
-- GRANTs: `authenticated` (SELECT/INSERT), `service_role` (ALL)
-- Index on `(user_id, accepted_at desc)`
+# Why a plan first
 
-**`user_preferences`** — CHOPCHOP app-level preferences (distinct from device permissions)
-- `user_id` (unique), `allow_urban_insights bool default true`, `allow_marketing_notifications bool default false`, `allow_personalized_offers bool default false`, `updated_at`
-- RLS: user can `SELECT`/`INSERT`/`UPDATE` own row; `service_role` full
-- GRANTs: `authenticated` (SELECT/INSERT/UPDATE), `service_role` (ALL)
-- `updated_at` trigger
+The new request is genuinely huge: new DB tables + RPCs, a full two-sided manual Orange Money reconciliation queue, a rewrite of the customer Recharger flow, and a sweep of fake/mock data across ~15 admin tabs. Done in one shot it would be hundreds of lines of SQL plus dozens of files — impossible to review or QA confidently. I want to ship it in 3 small, individually verifiable passes, each ending in a stable build.
 
-## 2. Legal version constants
+Before writing code I also need a short audit (Phase 0 of your brief) so we agree on the source of truth and don't create a duplicate top-up path.
 
-**`src/lib/legal.ts`** — single source of truth.
-```
-TERMS_VERSION = "2026-05-27-v1"
-PRIVACY_VERSION = "2026-05-27-v1"
-LEGAL_LAST_UPDATED = "2026-05-27"
-```
-Plus helpers: `hasAcceptedCurrentLegal(userId)`, `recordLegalAcceptance({ source })`.
+# Pass 1 — Audit (read-only, no code)
 
-## 3. Pages
+I'll inspect and report back:
 
-- **`/terms`** — `src/pages/Terms.tsx`. French-first content following the 22-section structure from the spec, with the draft notice ("These terms are a launch draft and should be reviewed by counsel before broad public launch.") and version line. SEO meta.
-- **`/privacy`** — `src/pages/Privacy.tsx`. French-first privacy policy covering account data, location, ride/order/wallet/support/merchant data, device data, notifications, camera, aggregated urban intelligence, service providers, no third-party ad tracking at launch, `support@chopchopguinee.com`.
-- **`/settings/permissions`** — `src/pages/PermissionCenter.tsx`. Two sections:
-  1. **Permissions appareil** (Localisation, Notifications, Caméra, Photos/Documents) — live status via `navigator.permissions` where available, "Activer" / "Gérer dans les réglages" CTAs, French copy from spec.
-  2. **Préférences CHOPCHOP** (Données urbaines agrégées, Notifications marketing, Offres personnalisées, Publicité & personnalisation [info-only: "CHOPCHOP n'utilise pas le suivi publicitaire inter-apps pour le moment."]) — bound to `user_preferences`.
+- Current Recharger handler (`WalletHero` → ?) and existing `TopUpOrangeMoney` component.
+- Existing `payment_intents` helpers and any `topup_requests` table/RPCs (`create_wallet_topup_intent`, `wallet_topup_om_credit`, `confirm_payment_intent`, etc.).
+- What `PaymentsAdmin` and `WalletReconciliation` currently read.
+- Every admin tab still rendering `MOCK` / hardcoded rows.
+- Whether `payment_intents` alone can be the source of truth (preferred) or if a parallel `topup_requests` table exists and must be linked.
 
-Routes added in `src/App.tsx`.
+Deliverable: short written report with file:line refs and the chosen source-of-truth model. No code changes.
 
-## 4. Signup acceptance
+# Pass 2 — Real Recharger + admin visibility (small migration + UI)
 
-**`src/pages/Auth.tsx`** — add required checkbox on signup form only (not login):
-```
-[ ] J'accepte les Conditions d'utilisation et la Politique de confidentialité.
-```
-Submit disabled until checked. On successful signup, write a `user_legal_consents` row with current versions, `source: "signup"`, best-effort `user_agent`. Failure to write is logged but doesn't block account creation (retry on next session via `useLegalConsentGate`).
+Goal: a real customer top-up appears in `/admin/payments` and can be confirmed/failed by finance/god admin via secure RPC.
 
-## 5. Existing-user gate (no chaos)
+- New table `payment_receiving_accounts` (admin-managed OM receiving numbers) + sanitized `get_active_payment_receiving_accounts()` RPC.
+- New RPC `create_wallet_topup_intent(amount, provider, receiving_account_id)` → inserts `payment_intents` row with `purpose = wallet_topup`, status `pending`, public reference. Never credits.
+- Customer: `Recharger` opens a real amount sheet → method picker → shows active OM receiving number → creates intent → shows pending receipt.
+- Admin `PaymentsAdmin`: wire real query of `payment_intents` (it likely already does — confirm and fix filters/refetch). Confirm/Fail buttons call existing `confirm_payment_intent` / `fail_payment_intent` RPCs (already SECURITY DEFINER + admin-gated).
+- Admin settings panel inside `/admin/payments` to CRUD receiving accounts.
+- Polling + manual refresh on both sides (no financial realtime).
 
-**`src/hooks/useLegalConsentGate.ts`** — checks for a consent row matching current versions. If missing, exposes `needsAcceptance: true` and a `accept()` action.
+# Pass 3 — Two-sided OM reconciliation queue
 
-**`src/components/legal/LegalAcceptanceModal.tsx`** — gentle one-time modal with the spec copy ("Nous avons mis à jour les Conditions d'utilisation…"), links to /terms and /privacy, single "J'accepte" button. Mounted at app shell level but only renders when `needsAcceptance` is true **and** the route is a sensitive surface (booking, wallet, driver mode, merchant actions, Repas order, Marché delivery, support issue creation). Public/home/onboarding/auth routes are NOT gated.
+Goal: customer code + admin OM receipt match automatically and credit wallet idempotently.
 
-## 6. Profile / Settings integration
+- New tables: `om_customer_confirmations`, `om_admin_receipts`, `om_reconciliation_matches` with strict RLS.
+- RPCs (all SECURITY DEFINER, idempotent):
+  - `submit_customer_om_code(payment_intent_id, code)` — owner-only.
+  - `submit_admin_om_receipt(code, amount, receiving_account_id, payer_phone, note)` — finance/god only.
+  - `reconcile_om_topup(...)` — normalizes code, matches code+amount, on success calls existing confirm path to credit wallet via `wallet_transactions`. Conflicts/duplicates marked for review, never credited.
+- Customer UI: after top-up intent, second step "Coller le code Orange Money".
+- Admin UI: new "Réconciliation OM" tab with the 4 queues (waiting admin / waiting customer / matched / conflicts) + quick-entry form.
+- Command Center counts wired to real pending/conflict counts.
 
-Add a "Légal & confidentialité" group in the existing Profile screen with rows:
-- Conditions d'utilisation → `/terms`
-- Politique de confidentialité → `/privacy`
-- Permissions & préférences → `/settings/permissions`
+# Pass 4 — Admin mock-data sweep
 
-## 7. Documentation
+Per-tab pass replacing `MOCK` arrays with real queries or honest `À connecter` empty states. Tabs: `UsersAdmin`, `DriversAdmin`, `MerchantsAdmin`, `OrdersAdmin`, `RepasAdmin`, `MarcheAdmin`, `RiskAdmin`, `PromotionsAdmin`, `ZonesAdmin`, `ReportsAdmin`, `NotificationsAdmin`, `LiveOps`, `AdminDashboard`, `PilotCommandCenter`, `WalletAdmin`. No fake users, ledgers, charts, or `Math.random`.
 
-- **`docs/ads/CHOPCHOP_ADS_PIPELINE.md`** — future-ready, inactive. Lists Sponsored Restaurants, Marché listings, Featured Merchants, Chop Deals, Sponsored Delivery Promotions, Brand Partnership Banners. Rules: "Sponsorisé" label, no third-party networks, first-party only, no hidden tracking.
-- **`docs/legal/STORE_DISCLOSURE_CHECKLIST.md`** — data categories, purposes, tracking statement (no third-party cross-app tracking, no IDFA, no ATT needed), data sharing (service providers + operational counterparties only, no sale).
-- **`docs/legal/PERMISSIONS_AND_CONSENT.md`** — internal map of which surface triggers which prompt, where consent is recorded, and how the gate works.
+# Security invariants kept across all passes
 
-## 8. Explicitly NOT in this pass
+- No frontend wallet credit.
+- No self-confirm of own top-ups.
+- Financial realtime stays off — polling + visibilitychange + manual refresh.
+- All new tables: explicit `GRANT`s, RLS enabled, anon has no access to payment data.
+- Existing security scan findings stay fixed; `security--run_security_scan` re-run after each migration.
 
-- No ad UI, no ad tables.
-- No ATT prompt.
-- No microphone/contacts requests.
-- No changes to existing location prompts (the previous live-location pass already handles that).
-- No admin legal dashboard (TODO noted in `docs/legal/PERMISSIONS_AND_CONSENT.md`).
-- No re-consent enforcement on login for existing users beyond the sensitive-action gate.
-- No changes to dispatch/payment/wallet/maps logic.
+# What I need from you
 
-## Execution order
+1. Approve this 4-pass split (or tell me to collapse / reorder).
+2. Confirm: use `payment_intents` as the single source of truth for wallet top-ups, and treat any existing `topup_requests` table as legacy to deprecate/link — not maintain in parallel.
+3. Confirm Pass 1 (audit) lands first as a written report, no code, so we lock the model before migrations.
 
-1. Run the migration (asks for your approval).
-2. After migration is applied and types regenerate, write all code + docs in one pass.
-3. Smoke: build is clean, /terms and /privacy load, signup checkbox blocks submit when unchecked, no ATT prompt, permission center renders both sections, profile links work.
-
-## Open questions
-
-If any of the following are wrong I'll adjust before step 1:
-- Default for `allow_urban_insights`: **ON** (operational improvement) vs **OFF** (conservative). I propose ON. Confirm or override.
-- Sensitive-action gate scope: I'll trigger the modal on `/wallet`, `/ride/*`, `/repas/checkout`, `/marche/checkout`, `/driver/*`, `/merchant/*`, support issue creation, and wallet top-up. Confirm or trim.
-- Existing `/legal` route (if any) — I'll link rather than replace, and add `/terms` + `/privacy` as new routes. Will confirm by reading `src/App.tsx` before writing.
+Once approved I'll start with the audit and report back before any DB or code changes.
