@@ -1974,12 +1974,14 @@ export type Database = {
           matched_topup_request_id: string | null
           matched_user_id: string | null
           notes: string | null
+          om_code_normalized: string | null
           payer_phone: string | null
           processed_at: string | null
           processing_status: string
           provider: string
           provider_transaction_id: string
           raw_payload: Json
+          receiving_account_id: string | null
           status: string
         }
         Insert: {
@@ -1992,12 +1994,14 @@ export type Database = {
           matched_topup_request_id?: string | null
           matched_user_id?: string | null
           notes?: string | null
+          om_code_normalized?: string | null
           payer_phone?: string | null
           processed_at?: string | null
           processing_status?: string
           provider: string
           provider_transaction_id: string
           raw_payload?: Json
+          receiving_account_id?: string | null
           status?: string
         }
         Update: {
@@ -2010,15 +2014,25 @@ export type Database = {
           matched_topup_request_id?: string | null
           matched_user_id?: string | null
           notes?: string | null
+          om_code_normalized?: string | null
           payer_phone?: string | null
           processed_at?: string | null
           processing_status?: string
           provider?: string
           provider_transaction_id?: string
           raw_payload?: Json
+          receiving_account_id?: string | null
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_provider_events_receiving_account_id_fkey"
+            columns: ["receiving_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_receiving_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_receiving_accounts: {
         Row: {
@@ -2552,6 +2566,9 @@ export type Database = {
           confirmation_code: string
           confirmed_at: string | null
           created_at: string
+          customer_om_code_normalized: string | null
+          customer_om_code_raw: string | null
+          customer_om_code_submitted_at: string | null
           expires_at: string
           id: string
           matched_provider_transaction_id: string | null
@@ -2572,6 +2589,9 @@ export type Database = {
           confirmation_code: string
           confirmed_at?: string | null
           created_at?: string
+          customer_om_code_normalized?: string | null
+          customer_om_code_raw?: string | null
+          customer_om_code_submitted_at?: string | null
           expires_at?: string
           id?: string
           matched_provider_transaction_id?: string | null
@@ -2592,6 +2612,9 @@ export type Database = {
           confirmation_code?: string
           confirmed_at?: string | null
           created_at?: string
+          customer_om_code_normalized?: string | null
+          customer_om_code_raw?: string | null
+          customer_om_code_submitted_at?: string | null
           expires_at?: string
           id?: string
           matched_provider_transaction_id?: string | null
@@ -3392,6 +3415,21 @@ export type Database = {
           reference: string
         }[]
       }
+      get_my_topup_om_status: {
+        Args: { p_topup_id: string }
+        Returns: {
+          amount_gnf: number
+          customer_om_code_submitted_at: string
+          expires_at: string
+          id: string
+          provider: string
+          receiving_instructions: string
+          receiving_label: string
+          receiving_phone: string
+          reference: string
+          status: string
+        }[]
+      }
       has_admin_role: {
         Args: {
           _role: Database["public"]["Enums"]["admin_role"]
@@ -3654,6 +3692,7 @@ export type Database = {
         Returns: number
       }
       next_wongo_reference: { Args: never; Returns: string }
+      normalize_om_code: { Args: { p_code: string }; Returns: string }
       om_auto_match: { Args: { p_event_id: string }; Returns: Json }
       om_pending_topups_for_event: {
         Args: { p_event_id: string }
@@ -3908,6 +3947,10 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      submit_customer_om_code: {
+        Args: { p_om_code: string; p_topup_request_id: string }
+        Returns: Json
+      }
       wallet_admin_credit: {
         Args: {
           p_amount_gnf: number
@@ -4089,6 +4132,9 @@ export type Database = {
           confirmation_code: string
           confirmed_at: string | null
           created_at: string
+          customer_om_code_normalized: string | null
+          customer_om_code_raw: string | null
+          customer_om_code_submitted_at: string | null
           expires_at: string
           id: string
           matched_provider_transaction_id: string | null
@@ -4142,6 +4188,9 @@ export type Database = {
           confirmation_code: string
           confirmed_at: string | null
           created_at: string
+          customer_om_code_normalized: string | null
+          customer_om_code_raw: string | null
+          customer_om_code_submitted_at: string | null
           expires_at: string
           id: string
           matched_provider_transaction_id: string | null
@@ -4172,6 +4221,9 @@ export type Database = {
               confirmation_code: string
               confirmed_at: string | null
               created_at: string
+              customer_om_code_normalized: string | null
+              customer_om_code_raw: string | null
+              customer_om_code_submitted_at: string | null
               expires_at: string
               id: string
               matched_provider_transaction_id: string | null
@@ -4201,6 +4253,9 @@ export type Database = {
               confirmation_code: string
               confirmed_at: string | null
               created_at: string
+              customer_om_code_normalized: string | null
+              customer_om_code_raw: string | null
+              customer_om_code_submitted_at: string | null
               expires_at: string
               id: string
               matched_provider_transaction_id: string | null

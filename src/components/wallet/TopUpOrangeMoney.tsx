@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Copy, Check, Smartphone, Clock, ShieldCheck, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Loader2, Copy, Check, Smartphone, Clock, ShieldCheck, ArrowLeft, AlertTriangle, KeyRound, Hourglass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -14,7 +14,7 @@ type TopupRow = {
   amount_gnf: number;
   status: string;
   expires_at: string;
-  transaction_id: string | null;
+  customer_om_code_submitted_at?: string | null;
 };
 
 type ReceivingAccount = {
@@ -37,6 +37,8 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [copied, setCopied] = useState<"ref" | "msisdn" | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [omCode, setOmCode] = useState("");
+  const [submittingCode, setSubmittingCode] = useState(false);
 
   // Load admin-configured active Orange Money receiving accounts.
   useEffect(() => {
@@ -67,20 +69,19 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
 
   // Live status — subscribe to the topup row
   // Live status — financial realtime is disabled for security, so poll on a
-  // gentle interval and on tab visibility changes until the request reaches
-  // a terminal state.
+  // gentle interval (via sanitized SECURITY DEFINER RPC) and on tab
+  // visibility changes until the request reaches a terminal state.
   useEffect(() => {
     if (!topup) return;
     const terminal = ["credited", "expired", "failed", "cancelled"].includes(topup.status);
     if (terminal) return;
     let cancelled = false;
     const refetch = async () => {
-      const { data } = await supabase
-        .from("topup_requests")
-        .select("id, reference, amount_gnf, status, expires_at, transaction_id")
-        .eq("id", topup.id)
-        .maybeSingle();
-      if (!cancelled && data) setTopup(data as TopupRow);
+      const { data } = await supabase.rpc("get_my_topup_om_status", { p_topup_id: topup.id });
+      const row = Array.isArray(data) ? data[0] : null;
+      if (!cancelled && row) {
+        setTopup((prev) => prev ? { ...prev, ...row } : prev);
+      }
     };
     const interval = setInterval(() => {
       if (typeof document === "undefined" || document.visibilityState === "visible") {
@@ -129,7 +130,41 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
       return;
     }
     setTopup(data as unknown as TopupRow);
+    setOmCode("");
     setStep("instructions");
+  };
+
+  const submitOmCode = async () => {
+    if (!topup) return;
+    const code = omCode.trim();
+    if (code.length < 4) {
+      toast.error("Code Orange Money trop court");
+      return;
+    }
+    if (!ensureOnlineForFinancialAction()) {
+      toast.error("Connexion indisponible. Réessayez quand vous serez en ligne.");
+      return;
+    }
+    setSubmittingCode(true);
+    const { data, error } = await supabase.rpc("submit_customer_om_code", {
+      p_topup_request_id: topup.id,
+      p_om_code: code,
+    });
+    setSubmittingCode(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    const result = (data ?? {}) as { status?: string; reason?: string };
+    if (result.status === "needs_review") {
+      toast.warning("Code reçu — vérification nécessaire");
+    } else {
+      toast.success("Code envoyé · en attente de confirmation");
+    }
+    // Refresh status
+    const { data: row } = await supabase.rpc("get_my_topup_om_status", { p_topup_id: topup.id });
+    const r = Array.isArray(row) ? row[0] : null;
+    if (r) setTopup((prev) => prev ? { ...prev, ...r } : prev);
   };
 
   const copy = async (text: string, kind: "ref" | "msisdn") => {
@@ -268,23 +303,47 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
               </ol>
             </div>
 
-            <div className="rounded-2xl bg-muted/40 border border-border/60 p-3 flex items-center gap-2">
-              {review ? (
-                <>
-                  <ShieldCheck className="w-4 h-4 text-secondary-foreground shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Paiement reçu — en cours de vérification par le support CHOPCHOP.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Recharge Orange Money demandée. Confirmez sur votre téléphone.
-                  </p>
-                </>
-              )}
-            </div>
+            {/* Customer OM confirmation code submission */}
+            {!topup.customer_om_code_submitted_at ? (
+              <div className="rounded-3xl bg-card border border-border p-4 space-y-2 shadow-card">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-semibold">Collez votre code Orange Money</p>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Après l'envoi, OM vous donne un code de confirmation. Collez-le ici pour accélérer la vérification.
+                </p>
+                <Input
+                  value={omCode}
+                  onChange={(e) => setOmCode(e.target.value)}
+                  placeholder="ex. ABC123XYZ"
+                  maxLength={40}
+                  className="font-mono"
+                />
+                <Button onClick={submitOmCode} disabled={submittingCode || omCode.trim().length < 4} className="w-full">
+                  {submittingCode ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Envoyer le code
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-muted/40 border border-border/60 p-3 flex items-center gap-2">
+                {review ? (
+                  <>
+                    <ShieldCheck className="w-4 h-4 text-secondary-foreground shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      Recharge en vérification. Le support CHOPCHOP va examiner la transaction.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Hourglass className="w-4 h-4 text-primary shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      Code reçu. Nous attendons la confirmation CHOPCHOP.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
