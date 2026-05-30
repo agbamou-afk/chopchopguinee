@@ -30,12 +30,15 @@ export function MapFallbackCard({
         <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">{title}</span>
         <span className="text-xs text-muted-foreground max-w-[20rem]">{message}</span>
         {onRetry && (
-          <button
-            type="button" onClick={onRetry}
-            className="mt-1 inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-border/60 bg-card/80 text-xs font-semibold text-foreground hover:bg-card transition"
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); onRetry(); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRetry(); } }}
+            className="mt-1 inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-border/60 bg-card/80 text-xs font-semibold text-foreground hover:bg-card transition cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" /> {retryLabel}
-          </button>
+          </span>
         )}
       </div>
     </div>
