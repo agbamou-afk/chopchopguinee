@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Loader2, Check, X, AlertTriangle, FileUp, RefreshCcw, Eye, ShieldAlert, Inbox, Send } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Loader2, Check, X, AlertTriangle, FileUp, RefreshCcw, Eye, ShieldAlert, Inbox, Send, KeyRound, Clock, CheckCircle2, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ type Event = {
   created_at: string;
   processed_at: string | null;
   raw_payload: Record<string, unknown>;
+  om_code_normalized?: string | null;
+  receiving_account_id?: string | null;
 };
 
 type Candidate = {
@@ -77,7 +79,7 @@ function fmtDate(iso: string) {
 }
 
 export default function WalletReconciliation() {
-  const [tab, setTab] = useState("customer");
+  const [tab, setTab] = useState("demandes");
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
@@ -96,6 +98,7 @@ export default function WalletReconciliation() {
   const [mSubmitting, setMSubmitting] = useState(false);
   const [mAccountId, setMAccountId] = useState<string>("");
   const [receivingAccounts, setReceivingAccounts] = useState<ReceivingAccount[]>([]);
+  const formRef = useRef<HTMLDivElement | null>(null);
 
   const activeOMAccounts = useMemo(
     () => receivingAccounts.filter((a) => a.provider === "orange_money" && a.is_active),
@@ -126,7 +129,7 @@ export default function WalletReconciliation() {
     setLoading(true);
     const { data, error } = await supabase
       .from("payment_provider_events")
-      .select("*")
+      .select("*, om_code_normalized, receiving_account_id")
       .order("created_at", { ascending: false })
       .limit(300);
     if (error) toast.error(error.message);
@@ -160,21 +163,75 @@ export default function WalletReconciliation() {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
-  const filtered = useMemo(() => {
-    switch (tab) {
-      case "auto": return events.filter((e) => e.processing_status === "credited");
-      case "pending": return events.filter((e) => e.processing_status === "received");
-      case "review": return events.filter((e) => e.processing_status === "needs_review");
-      case "expired": return events.filter((e) => e.processing_status === "rejected" && (e.notes ?? "").includes("expired"));
-      case "suspicious": return events.filter((e) => e.processing_status === "rejected" || (e.notes ?? "").includes("suspect"));
-      default: return events;
-    }
-  }, [events, tab]);
+  // Polling every 15s while tab is open (financial realtime is intentionally disabled).
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void load();
+        void loadCustomerTopups();
+      }
+    }, 15000);
+    return () => clearInterval(id);
+  }, []);
 
-  const customerFiltered = useMemo(() => {
-    // Pending = customer-side requests waiting for an OM receipt/admin action.
-    return customerTopups.filter((t) => t.status === "pending" || t.status === "matched" || t.status === "needs_review");
-  }, [customerTopups]);
+  // ---- Queue derivations -------------------------------------------------
+  // A. Demandes clients : all pending top-up requests (no code yet OR with code).
+  const qDemandes = useMemo(
+    () => customerTopups.filter((t) => t.status === "pending"),
+    [customerTopups],
+  );
+  // B. Codes clients en attente admin : customer pasted a code, not yet credited.
+  const qCustomerCodeWaiting = useMemo(
+    () =>
+      customerTopups.filter(
+        (t) =>
+          !!t.customer_om_code_submitted_at &&
+          !!t.customer_om_code_normalized &&
+          (t.status === "pending" || t.status === "matched" || t.status === "needs_review"),
+      ),
+    [customerTopups],
+  );
+  // C. Reçus OM en attente client : admin event has code, parked, not credited.
+  const qReceiptsWaiting = useMemo(
+    () =>
+      events.filter(
+        (e) =>
+          e.processing_status === "received" &&
+          !e.matched_topup_request_id,
+      ),
+    [events],
+  );
+  // D. Réconciliés : credited events.
+  const qReconciled = useMemo(
+    () => events.filter((e) => e.processing_status === "credited"),
+    [events],
+  );
+  // E. Conflits : events needs_review/rejected + customer topups needs_review.
+  const qConflicts = useMemo(() => {
+    const evs = events.filter(
+      (e) => e.processing_status === "needs_review" || e.processing_status === "rejected",
+    );
+    return evs;
+  }, [events]);
+  const qTopupConflicts = useMemo(
+    () => customerTopups.filter((t) => t.status === "needs_review"),
+    [customerTopups],
+  );
+  // -----------------------------------------------------------------------
+
+  const refreshAll = () => {
+    void load();
+    void loadCustomerTopups();
+  };
+
+  const prefillFromCustomerCode = (t: CustomerTopupRow) => {
+    setMTxId((t.customer_om_code_normalized ?? "").toUpperCase());
+    setMAmount(String(t.amount_gnf));
+    if (t.receiving_account_id) setMAccountId(t.receiving_account_id);
+    setTab("demandes");
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    toast.message("Formulaire pré-rempli avec le code client");
+  };
 
   const submitManualReceipt = async () => {
     const amt = Number(mAmount);
@@ -207,10 +264,10 @@ export default function WalletReconciliation() {
     const { error: mErr } = await supabase.rpc("om_auto_match", { p_event_id: inserted.id });
     setMSubmitting(false);
     if (mErr) { toast.error(mErr.message); return; }
-    toast.success("Reçu OM enregistré · matching lancé");
+    // Try to interpret RPC result, but be defensive about return shape.
+    toast.success("Reçu enregistré · matching lancé");
     setMTxId(""); setMAmount(""); setMPhone(""); setMNote("");
-    void load();
-    void loadCustomerTopups();
+    refreshAll();
   };
 
   const cancelTopup = async (topupId: string) => {
