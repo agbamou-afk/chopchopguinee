@@ -80,7 +80,20 @@ function fmtDate(iso: string) {
 }
 
 export default function WalletReconciliation() {
-  const [tab, setTab] = useState("demandes");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "demandes";
+  const [tab, setTab] = useState(initialTab);
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t && t !== tab) setTab(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+  const onTabChange = (v: string) => {
+    setTab(v);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", v);
+    setSearchParams(next, { replace: true });
+  };
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
