@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
     // Require authenticated caller — Mapbox token is quota-sensitive.
     const authHeader = req.headers.get('Authorization') ?? '';
     if (!authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ error: 'unauthorized', message: 'Authentication required for map configuration.' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -17,14 +17,23 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } },
     );
-    const { data: claims, error: authErr } = await userClient.auth.getClaims(
-      authHeader.replace('Bearer ', ''),
-    );
-    if (authErr || !claims?.claims?.sub) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    let userId: string | null = null;
+    try {
+      const { data: userRes, error: authErr } = await userClient.auth.getUser(
+        authHeader.replace('Bearer ', ''),
+      );
+      if (authErr || !userRes?.user?.id) {
+        return new Response(
+          JSON.stringify({ error: 'unauthorized', message: 'Authentication required for map configuration.' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+      userId = userRes.user.id;
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'unauthorized', message: 'Authentication required for map configuration.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
     const token = Deno.env.get('MAPBOX_PUBLIC_TOKEN') ?? '';
     const supabase = createClient(
@@ -54,7 +63,7 @@ Deno.serve(async (req) => {
       },
     );
   } catch (e) {
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
+    return new Response(JSON.stringify({ error: 'maps_config_error', message: 'Map configuration unavailable.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
