@@ -2020,6 +2020,48 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_receiving_accounts: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          label: string
+          phone_e164: string
+          provider: string
+          public_instructions: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          phone_e164: string
+          provider?: string
+          public_instructions?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          phone_e164?: string
+          provider?: string
+          public_instructions?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       payment_reconciliation_events: {
         Row: {
           actor_user_id: string | null
@@ -2515,6 +2557,7 @@ export type Database = {
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
+          receiving_account_id: string | null
           reference: string
           status: Database["public"]["Enums"]["topup_status"]
           transaction_id: string | null
@@ -2534,6 +2577,7 @@ export type Database = {
           matched_provider_transaction_id?: string | null
           notes?: string | null
           provider?: string
+          receiving_account_id?: string | null
           reference: string
           status?: Database["public"]["Enums"]["topup_status"]
           transaction_id?: string | null
@@ -2553,6 +2597,7 @@ export type Database = {
           matched_provider_transaction_id?: string | null
           notes?: string | null
           provider?: string
+          receiving_account_id?: string | null
           reference?: string
           status?: Database["public"]["Enums"]["topup_status"]
           transaction_id?: string | null
@@ -2560,6 +2605,13 @@ export type Database = {
           user_phone?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "topup_requests_receiving_account_id_fkey"
+            columns: ["receiving_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_receiving_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "topup_requests_transaction_id_fkey"
             columns: ["transaction_id"]
@@ -3309,6 +3361,16 @@ export type Database = {
         }[]
       }
       gen_topup_reference: { Args: never; Returns: string }
+      get_active_payment_receiving_accounts: {
+        Args: never
+        Returns: {
+          id: string
+          label: string
+          phone_e164: string
+          provider: string
+          public_instructions: string
+        }[]
+      }
       get_demo_driver: { Args: never; Returns: string }
       get_my_driver_application_status: {
         Args: never
@@ -4032,6 +4094,7 @@ export type Database = {
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
+          receiving_account_id: string | null
           reference: string
           status: Database["public"]["Enums"]["topup_status"]
           transaction_id: string | null
@@ -4084,6 +4147,7 @@ export type Database = {
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
+          receiving_account_id: string | null
           reference: string
           status: Database["public"]["Enums"]["topup_status"]
           transaction_id: string | null
@@ -4097,34 +4161,65 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      wallet_topup_om_create: {
-        Args: { p_amount_gnf: number }
-        Returns: {
-          agent_user_id: string | null
-          amount_gnf: number
-          cancelled_reason: string | null
-          client_user_id: string
-          confirmation_code: string
-          confirmed_at: string | null
-          created_at: string
-          expires_at: string
-          id: string
-          matched_provider_transaction_id: string | null
-          notes: string | null
-          provider: string
-          reference: string
-          status: Database["public"]["Enums"]["topup_status"]
-          transaction_id: string | null
-          updated_at: string
-          user_phone: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "topup_requests"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      wallet_topup_om_create:
+        | {
+            Args: { p_amount_gnf: number }
+            Returns: {
+              agent_user_id: string | null
+              amount_gnf: number
+              cancelled_reason: string | null
+              client_user_id: string
+              confirmation_code: string
+              confirmed_at: string | null
+              created_at: string
+              expires_at: string
+              id: string
+              matched_provider_transaction_id: string | null
+              notes: string | null
+              provider: string
+              receiving_account_id: string | null
+              reference: string
+              status: Database["public"]["Enums"]["topup_status"]
+              transaction_id: string | null
+              updated_at: string
+              user_phone: string | null
+            }
+            SetofOptions: {
+              from: "*"
+              to: "topup_requests"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: { p_amount_gnf: number; p_receiving_account_id?: string }
+            Returns: {
+              agent_user_id: string | null
+              amount_gnf: number
+              cancelled_reason: string | null
+              client_user_id: string
+              confirmation_code: string
+              confirmed_at: string | null
+              created_at: string
+              expires_at: string
+              id: string
+              matched_provider_transaction_id: string | null
+              notes: string | null
+              provider: string
+              receiving_account_id: string | null
+              reference: string
+              status: Database["public"]["Enums"]["topup_status"]
+              transaction_id: string | null
+              updated_at: string
+              user_phone: string | null
+            }
+            SetofOptions: {
+              from: "*"
+              to: "topup_requests"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       wallet_topup_om_credit: {
         Args: { p_event_id: string; p_topup_request_id: string }
         Returns: {
