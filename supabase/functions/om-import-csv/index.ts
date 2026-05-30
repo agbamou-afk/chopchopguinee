@@ -83,11 +83,12 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", user.id);
-    const allowed = (roles ?? []).some((r: { role: string }) =>
-      ["god_admin", "finance_admin", "admin"].includes(r.role)
-    );
-    if (!allowed) {
+    // Authorize via admin_users only (single source of admin authority).
+    // Allowed: active god_admin, super_admin, finance_admin.
+    const { data: allowed, error: authzErr } = await admin.rpc("can_manage_wallet", {
+      _user_id: user.id,
+    });
+    if (authzErr || !allowed) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
