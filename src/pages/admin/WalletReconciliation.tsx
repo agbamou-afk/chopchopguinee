@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { ModulePage } from "@/components/admin/ModulePage";
 import { formatGNF } from "@/lib/format";
 import { toast } from "sonner";
+import { PaymentReceivingAccountsManager, type ReceivingAccount } from "@/components/admin/PaymentReceivingAccountsManager";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Event = {
   id: string;
@@ -54,6 +56,7 @@ type CustomerTopupRow = {
   user_phone: string | null;
   created_at: string;
   expires_at: string;
+  receiving_account_id: string | null;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -89,6 +92,19 @@ export default function WalletReconciliation() {
   const [mPhone, setMPhone] = useState("");
   const [mNote, setMNote] = useState("");
   const [mSubmitting, setMSubmitting] = useState(false);
+  const [mAccountId, setMAccountId] = useState<string>("");
+  const [receivingAccounts, setReceivingAccounts] = useState<ReceivingAccount[]>([]);
+
+  const activeOMAccounts = useMemo(
+    () => receivingAccounts.filter((a) => a.provider === "orange_money" && a.is_active),
+    [receivingAccounts],
+  );
+
+  useEffect(() => {
+    if (!mAccountId && activeOMAccounts.length > 0) {
+      setMAccountId(activeOMAccounts[0].id);
+    }
+  }, [activeOMAccounts, mAccountId]);
 
   const load = async () => {
     setLoading(true);
@@ -106,7 +122,7 @@ export default function WalletReconciliation() {
     setCustomerLoading(true);
     const { data, error } = await supabase
       .from("topup_requests")
-      .select("id, reference, client_user_id, amount_gnf, status, provider, user_phone, created_at, expires_at")
+      .select("id, reference, client_user_id, amount_gnf, status, provider, user_phone, created_at, expires_at, receiving_account_id")
       .order("created_at", { ascending: false })
       .limit(300);
     if (error) toast.error(error.message);
@@ -148,6 +164,8 @@ export default function WalletReconciliation() {
     const amt = Number(mAmount);
     if (!mTxId.trim()) { toast.error("Code/Tx OM requis"); return; }
     if (!amt || amt <= 0) { toast.error("Montant invalide"); return; }
+    const acct = activeOMAccounts.find((a) => a.id === mAccountId) ?? activeOMAccounts[0];
+    if (!acct) { toast.error("Configurez un numéro de réception OM actif"); return; }
     setMSubmitting(true);
     const { data: inserted, error } = await supabase
       .from("payment_provider_events")
@@ -158,7 +176,13 @@ export default function WalletReconciliation() {
         payer_phone: mPhone.trim() || null,
         amount_gnf: amt,
         status: "successful",
-        raw_payload: { source: "admin_manual_entry", note: mNote || null },
+        raw_payload: {
+          source: "admin_manual_entry",
+          note: mNote || null,
+          receiving_account_id: acct.id,
+          receiving_phone: acct.phone_e164,
+          receiving_label: acct.label,
+        },
       })
       .select("id")
       .single();
