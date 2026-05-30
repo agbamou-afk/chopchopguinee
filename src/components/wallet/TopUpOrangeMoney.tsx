@@ -293,6 +293,14 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="space-y-4">
+      {!accountsLoading && accounts.length === 0 && (
+        <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-3 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+          <p className="text-xs text-foreground">
+            Recharge Orange Money indisponible pour le moment. Réessayez plus tard.
+          </p>
+        </div>
+      )}
       <div>
         <p className="text-sm text-muted-foreground">Montant de la recharge</p>
         <div className="mt-2 flex items-baseline gap-2">
@@ -325,7 +333,11 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
         ))}
       </div>
 
-      <Button onClick={create} disabled={creating || amount < 1000} className="w-full h-12">
+      <Button
+        onClick={create}
+        disabled={creating || amount < 1000 || !activeAccount || accountsLoading}
+        className="w-full h-12"
+      >
         {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Créer la demande de recharge"}
       </Button>
 
