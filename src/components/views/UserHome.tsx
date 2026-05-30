@@ -80,6 +80,12 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
 
   const handleTopUp = () => {
     Analytics.track("home.primary_action.clicked", { metadata: { action: "topup" } });
+    // Deep-link: open the top-up sheet directly when WalletView mounts so
+    // tapping Recharger on the home wallet hero goes straight to the amount
+    // entry, instead of dropping the user on the wallet tab home.
+    try {
+      sessionStorage.setItem("cc:open_topup", "1");
+    } catch {}
     onActionClick("wallet");
   };
 

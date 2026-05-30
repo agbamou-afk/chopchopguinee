@@ -42,20 +42,37 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
   }, []);
 
   // Live status — subscribe to the topup row
+  // Live status — financial realtime is disabled for security, so poll on a
+  // gentle interval and on tab visibility changes until the request reaches
+  // a terminal state.
   useEffect(() => {
     if (!topup) return;
-    const ch = supabase
-      .channel(`topup-${topup.id}-${Math.random().toString(36).slice(2)}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "topup_requests", filter: `id=eq.${topup.id}` },
-        (payload) => setTopup(payload.new as TopupRow),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
+    const terminal = ["credited", "expired", "failed", "cancelled"].includes(topup.status);
+    if (terminal) return;
+    let cancelled = false;
+    const refetch = async () => {
+      const { data } = await supabase
+        .from("topup_requests")
+        .select("id, reference, amount_gnf, status, expires_at, transaction_id")
+        .eq("id", topup.id)
+        .maybeSingle();
+      if (!cancelled && data) setTopup(data as TopupRow);
     };
-  }, [topup?.id]);
+    const interval = setInterval(() => {
+      if (typeof document === "undefined" || document.visibilityState === "visible") {
+        void refetch();
+      }
+    }, 6000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refetch();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [topup?.id, topup?.status]);
 
   // Countdown timer
   useEffect(() => {
