@@ -209,12 +209,14 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
                   Compte marchand CHOPCHOP
                 </p>
                 <button
-                  onClick={() => copy(merchant.replace(/\s/g, ""), "msisdn")}
+                  onClick={() =>
+                    activeAccount && copy(activeAccount.phone_e164.replace(/\s/g, ""), "msisdn")
+                  }
                   className="mt-1 w-full flex items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2 hover:bg-muted transition"
                 >
                   <span className="flex items-center gap-2 font-mono font-semibold">
                     <Smartphone className="w-4 h-4 text-primary" />
-                    {merchant}
+                    {activeAccount?.phone_e164 ?? "—"}
                   </span>
                   {copied === "msisdn" ? (
                     <Check className="w-4 h-4 text-success" />
@@ -222,6 +224,14 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
                     <Copy className="w-4 h-4 text-muted-foreground" />
                   )}
                 </button>
+                {activeAccount?.label && (
+                  <p className="text-[11px] text-muted-foreground mt-1">{activeAccount.label}</p>
+                )}
+                {activeAccount?.public_instructions && (
+                  <p className="text-[11px] text-muted-foreground mt-1 whitespace-pre-line">
+                    {activeAccount.public_instructions}
+                  </p>
+                )}
               </div>
 
               <div>
