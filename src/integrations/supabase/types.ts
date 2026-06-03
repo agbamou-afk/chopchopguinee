@@ -3457,6 +3457,24 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
       is_god_admin: { Args: { _user_id: string }; Returns: boolean }
+      list_my_topup_requests: {
+        Args: { p_limit?: number }
+        Returns: {
+          amount_gnf: number
+          cancelled_reason: string
+          confirmed_at: string
+          created_at: string
+          customer_code_submitted_at: string
+          expires_at: string
+          id: string
+          provider: string
+          receiving_label: string
+          receiving_phone: string
+          reference: string
+          status: string
+          updated_at: string
+        }[]
+      }
       log_admin_action: {
         Args: {
           _action: string
@@ -3956,6 +3974,13 @@ export type Database = {
       submit_customer_om_code: {
         Args: { p_om_code: string; p_topup_request_id: string }
         Returns: Json
+      }
+      user_has_pin: {
+        Args: never
+        Returns: {
+          has_pin: boolean
+          updated_at: string
+        }[]
       }
       wallet_admin_credit: {
         Args: {
