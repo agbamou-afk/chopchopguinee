@@ -1,60 +1,35 @@
 /// <reference types="npm:@types/react@18.3.1" />
-
 import * as React from 'npm:react@18.3.1'
+import { Text } from 'npm:@react-email/components@0.0.22'
+import { EmailLayout, H1, P, SupportSection } from '../email-components.tsx'
+import { COLORS, FONT_STACK } from '../email-brand.ts'
 
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Preview,
-  Text,
-} from 'npm:@react-email/components@0.0.22'
+interface Props { token: string }
 
-interface ReauthenticationEmailProps {
-  token: string
-}
-
-export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Your verification code</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
-        <Text style={codeStyle}>{token}</Text>
-        <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+export const ReauthenticationEmail = ({ token }: Props) => (
+  <EmailLayout preview="Une vérification rapide pour protéger votre compte CHOPCHOP.">
+    <H1>Vérification de sécurité</H1>
+    <P>
+      Pour continuer, utilisez le code ci-dessous afin de confirmer votre
+      identité.
+    </P>
+    <Text style={codeStyle}>{token}</Text>
+    <P muted>
+      Ce code expire dans quelques minutes. Si vous n'êtes pas à l'origine de
+      cette demande, ignorez cet e-mail ou contactez le support.
+    </P>
+    <SupportSection />
+  </EmailLayout>
 )
 
 export default ReauthenticationEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
 const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
+  fontFamily: FONT_STACK,
+  fontSize: '28px',
+  fontWeight: 700 as const,
+  letterSpacing: '0.4em',
+  color: COLORS.green,
+  textAlign: 'center' as const,
+  margin: '8px 0 18px',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
