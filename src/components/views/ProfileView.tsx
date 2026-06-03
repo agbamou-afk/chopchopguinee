@@ -26,7 +26,7 @@ import { MenuButton } from "@/components/ui/MainMenuSheet";
 import { ONBOARDING_DONE_KEY, ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/ClientOnboarding";
 import { DRIVER_ONBOARDING_DONE_KEY, DRIVER_ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/DriverOnboarding";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
-import { AccountDeletionRequestSheet } from "@/components/account/AccountDeletionRequestSheet";
+import { SelfDeleteAccountSheet } from "@/components/account/SelfDeleteAccountSheet";
 
 interface ProfileViewProps {
   isDriverMode: boolean;
@@ -316,7 +316,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
           Version 1.0.0
         </p>
       </div>
-      <AccountDeletionRequestSheet open={deletionOpen} onOpenChange={setDeletionOpen} />
+      <SelfDeleteAccountSheet open={deletionOpen} onOpenChange={setDeletionOpen} />
     </div>
   );
 }
