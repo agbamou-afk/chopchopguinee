@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Loader2, Shield, KeyRound, ScrollText, Lock, ChevronRight } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Shield, KeyRound, ScrollText, Lock, ChevronRight, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Seo } from "@/components/Seo";
 import { GuineaPhoneInput } from "@/components/ui/guinea-phone-input";
+import { SelfDeleteAccountSheet } from "@/components/account/SelfDeleteAccountSheet";
 import {
   GUINEA_PHONE_INVALID_MESSAGE,
   extractGuineaLocal,
@@ -25,6 +26,7 @@ export default function ProfileInfo() {
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -187,7 +189,27 @@ export default function ProfileInfo() {
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
+
+        <div className="bg-card rounded-2xl shadow-card p-5 space-y-3 border border-destructive/20">
+          <h2 className="font-semibold text-foreground flex items-center gap-2">
+            <Trash2 className="w-4 h-4 text-destructive" /> Supprimer mon compte
+          </h2>
+          <p className="text-[12.5px] leading-snug text-muted-foreground">
+            Vous pouvez demander la suppression de votre compte. Les données nécessaires à la
+            sécurité, aux paiements et aux obligations légales peuvent être conservées.
+          </p>
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Supprimer mon compte
+          </Button>
+        </div>
       </div>
+
+      <SelfDeleteAccountSheet open={deleteOpen} onOpenChange={setDeleteOpen} />
     </div>
   );
 }
