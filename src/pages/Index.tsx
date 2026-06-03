@@ -318,6 +318,14 @@ const Index = () => {
         sessionStorage.setItem("cc_driver_mode_choice", next ? "driver" : "client");
       } catch { /* noop */ }
     }
+    // Switching OUT of driver mode must deactivate driver availability so
+    // pending or off-duty drivers never receive offers while browsing as
+    // clients. Approval is unaffected — only presence is set offline.
+    if (!next) {
+      void supabase
+        .rpc("driver_set_status", { p_status: "offline" })
+        .catch(() => {/* non-blocking */});
+    }
     setIsDriverMode(next);
   }, []);
 
