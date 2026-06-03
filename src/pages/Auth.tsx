@@ -69,7 +69,7 @@ export default function Auth() {
   const [params] = useSearchParams();
   const nextParam = params.get("next");
   const safeNext = nextParam && nextParam.startsWith("/") ? nextParam : null;
-  const { ready, isLoggedIn, isAdmin, isProfileComplete } = useAuth();
+  const { ready, isLoggedIn, isAdmin, isProfileComplete, signupIntent, requestedDriverVehicle } = useAuth();
 
   const [mode, setMode] = useState<Mode>("signin");
   const [first, setFirst] = useState("");
@@ -97,11 +97,22 @@ export default function Auth() {
         typeof window !== "undefined"
           ? sessionStorage.getItem(DRIVER_INTENT_STORAGE_KEY)
           : null;
-      if (raw) {
-        const parsed = JSON.parse(raw) as { vehicle?: DriverVehicleIntent };
+      const parsedVehicle = (() => {
+        if (!raw) return null;
+        try {
+          const p = JSON.parse(raw) as { vehicle?: DriverVehicleIntent };
+          return p?.vehicle ?? null;
+        } catch { return null; }
+      })();
+      // Source of truth in priority order:
+      //   1) sessionStorage (same-device signup → confirm)
+      //   2) user_metadata.signup_intent (cross-device email confirm,
+      //      browser refresh, or re-login)
+      const wantsDriver = !!parsedVehicle || signupIntent === "driver";
+      if (wantsDriver) {
         sessionStorage.removeItem(DRIVER_INTENT_STORAGE_KEY);
         sessionStorage.setItem("cc_driver_mode_choice", "driver");
-        const v = parsed?.vehicle ?? "moto";
+        const v = parsedVehicle ?? requestedDriverVehicle ?? "moto";
         navigate(`/driver/apply?intent=${encodeURIComponent(v)}`, { replace: true });
         return;
       }
@@ -113,7 +124,7 @@ export default function Auth() {
       return;
     }
     navigate(isAdmin ? "/admin" : "/", { replace: true });
-  }, [ready, isLoggedIn, isAdmin, isProfileComplete, safeNext, navigate]);
+  }, [ready, isLoggedIn, isAdmin, isProfileComplete, signupIntent, requestedDriverVehicle, safeNext, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
