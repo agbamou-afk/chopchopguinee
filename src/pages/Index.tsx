@@ -322,9 +322,11 @@ const Index = () => {
     // pending or off-duty drivers never receive offers while browsing as
     // clients. Approval is unaffected — only presence is set offline.
     if (!next) {
-      void supabase
-        .rpc("driver_set_status", { p_status: "offline" })
-        .catch(() => {/* non-blocking */});
+      // Fire-and-forget; ignore errors (e.g. user has no driver_profile yet).
+      void (async () => {
+        try { await supabase.rpc("driver_set_status", { p_status: "offline" }); }
+        catch { /* non-blocking */ }
+      })();
     }
     setIsDriverMode(next);
   }, []);
