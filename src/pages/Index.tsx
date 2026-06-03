@@ -95,7 +95,7 @@ const Index = () => {
   const [conversionGate, setConversionGate] = useState<{ open: boolean; intent?: ConversionIntent }>({ open: false });
   const [signupInviteOpen, setSignupInviteOpen] = useState(false);
   const { requireAuth } = useAuthGuard();
-  const { ready, roles, user } = useAuth();
+  const { ready, roles, user, signupIntent } = useAuth();
   const { profile: driverProfile, loading: driverProfileLoading } = useDriverProfile();
   // Robust driver-designated check — combines every existing source of truth
   // so sandbox / hybrid / role-only / profile-only accounts all resolve.
@@ -106,6 +106,7 @@ const Index = () => {
     roles.includes("driver") ||
     (roles as string[]).includes("courier") ||
     driverProfile != null ||
+    signupIntent === "driver" ||
     sandboxDriverEmail;
   // Routing is "resolving" until we have both roles and (if logged in) the
   // driver profile lookup. Prevents the client-home flash for drivers.
@@ -129,6 +130,27 @@ const Index = () => {
     adminRedirectedRef.current = true;
     navigate("/admin", { replace: true });
   }, [adminUser, navigate]);
+
+  // Driver applicants who confirmed their email arrive at "/" with a session
+  // but no driver_profile yet (the application has not been submitted). Route
+  // them straight to /driver/apply so they never see the client home flash.
+  // Once the application is submitted, driverProfile exists and this is a no-op.
+  const driverApplyRedirectedRef = useRef(false);
+  useEffect(() => {
+    if (driverResolving || !user) return;
+    if (driverApplyRedirectedRef.current) return;
+    if (signupIntent !== "driver") return;
+    if (driverProfile) return; // already applied
+    driverApplyRedirectedRef.current = true;
+    try {
+      sessionStorage.setItem("cc_driver_mode_choice", "driver");
+    } catch { /* noop */ }
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+    const v = meta.requested_driver_vehicle;
+    const vehicle = v === "moto" || v === "toktok" || v === "livraison" ? v : "moto";
+    navigate(`/driver/apply?intent=${encodeURIComponent(vehicle)}`, { replace: true });
+  }, [driverResolving, user, signupIntent, driverProfile, navigate]);
+
   // Public onboarding always shows on launch; live users see it once.
   const onboardingBlocksApp = driverResolving || showOnboarding || showDriverOnboarding;
 
@@ -295,6 +317,16 @@ const Index = () => {
       try {
         sessionStorage.setItem("cc_driver_mode_choice", next ? "driver" : "client");
       } catch { /* noop */ }
+    }
+    // Switching OUT of driver mode must deactivate driver availability so
+    // pending or off-duty drivers never receive offers while browsing as
+    // clients. Approval is unaffected — only presence is set offline.
+    if (!next) {
+      // Fire-and-forget; ignore errors (e.g. user has no driver_profile yet).
+      void (async () => {
+        try { await supabase.rpc("driver_set_status", { p_status: "offline" }); }
+        catch { /* non-blocking */ }
+      })();
     }
     setIsDriverMode(next);
   }, []);

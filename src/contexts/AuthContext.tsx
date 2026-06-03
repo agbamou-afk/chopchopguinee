@@ -40,6 +40,14 @@ interface AuthContextValue {
   isGodAdmin: boolean;
   hasRole: (role: AppRole) => boolean;
   isProfileComplete: boolean;
+  /**
+   * Signup intent persisted in auth user_metadata at registration time.
+   * Survives email confirmation and re-logins, unlike sessionStorage. Used
+   * to route returning driver applicants to /driver/apply even before they
+   * have a driver_profile row.
+   */
+  signupIntent: "client" | "driver" | null;
+  requestedDriverVehicle: "moto" | "toktok" | "livraison" | null;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -186,6 +194,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isGodAdmin: roles.includes("god_admin"),
     hasRole: (r) => roles.includes(r),
     isProfileComplete: profileComplete(profile),
+    signupIntent: (() => {
+      const v = (session?.user?.user_metadata as Record<string, unknown> | undefined)?.signup_intent;
+      return v === "driver" || v === "client" ? v : null;
+    })(),
+    requestedDriverVehicle: (() => {
+      const v = (session?.user?.user_metadata as Record<string, unknown> | undefined)?.requested_driver_vehicle;
+      return v === "moto" || v === "toktok" || v === "livraison" ? v : null;
+    })(),
     refresh,
     signOut,
   };

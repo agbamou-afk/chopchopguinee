@@ -24,7 +24,7 @@ const schema = z.object({
 });
 
 export default function CompleteProfile() {
-  const { ready, isLoggedIn, user, profile, refresh } = useAuth();
+  const { ready, isLoggedIn, user, profile, refresh, signupIntent, requestedDriverVehicle } = useAuth();
   const navigate = useNavigate();
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -84,7 +84,16 @@ export default function CompleteProfile() {
       /* non-blocking */
     }
     toast({ title: "Profil complété" });
-    navigate("/", { replace: true });
+    // Driver applicants must land directly in the driver application flow,
+    // never the client home, even if they completed profile after email
+    // confirmation.
+    if (signupIntent === "driver") {
+      try { sessionStorage.setItem("cc_driver_mode_choice", "driver"); } catch { /* noop */ }
+      const v = requestedDriverVehicle ?? "moto";
+      navigate(`/driver/apply?intent=${encodeURIComponent(v)}`, { replace: true });
+    } else {
+      navigate("/", { replace: true });
+    }
   };
 
   return (
