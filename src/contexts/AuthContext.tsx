@@ -82,6 +82,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
       let resolved = (prof as ProfileRecord) ?? null;
+      // If the profile is marked deleted, sign the user out immediately and
+      // surface a message via toast. Prevents reuse of an anonymized account.
+      if (resolved && resolved.account_status === "deleted") {
+        try {
+          const { toast } = await import("@/hooks/use-toast");
+          toast({
+            title: "Compte désactivé",
+            description:
+              "Ce compte a été supprimé. Contactez support@chopchopguinee.com pour toute question.",
+          });
+        } catch {
+          /* noop */
+        }
+        await supabase.auth.signOut();
+        setProfile(null);
+        setRoles([]);
+        return;
+      }
       // If the profile row is missing but auth metadata has name/phone,
       // auto-upsert once so returning users never see CompleteProfile again.
       if (!resolved && authUser) {

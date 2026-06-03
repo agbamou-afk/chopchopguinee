@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          request_type: string
+          requested_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_type: string
+          requested_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_type?: string
+          requested_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           admin_role: Database["public"]["Enums"]["admin_role"]
@@ -2122,6 +2161,7 @@ export type Database = {
           account_status: string
           avatar_url: string | null
           created_at: string
+          deleted_at: string | null
           display_name: string | null
           email: string | null
           first_name: string | null
@@ -2139,6 +2179,7 @@ export type Database = {
           account_status?: string
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           email?: string | null
           first_name?: string | null
@@ -2156,6 +2197,7 @@ export type Database = {
           account_status?: string
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           email?: string | null
           first_name?: string | null
@@ -3019,6 +3061,10 @@ export type Database = {
       }
     }
     Functions: {
+      _anonymize_user_core: {
+        Args: { _suspended_reason: string; _target: string }
+        Returns: undefined
+      }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -3046,6 +3092,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_anonymize_user: {
+        Args: { _reason?: string; _target: string }
+        Returns: Json
       }
       admin_create_agent: {
         Args: {
@@ -3075,6 +3125,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_log_test_delete: {
+        Args: { _caller: string; _reason: string; _target: string }
+        Returns: undefined
       }
       analytics_summary: { Args: { p_days?: number }; Returns: Json }
       can_access_admin: { Args: { _user_id: string }; Returns: boolean }
@@ -3742,6 +3796,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      request_account_deletion: { Args: { _reason?: string }; Returns: Json }
       ride_accept: {
         Args: { p_ride_id: string }
         Returns: {
@@ -3974,6 +4029,10 @@ export type Database = {
       submit_customer_om_code: {
         Args: { p_om_code: string; p_topup_request_id: string }
         Returns: Json
+      }
+      user_has_financial_history: {
+        Args: { _user_id: string }
+        Returns: boolean
       }
       user_has_pin: {
         Args: never
