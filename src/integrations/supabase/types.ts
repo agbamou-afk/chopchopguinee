@@ -2404,8 +2404,10 @@ export type Database = {
           rating: number
           response_rate: number
           service_areas: string[]
+          status: string
           updated_at: string
           user_id: string
+          visibility: string
         }
         Insert: {
           availability?: string | null
@@ -2418,8 +2420,10 @@ export type Database = {
           rating?: number
           response_rate?: number
           service_areas?: string[]
+          status?: string
           updated_at?: string
           user_id: string
+          visibility?: string
         }
         Update: {
           availability?: string | null
@@ -2432,8 +2436,10 @@ export type Database = {
           rating?: number
           response_rate?: number
           service_areas?: string[]
+          status?: string
           updated_at?: string
           user_id?: string
+          visibility?: string
         }
         Relationships: []
       }
