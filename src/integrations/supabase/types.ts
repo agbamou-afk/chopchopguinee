@@ -4494,7 +4494,7 @@ export type Database = {
         | "declined"
       listing_kind: "merchant" | "community" | "service"
       listing_status: "active" | "sold" | "paused" | "removed"
-      message_channel: "whatsapp" | "sms" | "inapp"
+      message_channel: "whatsapp" | "sms" | "inapp" | "in_app"
       message_kind: "text" | "image" | "location" | "quick_reply"
       message_status:
         | "queued"
@@ -4842,7 +4842,7 @@ export const Constants = {
       ],
       listing_kind: ["merchant", "community", "service"],
       listing_status: ["active", "sold", "paused", "removed"],
-      message_channel: ["whatsapp", "sms", "inapp"],
+      message_channel: ["whatsapp", "sms", "inapp", "in_app"],
       message_kind: ["text", "image", "location", "quick_reply"],
       message_status: [
         "queued",
