@@ -255,8 +255,8 @@ export default function Auth() {
       return;
     }
     toast({
-      title: "Email renvoyé",
-      description: "Si un compte non confirmé existe, un nouvel email a été envoyé.",
+      title: "Email de confirmation renvoyé",
+      description: "Vérifiez votre boîte de réception et vos spams.",
     });
   };
 
