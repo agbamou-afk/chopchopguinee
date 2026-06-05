@@ -503,6 +503,7 @@ export default function Auth() {
           ← Retour à l'application
         </Link>
       </div>
+      )}
     </div>
   );
 }
