@@ -56,6 +56,11 @@ export function useUnderConstructionAnnouncement({
   const [open, setOpen] = useState(false);
   const scheduledRef = useRef(false);
   const shownRef = useRef(false);
+  // Captured at mount: whether this user/guest had already dismissed UC
+  // before this session started. Drives `willShow` so callers can decide
+  // whether to wait on UC or proceed with their own scheduling.
+  const [seenAtMount] = useState(() => alreadySeen(userId));
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     if (!canShow) return;
@@ -77,7 +82,13 @@ export function useUnderConstructionAnnouncement({
   const close = () => {
     markSeen(userId);
     setOpen(false);
+    setDismissed(true);
   };
 
-  return { open, close };
+  return {
+    open,
+    close,
+    /** UC will (or might still) appear in this session. */
+    willShow: !seenAtMount && !dismissed,
+  };
 }

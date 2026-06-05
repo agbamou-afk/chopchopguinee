@@ -258,13 +258,9 @@ const Index = () => {
         }
       } catch { /* noop */ }
     }
-    // Gentle signup invite for logged-out visitors only, 3–5s after close.
-    if (publicUser && !adminUser && !shouldSkipSignupInvite()) {
-      const delay = 3000 + Math.floor(Math.random() * 2000);
-      setTimeout(() => {
-        setSignupInviteOpen(true);
-      }, delay);
-    }
+    // Signup nudge scheduling is handled by a dedicated effect so it can
+    // sequence correctly behind the "Under Construction" announcement
+    // (UC shows first, then nudge ~1s after it closes). See effect below.
   };
 
   const finishDriverOnboarding = () => {
@@ -503,10 +499,31 @@ const Index = () => {
     !showScanner &&
     !conversionGate.open &&
     !signupInviteOpen;
-  const { open: ucOpen, close: ucClose } = useUnderConstructionAnnouncement({
+  const { open: ucOpen, close: ucClose, willShow: ucWillShow } = useUnderConstructionAnnouncement({
     canShow: announcementCanShow,
     userId: user?.id ?? null,
   });
+
+  // Signup nudge scheduler. Runs after Under Construction is dismissed
+  // (or immediately when UC won't show this session), preserving the
+  // original ~3–5s gentle delay. Eligible only for public guests who
+  // are fully inside the product shell and haven't already dismissed.
+  useEffect(() => {
+    if (!publicUser || adminUser) return;
+    if (!ready || onboardingBlocksApp) return;
+    if (bookingRide || activeTrip || showScanner) return;
+    if (conversionGate.open) return;
+    if (signupInviteOpen) return;
+    if (ucOpen || ucWillShow) return; // wait for UC to finish first
+    if (shouldSkipSignupInvite()) return;
+    const delay = 800 + Math.floor(Math.random() * 700);
+    const t = window.setTimeout(() => setSignupInviteOpen(true), delay);
+    return () => window.clearTimeout(t);
+  }, [
+    publicUser, adminUser, ready, onboardingBlocksApp,
+    bookingRide, activeTrip, showScanner,
+    conversionGate.open, signupInviteOpen, ucOpen, ucWillShow,
+  ]);
 
   const renderUserView = () => {
     switch (activeView) {
