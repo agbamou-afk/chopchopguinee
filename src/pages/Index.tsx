@@ -489,7 +489,7 @@ const Index = () => {
 
   // "CHOPCHOP arrive bientôt" announcement. Only schedules once the user is
   // truly in the product shell: onboarding finished, no blocking sheet, no
-  // trip/booking/scanner open. The hook itself enforces the 30s delay and
+  // trip/booking/scanner open. The hook itself enforces the 1s delay and
   // localStorage dismissal persistence.
   const announcementCanShow =
     ready &&
@@ -504,10 +504,12 @@ const Index = () => {
     userId: user?.id ?? null,
   });
 
+  const SIGNUP_NUDGE_AFTER_UC_MS = 10000;
+
   // Signup nudge scheduler. Runs after Under Construction is dismissed
-  // (or immediately when UC won't show this session), preserving the
-  // original ~3–5s gentle delay. Eligible only for public guests who
-  // are fully inside the product shell and haven't already dismissed.
+  // (or immediately when UC won't show this session), with a 10s delay.
+  // Eligible only for public guests who are fully inside the product shell
+  // and haven't already dismissed.
   useEffect(() => {
     if (!publicUser || adminUser) return;
     if (!ready || onboardingBlocksApp) return;
@@ -516,8 +518,7 @@ const Index = () => {
     if (signupInviteOpen) return;
     if (ucOpen || ucWillShow) return; // wait for UC to finish first
     if (shouldSkipSignupInvite()) return;
-    const delay = 800 + Math.floor(Math.random() * 700);
-    const t = window.setTimeout(() => setSignupInviteOpen(true), delay);
+    const t = window.setTimeout(() => setSignupInviteOpen(true), SIGNUP_NUDGE_AFTER_UC_MS);
     return () => window.clearTimeout(t);
   }, [
     publicUser, adminUser, ready, onboardingBlocksApp,

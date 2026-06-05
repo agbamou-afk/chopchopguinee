@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
+export const UNDER_CONSTRUCTION_DELAY_MS = 1000;
+
+
 /**
  * Per-user dismissal key. Logged-out visitors fall back to a session-scoped
  * key so the popup never trails them across sessions when no identity exists.
@@ -37,7 +40,7 @@ interface Options {
   canShow: boolean;
   /** Current user id, or null for logged-out visitors. */
   userId: string | null;
-  /** Delay before opening, ms. Defaults to 30s. */
+  /** Delay before opening, ms. Defaults to 1s. */
   delayMs?: number;
 }
 
@@ -51,7 +54,7 @@ interface Options {
 export function useUnderConstructionAnnouncement({
   canShow,
   userId,
-  delayMs = 30_000,
+  delayMs = UNDER_CONSTRUCTION_DELAY_MS,
 }: Options) {
   const [open, setOpen] = useState(false);
   const scheduledRef = useRef(false);
