@@ -3063,7 +3063,7 @@ export type Database = {
     Functions: {
       _anonymize_user_core: {
         Args: { _suspended_reason: string; _target: string }
-        Returns: undefined
+        Returns: Json
       }
       admin_adjust_agent_float: {
         Args: {
