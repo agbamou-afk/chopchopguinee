@@ -20,6 +20,7 @@ import {
   isValidGuineaLocal,
   normalizeGuineaPhone,
 } from "@/lib/phone/guinea";
+import { EmailConfirmationPendingCard } from "@/components/auth/EmailConfirmationPendingCard";
 
 type SignupIntent = "client" | "driver";
 type DriverVehicleIntent = "moto" | "toktok" | "livraison";
@@ -81,6 +82,9 @@ export default function Auth() {
   const [acceptLegal, setAcceptLegal] = useState(false);
   const [intent, setIntent] = useState<SignupIntent>("client");
   const [vehicle, setVehicle] = useState<DriverVehicleIntent>("moto");
+  const [pendingConfirm, setPendingConfirm] = useState<
+    { email: string; intent: SignupIntent } | null
+  >(null);
 
   // After session is established, route by role + profile completeness.
   useEffect(() => {
@@ -201,14 +205,7 @@ export default function Auth() {
       }
       // Record acceptance immediately if a session was created (auto-confirm).
       void recordLegalAcceptance({ source: "signup" });
-      toast({
-        title: "Compte créé",
-        description:
-          intent === "driver"
-            ? "Vérifiez votre email pour confirmer votre inscription, puis complétez votre demande chauffeur."
-            : "Vérifiez votre email pour confirmer votre inscription.",
-      });
-      setMode("signin");
+      setPendingConfirm({ email: email.trim(), intent });
       return;
     }
 
@@ -234,7 +231,14 @@ export default function Auth() {
       password,
     });
     setBusy(false);
-    if (error) toast({ title: "Échec", description: frenchAuthError(error.message) });
+    if (error) {
+      const msg = (error.message ?? "").toLowerCase();
+      if (msg.includes("not confirmed") || msg.includes("confirm")) {
+        setPendingConfirm({ email: email.trim(), intent: "client" });
+        return;
+      }
+      toast({ title: "Échec", description: frenchAuthError(error.message) });
+    }
   };
 
   const resendConfirmation = async () => {
@@ -267,6 +271,28 @@ export default function Auth() {
         description="Connectez-vous ou créez votre compte CHOPCHOP par email pour accéder aux courses, livraisons, marché et portefeuille en GNF."
         canonical="/auth"
       />
+      {pendingConfirm ? (
+        <EmailConfirmationPendingCard
+          email={pendingConfirm.email}
+          intent={pendingConfirm.intent}
+          onAlreadyConfirmed={() => {
+            setMode("signin");
+            setEmail(pendingConfirm.email);
+            setPassword("");
+            setPendingConfirm(null);
+            toast({
+              title: "Connexion",
+              description: "Connectez-vous avec votre email et mot de passe.",
+            });
+          }}
+          onUseAnotherEmail={() => {
+            setMode("signup");
+            setEmail("");
+            setPassword("");
+            setPendingConfirm(null);
+          }}
+        />
+      ) : (
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-elevated p-6">
         <div className="flex flex-col items-center mb-6">
           <BrandLogo size="lg" className="mb-2" />
@@ -477,6 +503,7 @@ export default function Auth() {
           ← Retour à l'application
         </Link>
       </div>
+      )}
     </div>
   );
 }
