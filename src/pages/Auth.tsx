@@ -453,6 +453,17 @@ export default function Auth() {
               Connexion par téléphone bientôt disponible.
             </p>
           )}
+
+          {mode === "signin" && (
+            <button
+              type="button"
+              onClick={resendConfirmation}
+              disabled={busy}
+              className="block w-full text-[12px] text-primary underline text-center pt-1"
+            >
+              Renvoyer l'email de confirmation
+            </button>
+          )}
         </form>
 
         <button
