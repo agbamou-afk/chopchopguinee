@@ -258,13 +258,9 @@ const Index = () => {
         }
       } catch { /* noop */ }
     }
-    // Gentle signup invite for logged-out visitors only, 3–5s after close.
-    if (publicUser && !adminUser && !shouldSkipSignupInvite()) {
-      const delay = 3000 + Math.floor(Math.random() * 2000);
-      setTimeout(() => {
-        setSignupInviteOpen(true);
-      }, delay);
-    }
+    // Signup nudge scheduling is handled by a dedicated effect so it can
+    // sequence correctly behind the "Under Construction" announcement
+    // (UC shows first, then nudge ~1s after it closes). See effect below.
   };
 
   const finishDriverOnboarding = () => {
