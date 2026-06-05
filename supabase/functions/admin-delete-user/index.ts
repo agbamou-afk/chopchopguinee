@@ -94,20 +94,40 @@ Deno.serve(async (req) => {
 
     if (hist === true) {
       // Anonymize instead of hard delete
-      const { error: anonErr } = await admin.rpc("admin_anonymize_user", {
+      const { data: anonData, error: anonErr } = await admin.rpc("admin_anonymize_user", {
         _target: target,
         _reason: reason,
       });
       if (anonErr) {
         console.error("[admin-delete-user] anonymize failed", anonErr);
         return json(
-          { error: "anonymize_failed", message: "Échec de l'anonymisation du compte." },
+          {
+            error: "anonymize_failed",
+            message: "Impossible d'anonymiser ce compte pour le moment.",
+            detail: anonErr.message ?? null,
+            code: (anonErr as { code?: string }).code ?? null,
+            hint: (anonErr as { hint?: string }).hint ?? null,
+          },
+          500,
+        );
+      }
+      const a = (anonData ?? {}) as { ok?: boolean; sqlstate?: string; detail?: string; steps?: unknown };
+      if (a && a.ok === false) {
+        console.error("[admin-delete-user] anonymize returned ok=false", a);
+        return json(
+          {
+            error: "anonymize_failed",
+            message: "Impossible d'anonymiser ce compte pour le moment.",
+            detail: a.detail ?? null,
+            sqlstate: a.sqlstate ?? null,
+          },
           500,
         );
       }
       return json({
         ok: true,
         mode: "anonymized",
+        steps: a.steps ?? null,
         message:
           "Ce compte contient des données financières. Il a été anonymisé plutôt que supprimé.",
       });
