@@ -42,6 +42,8 @@ import {
 } from "@/components/onboarding/SignupInviteSheet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
 import { createSupportIssue } from "@/lib/support/issues";
+import { UnderConstructionModal } from "@/components/announcements/UnderConstructionModal";
+import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -489,6 +491,23 @@ const Index = () => {
     setActiveTab("home");
   };
 
+  // "CHOPCHOP arrive bientôt" announcement. Only schedules once the user is
+  // truly in the product shell: onboarding finished, no blocking sheet, no
+  // trip/booking/scanner open. The hook itself enforces the 30s delay and
+  // localStorage dismissal persistence.
+  const announcementCanShow =
+    ready &&
+    !onboardingBlocksApp &&
+    !bookingRide &&
+    !activeTrip &&
+    !showScanner &&
+    !conversionGate.open &&
+    !signupInviteOpen;
+  const { open: ucOpen, close: ucClose } = useUnderConstructionAnnouncement({
+    canShow: announcementCanShow,
+    userId: user?.id ?? null,
+  });
+
   const renderUserView = () => {
     switch (activeView) {
       case "food":
@@ -727,6 +746,7 @@ const Index = () => {
         onOpenChange={setSignupInviteOpen}
         onDismiss={markSignupInviteDismissed}
       />
+      <UnderConstructionModal open={ucOpen} onClose={ucClose} />
     </div>
   );
 };
