@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
+export const UNDER_CONSTRUCTION_DELAY_MS = 1000;
+
+
 /**
  * Per-user dismissal key. Logged-out visitors fall back to a session-scoped
  * key so the popup never trails them across sessions when no identity exists.
