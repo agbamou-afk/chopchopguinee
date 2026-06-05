@@ -73,14 +73,30 @@ export default function UsersAdmin() {
         body: { target_user_id: pending.user_id, confirm: true, reason: "admin_pilot_cleanup" },
       });
       if (error) {
-        toast({ title: "Erreur", description: error.message });
-      } else if ((data as { error?: string })?.error) {
-        toast({ title: "Erreur", description: (data as { error: string }).error });
-      } else {
-        const mode = (data as { mode?: string; message?: string })?.mode;
+        // supabase-js wraps non-2xx responses in FunctionsHttpError; the JSON
+        // body is exposed via error.context (a Response). Try to extract the
+        // French message we returned from the edge function.
+        let parsed: { error?: string; message?: string } | null = null;
+        const ctx = (error as unknown as { context?: Response }).context;
+        if (ctx && typeof ctx.json === "function") {
+          try { parsed = await ctx.clone().json(); } catch { /* not JSON */ }
+        }
+        console.error("[admin-delete-user] failed", { error, parsed });
         toast({
-          title: mode === "hard_deleted" ? "Compte test supprimé" : "Compte désactivé",
-          description: (data as { message?: string })?.message ?? "",
+          title: "Suppression impossible",
+          description:
+            parsed?.message ??
+            parsed?.error ??
+            "Impossible de supprimer ce compte pour le moment.",
+        });
+      } else if ((data as { error?: string; message?: string })?.error) {
+        const d = data as { error: string; message?: string };
+        toast({ title: "Suppression impossible", description: d.message ?? d.error });
+      } else {
+        const d = (data ?? {}) as { mode?: string; message?: string };
+        toast({
+          title: d.mode === "hard_deleted" ? "Compte test supprimé" : "Compte anonymisé",
+          description: d.message ?? "",
         });
         setPending(null);
         await reload();
