@@ -499,10 +499,31 @@ const Index = () => {
     !showScanner &&
     !conversionGate.open &&
     !signupInviteOpen;
-  const { open: ucOpen, close: ucClose } = useUnderConstructionAnnouncement({
+  const { open: ucOpen, close: ucClose, willShow: ucWillShow } = useUnderConstructionAnnouncement({
     canShow: announcementCanShow,
     userId: user?.id ?? null,
   });
+
+  // Signup nudge scheduler. Runs after Under Construction is dismissed
+  // (or immediately when UC won't show this session), preserving the
+  // original ~3–5s gentle delay. Eligible only for public guests who
+  // are fully inside the product shell and haven't already dismissed.
+  useEffect(() => {
+    if (!publicUser || adminUser) return;
+    if (!ready || onboardingBlocksApp) return;
+    if (bookingRide || activeTrip || showScanner) return;
+    if (conversionGate.open) return;
+    if (signupInviteOpen) return;
+    if (ucOpen || ucWillShow) return; // wait for UC to finish first
+    if (shouldSkipSignupInvite()) return;
+    const delay = 800 + Math.floor(Math.random() * 700);
+    const t = window.setTimeout(() => setSignupInviteOpen(true), delay);
+    return () => window.clearTimeout(t);
+  }, [
+    publicUser, adminUser, ready, onboardingBlocksApp,
+    bookingRide, activeTrip, showScanner,
+    conversionGate.open, signupInviteOpen, ucOpen, ucWillShow,
+  ]);
 
   const renderUserView = () => {
     switch (activeView) {
