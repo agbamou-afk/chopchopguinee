@@ -237,6 +237,29 @@ export default function Auth() {
     if (error) toast({ title: "Échec", description: frenchAuthError(error.message) });
   };
 
+  const resendConfirmation = async () => {
+    const e1 = emailSchema.safeParse(email);
+    if (!e1.success) {
+      toast({ title: "Email requis", description: "Entrez votre adresse email puis réessayez." });
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/` },
+    });
+    setBusy(false);
+    if (error) {
+      toast({ title: "Échec", description: frenchAuthError(error.message) });
+      return;
+    }
+    toast({
+      title: "Email renvoyé",
+      description: "Si un compte non confirmé existe, un nouvel email a été envoyé.",
+    });
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Seo
