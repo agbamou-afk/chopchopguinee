@@ -76,18 +76,17 @@ export default function UsersAdmin() {
         // supabase-js wraps non-2xx responses in FunctionsHttpError; the JSON
         // body is exposed via error.context (a Response). Try to extract the
         // French message we returned from the edge function.
-        let parsed: { error?: string; message?: string } | null = null;
+        let parsed: { error?: string; message?: string; detail?: string; sqlstate?: string } | null = null;
         const ctx = (error as unknown as { context?: Response }).context;
         if (ctx && typeof ctx.json === "function") {
           try { parsed = await ctx.clone().json(); } catch { /* not JSON */ }
         }
         console.error("[admin-delete-user] failed", { error, parsed });
+        const base = parsed?.message ?? parsed?.error ?? "Impossible de supprimer ce compte pour le moment.";
+        const extra = parsed?.detail ? ` (${parsed.detail}${parsed.sqlstate ? ` · ${parsed.sqlstate}` : ""})` : "";
         toast({
           title: "Suppression impossible",
-          description:
-            parsed?.message ??
-            parsed?.error ??
-            "Impossible de supprimer ce compte pour le moment.",
+          description: `${base}${extra}`,
         });
       } else if ((data as { error?: string; message?: string })?.error) {
         const d = data as { error: string; message?: string };
