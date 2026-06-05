@@ -489,7 +489,7 @@ const Index = () => {
 
   // "CHOPCHOP arrive bientôt" announcement. Only schedules once the user is
   // truly in the product shell: onboarding finished, no blocking sheet, no
-  // trip/booking/scanner open. The hook itself enforces the 30s delay and
+  // trip/booking/scanner open. The hook itself enforces the 1s delay and
   // localStorage dismissal persistence.
   const announcementCanShow =
     ready &&
