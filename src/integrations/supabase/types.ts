@@ -1817,6 +1817,7 @@ export type Database = {
       }
       merchant_stores: {
         Row: {
+          address_label: string | null
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
@@ -1831,7 +1832,12 @@ export type Database = {
           delivery_available: boolean
           district: string | null
           id: string
+          id_photo_path: string | null
+          landmark: string | null
           latitude: number | null
+          location_accuracy_m: number | null
+          location_confirmed_at: string | null
+          location_source: string | null
           longitude: number | null
           market_id: string | null
           member_since: string
@@ -1842,15 +1848,18 @@ export type Database = {
           owner_user_id: string
           phone: string | null
           rejection_reason: string | null
+          selfie_photo_path: string | null
           slug: string
           stall_number: string | null
           status: string
+          storefront_photo_path: string | null
           submitted_at: string | null
           updated_at: string
           verification_state: string
           whatsapp: string | null
         }
         Insert: {
+          address_label?: string | null
           approved_at?: string | null
           approved_by?: string | null
           avatar_url?: string | null
@@ -1865,7 +1874,12 @@ export type Database = {
           delivery_available?: boolean
           district?: string | null
           id?: string
+          id_photo_path?: string | null
+          landmark?: string | null
           latitude?: number | null
+          location_accuracy_m?: number | null
+          location_confirmed_at?: string | null
+          location_source?: string | null
           longitude?: number | null
           market_id?: string | null
           member_since?: string
@@ -1876,15 +1890,18 @@ export type Database = {
           owner_user_id: string
           phone?: string | null
           rejection_reason?: string | null
+          selfie_photo_path?: string | null
           slug: string
           stall_number?: string | null
           status?: string
+          storefront_photo_path?: string | null
           submitted_at?: string | null
           updated_at?: string
           verification_state?: string
           whatsapp?: string | null
         }
         Update: {
+          address_label?: string | null
           approved_at?: string | null
           approved_by?: string | null
           avatar_url?: string | null
@@ -1899,7 +1916,12 @@ export type Database = {
           delivery_available?: boolean
           district?: string | null
           id?: string
+          id_photo_path?: string | null
+          landmark?: string | null
           latitude?: number | null
+          location_accuracy_m?: number | null
+          location_confirmed_at?: string | null
+          location_source?: string | null
           longitude?: number | null
           market_id?: string | null
           member_since?: string
@@ -1910,9 +1932,11 @@ export type Database = {
           owner_user_id?: string
           phone?: string | null
           rejection_reason?: string | null
+          selfie_photo_path?: string | null
           slug?: string
           stall_number?: string | null
           status?: string
+          storefront_photo_path?: string | null
           submitted_at?: string | null
           updated_at?: string
           verification_state?: string
@@ -3272,8 +3296,10 @@ export type Database = {
           allow_marketing_notifications: boolean
           allow_personalized_offers: boolean
           allow_urban_insights: boolean
+          app_mode: string
           created_at: string
           id: string
+          merchant_slides_completed_at: string | null
           updated_at: string
           user_id: string
         }
@@ -3281,8 +3307,10 @@ export type Database = {
           allow_marketing_notifications?: boolean
           allow_personalized_offers?: boolean
           allow_urban_insights?: boolean
+          app_mode?: string
           created_at?: string
           id?: string
+          merchant_slides_completed_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -3290,8 +3318,10 @@ export type Database = {
           allow_marketing_notifications?: boolean
           allow_personalized_offers?: boolean
           allow_urban_insights?: boolean
+          app_mode?: string
           created_at?: string
           id?: string
+          merchant_slides_completed_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -3626,6 +3656,7 @@ export type Database = {
       admin_merchant_decision: {
         Args: { _decision: string; _reason?: string; _store_id: string }
         Returns: {
+          address_label: string | null
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
@@ -3640,7 +3671,12 @@ export type Database = {
           delivery_available: boolean
           district: string | null
           id: string
+          id_photo_path: string | null
+          landmark: string | null
           latitude: number | null
+          location_accuracy_m: number | null
+          location_confirmed_at: string | null
+          location_source: string | null
           longitude: number | null
           market_id: string | null
           member_since: string
@@ -3651,9 +3687,11 @@ export type Database = {
           owner_user_id: string
           phone: string | null
           rejection_reason: string | null
+          selfie_photo_path: string | null
           slug: string
           stall_number: string | null
           status: string
+          storefront_photo_path: string | null
           submitted_at: string | null
           updated_at: string
           verification_state: string

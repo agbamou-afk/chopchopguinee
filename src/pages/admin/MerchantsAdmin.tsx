@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { MapPin, ExternalLink } from "lucide-react";
 
 type Row = {
   id: string;
@@ -21,8 +22,73 @@ type Row = {
   stall_number?: string | null;
   rejection_reason?: string | null;
   submitted_at?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  landmark?: string | null;
+  address_label?: string | null;
+  location_source?: string | null;
+  id_photo_path?: string | null;
+  selfie_photo_path?: string | null;
+  storefront_photo_path?: string | null;
   created_at: string;
 };
+
+function MerchantReviewDocs({ row }: { row: Row }) {
+  const [urls, setUrls] = useState<{ id?: string | null; selfie?: string | null; storefront?: string | null }>({});
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const out: { id?: string | null; selfie?: string | null; storefront?: string | null } = {};
+      for (const [key, path] of [
+        ["id", row.id_photo_path],
+        ["selfie", row.selfie_photo_path],
+        ["storefront", row.storefront_photo_path],
+      ] as const) {
+        if (!path) continue;
+        const { data } = await supabase.storage.from("merchant-docs").createSignedUrl(path, 60 * 10);
+        (out as any)[key] = data?.signedUrl ?? null;
+      }
+      if (alive) setUrls(out);
+    })();
+    return () => { alive = false; };
+  }, [row.id, row.id_photo_path, row.selfie_photo_path, row.storefront_photo_path]);
+
+  const hasLoc = row.latitude != null && row.longitude != null;
+  return (
+    <div className="space-y-2">
+      {hasLoc && (
+        <a
+          href={`https://www.google.com/maps?q=${row.latitude},${row.longitude}`}
+          target="_blank" rel="noreferrer"
+          className="inline-flex items-center gap-1 text-xs text-primary underline"
+        >
+          <MapPin className="w-3.5 h-3.5" />
+          {row.latitude!.toFixed(5)}, {row.longitude!.toFixed(5)}
+          {row.location_source ? ` · ${row.location_source}` : ""}
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      )}
+      <div className="grid grid-cols-3 gap-2">
+        {(["id", "selfie", "storefront"] as const).map((k) => {
+          const url = (urls as any)[k] as string | null | undefined;
+          const label = k === "id" ? "Pièce" : k === "selfie" ? "Selfie" : "Boutique";
+          return (
+            <div key={k} className="rounded-lg border border-border/60 overflow-hidden">
+              {url ? (
+                <a href={url} target="_blank" rel="noreferrer" className="block">
+                  <img src={url} alt={label} className="w-full h-20 object-cover" />
+                </a>
+              ) : (
+                <div className="h-20 flex items-center justify-center text-[10px] text-muted-foreground">—</div>
+              )}
+              <div className="text-[10px] text-center py-1 bg-muted/30">{label}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 type Filter =
   | "Tous"
@@ -52,7 +118,7 @@ export default function MerchantsAdmin() {
       (supabase as any)
         .from("merchant_stores")
         .select(
-          "id,name,district,status,verification_state,created_at,onboarding_status,owner_user_id,phone,owner_name,business_type,stall_number,rejection_reason,submitted_at",
+          "id,name,district,status,verification_state,created_at,onboarding_status,owner_user_id,phone,owner_name,business_type,stall_number,rejection_reason,submitted_at,latitude,longitude,landmark,address_label,location_source,id_photo_path,selfie_photo_path,storefront_photo_path",
         )
         .order("created_at", { ascending: false })
         .limit(200),
@@ -161,6 +227,7 @@ export default function MerchantsAdmin() {
             {selected.rejection_reason && (
               <p className="text-xs italic text-muted-foreground">« {selected.rejection_reason} »</p>
             )}
+            <MerchantReviewDocs row={selected} />
             <div>
               <label className="text-xs font-medium">Motif / instructions (optionnel)</label>
               <textarea

@@ -127,7 +127,7 @@ export default function Auth() {
           !!sessionStorage.getItem(MERCHANT_INTENT_STORAGE_KEY));
       if (wantsMerchant) {
         sessionStorage.removeItem(MERCHANT_INTENT_STORAGE_KEY);
-        navigate("/merchant/onboarding", { replace: true });
+        navigate("/merchant/onboarding-slides", { replace: true });
         return;
       }
     } catch {
