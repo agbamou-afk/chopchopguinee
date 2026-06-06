@@ -1,11 +1,13 @@
 import { ModulePage } from "@/components/admin/ModulePage";
 import { AdminToolbar, DataTable, FilterChip, StatGrid, StatusBadge } from "@/components/admin/AdminMock";
-import { Users, UserCheck, UserX, ShieldAlert, Trash2, Loader2, Ban, ShieldCheck } from "lucide-react";
+import { Users, UserCheck, UserX, ShieldAlert, Trash2, Loader2, Ban, ShieldCheck, MailSearch, Send } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -42,6 +44,25 @@ function maskPhone(p: string | null) {
   return p.slice(0, 7) + " ••• ••";
 }
 
+function fmt(v: unknown): string {
+  if (v == null || v === "") return "—";
+  if (typeof v === "string") {
+    const d = new Date(v);
+    if (!Number.isNaN(d.getTime())) return d.toLocaleString("fr-FR");
+    return v;
+  }
+  return String(v);
+}
+
+function DiagLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-2 border-b border-border/40 py-0.5">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-mono text-foreground text-right break-all">{value}</span>
+    </div>
+  );
+}
+
 export default function UsersAdmin() {
   const { isSuperAdmin, role } = useAdminAuth();
   const canHardDelete = isSuperAdmin || role === "god_admin";
@@ -56,6 +77,51 @@ export default function UsersAdmin() {
   const [banReason, setBanReason] = useState("");
   const [unbanTarget, setUnbanTarget] = useState<Row | null>(null);
   const [unbanReason, setUnbanReason] = useState("");
+
+  // Email diagnostics
+  const [diagEmail, setDiagEmail] = useState("");
+  const [diagBusy, setDiagBusy] = useState(false);
+  const [diagResult, setDiagResult] = useState<Record<string, unknown> | null>(null);
+  const [resendBusy, setResendBusy] = useState(false);
+
+  const runDiagnostics = async () => {
+    const email = diagEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      toast({ title: "Email invalide", description: "Saisissez une adresse email valide." });
+      return;
+    }
+    setDiagBusy(true);
+    setDiagResult(null);
+    const { data, error } = await supabase.rpc("admin_email_delivery_diagnostics", { p_email: email });
+    setDiagBusy(false);
+    if (error) {
+      toast({ title: "Diagnostic impossible", description: error.message });
+      return;
+    }
+    setDiagResult(data as Record<string, unknown>);
+  };
+
+  const resendConfirmation = async () => {
+    const email = diagEmail.trim().toLowerCase();
+    if (!email) return;
+    setResendBusy(true);
+    const { data, error } = await supabase.functions.invoke("admin-email-resend", {
+      body: { email },
+    });
+    setResendBusy(false);
+    if (error) {
+      let parsed: { message?: string; error?: string } | null = null;
+      const ctx = (error as unknown as { context?: Response }).context;
+      if (ctx && typeof ctx.json === "function") {
+        try { parsed = await ctx.clone().json(); } catch { /* ignore */ }
+      }
+      toast({ title: "Renvoi impossible", description: parsed?.message ?? parsed?.error ?? error.message });
+      return;
+    }
+    const d = (data ?? {}) as { message?: string };
+    toast({ title: "Renvoi déclenché", description: d.message ?? "Email mis en file d'attente." });
+    await runDiagnostics();
+  };
 
   const reload = async () => {
     setLoading(true);
@@ -184,6 +250,77 @@ export default function UsersAdmin() {
         { label: "Suspendus", value: loading ? "…" : String(stats.suspendus), icon: UserX },
         { label: "KYC niveau 0", value: loading ? "…" : String(stats.kyc), icon: ShieldAlert },
       ]} />
+
+      {canHardDelete && (
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <MailSearch className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-semibold">Diagnostic email signup</h3>
+          </div>
+          <p className="text-[12px] text-muted-foreground">
+            Vérifier l'état réel d'une confirmation : utilisateur Auth, file d'attente, fournisseur, suppression.
+            Réservé aux god_admin.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              type="email"
+              value={diagEmail}
+              onChange={(e) => setDiagEmail(e.target.value)}
+              placeholder="adresse@exemple.com"
+              className="sm:flex-1"
+              autoComplete="off"
+            />
+            <Button onClick={runDiagnostics} disabled={diagBusy} variant="outline">
+              {diagBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <MailSearch className="w-4 h-4" />}
+              <span className="ml-1">Diagnostiquer</span>
+            </Button>
+            <Button onClick={resendConfirmation} disabled={resendBusy || !diagEmail.trim()} className="gradient-primary">
+              {resendBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span className="ml-1">Renvoyer confirmation</span>
+            </Button>
+          </div>
+          {diagResult && (
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-2 text-[12px]">
+              {(diagResult as { ok?: boolean; error?: string }).ok === false ? (
+                <p className="text-destructive font-medium">
+                  Erreur : {(diagResult as { error?: string }).error}
+                </p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-1">
+                    <DiagLine label="Auth user" value={String((diagResult as Record<string, unknown>).auth_user_exists ?? "—")} />
+                    <DiagLine label="Confirmé" value={String((diagResult as Record<string, unknown>).email_confirmed ?? "—")} />
+                    <DiagLine label="confirmation_sent_at" value={fmt((diagResult as Record<string, unknown>).confirmation_sent_at)} />
+                    <DiagLine label="email_confirmed_at" value={fmt((diagResult as Record<string, unknown>).email_confirmed_at)} />
+                    <DiagLine label="Dernier template" value={String((diagResult as Record<string, unknown>).latest_template ?? "—")} />
+                    <DiagLine label="Dernier statut" value={String((diagResult as Record<string, unknown>).latest_status ?? "—")} />
+                    <DiagLine label="Dernier envoi" value={fmt((diagResult as Record<string, unknown>).latest_created_at)} />
+                    <DiagLine label="Supprimé (bounce/plainte)" value={String((diagResult as Record<string, unknown>).suppressed ?? false)} />
+                    <DiagLine label="File auth_emails" value={String((diagResult as Record<string, unknown>).queue_pending_count ?? "—")} />
+                    <DiagLine label="DLQ auth_emails" value={String((diagResult as Record<string, unknown>).queue_dlq_count ?? "—")} />
+                  </div>
+                  {(diagResult as { latest_error?: string }).latest_error && (
+                    <p className="text-destructive">
+                      Erreur fournisseur : {(diagResult as { latest_error?: string }).latest_error}
+                    </p>
+                  )}
+                  {(diagResult as { send_log?: Record<string, number> }).send_log && (
+                    <p className="text-muted-foreground">
+                      Historique : {Object.entries((diagResult as { send_log: Record<string, number> }).send_log)
+                        .map(([k, v]) => `${k}:${v}`)
+                        .join(" · ")}
+                    </p>
+                  )}
+                  <p className="font-medium text-foreground">
+                    → {(diagResult as { recommended_action?: string }).recommended_action}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
+
       <AdminToolbar placeholder="Recherche à connecter..." />
       <div className="flex gap-2 flex-wrap">
         {(["Tous", "Actifs", "Suspendus", "KYC"] as const).map((f) => (
