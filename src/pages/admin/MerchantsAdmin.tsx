@@ -169,6 +169,7 @@ export default function MerchantsAdmin() {
             {selected.rejection_reason && (
               <p className="text-xs italic text-muted-foreground">« {selected.rejection_reason} »</p>
             )}
+            <MerchantReviewDocs row={selected} />
             <div>
               <label className="text-xs font-medium">Motif / instructions (optionnel)</label>
               <textarea
