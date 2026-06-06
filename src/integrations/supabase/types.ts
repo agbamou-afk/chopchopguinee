@@ -697,6 +697,65 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_route_traces: {
+        Row: {
+          accuracy_m: number | null
+          created_at: string
+          driver_id: string
+          heading: number | null
+          id: number
+          lat: number
+          lng: number
+          mission_id: string | null
+          observed_at: string
+          phase: string
+          planned_route_hash: string | null
+          provider: string | null
+          ride_id: string | null
+          speed_mps: number | null
+        }
+        Insert: {
+          accuracy_m?: number | null
+          created_at?: string
+          driver_id: string
+          heading?: number | null
+          id?: number
+          lat: number
+          lng: number
+          mission_id?: string | null
+          observed_at?: string
+          phase: string
+          planned_route_hash?: string | null
+          provider?: string | null
+          ride_id?: string | null
+          speed_mps?: number | null
+        }
+        Update: {
+          accuracy_m?: number | null
+          created_at?: string
+          driver_id?: string
+          heading?: number | null
+          id?: number
+          lat?: number
+          lng?: number
+          mission_id?: string | null
+          observed_at?: string
+          phase?: string
+          planned_route_hash?: string | null
+          provider?: string | null
+          ride_id?: string | null
+          speed_mps?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_route_traces_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1099,6 +1158,54 @@ export type Database = {
           name?: string
           neighborhood?: string | null
           popularity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      learned_route_segments: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          destination_geohash: string
+          id: number
+          last_observed_at: string | null
+          median_distance_m: number | null
+          median_duration_s: number | null
+          notes: string | null
+          observed_count: number
+          origin_geohash: string
+          segment_hash: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          confidence_score?: number
+          created_at?: string
+          destination_geohash: string
+          id?: number
+          last_observed_at?: string | null
+          median_distance_m?: number | null
+          median_duration_s?: number | null
+          notes?: string | null
+          observed_count?: number
+          origin_geohash: string
+          segment_hash?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          destination_geohash?: string
+          id?: number
+          last_observed_at?: string | null
+          median_distance_m?: number | null
+          median_duration_s?: number | null
+          notes?: string | null
+          observed_count?: number
+          origin_geohash?: string
+          segment_hash?: string | null
+          source?: string
           updated_at?: string
         }
         Relationships: []
@@ -2293,6 +2400,71 @@ export type Database = {
           score?: number
         }
         Relationships: []
+      }
+      ride_route_summaries: {
+        Row: {
+          actual_route_distance_m: number | null
+          actual_route_duration_s: number | null
+          average_speed_kmh: number | null
+          created_at: string
+          deviation_count: number
+          driver_id: string | null
+          end_district: string | null
+          metadata: Json
+          planned_route_distance_m: number | null
+          planned_route_duration_s: number | null
+          point_count: number
+          ride_id: string
+          route_confidence: number | null
+          start_district: string | null
+          time_window: string | null
+          updated_at: string
+        }
+        Insert: {
+          actual_route_distance_m?: number | null
+          actual_route_duration_s?: number | null
+          average_speed_kmh?: number | null
+          created_at?: string
+          deviation_count?: number
+          driver_id?: string | null
+          end_district?: string | null
+          metadata?: Json
+          planned_route_distance_m?: number | null
+          planned_route_duration_s?: number | null
+          point_count?: number
+          ride_id: string
+          route_confidence?: number | null
+          start_district?: string | null
+          time_window?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actual_route_distance_m?: number | null
+          actual_route_duration_s?: number | null
+          average_speed_kmh?: number | null
+          created_at?: string
+          deviation_count?: number
+          driver_id?: string | null
+          end_district?: string | null
+          metadata?: Json
+          planned_route_distance_m?: number | null
+          planned_route_duration_s?: number | null
+          point_count?: number
+          ride_id?: string
+          route_confidence?: number | null
+          start_district?: string | null
+          time_window?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_route_summaries_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rides: {
         Row: {

@@ -41,6 +41,13 @@ export default function Privacy() {
               <li>Compte : nom, email, mot de passe (haché), téléphone.</li>
               <li>Profil : photo, préférences.</li>
               <li>Localisation : position GPS, point de départ, destination.</li>
+              <li>
+                Trajets opérationnels : lorsqu'un chauffeur est en mission
+                active, l'itinéraire réellement parcouru peut être enregistré
+                afin de compléter la course, d'améliorer les ETA et la fiabilité
+                du routage local. CHOPCHOP ne suit pas les utilisateurs en
+                dehors des périodes d'utilisation active du service.
+              </li>
               <li>Courses, livraisons et commandes Repas / Marché.</li>
               <li>Portefeuille et historique de paiements.</li>
               <li>Demandes de support et pièces jointes éventuelles.</li>

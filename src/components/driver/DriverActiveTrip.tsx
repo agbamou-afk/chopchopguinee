@@ -11,6 +11,8 @@ import { useRideLifecycleNotifications } from "@/hooks/useRideLifecycleNotificat
 import { useConnectionRestored } from "@/hooks/useConnectionRestored";
 import { useTurnByTurn } from "@/hooks/useTurnByTurn";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { useRouteTraceCapture } from "@/hooks/useRouteTraceCapture";
+import { decodePolyline } from "@/lib/maps/geo";
 import { NavigationHud } from "./NavigationHud";
 import { DriverTripReceipt } from "./DriverTripReceipt";
 import { Button } from "@/components/ui/button";
@@ -134,6 +136,30 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     mute: muted,
   });
 
+  // Route Learning v0 — capture the actual path the driver takes while
+  // assigned to this ride. Strictly data collection: never overrides the
+  // provider route, never visible to the customer.
+  const tracePhase: "to_pickup" | "to_destination" | null =
+    phase === "approach" || phase === "arrived"
+      ? "to_pickup"
+      : phase === "on_trip"
+        ? "to_destination"
+        : null;
+  const plannedPathForTrace = useMemo(
+    () => (nav.route ? decodePolyline(nav.route.polyline) : null),
+    [nav.route],
+  );
+  const trace = useRouteTraceCapture({
+    rideId,
+    phase: tracePhase,
+    enabled: ride?.status === "pending" || ride?.status === "in_progress",
+    plannedRoute: nav.route
+      ? { distanceM: nav.route.distanceM, durationS: nav.route.durationS }
+      : null,
+    plannedPath: plannedPathForTrace,
+    provider: "internal",
+  });
+
   // Fit bounds whenever endpoints arrive
   useEffect(() => {
     if (!pickup || !mapRef.current) return;
@@ -234,6 +260,8 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     });
     setBusy(false);
     if (error) { toast({ title: "Erreur", description: error.message }); return; }
+    // Fire-and-forget; never blocks completion.
+    trace.finalize().catch(() => {});
     try { Analytics.track("driver.ride.completed" as any, { metadata: { rideId } }); } catch {}
     playRideCompleted();
     setReceiptFare(ride.fare_gnf ?? 0);
