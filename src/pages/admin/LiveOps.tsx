@@ -7,6 +7,7 @@ import {
 import { useState } from "react";
 import { AdminLiveOpsMap } from "@/components/admin/AdminLiveOpsMap";
 import { RouteLearningCard } from "@/components/admin/RouteLearningCard";
+import { RouteIntelligencePanel } from "@/components/admin/RouteIntelligencePanel";
 
 /**
  * Canonical ride lifecycle phases as understood by ops.
@@ -98,6 +99,7 @@ export default function LiveOps() {
       ]} />
       <AdminLiveOpsMap variant="moto" />
       <RouteLearningCard />
+      <RouteIntelligencePanel />
       <div className="flex gap-2 flex-wrap">
         {["Tous", "Alertes", "Recherche", "En course", "Hors ligne"].map((x) => (
           <FilterChip key={x} label={x} active={f === x} onClick={() => setF(x)} />

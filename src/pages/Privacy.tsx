@@ -48,6 +48,13 @@ export default function Privacy() {
                 du routage local. CHOPCHOP ne suit pas les utilisateurs en
                 dehors des périodes d'utilisation active du service.
               </li>
+              <li>
+                Analyses d'itinéraires : les trajets terminés sont agrégés par
+                district, créneau horaire et type de jour afin d'améliorer les
+                temps estimés et la fiabilité du service. Ces analyses ne sont
+                jamais affichées publiquement comme l'historique personnel d'un
+                chauffeur.
+              </li>
               <li>Courses, livraisons et commandes Repas / Marché.</li>
               <li>Portefeuille et historique de paiements.</li>
               <li>Demandes de support et pièces jointes éventuelles.</li>
