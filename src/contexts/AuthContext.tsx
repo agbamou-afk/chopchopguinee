@@ -46,7 +46,7 @@ interface AuthContextValue {
    * to route returning driver applicants to /driver/apply even before they
    * have a driver_profile row.
    */
-  signupIntent: "client" | "driver" | null;
+  signupIntent: "client" | "driver" | "merchant" | null;
   requestedDriverVehicle: "moto" | "toktok" | "livraison" | null;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -222,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isProfileComplete: profileComplete(profile),
     signupIntent: (() => {
       const v = (session?.user?.user_metadata as Record<string, unknown> | undefined)?.signup_intent;
-      return v === "driver" || v === "client" ? v : null;
+      return v === "driver" || v === "client" || v === "merchant" ? v : null;
     })(),
     requestedDriverVehicle: (() => {
       const v = (session?.user?.user_metadata as Record<string, unknown> | undefined)?.requested_driver_vehicle;
