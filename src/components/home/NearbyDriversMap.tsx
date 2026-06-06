@@ -1,5 +1,5 @@
 import { Marker } from "react-map-gl";
-import { ChopMap, DriverCluster, MapMarker, VendorDiscoveryLayer } from "@/components/map";
+import { ChopMap, MapMarker, NearbyAvailableDrivers, VendorDiscoveryLayer } from "@/components/map";
 
 interface Props {
   lng: number;
@@ -19,7 +19,8 @@ export default function NearbyDriversMap({ lng, lat, userPresent = false }: Prop
       interactive={false}
       initialView={{ longitude: lng, latitude: lat, zoom: 13 }}
     >
-      <DriverCluster variant="moto" />
+      {/* Privacy-safe — RPC returns only approved + online drivers, rounded coords. */}
+      <NearbyAvailableDrivers lat={userPresent ? lat : null} lng={userPresent ? lng : null} vehicleType="moto" />
       {/* Customer-only: nearby public restaurants & boutiques (with coords). */}
       <VendorDiscoveryLayer enabled filters={{ restaurants: true, stores: true }} />
       {userPresent && (
