@@ -672,9 +672,7 @@ const Index = () => {
           />
         )}
         {!onboardingBlocksApp && activeTrip && (
-          (typeof window !== "undefined" &&
-            (localStorage.getItem("cc_realtime_trip") === "1" ||
-              /[?&]trip=v2/.test(window.location.search))) && activeTrip.rideId
+          activeTrip.rideId
           ? (
             <RealtimeTripScreen
               key={`v2-${activeTrip.rideId}`}
