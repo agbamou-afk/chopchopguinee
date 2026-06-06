@@ -5,6 +5,10 @@ import { UserHome } from "@/components/views/UserHome";
 import { DriverHome } from "@/components/views/DriverHome";
 import { RideBooking } from "@/components/ride/RideBooking";
 import { RealtimeTripScreen } from "@/components/trip/RealtimeTripScreen";
+
+/** Local ride mode type — kept here so the legacy LiveTracking component
+ * (now quarantined under `_legacy/`) is not imported from production code. */
+type TrackingMode = "moto" | "toktok" | "food";
 import { QrScanner } from "@/components/scanner/QrScanner";
 import { toast } from "@/hooks/use-toast";
 import { FoodView } from "@/components/views/FoodView";
@@ -670,24 +674,12 @@ const Index = () => {
             }}
           />
         )}
-        {!onboardingBlocksApp && activeTrip && (
-          activeTrip.rideId
-          ? (
-            <RealtimeTripScreen
-              key={`v2-${activeTrip.rideId}`}
-              rideId={activeTrip.rideId}
-              mode={activeTrip.mode as "moto" | "toktok"}
-              holdId={activeTrip.holdId}
-              onClose={() => closeActiveTrip(true)}
-            />
-          )
-          : <LiveTracking
-            mode={activeTrip.mode}
-            pickupCoords={activeTrip.pickupCoords}
-            destCoords={activeTrip.destCoords}
-            fare={activeTrip.fare}
-            holdId={activeTrip.holdId}
+        {!onboardingBlocksApp && activeTrip && activeTrip.rideId && (
+          <RealtimeTripScreen
+            key={`v2-${activeTrip.rideId}`}
             rideId={activeTrip.rideId}
+            mode={activeTrip.mode as "moto" | "toktok"}
+            holdId={activeTrip.holdId}
             onClose={() => closeActiveTrip(true)}
           />
         )}
