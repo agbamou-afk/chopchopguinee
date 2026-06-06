@@ -1,4 +1,16 @@
+/**
+ * ⚠️ LEGACY — DO NOT IMPORT FROM PRODUCTION RIDE FLOWS.
+ *
+ * This component is the pre-v2 ride tracking surface. It uses straight-line
+ * routes and simulated driver positions. The active ride UX MUST always use
+ * `<RealtimeTripScreen>` (src/components/trip/RealtimeTripScreen.tsx).
+ *
+ * Kept here only for sandbox/demo experiments. Importing it from any code
+ * path that runs outside `?sandbox=1` / `isSandboxMode()` will throw at
+ * render time to prevent accidental regressions.
+ */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { isSandboxMode } from "@/lib/runtimeMode";
 import { formatGNF } from "@/lib/format";
 import { motion, AnimatePresence } from "framer-motion";
 import { Marker } from "react-map-gl";
@@ -51,6 +63,11 @@ const DRIVERS = [
 ];
 
 export function LiveTracking({ mode, pickupCoords, destCoords, fare, onClose, holdId, rideId }: LiveTrackingProps) {
+  if (typeof window !== "undefined" && !isSandboxMode() && !/[?&]sandbox=1/.test(window.location.search)) {
+    throw new Error(
+      "LiveTracking is a quarantined legacy component. Use <RealtimeTripScreen> for production ride flows.",
+    );
+  }
   const [phase, setPhase] = useState<Phase>("searching");
   const [driverPos, setDriverPos] = useState<[number, number]>(() => [
     pickupCoords[0] + (Math.random() - 0.5) * 0.012,
