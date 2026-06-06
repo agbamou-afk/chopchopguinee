@@ -15,6 +15,7 @@ import { useCustomerMissionAlerts } from "@/hooks/useCustomerMissionAlerts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiveUserLocation } from "@/lib/location/useLiveUserLocation";
 import { MapPin } from "lucide-react";
+import { useNearbyAvailableDrivers } from "@/hooks/useNearbyAvailableDrivers";
 
 const NearbyDriversMap = lazy(() => import("@/components/home/NearbyDriversMap"));
 
@@ -41,6 +42,16 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
   const { lowDataMode } = useAppEnv();
   const live = useLiveUserLocation();
   const mapCenter = live.coords ?? live.fallbackCenter;
+  const nearby = useNearbyAvailableDrivers({
+    lat: live.isRealLocation && live.coords ? live.coords.lat : null,
+    lng: live.isRealLocation && live.coords ? live.coords.lng : null,
+    vehicleType: "moto",
+    radiusM: 3000,
+    enabled: live.isRealLocation,
+  });
+  const closestDriverMin = nearby.drivers[0]
+    ? Math.max(1, Math.round((nearby.drivers[0].distance_m / 1000) / 28 * 60))
+    : null;
   const userLocation = live.isRealLocation ? "votre zone" : "Conakry";
   const locationLabel = live.isRealLocation
     ? "Ma position"
@@ -185,6 +196,17 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               <Bike className="w-3 h-3 text-primary" />
               <span className="text-[11px] font-semibold text-foreground">En direct</span>
             </div>
+            {live.isRealLocation && !lowDataMode && (
+              <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 bg-card/95 backdrop-blur rounded-full px-2.5 py-1 shadow-card">
+                <span className="text-[11px] font-semibold text-foreground">
+                  {nearby.loading && nearby.drivers.length === 0
+                    ? "Recherche…"
+                    : nearby.drivers.length === 0
+                      ? "Aucun chauffeur proche"
+                      : `${nearby.drivers.length} ${nearby.drivers.length > 1 ? "chauffeurs" : "chauffeur"}${closestDriverMin ? ` · ~${closestDriverMin} min` : ""}`}
+                </span>
+              </div>
+            )}
             {!live.isRealLocation && !lowDataMode && (
               <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 bg-card/95 backdrop-blur rounded-2xl px-3 py-2 shadow-card">
                 <div className="flex items-center gap-2 text-left min-w-0">
