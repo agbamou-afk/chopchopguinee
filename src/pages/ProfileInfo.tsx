@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { BrandLogo } from "@/components/brand/BrandLogo";
+
 import { Seo } from "@/components/Seo";
 import { GuineaPhoneInput } from "@/components/ui/guinea-phone-input";
 import { SelfDeleteAccountSheet } from "@/components/account/SelfDeleteAccountSheet";
