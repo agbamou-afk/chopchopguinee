@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { SecondaryPageHeader } from "@/components/ui/SecondaryPageHeader";
 import { PRIVACY_VERSION, LEGAL_LAST_UPDATED } from "@/lib/legal";
