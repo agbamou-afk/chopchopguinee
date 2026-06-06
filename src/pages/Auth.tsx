@@ -12,7 +12,7 @@ import { Seo } from "@/components/Seo";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TERMS_VERSION, PRIVACY_VERSION, recordLegalAcceptance } from "@/lib/legal";
-import { Bike, Car, Package, ShoppingBag } from "lucide-react";
+import { Bike, Car, Package, ShoppingBag, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GuineaPhoneInput } from "@/components/ui/guinea-phone-input";
 import {
@@ -22,9 +22,10 @@ import {
 } from "@/lib/phone/guinea";
 import { EmailConfirmationPendingCard } from "@/components/auth/EmailConfirmationPendingCard";
 
-type SignupIntent = "client" | "driver";
+type SignupIntent = "client" | "driver" | "merchant";
 type DriverVehicleIntent = "moto" | "toktok" | "livraison";
 const DRIVER_INTENT_STORAGE_KEY = "cc_signup_driver_intent";
+const MERCHANT_INTENT_STORAGE_KEY = "cc_signup_merchant_intent";
 
 const emailSchema = z
   .string()
@@ -118,6 +119,15 @@ export default function Auth() {
         sessionStorage.setItem("cc_driver_mode_choice", "driver");
         const v = parsedVehicle ?? requestedDriverVehicle ?? "moto";
         navigate(`/driver/apply?intent=${encodeURIComponent(v)}`, { replace: true });
+        return;
+      }
+      const wantsMerchant =
+        signupIntent === "merchant" ||
+        (typeof window !== "undefined" &&
+          !!sessionStorage.getItem(MERCHANT_INTENT_STORAGE_KEY));
+      if (wantsMerchant) {
+        sessionStorage.removeItem(MERCHANT_INTENT_STORAGE_KEY);
+        navigate("/merchant/onboarding", { replace: true });
         return;
       }
     } catch {
@@ -239,6 +249,9 @@ export default function Auth() {
             JSON.stringify({ vehicle }),
           );
         }
+        if (intent === "merchant" && typeof window !== "undefined") {
+          sessionStorage.setItem(MERCHANT_INTENT_STORAGE_KEY, "1");
+        }
       } catch {
         /* noop */
       }
@@ -252,7 +265,9 @@ export default function Auth() {
         description:
           intent === "driver"
             ? "Compte créé. Finalisez votre demande chauffeur/coursier."
-            : "Bienvenue sur CHOPCHOP.",
+            : intent === "merchant"
+              ? "Compte créé. Présentez votre boutique pour rejoindre Marché."
+              : "Bienvenue sur CHOPCHOP.",
       });
       return;
     }
