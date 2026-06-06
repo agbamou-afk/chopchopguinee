@@ -16,6 +16,8 @@ export interface MerchantStore {
   delivery_available: boolean;
   choppay_enabled: boolean;
   verification_state: string;
+  onboarding_status?: string;
+  rejection_reason?: string | null;
 }
 
 export interface MerchantIdentity {
