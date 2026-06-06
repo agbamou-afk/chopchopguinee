@@ -92,10 +92,17 @@ export default function UsersAdmin() {
         const d = data as { error: string; message?: string };
         toast({ title: "Suppression impossible", description: d.message ?? d.error });
       } else {
-        const d = (data ?? {}) as { mode?: string; message?: string };
+        const d = (data ?? {}) as { mode?: string; message?: string; email_reusable?: boolean };
+        const isDeleted = d.mode === "deleted" || d.mode === "hard_deleted";
         toast({
-          title: d.mode === "hard_deleted" ? "Compte test supprimé" : "Compte anonymisé",
-          description: d.message ?? "",
+          title: isDeleted
+            ? "Compte test supprimé — email réutilisable"
+            : "Compte anonymisé — historique conservé",
+          description:
+            d.message ??
+            (isDeleted
+              ? "L'email peut être réutilisé pour un nouveau compte."
+              : "L'historique financier/opérationnel est conservé. L'email peut ne pas être réutilisable."),
         });
         setPending(null);
         await reload();
