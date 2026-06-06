@@ -59,6 +59,7 @@ const PilotCommandCenter = lazy(() => import("./pages/admin/PilotCommandCenter")
 const DriverApply = lazy(() => import("./pages/DriverApply"));
 const MerchantQR = lazy(() => import("./pages/MerchantQR"));
 const Merchant = lazy(() => import("./pages/Merchant"));
+const MerchantOnboarding = lazy(() => import("./pages/MerchantOnboarding"));
 import PrivacySettings from "./pages/PrivacySettings";
 import OfflinePage from "./pages/Offline";
 import Terms from "./pages/Terms";
@@ -173,6 +174,7 @@ const App = () => {
           <Route path="/driver/apply" element={<Suspense fallback={null}><DriverApply /></Suspense>} />
           <Route path="/merchant" element={<Suspense fallback={null}><MerchantQR /></Suspense>} />
           <Route path="/merchant/hub" element={<Suspense fallback={null}><Merchant /></Suspense>} />
+          <Route path="/merchant/onboarding" element={<Suspense fallback={null}><MerchantOnboarding /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

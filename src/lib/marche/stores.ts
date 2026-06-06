@@ -56,6 +56,7 @@ export async function listStores(opts: { q?: string; district?: string; limit?: 
     .from("merchant_stores")
     .select("*")
     .eq("status", "active")
+    .eq("onboarding_status", "approved")
     .order("member_since", { ascending: false })
     .limit(opts.limit ?? 30);
   if (opts.q?.trim()) q = q.ilike("name", `%${opts.q.trim()}%`);

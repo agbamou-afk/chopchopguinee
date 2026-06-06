@@ -1623,9 +1623,104 @@ export type Database = {
         }
         Relationships: []
       }
+      market_onboarding_assignments: {
+        Row: {
+          assigned_zone: string | null
+          campaign_id: string
+          created_at: string
+          id: string
+          merchants_completed: number
+          merchants_targeted: number
+          specialist_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_zone?: string | null
+          campaign_id: string
+          created_at?: string
+          id?: string
+          merchants_completed?: number
+          merchants_targeted?: number
+          specialist_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_zone?: string | null
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          merchants_completed?: number
+          merchants_targeted?: number
+          specialist_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_onboarding_assignments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "market_onboarding_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_onboarding_campaigns: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          market_id: string
+          name: string
+          notes: string | null
+          start_date: string | null
+          status: string
+          target_merchants: number | null
+          team_lead: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          market_id: string
+          name: string
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          target_merchants?: number | null
+          team_lead?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          market_id?: string
+          name?: string
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          target_merchants?: number | null
+          team_lead?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_onboarding_campaigns_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "physical_markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_listings: {
         Row: {
           availability: Database["public"]["Enums"]["listing_availability"]
+          barcode: string | null
           category: string
           commune: string | null
           condition: string | null
@@ -1642,6 +1737,7 @@ export type Database = {
           photo_count: number
           price_gnf: number | null
           promoted: boolean
+          quantity_in_stock: number | null
           seller_id: string
           sold_count: number
           status: Database["public"]["Enums"]["listing_status"]
@@ -1649,9 +1745,11 @@ export type Database = {
           title: string
           updated_at: string
           view_count: number
+          visibility: string
         }
         Insert: {
           availability?: Database["public"]["Enums"]["listing_availability"]
+          barcode?: string | null
           category: string
           commune?: string | null
           condition?: string | null
@@ -1668,6 +1766,7 @@ export type Database = {
           photo_count?: number
           price_gnf?: number | null
           promoted?: boolean
+          quantity_in_stock?: number | null
           seller_id: string
           sold_count?: number
           status?: Database["public"]["Enums"]["listing_status"]
@@ -1675,9 +1774,11 @@ export type Database = {
           title: string
           updated_at?: string
           view_count?: number
+          visibility?: string
         }
         Update: {
           availability?: Database["public"]["Enums"]["listing_availability"]
+          barcode?: string | null
           category?: string
           commune?: string | null
           condition?: string | null
@@ -1694,6 +1795,7 @@ export type Database = {
           photo_count?: number
           price_gnf?: number | null
           promoted?: boolean
+          quantity_in_stock?: number | null
           seller_id?: string
           sold_count?: number
           status?: Database["public"]["Enums"]["listing_status"]
@@ -1701,6 +1803,7 @@ export type Database = {
           title?: string
           updated_at?: string
           view_count?: number
+          visibility?: string
         }
         Relationships: [
           {
@@ -1714,64 +1817,106 @@ export type Database = {
       }
       merchant_stores: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           avatar_url: string | null
           bio: string | null
+          business_name: string | null
+          business_type: string | null
           category: string | null
           choppay_enabled: boolean
           cover_url: string | null
           created_at: string
+          created_by: string | null
           delivery_available: boolean
           district: string | null
           id: string
           latitude: number | null
           longitude: number | null
+          market_id: string | null
           member_since: string
           name: string
+          onboarding_status: string
+          operating_hours: string | null
+          owner_name: string | null
           owner_user_id: string
+          phone: string | null
+          rejection_reason: string | null
           slug: string
+          stall_number: string | null
           status: string
+          submitted_at: string | null
           updated_at: string
           verification_state: string
+          whatsapp: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           avatar_url?: string | null
           bio?: string | null
+          business_name?: string | null
+          business_type?: string | null
           category?: string | null
           choppay_enabled?: boolean
           cover_url?: string | null
           created_at?: string
+          created_by?: string | null
           delivery_available?: boolean
           district?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          market_id?: string | null
           member_since?: string
           name: string
+          onboarding_status?: string
+          operating_hours?: string | null
+          owner_name?: string | null
           owner_user_id: string
+          phone?: string | null
+          rejection_reason?: string | null
           slug: string
+          stall_number?: string | null
           status?: string
+          submitted_at?: string | null
           updated_at?: string
           verification_state?: string
+          whatsapp?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           avatar_url?: string | null
           bio?: string | null
+          business_name?: string | null
+          business_type?: string | null
           category?: string | null
           choppay_enabled?: boolean
           cover_url?: string | null
           created_at?: string
+          created_by?: string | null
           delivery_available?: boolean
           district?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          market_id?: string | null
           member_since?: string
           name?: string
+          onboarding_status?: string
+          operating_hours?: string | null
+          owner_name?: string | null
           owner_user_id?: string
+          phone?: string | null
+          rejection_reason?: string | null
           slug?: string
+          stall_number?: string | null
           status?: string
+          submitted_at?: string | null
           updated_at?: string
           verification_state?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -2367,6 +2512,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      physical_markets: {
+        Row: {
+          address: string | null
+          commune: string | null
+          created_at: string
+          district: string | null
+          id: string
+          landmark: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          commune?: string | null
+          created_at?: string
+          district?: string | null
+          id?: string
+          landmark?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          commune?: string | null
+          created_at?: string
+          district?: string | null
+          id?: string
+          landmark?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -3432,6 +3622,49 @@ export type Database = {
       admin_log_test_delete: {
         Args: { _caller: string; _reason: string; _target: string }
         Returns: undefined
+      }
+      admin_merchant_decision: {
+        Args: { _decision: string; _reason?: string; _store_id: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          avatar_url: string | null
+          bio: string | null
+          business_name: string | null
+          business_type: string | null
+          category: string | null
+          choppay_enabled: boolean
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          delivery_available: boolean
+          district: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          market_id: string | null
+          member_since: string
+          name: string
+          onboarding_status: string
+          operating_hours: string | null
+          owner_name: string | null
+          owner_user_id: string
+          phone: string | null
+          rejection_reason: string | null
+          slug: string
+          stall_number: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          verification_state: string
+          whatsapp: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "merchant_stores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
       admin_unban_user: {
@@ -4785,6 +5018,7 @@ export type Database = {
         | "operations_admin"
         | "finance_admin"
         | "god_admin"
+        | "onboarding_specialist"
       approval_status: "pending" | "approved" | "rejected" | "cancelled"
       driver_application_decision:
         | "pending"
@@ -5126,6 +5360,7 @@ export const Constants = {
         "operations_admin",
         "finance_admin",
         "god_admin",
+        "onboarding_specialist",
       ],
       approval_status: ["pending", "approved", "rejected", "cancelled"],
       driver_application_decision: [

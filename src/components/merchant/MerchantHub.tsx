@@ -13,6 +13,7 @@ import { AnalyticsStrip } from "./AnalyticsStrip";
 import { setRestaurantOpen, setStoreOpen } from "@/lib/merchant/operations";
 import { toast } from "@/hooks/use-toast";
 import { MerchantActivationPanel } from "./MerchantActivationPanel";
+import { MerchantPendingBanner } from "./MerchantPendingBanner";
 
 export function MerchantHub() {
   const navigate = useNavigate();
@@ -64,6 +65,12 @@ export function MerchantHub() {
         <MerchantActivationPanel onActivated={refresh} />
       ) : (
       <main className="max-w-md mx-auto px-4 pt-4 space-y-3">
+        {store?.onboarding_status && store.onboarding_status !== "approved" && (
+          <MerchantPendingBanner
+            status={store.onboarding_status}
+            reason={store.rejection_reason ?? null}
+          />
+        )}
         <MerchantIdentityStrip
           store={store}
           restaurant={restaurant}
