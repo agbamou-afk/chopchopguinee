@@ -412,39 +412,53 @@ export default function Auth() {
                 <Label className="text-xs uppercase tracking-wide text-muted-foreground">
                   Comment souhaitez-vous utiliser CHOPCHOP ?
                 </Label>
-                <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setIntent("client")}
                     className={cn(
-                      "flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-colors",
+                      "flex flex-col items-start gap-1 p-2.5 rounded-2xl border text-left transition-colors",
                       intent === "client"
                         ? "border-primary bg-primary/5"
                         : "border-border bg-card",
                     )}
                   >
                     <ShoppingBag className="w-5 h-5 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">Client</span>
+                    <span className="text-xs font-semibold text-foreground">Client</span>
                     <span className="text-[11px] text-muted-foreground leading-snug">
-                      Commander, acheter, envoyer ou vous déplacer.
+                      Commander, acheter, envoyer.
                     </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setIntent("driver")}
                     className={cn(
-                      "flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-colors",
+                      "flex flex-col items-start gap-1 p-2.5 rounded-2xl border text-left transition-colors",
                       intent === "driver"
                         ? "border-primary bg-primary/5"
                         : "border-border bg-card",
                     )}
                   >
                     <Bike className="w-5 h-5 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">
-                      Chauffeur / Coursier
-                    </span>
+                    <span className="text-xs font-semibold text-foreground">Chauffeur</span>
                     <span className="text-[11px] text-muted-foreground leading-snug">
-                      Recevoir des courses et livraisons après vérification.
+                      Courses et livraisons après vérification.
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIntent("merchant")}
+                    className={cn(
+                      "flex flex-col items-start gap-1 p-2.5 rounded-2xl border text-left transition-colors",
+                      intent === "merchant"
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card",
+                    )}
+                  >
+                    <Store className="w-5 h-5 text-primary" />
+                    <span className="text-xs font-semibold text-foreground">Marchand</span>
+                    <span className="text-[11px] text-muted-foreground leading-snug">
+                      Vendre vos produits sur Marché.
                     </span>
                   </button>
                 </div>
