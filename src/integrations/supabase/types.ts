@@ -3729,6 +3729,24 @@ export type Database = {
           status: string
         }[]
       }
+      get_nearby_available_drivers: {
+        Args: {
+          p_lat: number
+          p_limit?: number
+          p_lng: number
+          p_radius_m?: number
+          p_vehicle_type?: string
+        }
+        Returns: {
+          approx_lat: number
+          approx_lng: number
+          distance_m: number
+          driver_ref: string
+          heading: number
+          last_seen_at: string
+          vehicle_type: string
+        }[]
+      }
       has_admin_role: {
         Args: {
           _role: Database["public"]["Enums"]["admin_role"]

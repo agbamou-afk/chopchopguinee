@@ -17,9 +17,10 @@ interface Props {
   children?: React.ReactNode;
   interactive?: boolean;
   onLoad?: () => void;
+  onClick?: (lngLat: { lng: number; lat: number }) => void;
 }
 export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
-  { initialView, className, children, interactive = true, onLoad }, ref,
+  { initialView, className, children, interactive = true, onLoad, onClick }, ref,
 ) {
   const { config, error } = useMapConfig();
   const mapRef = useRef<MapRef>(null);
@@ -72,6 +73,10 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
         attributionControl={false} interactive={interactive}
         maxPitch={low ? 0 : 60}
         fadeDuration={low ? 0 : 300}
+        onClick={onClick ? (e: any) => {
+          const ll = e?.lngLat;
+          if (ll) onClick({ lng: ll.lng, lat: ll.lat });
+        } : undefined}
         onLoad={(e) => {
           if (!loadedRef.current) {
             loadedRef.current = true;

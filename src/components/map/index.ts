@@ -5,6 +5,7 @@ export * from './chopPinTypes';
 export { DriverMarker } from './DriverMarker';
 export { DriverPositionMarker } from './DriverPositionMarker';
 export { DriverCluster } from './DriverCluster';
+export { NearbyAvailableDrivers } from './NearbyAvailableDrivers';
 export { RoutePolyline } from './RoutePolyline';
 export { StraightLineFallback } from './StraightLineFallback';
 export { PinSet } from './PinSet';
