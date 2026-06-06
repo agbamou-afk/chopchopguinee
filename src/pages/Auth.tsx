@@ -167,7 +167,7 @@ export default function Auth() {
       }
       setBusy(true);
       const display = `${first.trim()} ${last.trim()}`;
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
@@ -187,6 +187,25 @@ export default function Auth() {
       setBusy(false);
       if (error) {
         toast({ title: "Échec inscription", description: frenchAuthError(error.message) });
+        return;
+      }
+      // Supabase anti-enumeration: when the email is already registered,
+      // signUp returns 200 with a user object whose `identities` array is
+      // empty AND no new confirmation email is sent. Detect this and route
+      // the user to a clear path (sign in or resend confirmation) instead
+      // of leaving them on a pending screen forever.
+      const identities = signUpData?.user?.identities;
+      const alreadyRegistered =
+        !signUpData?.session && Array.isArray(identities) && identities.length === 0;
+      if (alreadyRegistered) {
+        toast({
+          title: "Adresse déjà utilisée",
+          description:
+            "Cette adresse est peut-être déjà associée à un compte. Si vous n'avez pas confirmé votre compte, renvoyez l'email de confirmation.",
+        });
+        setMode("signin");
+        setPassword("");
+        setPendingConfirm({ email: email.trim(), intent });
         return;
       }
       // Persist intent so post-confirmation routing can branch to the
