@@ -244,7 +244,16 @@ export default function Auth() {
       }
       // Record acceptance immediately if a session was created (auto-confirm).
       void recordLegalAcceptance({ source: "signup" });
-      setPendingConfirm({ email: email.trim(), intent });
+      // Pilot mode: email confirmation is NOT required. If a session was
+      // created (auto-confirm), the AuthContext effect above will route to
+      // /complete-profile then to client home or /driver/apply based on intent.
+      toast({
+        title: "Compte créé avec succès",
+        description:
+          intent === "driver"
+            ? "Compte créé. Finalisez votre demande chauffeur/coursier."
+            : "Bienvenue sur CHOPCHOP.",
+      });
       return;
     }
 
@@ -273,7 +282,14 @@ export default function Auth() {
     if (error) {
       const msg = (error.message ?? "").toLowerCase();
       if (msg.includes("not confirmed") || msg.includes("confirm")) {
-        setPendingConfirm({ email: email.trim(), intent: "client" });
+        // Pilot mode: confirmation is disabled for new signups. Older
+        // unconfirmed accounts may still hit this. Surface a clear toast
+        // and offer a one-tap resend rather than trapping the user.
+        toast({
+          title: "Compte en cours d'activation",
+          description:
+            "Votre compte est en cours d'activation. Réessayez dans un instant ou contactez le support CHOPCHOP.",
+        });
         return;
       }
       toast({ title: "Échec", description: frenchAuthError(error.message) });
