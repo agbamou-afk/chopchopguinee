@@ -21,6 +21,14 @@ type Row = {
   stall_number?: string | null;
   rejection_reason?: string | null;
   submitted_at?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  landmark?: string | null;
+  address_label?: string | null;
+  location_source?: string | null;
+  id_photo_path?: string | null;
+  selfie_photo_path?: string | null;
+  storefront_photo_path?: string | null;
   created_at: string;
 };
 
@@ -52,7 +60,7 @@ export default function MerchantsAdmin() {
       (supabase as any)
         .from("merchant_stores")
         .select(
-          "id,name,district,status,verification_state,created_at,onboarding_status,owner_user_id,phone,owner_name,business_type,stall_number,rejection_reason,submitted_at",
+          "id,name,district,status,verification_state,created_at,onboarding_status,owner_user_id,phone,owner_name,business_type,stall_number,rejection_reason,submitted_at,latitude,longitude,landmark,address_label,location_source,id_photo_path,selfie_photo_path,storefront_photo_path",
         )
         .order("created_at", { ascending: false })
         .limit(200),
