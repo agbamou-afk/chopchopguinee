@@ -1,66 +1,107 @@
-## Scope
 
-Two combined requests, delivered as one coherent V0. Far too large to ship end-to-end in a single pass safely, so this plan splits work into a documented strategy + minimal-safe-implementation slice that satisfies the hard exit criteria without breaking existing Marché, client, or driver flows.
+# Merchant Signup, Onboarding, Approval & Mode Toggle
 
-## Audit summary (current state)
+Extends the V0 merchant onboarding already shipped (`MerchantOnboarding.tsx`, `merchant_stores.onboarding_status`, `admin_merchant_decision` RPC) with the full disciplined flow that mirrors driver signup.
 
-- `merchant_stores` exists: owner_user_id (unique), slug, name, district, category, verification_state (none/pending/verified), status (active/paused/suspended). No `pending`/`draft` status, no onboarding fields, no `created_by`, no `business_type`, no market FK.
-- `marketplace_listings` exists with status/visibility and optional `store_id`. No `quantity_in_stock`, no `barcode`, no `visibility` separate from status.
-- No tables for physical markets, onboarding campaigns, assignments.
-- Merchant UI exists: `MerchantHub`, `MerchantActivationPanel`, `StoreOnboardingSheet`, `CatalogSection`, etc. Activation today is opt-in inside an existing client account, not a signup branch.
-- `Auth.tsx` currently branches Client / Driver via `signup_intent`. No merchant branch.
-- `MerchantsAdmin` lists restaurants + stores but has no approval actions.
+## Agent routing
+- **Lead:** Marché Agent
+- **Reviewers:** Platform/QA/Security (auth branching, RLS, private storage), Admin & Ops (approval queue)
 
-## Deliverables (V0 — this pass)
+## Flow target
+```
+Signup (Marchand) → Merchant Onboarding Slides → Merchant Application
+  → Merchant Dashboard (pending) → Admin Approval → Approved Dashboard
+  ↔ Client Mode toggle (status & catalog preserved)
+```
 
-### 1. Docs (no code risk)
-- `docs/marche/MARKET_DIGITIZATION_STRATEGY.md` — market-by-market onboarding strategy, specialist workflow, photo/AI/barcode roadmap, ranking & sponsored-placement model (clearly marked future), phased roadmap V0/V1/V2.
-- `docs/marche/MERCHANT_ONBOARDING_FUNNEL.md` — signup branch, onboarding fields, pending-merchant rules, approval lifecycle, RLS posture.
+## 1. Signup branch (Platform)
+- `Auth.tsx` already exposes Client / Chauffeur-Coursier / Marchand. Verify Marchand sets `signup_intent='merchant'` in profile metadata and skips client onboarding/conversion gate.
+- Post-signup redirect:
+  - `merchant` + slides not completed → `/merchant/onboarding-slides`
+  - `merchant` + slides done + no store → `/merchant/onboarding`
+  - `merchant` + store exists → `/merchant`
+- Persist `merchant_slides_completed_at` on `profiles` (or `user_preferences`).
 
-### 2. Schema migration (additive, non-breaking)
-- `merchant_stores`: add `business_name`, `owner_name`, `phone`, `business_type`, `stall_number`, `onboarding_status` (`draft|submitted|in_review|needs_info|approved|rejected`), `created_by`, `submitted_at`, `approved_at`, `approved_by`, `rejection_reason`, `market_id`. Extend status check to include `pending`, `draft`, `rejected`, `archived`. Default new stores to `status='pending'`, `onboarding_status='draft'`.
-- `marketplace_listings`: add `quantity_in_stock int`, `barcode text`, `visibility text default 'private'`. Existing rows backfilled to `visibility='public'` so current marketplace UI does not break.
-- New tables: `physical_markets`, `market_onboarding_campaigns`, `market_onboarding_assignments`, plus `app_role` enum value `merchant` and `onboarding_specialist` (additive). Full GRANTs + RLS per project rules.
-- Tighten "Anyone read active stores" policy so only `status='active' AND onboarding_status='approved'` is public; owner + admin keep full read.
-- Listings public-read policy tightened to require approved store + `visibility='public'` + `status='active'`.
-- New `has_role(..., 'merchant')` / specialist policies for store + product self-management.
+## 2. Merchant onboarding slides (new)
+`src/pages/MerchantOnboardingSlides.tsx` — 4 slides (Vendez / Catalogue / Vérification / Position) + CTA "Créer ma boutique". Same visual family as driver slides. Mark completion in DB; never re-show. Not shown to clients or drivers.
 
-### 3. Auth signup branch
-- `src/pages/Auth.tsx`: add third card "Marchand" with French copy. `signup_intent='merchant'`, stored in `user_metadata` + sessionStorage handoff identical to driver path.
-- `src/components/auth/ProfileCompletionRedirect.tsx` (or equivalent): after auth, if intent=merchant and no `merchant_stores` row → redirect to `/merchant/onboarding`; else to `/merchant`.
+## 3. Merchant application form (extends existing `MerchantOnboarding.tsx`)
+Required: business_name, owner_name, phone_e164 (+224), category, store location, ID photo, selfie.
+Recommended: storefront photo, market_name, stall_number, landmark, description, opening_hours, whatsapp.
 
-### 4. Merchant onboarding funnel
-- New route `/merchant/onboarding` → new page that collects required fields (business name, owner name, phone, district/market, category, business type) + optional (description, stall, hours, WhatsApp). On submit: insert `merchant_stores` with `status='pending'`, `onboarding_status='submitted'`, `created_by=auth.uid()`, `submitted_at=now()`.
+### Store location picker (new component `StoreLocationPicker`)
+- Button "Utiliser ma position actuelle" → geolocation API, capture lat/lng/accuracy, reverse geocode, confirm.
+- Button "Choisir sur la carte" → map with draggable pin (reuse existing map components).
+- Saves `lat`, `lng`, `district`, `address_label`, `landmark`, `location_source` (`current_location`|`manual_pin`), `location_accuracy_m`, `location_confirmed_at`.
+- No Kaloum default. Permission denial → manual pin fallback with clear copy.
 
-### 5. Merchant dashboard pending state
-- Extend `MerchantHub` to render a "Boutique en vérification" banner when `onboarding_status != 'approved'`, with copy from spec. Catalog + product creation remain enabled but new products are forced to `visibility='private'`, `status='draft'` until approval.
+## 4. Data model migration
+Add to `merchant_stores` (if missing): `owner_name`, `lat`, `lng`, `district`, `address_label`, `landmark`, `location_source`, `location_accuracy_m`, `location_confirmed_at`, `id_photo_path`, `selfie_photo_path`, `storefront_photo_path`, `submitted_at`, `decided_at`, `decided_by`, `decision_reason`.
+Keep existing `status` / `onboarding_status` / `visibility`. Default new merchants: `status='pending'`, `visibility='private'`, `onboarding_status='submitted'`.
 
-### 6. Admin approval module
-- Extend `MerchantsAdmin`: add Pending / Needs info / Approved / Rejected tabs (real data), row click opens a sheet with Approve / Reject / Request info / Suspend actions wired through a new `admin_merchant_decision` RPC (security definer, admin-only, audit logged via existing `log_admin_action`). Approve → status='active', onboarding_status='approved', approved_at/by set. Reject → status='rejected', stores `rejection_reason`.
+## 5. Private storage bucket
+Create **private** bucket `merchant-docs`. Paths: `merchant-docs/{user_id}/id-card.{ext}`, `/selfie.{ext}`, `/storefront.{ext}`.
+RLS on `storage.objects`:
+- INSERT/SELECT/UPDATE: `auth.uid()::text = (storage.foldername(name))[1]`
+- SELECT also allowed for admins via `has_role(auth.uid(),'admin')` or `operations_admin`.
+- No anon access. Never store ID/selfie in avatar or product image buckets.
 
-### 7. Customer marketplace safety
-- Update `src/lib/marche/stores.ts` and listing queries to filter on approved-store + public-visibility (defense in depth; RLS already enforces).
+## 6. Merchant dashboard pending state
+Extend `MerchantHub` + `MerchantPendingBanner`:
+- Title "Boutique en vérification" + body.
+- Checklist (info / position / ID / selfie / storefront / produits).
+- Actions: add product, edit info, add documents, view status, switch to client mode.
+- Pending merchants CAN create products (drafts) but products are forced `status='draft'`, `visibility='private'` via DB trigger.
 
-### 8. QA & build
-- Run typecheck/build, run Playwright `03-merchant.spec.ts`. Manual QA notes: client signup unchanged, driver signup unchanged, merchant signup → onboarding → pending dashboard → draft product invisible to anon → admin approves → product publishable.
+## 7. Product visibility enforcement
+DB trigger on `marketplace_listings` insert/update:
+- If owning store not `approved` → force `visibility='private'`, `status='draft'`.
+- Public marketplace query (`get_public_listings` or RLS): require `store.status='approved'` AND `store.visibility='public'` AND `listing.visibility='public'` AND `listing.status='active'`.
 
-## Explicitly deferred to V1/V2 (documented, not built)
+## 8. Admin approval (extends `MerchantsAdmin.tsx`)
+Detail panel shows: business + owner + phone, location map preview, ID photo, selfie, storefront, draft product count, notes.
+Actions wired to existing `admin_merchant_decision` RPC: Approve / Reject / Request Info / Suspend / Reactivate. Reason captured. Audit log entry.
+Approve → `status='approved'`, `onboarding_status='approved'`, `visibility='public'` allowed; merchant unlocks public publishing.
+Reject → reason visible to merchant; products stay private.
+Needs info → `onboarding_status='needs_info'`; dashboard surfaces request.
 
-- Barcode scanner UI (manual field only in V0).
-- AI background removal (UI placeholder "bientôt", no fake processing).
-- Onboarding specialist field app + campaign management UI (tables + RLS only in V0).
-- Sponsored placement ranking, merchant analytics, bulk upload, supplier integrations.
-- Separating `merchant_products` from `marketplace_listings` — V0 extends listings with inventory + visibility; doc records the tradeoff and migration path.
-- Mode-switch (merchant browsing as client) — existing app already allows this; no changes needed.
+## 9. Mode toggle (new)
+New hook `useAppMode` + UI toggle in header/menu:
+- Stores `app_mode` in `user_preferences` (`merchant` | `client`) per user.
+- Merchant users default to Merchant Mode after onboarding.
+- "Passer en mode client" → routes to `/` client home; merchant store untouched.
+- "Passer en mode marchand" → routes to `/merchant`.
+- Toggle visible only to users with a `merchant_stores` row.
+- Switching never deletes store or alters approval status.
 
-## Risks / non-goals
+## 10. Routing guard updates
+`App.tsx` / `AuthContext`: post-login resolver checks intent + slides + store status to land on correct surface. Existing client / driver routing untouched.
 
-- Tightening the existing "Anyone read active stores" policy could hide stores that were created before this migration. Mitigation: backfill all existing `merchant_stores` to `onboarding_status='approved'` and `status='active'` in the same migration.
-- Existing marketplace listings will be backfilled to `visibility='public'` to preserve current customer Marché behaviour.
-- No changes to wallet, rides, drivers, OM, legal consent, phone normalization, or email confirmation.
+## 11. Security / RLS verification
+- Merchant: select/update own store only; insert/select own docs only; cannot set `status`/`decided_*`.
+- Admin/ops: full read via `has_role`.
+- Customers: cannot read pending stores, pending products, or any merchant doc.
+- All sensitive writes via SECURITY DEFINER RPCs already in place.
 
-## Lock candidate
+## 12. QA matrix (A–L per spec)
+Fresh merchant signup → slides → app → submit; current-location pin; manual map pin; ID/selfie upload to private bucket; pending dashboard; draft product invisible to clients; admin approve unlocks public; mode toggle round-trip; client and driver signup regression.
 
-`marche-merchant-onboarding-v0-stable` once all hard exit criteria pass.
+## Files to create
+- `src/pages/MerchantOnboardingSlides.tsx`
+- `src/components/merchant/StoreLocationPicker.tsx`
+- `src/components/merchant/MerchantDocUpload.tsx`
+- `src/components/merchant/ModeToggle.tsx`
+- `src/hooks/useAppMode.ts`
+- Migration: schema additions + bucket policies + visibility trigger
+- `docs/marche/MERCHANT_SIGNUP_FLOW.md`
 
-Approve to proceed with the migration + code changes in a single follow-up pass.
+## Files to edit
+- `src/pages/Auth.tsx`, `src/contexts/AuthContext.tsx`, `src/App.tsx`
+- `src/pages/MerchantOnboarding.tsx` (extend with new fields, docs, location)
+- `src/components/merchant/MerchantHub.tsx`, `MerchantPendingBanner.tsx`
+- `src/pages/admin/MerchantsAdmin.tsx` (detail panel + doc previews via signed URLs)
+
+## Out of scope (won't touch)
+- Wallet credit logic, ride/repas verticals, driver flow, client conversion gate.
+
+**Lock candidate:** `merchant-signup-onboarding-dashboard-approval-stable`
