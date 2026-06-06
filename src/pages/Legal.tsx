@@ -1,10 +1,7 @@
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Seo } from "@/components/Seo";
+import { SecondaryPageHeader } from "@/components/ui/SecondaryPageHeader";
 
 export default function Legal() {
-  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background pb-12">
       <Seo
@@ -12,17 +9,9 @@ export default function Legal() {
         description="Conditions générales d'utilisation de CHOPCHOP GUINEE LTD : nature du service, responsabilités, données personnelles et droit applicable en Guinée."
         canonical="/legal"
       />
-      <header className="gradient-primary text-primary-foreground rounded-b-3xl px-4 pt-6 pb-8">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <BrandLogo size="md" loading="lazy" />
-          <h1 className="text-lg font-bold">Mentions légales</h1>
-        </div>
-      </header>
+      <SecondaryPageHeader title="Mentions légales" />
 
-      <article className="px-5 -mt-4 max-w-md mx-auto bg-card rounded-2xl shadow-card p-6 space-y-4 text-sm text-foreground leading-relaxed">
+      <article className="px-5 -mt-5 max-w-md mx-auto bg-card rounded-2xl shadow-card p-6 space-y-4 text-sm text-foreground leading-relaxed">
         <h2 className="text-base font-bold">Conditions Générales d'Utilisation — CHOPCHOP GUINEE LTD</h2>
         <p className="text-xs text-muted-foreground">
           Dernière mise à jour : 12 mai 2026. Éditeur : <strong>CHOPCHOP GUINEE LTD</strong>

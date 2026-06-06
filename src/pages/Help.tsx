@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Loader2 } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Seo } from "@/components/Seo";
+import { SecondaryPageHeader } from "@/components/ui/SecondaryPageHeader";
 import { ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/ClientOnboarding";
 import { DRIVER_ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/DriverOnboarding";
 import { useAuth } from "@/contexts/AuthContext";
@@ -134,17 +134,9 @@ export default function Help() {
           })),
         }}
       />
-      <header className="gradient-primary text-primary-foreground rounded-b-3xl px-4 pt-6 pb-8">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <BrandLogo size="md" loading="lazy" />
-          <h1 className="text-lg font-bold">Aide & FAQ</h1>
-        </div>
-      </header>
+      <SecondaryPageHeader title="Aide & FAQ" />
 
-      <div className="px-4 -mt-6 max-w-md mx-auto space-y-4">
+      <div className="px-4 -mt-5 max-w-md mx-auto space-y-4">
         <div className="bg-card rounded-2xl shadow-card p-4">
           <h2 className="font-semibold text-foreground mb-2">Questions fréquentes</h2>
           <Accordion type="single" collapsible className="w-full">

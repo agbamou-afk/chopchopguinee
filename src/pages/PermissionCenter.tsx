@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, MapPin, Bell, Camera, ImageIcon, Megaphone, Activity, Loader2 } from "lucide-react";
+import { MapPin, Bell, Camera, ImageIcon, Megaphone, Activity, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
-import { BrandLogo } from "@/components/brand/BrandLogo";
+import { SecondaryPageHeader } from "@/components/ui/SecondaryPageHeader";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -114,17 +114,9 @@ export default function PermissionCenter() {
         description="Gérez les permissions de votre appareil et vos préférences CHOPCHOP : localisation, notifications, caméra, données urbaines."
         canonical="/settings/permissions"
       />
-      <header className="gradient-primary text-primary-foreground rounded-b-3xl px-4 pt-6 pb-8">
-        <div className="flex items-center gap-3">
-          <Link to="/profile" className="p-2 -ml-2 rounded-full hover:bg-white/10" aria-label="Retour">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <BrandLogo size="md" loading="lazy" />
-          <h1 className="text-lg font-bold">Permissions</h1>
-        </div>
-      </header>
+      <SecondaryPageHeader title="Permissions" onBack={() => window.history.length > 1 ? window.history.back() : window.location.assign("/profile")} />
 
-      <main className="px-4 -mt-4 max-w-md mx-auto space-y-4">
+      <main className="px-4 -mt-5 max-w-md mx-auto space-y-4">
         <section className="bg-card rounded-2xl shadow-card p-4 space-y-3">
           <h2 className="text-sm font-semibold">Permissions appareil</h2>
 

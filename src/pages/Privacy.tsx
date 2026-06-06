@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { Seo } from "@/components/Seo";
-import { BrandLogo } from "@/components/brand/BrandLogo";
+import { SecondaryPageHeader } from "@/components/ui/SecondaryPageHeader";
 import { PRIVACY_VERSION, LEGAL_LAST_UPDATED } from "@/lib/legal";
 
 export default function Privacy() {
@@ -12,17 +11,9 @@ export default function Privacy() {
         description="Comment CHOPCHOP collecte, utilise et protège vos données : compte, localisation, paiements, support, données urbaines agrégées."
         canonical="/privacy"
       />
-      <header className="gradient-primary text-primary-foreground rounded-b-3xl px-4 pt-6 pb-8">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="p-2 -ml-2 rounded-full hover:bg-white/10" aria-label="Retour">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <BrandLogo size="md" loading="lazy" />
-          <h1 className="text-lg font-bold">Confidentialité</h1>
-        </div>
-      </header>
+      <SecondaryPageHeader title="Confidentialité" />
 
-      <main className="px-4 -mt-4 max-w-2xl mx-auto">
+      <main className="px-4 -mt-5 max-w-2xl mx-auto">
         <article className="bg-card rounded-2xl shadow-card p-5 text-sm leading-relaxed text-foreground/90 space-y-5">
           <div className="text-xs text-muted-foreground">
             Version : <span className="font-semibold text-foreground">{PRIVACY_VERSION}</span> ·
