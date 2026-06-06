@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Loader2, Shield, KeyRound, ScrollText, Lock, ChevronRight, Trash2 } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Shield, KeyRound, ScrollText, Lock, ChevronRight, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,12 +20,15 @@ import {
 
 export default function ProfileInfo() {
   const navigate = useNavigate();
+  const { refresh } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -80,6 +84,79 @@ export default function ProfileInfo() {
     }
   };
 
+  const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5 MB
+
+  const handleAvatarFile = async (file: File) => {
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      toast({ title: "Format non supporté", description: "Format d'image non supporté. Choisissez JPG, PNG ou WEBP." });
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast({ title: "Image trop lourde", description: "Image trop lourde. Choisissez une image plus légère (max 5 Mo)." });
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user.id;
+      if (!uid) return;
+      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const path = `${uid}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("profile-avatars")
+        .upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
+      if (upErr) throw upErr;
+      const { data: signed, error: sErr } = await supabase.storage
+        .from("profile-avatars")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (sErr || !signed?.signedUrl) throw sErr ?? new Error("no signed url");
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: signed.signedUrl })
+        .eq("user_id", uid);
+      if (updErr) throw updErr;
+      setAvatarUrl(signed.signedUrl);
+      await refresh();
+      toast({ title: "Photo de profil mise à jour" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      console.error("[avatar-upload]", msg);
+      toast({ title: "Échec", description: "Impossible d'envoyer la photo pour le moment." });
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeAvatar = async () => {
+    setUploadingAvatar(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user.id;
+      if (!uid) return;
+      // Best-effort: remove all files in the user's folder.
+      const { data: list } = await supabase.storage.from("profile-avatars").list(uid);
+      if (list && list.length > 0) {
+        await supabase.storage
+          .from("profile-avatars")
+          .remove(list.map((f) => `${uid}/${f.name}`));
+      }
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("user_id", uid);
+      if (updErr) throw updErr;
+      setAvatarUrl(null);
+      await refresh();
+      toast({ title: "Photo supprimée" });
+    } catch {
+      toast({ title: "Échec", description: "Impossible de supprimer la photo pour le moment." });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -114,16 +191,64 @@ export default function ProfileInfo() {
               ) : (
                 (fullName || email)[0]?.toUpperCase() ?? "?"
               )}
+              {uploadingAvatar && (
+                <div className="absolute inset-0 bg-background/60 flex items-center justify-center rounded-full">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                </div>
+              )}
             </div>
             <button
               type="button"
-              onClick={() => toast({ title: "Bientôt disponible", description: "Téléversement photo à venir." })}
-              className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-primary-foreground shadow"
+              aria-label="Changer la photo de profil"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-primary-foreground shadow disabled:opacity-60"
             >
               <Camera className="w-4 h-4" />
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void handleAvatarFile(f);
+              }}
+            />
           </div>
           <p className="mt-3 text-sm text-muted-foreground">{email}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground text-center px-2">
+            Ajoutez une photo pour personnaliser votre profil CHOPCHOP. JPG, PNG ou WEBP, 5 Mo max.
+            <br />
+            <span className="text-[10px] opacity-80">
+              Votre photo de profil est différente des documents de vérification chauffeur.
+            </span>
+          </p>
+          <div className="mt-3 flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={uploadingAvatar}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              {avatarUrl ? "Changer la photo" : "Ajouter une photo"}
+            </Button>
+            {avatarUrl && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={uploadingAvatar}
+                onClick={removeAvatar}
+              >
+                <X className="w-4 h-4 mr-2" />
+                Supprimer
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="bg-card rounded-2xl shadow-card p-5 space-y-3">
