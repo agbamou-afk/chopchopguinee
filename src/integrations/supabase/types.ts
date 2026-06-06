@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_bans: {
+        Row: {
+          banned_at: string
+          banned_by: string
+          created_at: string
+          email: string | null
+          email_lc: string | null
+          expires_at: string | null
+          id: string
+          lift_reason: string | null
+          lifted_at: string | null
+          lifted_by: string | null
+          metadata: Json
+          phone_e164: string | null
+          reason: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          banned_at?: string
+          banned_by: string
+          created_at?: string
+          email?: string | null
+          email_lc?: string | null
+          expires_at?: string | null
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          metadata?: Json
+          phone_e164?: string | null
+          reason: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          banned_at?: string
+          banned_by?: string
+          created_at?: string
+          email?: string | null
+          email_lc?: string | null
+          expires_at?: string | null
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          metadata?: Json
+          phone_e164?: string | null
+          reason?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       account_deletion_requests: {
         Row: {
           created_at: string
@@ -3297,6 +3354,7 @@ export type Database = {
         Args: { _suspended_reason: string; _target: string }
         Returns: Json
       }
+      _is_god_admin: { Args: { _user: string }; Returns: boolean }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -3330,6 +3388,10 @@ export type Database = {
         Returns: Json
       }
       admin_auth_user_exists: { Args: { _target: string }; Returns: boolean }
+      admin_ban_user: {
+        Args: { _expires_at?: string; _reason: string; _target: string }
+        Returns: Json
+      }
       admin_check_email_reuse_blocker: {
         Args: { p_email: string }
         Returns: Json
@@ -3368,6 +3430,10 @@ export type Database = {
         Returns: undefined
       }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
+      admin_unban_user: {
+        Args: { _lift_reason: string; _target: string }
+        Returns: Json
+      }
       analytics_summary: { Args: { p_days?: number }; Returns: Json }
       analyze_route_learning_v1: {
         Args: { p_window_days?: number }
@@ -3405,6 +3471,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      check_signup_allowed: {
+        Args: { _email: string; _phone: string }
+        Returns: Json
       }
       claim_first_admin: { Args: never; Returns: boolean }
       confirm_payment_intent: {
@@ -3774,6 +3844,7 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
       is_god_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_user_banned: { Args: { _user: string }; Returns: boolean }
       list_my_topup_requests: {
         Args: { p_limit?: number }
         Returns: {
