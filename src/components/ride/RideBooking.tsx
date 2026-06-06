@@ -106,17 +106,20 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   };
 
   const handleMapTap = async ({ lat, lng }: { lat: number; lng: number }) => {
-    // First tap with no pickup sets pickup; otherwise tap sets/replaces destination.
-    if (!pickupCoords) {
+    // Respect the focused field; otherwise first tap sets pickup, next taps set destination.
+    const target = activeField ?? (!pickupCoords ? "pickup" : "destination");
+    if (target === "pickup") {
       setPickupCoords([lat, lng]);
       setPickupIsReal(true);
       const label = await reverseLabel(lat, lng);
       setPickup(label);
+      setActiveField(null);
       return;
     }
     setDestCoords([lat, lng]);
     const label = await reverseLabel(lat, lng);
     setDestination(label);
+    setActiveField(null);
   };
 
   // Visual map center — falls back to Conakry but is never sent as pickup.
@@ -448,11 +451,12 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
       </div>
 
       {/* Interactive map */}
-      <div className="flex-1 bg-muted relative overflow-hidden">
+      <div className="flex-1 min-h-0 bg-muted relative overflow-hidden touch-none">
         <ChopMap
           ref={mapRef}
           className="absolute inset-0 w-full h-full"
           initialView={{ longitude: mapCenter[1], latitude: mapCenter[0], zoom: 14 }}
+          interactive
           onClick={handleMapTap}
         >
           {routePolyline && <RoutePolyline encoded={routePolyline} />}
@@ -468,7 +472,11 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
             <DraggablePickupPin
               lat={pickupCoords[0]}
               lng={pickupCoords[1]}
-              onDragEnd={(next) => { setPickupCoords([next.lat, next.lng]); setPickupIsReal(true); }}
+              onDragEnd={(next) => {
+                setPickupCoords([next.lat, next.lng]);
+                setPickupIsReal(true);
+                reverseLabel(next.lat, next.lng).then(setPickup);
+              }}
               size={36}
             />
           )}
@@ -490,12 +498,12 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           )}
         </ChopMap>
         {!pickupCoords && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
+          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
             Touchez la carte pour choisir votre point de départ.
           </div>
         )}
         {pickupCoords && !destCoords && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
+          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
             Touchez la carte pour placer la destination.
           </div>
         )}
@@ -513,18 +521,18 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           )}
         </button>
         {routing && (
-          <div className="absolute top-4 left-4 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-xs font-medium text-foreground flex items-center gap-2">
+          <div className="pointer-events-none absolute top-4 left-4 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-xs font-medium text-foreground flex items-center gap-2">
             <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
             Calcul de l'itinéraire…
           </div>
         )}
         {!routing && distanceKm !== null && durationMin !== null && (
-          <div className="absolute top-4 left-4 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-xs font-medium text-foreground">
+          <div className="pointer-events-none absolute top-4 left-4 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-xs font-medium text-foreground">
             {formatDuration(durationMin * 60)} • {formatDistance((distanceKm ?? 0) * 1000)}
           </div>
         )}
         {routeError && (
-          <div className="absolute top-14 left-4 z-[400] bg-destructive/10 text-destructive shadow-card rounded-full px-3 py-1 text-[11px]">
+          <div className="pointer-events-none absolute top-14 left-4 z-[400] bg-destructive/10 text-destructive shadow-card rounded-full px-3 py-1 text-[11px]">
             Itinéraire estimé
           </div>
         )}

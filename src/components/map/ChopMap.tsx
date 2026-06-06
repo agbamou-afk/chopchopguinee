@@ -71,6 +71,12 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
         }}
         style={{ width: '100%', height: '100%' }}
         attributionControl={false} interactive={interactive}
+        dragPan={interactive}
+        scrollZoom={interactive}
+        touchZoomRotate={interactive}
+        doubleClickZoom={interactive}
+        boxZoom={interactive}
+        keyboard={interactive}
         maxPitch={low ? 0 : 60}
         fadeDuration={low ? 0 : 300}
         onClick={onClick ? (e: any) => {
