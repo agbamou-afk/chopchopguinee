@@ -4785,6 +4785,7 @@ export type Database = {
         | "operations_admin"
         | "finance_admin"
         | "god_admin"
+        | "onboarding_specialist"
       approval_status: "pending" | "approved" | "rejected" | "cancelled"
       driver_application_decision:
         | "pending"
@@ -5126,6 +5127,7 @@ export const Constants = {
         "operations_admin",
         "finance_admin",
         "god_admin",
+        "onboarding_specialist",
       ],
       approval_status: ["pending", "approved", "rejected", "cancelled"],
       driver_application_decision: [
