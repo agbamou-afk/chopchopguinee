@@ -106,17 +106,20 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   };
 
   const handleMapTap = async ({ lat, lng }: { lat: number; lng: number }) => {
-    // First tap with no pickup sets pickup; otherwise tap sets/replaces destination.
-    if (!pickupCoords) {
+    // Respect the focused field; otherwise first tap sets pickup, next taps set destination.
+    const target = activeField ?? (!pickupCoords ? "pickup" : "destination");
+    if (target === "pickup") {
       setPickupCoords([lat, lng]);
       setPickupIsReal(true);
       const label = await reverseLabel(lat, lng);
       setPickup(label);
+      setActiveField(null);
       return;
     }
     setDestCoords([lat, lng]);
     const label = await reverseLabel(lat, lng);
     setDestination(label);
+    setActiveField(null);
   };
 
   // Visual map center — falls back to Conakry but is never sent as pickup.
@@ -469,7 +472,11 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
             <DraggablePickupPin
               lat={pickupCoords[0]}
               lng={pickupCoords[1]}
-              onDragEnd={(next) => { setPickupCoords([next.lat, next.lng]); setPickupIsReal(true); }}
+              onDragEnd={(next) => {
+                setPickupCoords([next.lat, next.lng]);
+                setPickupIsReal(true);
+                reverseLabel(next.lat, next.lng).then(setPickup);
+              }}
               size={36}
             />
           )}
