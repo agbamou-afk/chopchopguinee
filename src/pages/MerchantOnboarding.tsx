@@ -122,7 +122,11 @@ export default function MerchantOnboarding() {
 
   return (
     <div className="min-h-screen bg-background pb-16">
-      <Seo title="Créer ma boutique — CHOPCHOP" canonical="/merchant/onboarding" />
+      <Seo
+        title="Créer ma boutique — CHOPCHOP"
+        description="Créez votre boutique CHOPCHOP Marché. Vos informations sont vérifiées par l'équipe avant publication."
+        canonical="/merchant/onboarding"
+      />
       <SecondaryPageHeader title="Créer ma boutique" subtitle="Présentez votre activité pour rejoindre CHOPCHOP Marché." />
       <main className="max-w-md mx-auto px-4 -mt-5">
         <div className="bg-card border border-border/60 rounded-3xl shadow-card p-5">
