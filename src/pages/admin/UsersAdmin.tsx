@@ -1,10 +1,11 @@
 import { ModulePage } from "@/components/admin/ModulePage";
 import { AdminToolbar, DataTable, FilterChip, StatGrid, StatusBadge } from "@/components/admin/AdminMock";
-import { Users, UserCheck, UserX, ShieldAlert, Trash2, Loader2 } from "lucide-react";
+import { Users, UserCheck, UserX, ShieldAlert, Trash2, Loader2, Ban, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -16,6 +17,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type Row = {
   user_id: string;
@@ -36,12 +45,17 @@ function maskPhone(p: string | null) {
 export default function UsersAdmin() {
   const { isSuperAdmin, role } = useAdminAuth();
   const canHardDelete = isSuperAdmin || role === "god_admin";
+  const canBan = canHardDelete;
   const [filter, setFilter] = useState<"Tous" | "Actifs" | "Suspendus" | "KYC">("Tous");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, actifs: 0, suspendus: 0, kyc: 0 });
   const [pending, setPending] = useState<Row | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [banTarget, setBanTarget] = useState<Row | null>(null);
+  const [banReason, setBanReason] = useState("");
+  const [unbanTarget, setUnbanTarget] = useState<Row | null>(null);
+  const [unbanReason, setUnbanReason] = useState("");
 
   const reload = async () => {
     setLoading(true);
@@ -119,6 +133,49 @@ export default function UsersAdmin() {
     return rows;
   }, [rows, filter]);
 
+  const confirmBan = async () => {
+    if (!banTarget) return;
+    if (banReason.trim().length < 3) {
+      toast({ title: "Raison requise", description: "Indiquez une raison (3 caractères min)." });
+      return;
+    }
+    setBusyId(banTarget.user_id);
+    const { data, error } = await supabase.rpc("admin_ban_user", {
+      _target: banTarget.user_id,
+      _reason: banReason.trim(),
+      _expires_at: null,
+    });
+    setBusyId(null);
+    const res = (data ?? {}) as { ok?: boolean; error?: string };
+    if (error || res.ok === false) {
+      toast({ title: "Bannissement impossible", description: error?.message ?? res.error ?? "Erreur inconnue." });
+      return;
+    }
+    toast({ title: "Compte banni", description: "L'utilisateur ne peut plus accéder à CHOPCHOP." });
+    setBanTarget(null);
+    setBanReason("");
+    await reload();
+  };
+
+  const confirmUnban = async () => {
+    if (!unbanTarget) return;
+    setBusyId(unbanTarget.user_id);
+    const { data, error } = await supabase.rpc("admin_unban_user", {
+      _target: unbanTarget.user_id,
+      _lift_reason: unbanReason.trim() || "réactivation admin",
+    });
+    setBusyId(null);
+    const res = (data ?? {}) as { ok?: boolean; error?: string };
+    if (error || res.ok === false) {
+      toast({ title: "Réactivation impossible", description: error?.message ?? res.error ?? "Erreur inconnue." });
+      return;
+    }
+    toast({ title: "Compte réactivé", description: "L'utilisateur peut de nouveau accéder à CHOPCHOP." });
+    setUnbanTarget(null);
+    setUnbanReason("");
+    await reload();
+  };
+
   return (
     <ModulePage module="users" title="Utilisateurs" subtitle="Profils enregistrés, statuts et KYC">
       <StatGrid items={[
@@ -142,16 +199,41 @@ export default function UsersAdmin() {
           `N${u.kyc_level ?? 0}`,
           new Date(u.created_at).toLocaleDateString("fr-FR"),
           canHardDelete ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-destructive hover:text-destructive h-7 px-2"
-              disabled={busyId === u.user_id || u.account_status === "deleted"}
-              onClick={() => setPending(u)}
-            >
-              {busyId === u.user_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-              <span className="ml-1 text-[11px]">Supprimer compte test</span>
-            </Button>
+            <div className="flex flex-wrap gap-1">
+              {u.account_status === "banned" ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-emerald-600 hover:text-emerald-600"
+                  disabled={busyId === u.user_id}
+                  onClick={() => { setUnbanTarget(u); setUnbanReason(""); }}
+                >
+                  {busyId === u.user_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                  <span className="ml-1 text-[11px]">Réactiver</span>
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-amber-600 hover:text-amber-600"
+                  disabled={busyId === u.user_id || u.account_status === "deleted"}
+                  onClick={() => { setBanTarget(u); setBanReason(""); }}
+                >
+                  <Ban className="w-3.5 h-3.5" />
+                  <span className="ml-1 text-[11px]">Bannir</span>
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive h-7 px-2"
+                disabled={busyId === u.user_id || u.account_status === "deleted" || u.account_status === "banned"}
+                onClick={() => setPending(u)}
+              >
+                {busyId === u.user_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                <span className="ml-1 text-[11px]">Supprimer compte test</span>
+              </Button>
+            </div>
           ) : (
             <span className="text-[11px] text-muted-foreground">—</span>
           ),
@@ -183,6 +265,71 @@ export default function UsersAdmin() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Ban dialog */}
+      <Dialog open={!!banTarget} onOpenChange={(o) => !o && setBanTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bannir ce compte</DialogTitle>
+            <DialogDescription>
+              Cette action bloque l'accès au compte et empêche la réinscription avec les mêmes informations
+              (email et téléphone). L'historique financier est conservé.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              {banTarget?.display_name || banTarget?.full_name || banTarget?.user_id}
+            </p>
+            <label className="text-xs text-muted-foreground">Raison du bannissement</label>
+            <Textarea
+              value={banReason}
+              onChange={(e) => setBanReason(e.target.value)}
+              placeholder="Ex. fraude, abus, comportement à risque…"
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBanTarget(null)}>Annuler</Button>
+            <Button
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={confirmBan}
+              disabled={busyId === banTarget?.user_id}
+            >
+              {busyId === banTarget?.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmer le bannissement"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unban dialog */}
+      <Dialog open={!!unbanTarget} onOpenChange={(o) => !o && setUnbanTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Réactiver le compte</DialogTitle>
+            <DialogDescription>
+              Lève le bannissement actif. L'utilisateur pourra de nouveau se connecter et l'email/téléphone
+              redevient utilisable pour ce compte.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              {unbanTarget?.display_name || unbanTarget?.full_name || unbanTarget?.user_id}
+            </p>
+            <label className="text-xs text-muted-foreground">Raison (optionnel)</label>
+            <Textarea
+              value={unbanReason}
+              onChange={(e) => setUnbanReason(e.target.value)}
+              rows={2}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUnbanTarget(null)}>Annuler</Button>
+            <Button onClick={confirmUnban} disabled={busyId === unbanTarget?.user_id} className="gradient-primary">
+              {busyId === unbanTarget?.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Réactiver"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ModulePage>
   );
 }
