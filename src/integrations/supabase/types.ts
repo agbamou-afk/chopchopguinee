@@ -3425,6 +3425,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_email_delivery_diagnostics: {
+        Args: { p_email: string }
+        Returns: Json
+      }
       admin_log_test_delete: {
         Args: { _caller: string; _reason: string; _target: string }
         Returns: undefined
