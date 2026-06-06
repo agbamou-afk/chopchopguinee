@@ -82,16 +82,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
       let resolved = (prof as ProfileRecord) ?? null;
-      // If the profile is marked deleted, sign the user out immediately and
-      // surface a message via toast. Prevents reuse of an anonymized account.
-      if (resolved && resolved.account_status === "deleted") {
+      // If the profile is marked deleted OR banned, sign the user out
+      // immediately and surface a clear message via toast.
+      if (resolved && (resolved.account_status === "deleted" || resolved.account_status === "banned")) {
         try {
           const { toast } = await import("@/hooks/use-toast");
-          toast({
-            title: "Compte désactivé",
-            description:
-              "Ce compte a été supprimé. Contactez support@chopchopguinee.com pour toute question.",
-          });
+          if (resolved.account_status === "banned") {
+            toast({
+              title: "Compte suspendu",
+              description:
+                "Ce compte a été suspendu. Contactez le support CHOPCHOP si vous pensez qu'il s'agit d'une erreur.",
+            });
+          } else {
+            toast({
+              title: "Compte désactivé",
+              description:
+                "Ce compte a été supprimé. Contactez support@chopchopguinee.com pour toute question.",
+            });
+          }
         } catch {
           /* noop */
         }
