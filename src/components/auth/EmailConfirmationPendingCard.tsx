@@ -72,8 +72,8 @@ export function EmailConfirmationPendingCard({
       )}
 
       <p className="text-[11px] text-muted-foreground text-center mt-4 leading-relaxed">
-        Pour le pilote, la confirmation se fait par email. La vérification par
-        téléphone sera ajoutée prochainement.
+        Votre email est utilisé pour votre compte et les notifications
+        importantes. La vérification par téléphone sera ajoutée prochainement.
       </p>
 
       <div className="mt-5 space-y-2">
