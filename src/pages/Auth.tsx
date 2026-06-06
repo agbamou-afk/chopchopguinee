@@ -167,6 +167,26 @@ export default function Auth() {
       }
       setBusy(true);
       const display = `${first.trim()} ${last.trim()}`;
+      // Ban preflight: refuse signup if the email or phone is on the
+      // active ban list. Public copy avoids enumeration leakage.
+      try {
+        const { data: allowedRes } = await supabase.rpc("check_signup_allowed", {
+          _email: email.trim(),
+          _phone: normalizeGuineaPhone(phone),
+        });
+        const allowed = (allowedRes as { allowed?: boolean } | null)?.allowed !== false;
+        if (!allowed) {
+          setBusy(false);
+          toast({
+            title: "Inscription impossible",
+            description:
+              "Cette inscription ne peut pas être finalisée. Contactez le support CHOPCHOP.",
+          });
+          return;
+        }
+      } catch {
+        /* preflight is best-effort; backend ban checks remain authoritative */
+      }
       const { data: signUpData, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
