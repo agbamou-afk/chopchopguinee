@@ -12,6 +12,8 @@ import { Seo } from "@/components/Seo";
 import { SecondaryPageHeader } from "@/components/ui/SecondaryPageHeader";
 import { slugify } from "@/lib/marche";
 import { normalizeGuineaPhone } from "@/lib/phone/guinea";
+import { StoreLocationPicker, type StoreLocation } from "@/components/merchant/StoreLocationPicker";
+import { MerchantDocUpload } from "@/components/merchant/MerchantDocUpload";
 
 const BUSINESS_TYPES = [
   { id: "market_stall", label: "Étal de marché" },
@@ -38,6 +40,10 @@ export default function MerchantOnboarding() {
     operating_hours: "",
     description: "",
   });
+  const [location, setLocation] = useState<StoreLocation | null>(null);
+  const [idPath, setIdPath] = useState<string | null>(null);
+  const [selfiePath, setSelfiePath] = useState<string | null>(null);
+  const [storefrontPath, setStorefrontPath] = useState<string | null>(null);
 
   useEffect(() => {
     if (!ready) return;
@@ -53,6 +59,16 @@ export default function MerchantOnboarding() {
         .maybeSingle();
       if (data) {
         navigate("/merchant/hub", { replace: true });
+        return;
+      }
+      // Gate: slides must be completed first.
+      const { data: pref } = await (supabase as any)
+        .from("user_preferences")
+        .select("merchant_slides_completed_at")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (!pref?.merchant_slides_completed_at) {
+        navigate("/merchant/onboarding-slides", { replace: true });
         return;
       }
       const meta = (user?.user_metadata as Record<string, unknown> | undefined) ?? {};
@@ -75,6 +91,14 @@ export default function MerchantOnboarding() {
       toast({ title: "Champs requis", description: "Nom de la boutique, propriétaire et téléphone." });
       return;
     }
+    if (!location) {
+      toast({ title: "Position requise", description: "Indiquez l'emplacement de la boutique." });
+      return;
+    }
+    if (!idPath || !selfiePath) {
+      toast({ title: "Vérification requise", description: "Envoyez votre pièce d'identité et votre selfie." });
+      return;
+    }
     setSubmitting(true);
     const normalizedPhone = normalizeGuineaPhone(form.phone) || form.phone.trim();
     const slug = `${slugify(form.business_name)}-${user.id.slice(0, 6)}`;
@@ -87,12 +111,22 @@ export default function MerchantOnboarding() {
       owner_name: form.owner_name.trim(),
       phone: normalizedPhone,
       whatsapp: form.whatsapp.trim() || null,
-      district: form.district.trim() || null,
+      district: (location.district || form.district.trim() || null),
       category: form.category.trim() || null,
       business_type: form.business_type,
       stall_number: form.stall_number.trim() || null,
       operating_hours: form.operating_hours.trim() || null,
       bio: form.description.trim() || null,
+      latitude: location.lat,
+      longitude: location.lng,
+      address_label: location.address_label ?? null,
+      landmark: location.landmark ?? null,
+      location_source: location.location_source,
+      location_accuracy_m: location.location_accuracy_m ?? null,
+      location_confirmed_at: new Date().toISOString(),
+      id_photo_path: idPath,
+      selfie_photo_path: selfiePath,
+      storefront_photo_path: storefrontPath,
       status: "pending",
       onboarding_status: "submitted",
       submitted_at: new Date().toISOString(),
@@ -105,6 +139,12 @@ export default function MerchantOnboarding() {
       toast({ title: "Erreur", description: error.message });
       return;
     }
+    // Default mode to merchant after successful submission.
+    try {
+      await (supabase as any)
+        .from("user_preferences")
+        .upsert({ user_id: user.id, app_mode: "merchant" }, { onConflict: "user_id" });
+    } catch { /* noop */ }
     toast({
       title: "Boutique envoyée",
       description: "Votre boutique est en vérification. Vous pouvez préparer votre catalogue.",
@@ -193,6 +233,16 @@ export default function MerchantOnboarding() {
             <div>
               <Label htmlFor="description">Description (optionnel)</Label>
               <Textarea id="description" value={form.description} onChange={(e) => setField("description")(e.target.value)} rows={3} />
+            </div>
+            <StoreLocationPicker value={location} onChange={setLocation} />
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Vérification</p>
+              <MerchantDocUpload kind="id-card" currentPath={idPath} onUploaded={setIdPath} />
+              <MerchantDocUpload kind="selfie" currentPath={selfiePath} onUploaded={setSelfiePath} />
+              <MerchantDocUpload kind="storefront" currentPath={storefrontPath} onUploaded={setStorefrontPath} />
+              <p className="text-[11px] text-muted-foreground">
+                Vos documents sont stockés de manière privée et ne sont visibles que par l'équipe de vérification CHOPCHOP.
+              </p>
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
