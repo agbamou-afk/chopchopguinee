@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { BrandLogo } from "@/components/brand/BrandLogo";
+
 import { Seo } from "@/components/Seo";
 import { GuineaPhoneInput } from "@/components/ui/guinea-phone-input";
 import { SelfDeleteAccountSheet } from "@/components/account/SelfDeleteAccountSheet";
@@ -172,17 +172,23 @@ export default function ProfileInfo() {
         description="Gérez vos informations personnelles, votre photo de profil et la sécurité de votre compte CHOPCHOP."
         canonical="/profile"
       />
-      <header className="gradient-primary text-primary-foreground rounded-b-3xl px-4 pt-6 pb-8">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10">
+      <header
+        className="gradient-primary text-primary-foreground rounded-b-3xl px-5 pb-8"
+        style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top) + 0.5rem)" }}
+      >
+        <div className="flex items-center gap-4 max-w-md mx-auto">
+          <button
+            onClick={() => navigate(-1)}
+            className="shrink-0 p-2.5 rounded-full hover:bg-white/10 transition-colors"
+            aria-label="Retour"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <BrandLogo size="md" loading="lazy" />
-          <h1 className="text-lg font-bold">Mon profil</h1>
+          <h1 className="text-xl font-bold tracking-tight">Mon profil</h1>
         </div>
       </header>
 
-      <div className="px-4 -mt-6 max-w-md mx-auto space-y-4">
+      <div className="px-4 -mt-5 max-w-md mx-auto space-y-4">
         <div className="bg-card rounded-2xl shadow-card p-5 flex flex-col items-center">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold text-primary overflow-hidden">
