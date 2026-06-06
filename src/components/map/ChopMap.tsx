@@ -60,7 +60,7 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
     );
   }
   return (
-    <div className={`relative chop-map-skin touch-none ${className ?? ''}`}>
+    <div className={`relative chop-map-skin ${className ?? ''}`}>
       <Map ref={mapRef} mapboxAccessToken={config.mapboxToken} mapStyle={config.styleUrl}
         initialViewState={{
           longitude: initialView?.longitude ?? config.defaultCenter.lng,
