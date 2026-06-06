@@ -195,9 +195,12 @@ function UnderConstructionBackground() {
             strokeWidth="3"
             strokeLinecap="round"
           />
-          {/* Hour hand — slow ticking rotation */}
-          <g style={{ transformOrigin: "200px 240px" }}>
-            <motion.line
+          {/* Hour hand — slow ticking rotation around exact clock center
+              (200, 240). Uses SVG animateTransform so the pivot is part of
+              the rotate command itself and isn't affected by CSS
+              transform-box quirks across browsers. */}
+          <g>
+            <line
               x1="200"
               y1="240"
               x2="200"
@@ -205,10 +208,17 @@ function UnderConstructionBackground() {
               stroke="#0f3d2e"
               strokeWidth="4"
               strokeLinecap="round"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-              style={{ transformOrigin: "200px 240px" }}
-            />
+            >
+              <animateTransform
+                attributeName="transform"
+                attributeType="XML"
+                type="rotate"
+                from="0 200 240"
+                to="360 200 240"
+                dur="60s"
+                repeatCount="indefinite"
+              />
+            </line>
           </g>
           {/* Center pin — sunset gold */}
           <circle cx="200" cy="240" r="4" fill="#e8a23a" />
