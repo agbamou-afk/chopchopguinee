@@ -188,7 +188,7 @@ export default function ProfileInfo() {
         </div>
       </header>
 
-      <div className="px-4 -mt-6 max-w-md mx-auto space-y-4">
+      <div className="px-4 -mt-5 max-w-md mx-auto space-y-4">
         <div className="bg-card rounded-2xl shadow-card p-5 flex flex-col items-center">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold text-primary overflow-hidden">
