@@ -59,6 +59,51 @@ export default function UsersAdmin() {
   const [unbanTarget, setUnbanTarget] = useState<Row | null>(null);
   const [unbanReason, setUnbanReason] = useState("");
 
+  // Email diagnostics
+  const [diagEmail, setDiagEmail] = useState("");
+  const [diagBusy, setDiagBusy] = useState(false);
+  const [diagResult, setDiagResult] = useState<Record<string, unknown> | null>(null);
+  const [resendBusy, setResendBusy] = useState(false);
+
+  const runDiagnostics = async () => {
+    const email = diagEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      toast({ title: "Email invalide", description: "Saisissez une adresse email valide." });
+      return;
+    }
+    setDiagBusy(true);
+    setDiagResult(null);
+    const { data, error } = await supabase.rpc("admin_email_delivery_diagnostics", { p_email: email });
+    setDiagBusy(false);
+    if (error) {
+      toast({ title: "Diagnostic impossible", description: error.message });
+      return;
+    }
+    setDiagResult(data as Record<string, unknown>);
+  };
+
+  const resendConfirmation = async () => {
+    const email = diagEmail.trim().toLowerCase();
+    if (!email) return;
+    setResendBusy(true);
+    const { data, error } = await supabase.functions.invoke("admin-email-resend", {
+      body: { email },
+    });
+    setResendBusy(false);
+    if (error) {
+      let parsed: { message?: string; error?: string } | null = null;
+      const ctx = (error as unknown as { context?: Response }).context;
+      if (ctx && typeof ctx.json === "function") {
+        try { parsed = await ctx.clone().json(); } catch { /* ignore */ }
+      }
+      toast({ title: "Renvoi impossible", description: parsed?.message ?? parsed?.error ?? error.message });
+      return;
+    }
+    const d = (data ?? {}) as { message?: string };
+    toast({ title: "Renvoi déclenché", description: d.message ?? "Email mis en file d'attente." });
+    await runDiagnostics();
+  };
+
   const reload = async () => {
     setLoading(true);
     const { data } = await supabase
