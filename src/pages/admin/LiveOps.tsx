@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { AdminLiveOpsMap } from "@/components/admin/AdminLiveOpsMap";
+import { RouteLearningCard } from "@/components/admin/RouteLearningCard";
 
 /**
  * Canonical ride lifecycle phases as understood by ops.
@@ -96,6 +97,7 @@ export default function LiveOps() {
         { label: "Alertes",              value: String(counts.alerts),    icon: AlertTriangle, tone: "text-destructive" },
       ]} />
       <AdminLiveOpsMap variant="moto" />
+      <RouteLearningCard />
       <div className="flex gap-2 flex-wrap">
         {["Tous", "Alertes", "Recherche", "En course", "Hors ligne"].map((x) => (
           <FilterChip key={x} label={x} active={f === x} onClick={() => setF(x)} />
