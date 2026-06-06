@@ -1164,48 +1164,96 @@ export type Database = {
       }
       learned_route_segments: {
         Row: {
+          average_distance_delta_m: number | null
+          average_time_saved_s: number | null
           confidence_score: number
           created_at: string
+          day_type: string | null
+          destination_district: string | null
           destination_geohash: string
+          deviation_frequency: number | null
+          first_observed_at: string | null
           id: number
           last_observed_at: string | null
           median_distance_m: number | null
           median_duration_s: number | null
+          median_speed_kmh: number | null
           notes: string | null
           observed_count: number
+          origin_district: string | null
           origin_geohash: string
+          phase: string | null
+          provider_median_distance_m: number | null
+          provider_median_duration_s: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           segment_hash: string | null
           source: string
+          status: string
+          time_window: string | null
+          unique_driver_count: number
           updated_at: string
         }
         Insert: {
+          average_distance_delta_m?: number | null
+          average_time_saved_s?: number | null
           confidence_score?: number
           created_at?: string
+          day_type?: string | null
+          destination_district?: string | null
           destination_geohash: string
+          deviation_frequency?: number | null
+          first_observed_at?: string | null
           id?: number
           last_observed_at?: string | null
           median_distance_m?: number | null
           median_duration_s?: number | null
+          median_speed_kmh?: number | null
           notes?: string | null
           observed_count?: number
+          origin_district?: string | null
           origin_geohash: string
+          phase?: string | null
+          provider_median_distance_m?: number | null
+          provider_median_duration_s?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           segment_hash?: string | null
           source?: string
+          status?: string
+          time_window?: string | null
+          unique_driver_count?: number
           updated_at?: string
         }
         Update: {
+          average_distance_delta_m?: number | null
+          average_time_saved_s?: number | null
           confidence_score?: number
           created_at?: string
+          day_type?: string | null
+          destination_district?: string | null
           destination_geohash?: string
+          deviation_frequency?: number | null
+          first_observed_at?: string | null
           id?: number
           last_observed_at?: string | null
           median_distance_m?: number | null
           median_duration_s?: number | null
+          median_speed_kmh?: number | null
           notes?: string | null
           observed_count?: number
+          origin_district?: string | null
           origin_geohash?: string
+          phase?: string | null
+          provider_median_distance_m?: number | null
+          provider_median_duration_s?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           segment_hash?: string | null
           source?: string
+          status?: string
+          time_window?: string | null
+          unique_driver_count?: number
           updated_at?: string
         }
         Relationships: []
@@ -2407,13 +2455,17 @@ export type Database = {
           actual_route_duration_s: number | null
           average_speed_kmh: number | null
           created_at: string
+          day_type: string | null
           deviation_count: number
           driver_id: string | null
           end_district: string | null
+          hour_bucket: number | null
           metadata: Json
+          phase: string | null
           planned_route_distance_m: number | null
           planned_route_duration_s: number | null
           point_count: number
+          provider: string | null
           ride_id: string
           route_confidence: number | null
           start_district: string | null
@@ -2425,13 +2477,17 @@ export type Database = {
           actual_route_duration_s?: number | null
           average_speed_kmh?: number | null
           created_at?: string
+          day_type?: string | null
           deviation_count?: number
           driver_id?: string | null
           end_district?: string | null
+          hour_bucket?: number | null
           metadata?: Json
+          phase?: string | null
           planned_route_distance_m?: number | null
           planned_route_duration_s?: number | null
           point_count?: number
+          provider?: string | null
           ride_id: string
           route_confidence?: number | null
           start_district?: string | null
@@ -2443,13 +2499,17 @@ export type Database = {
           actual_route_duration_s?: number | null
           average_speed_kmh?: number | null
           created_at?: string
+          day_type?: string | null
           deviation_count?: number
           driver_id?: string | null
           end_district?: string | null
+          hour_bucket?: number | null
           metadata?: Json
+          phase?: string | null
           planned_route_distance_m?: number | null
           planned_route_duration_s?: number | null
           point_count?: number
+          provider?: string | null
           ride_id?: string
           route_confidence?: number | null
           start_district?: string | null
@@ -3303,6 +3363,13 @@ export type Database = {
         Returns: undefined
       }
       analytics_summary: { Args: { p_days?: number }; Returns: Json }
+      analyze_route_learning_v1: {
+        Args: { p_window_days?: number }
+        Returns: {
+          processed_summaries: number
+          upserted_segments: number
+        }[]
+      }
       can_access_admin: { Args: { _user_id: string }; Returns: boolean }
       can_manage_operations: { Args: { _user_id: string }; Returns: boolean }
       can_manage_wallet: { Args: { _user_id: string }; Returns: boolean }
@@ -3969,6 +4036,10 @@ export type Database = {
         }[]
       }
       request_account_deletion: { Args: { _reason?: string }; Returns: Json }
+      review_learned_route_segment: {
+        Args: { p_id: number; p_notes?: string; p_status: string }
+        Returns: boolean
+      }
       ride_accept: {
         Args: { p_ride_id: string }
         Returns: {
