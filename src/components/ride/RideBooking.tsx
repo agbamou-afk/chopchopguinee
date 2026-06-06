@@ -5,7 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ChopMap, type ChopMapHandle, PinSet, RoutePolyline, DriverCluster, DraggablePickupPin } from "@/components/map";
+import { ChopMap, type ChopMapHandle, RoutePolyline, NearbyAvailableDrivers, DraggablePickupPin } from "@/components/map";
+import { Marker } from "react-map-gl";
+import { MapMarker } from "@/components/map/MapMarker";
 import { RoutingService, decodePolyline, bbox as bboxOf, formatDistance, formatDuration } from "@/lib/maps";
 import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
 import { searchConakryPlaces, categoryLabel, confidenceLabel } from "@/lib/locations/searchPlaces";
@@ -88,6 +90,34 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const mapRef = useRef<ChopMapHandle>(null);
   const option = rideOptions[type];
   const Icon = option.icon;
+
+  // Reverse-geocode a coordinate; returns the best short label or null.
+  const reverseLabel = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`,
+        { headers: { "Accept-Language": "fr" } },
+      );
+      const d = await res.json();
+      return d?.display_name?.split(",").slice(0, 2).join(",") ?? "Position sélectionnée";
+    } catch {
+      return "Position sélectionnée";
+    }
+  };
+
+  const handleMapTap = async ({ lat, lng }: { lat: number; lng: number }) => {
+    // First tap with no pickup sets pickup; otherwise tap sets/replaces destination.
+    if (!pickupCoords) {
+      setPickupCoords([lat, lng]);
+      setPickupIsReal(true);
+      const label = await reverseLabel(lat, lng);
+      setPickup(label);
+      return;
+    }
+    setDestCoords([lat, lng]);
+    const label = await reverseLabel(lat, lng);
+    setDestination(label);
+  };
 
   // Visual map center — falls back to Conakry but is never sent as pickup.
   const mapCenter: [number, number] = pickupCoords
@@ -423,9 +453,16 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           ref={mapRef}
           className="absolute inset-0 w-full h-full"
           initialView={{ longitude: mapCenter[1], latitude: mapCenter[0], zoom: 14 }}
+          onClick={handleMapTap}
         >
           {routePolyline && <RoutePolyline encoded={routePolyline} />}
-          <DriverCluster variant={type === "toktok" ? "toktok" : "moto"} />
+          {/* Privacy-safe nearby driver markers, biased around pickup or live position. */}
+          <NearbyAvailableDrivers
+            lat={pickupCoords ? pickupCoords[0] : (live.isRealLocation && live.coords ? live.coords.lat : null)}
+            lng={pickupCoords ? pickupCoords[1] : (live.isRealLocation && live.coords ? live.coords.lng : null)}
+            vehicleType={type}
+            radiusM={4000}
+          />
           {/* Draggable pickup — only rendered once we have a real or chosen pickup. */}
           {pickupCoords && (
             <DraggablePickupPin
@@ -436,12 +473,30 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
             />
           )}
           {destCoords && (
-            <PinSet dropoff={{ lat: destCoords[0], lng: destCoords[1] }} pulseActive="dropoff" />
+            <Marker
+              longitude={destCoords[1]}
+              latitude={destCoords[0]}
+              anchor="bottom"
+              draggable
+              onDragEnd={(e: any) => {
+                const ll = e?.lngLat;
+                if (!ll) return;
+                setDestCoords([ll.lat, ll.lng]);
+                reverseLabel(ll.lat, ll.lng).then(setDestination);
+              }}
+            >
+              <MapMarker variant="dropoff" pulse size={36} label="Destination" />
+            </Marker>
           )}
         </ChopMap>
         {!pickupCoords && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
-            Position non activée — choisissez un point de départ.
+            Touchez la carte pour choisir votre point de départ.
+          </div>
+        )}
+        {pickupCoords && !destCoords && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
+            Touchez la carte pour placer la destination.
           </div>
         )}
         <button
