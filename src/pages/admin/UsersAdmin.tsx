@@ -44,6 +44,25 @@ function maskPhone(p: string | null) {
   return p.slice(0, 7) + " ••• ••";
 }
 
+function fmt(v: unknown): string {
+  if (v == null || v === "") return "—";
+  if (typeof v === "string") {
+    const d = new Date(v);
+    if (!Number.isNaN(d.getTime())) return d.toLocaleString("fr-FR");
+    return v;
+  }
+  return String(v);
+}
+
+function DiagLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-2 border-b border-border/40 py-0.5">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-mono text-foreground text-right break-all">{value}</span>
+    </div>
+  );
+}
+
 export default function UsersAdmin() {
   const { isSuperAdmin, role } = useAdminAuth();
   const canHardDelete = isSuperAdmin || role === "god_admin";
