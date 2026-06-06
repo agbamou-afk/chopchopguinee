@@ -14,6 +14,7 @@ import { setRestaurantOpen, setStoreOpen } from "@/lib/merchant/operations";
 import { toast } from "@/hooks/use-toast";
 import { MerchantActivationPanel } from "./MerchantActivationPanel";
 import { MerchantPendingBanner } from "./MerchantPendingBanner";
+import { MerchantModeToggle } from "./ModeToggle";
 
 export function MerchantHub() {
   const navigate = useNavigate();
@@ -59,6 +60,9 @@ export function MerchantHub() {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <h1 className="text-lg font-extrabold text-foreground">Espace marchand</h1>
+        <div className="ml-auto">
+          <MerchantModeToggle compact />
+        </div>
       </header>
 
       {!hasAny ? (
