@@ -231,6 +231,77 @@ export default function UsersAdmin() {
         { label: "Suspendus", value: loading ? "…" : String(stats.suspendus), icon: UserX },
         { label: "KYC niveau 0", value: loading ? "…" : String(stats.kyc), icon: ShieldAlert },
       ]} />
+
+      {canHardDelete && (
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <MailSearch className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-semibold">Diagnostic email signup</h3>
+          </div>
+          <p className="text-[12px] text-muted-foreground">
+            Vérifier l'état réel d'une confirmation : utilisateur Auth, file d'attente, fournisseur, suppression.
+            Réservé aux god_admin.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              type="email"
+              value={diagEmail}
+              onChange={(e) => setDiagEmail(e.target.value)}
+              placeholder="adresse@exemple.com"
+              className="sm:flex-1"
+              autoComplete="off"
+            />
+            <Button onClick={runDiagnostics} disabled={diagBusy} variant="outline">
+              {diagBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <MailSearch className="w-4 h-4" />}
+              <span className="ml-1">Diagnostiquer</span>
+            </Button>
+            <Button onClick={resendConfirmation} disabled={resendBusy || !diagEmail.trim()} className="gradient-primary">
+              {resendBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span className="ml-1">Renvoyer confirmation</span>
+            </Button>
+          </div>
+          {diagResult && (
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-2 text-[12px]">
+              {(diagResult as { ok?: boolean; error?: string }).ok === false ? (
+                <p className="text-destructive font-medium">
+                  Erreur : {(diagResult as { error?: string }).error}
+                </p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-1">
+                    <DiagLine label="Auth user" value={String((diagResult as Record<string, unknown>).auth_user_exists ?? "—")} />
+                    <DiagLine label="Confirmé" value={String((diagResult as Record<string, unknown>).email_confirmed ?? "—")} />
+                    <DiagLine label="confirmation_sent_at" value={fmt((diagResult as Record<string, unknown>).confirmation_sent_at)} />
+                    <DiagLine label="email_confirmed_at" value={fmt((diagResult as Record<string, unknown>).email_confirmed_at)} />
+                    <DiagLine label="Dernier template" value={String((diagResult as Record<string, unknown>).latest_template ?? "—")} />
+                    <DiagLine label="Dernier statut" value={String((diagResult as Record<string, unknown>).latest_status ?? "—")} />
+                    <DiagLine label="Dernier envoi" value={fmt((diagResult as Record<string, unknown>).latest_created_at)} />
+                    <DiagLine label="Supprimé (bounce/plainte)" value={String((diagResult as Record<string, unknown>).suppressed ?? false)} />
+                    <DiagLine label="File auth_emails" value={String((diagResult as Record<string, unknown>).queue_pending_count ?? "—")} />
+                    <DiagLine label="DLQ auth_emails" value={String((diagResult as Record<string, unknown>).queue_dlq_count ?? "—")} />
+                  </div>
+                  {(diagResult as { latest_error?: string }).latest_error && (
+                    <p className="text-destructive">
+                      Erreur fournisseur : {(diagResult as { latest_error?: string }).latest_error}
+                    </p>
+                  )}
+                  {(diagResult as { send_log?: Record<string, number> }).send_log && (
+                    <p className="text-muted-foreground">
+                      Historique : {Object.entries((diagResult as { send_log: Record<string, number> }).send_log)
+                        .map(([k, v]) => `${k}:${v}`)
+                        .join(" · ")}
+                    </p>
+                  )}
+                  <p className="font-medium text-foreground">
+                    → {(diagResult as { recommended_action?: string }).recommended_action}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
+
       <AdminToolbar placeholder="Recherche à connecter..." />
       <div className="flex gap-2 flex-wrap">
         {(["Tous", "Actifs", "Suspendus", "KYC"] as const).map((f) => (
