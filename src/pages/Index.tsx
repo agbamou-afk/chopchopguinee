@@ -4,7 +4,6 @@ import { AnimatePresence } from "framer-motion";
 import { UserHome } from "@/components/views/UserHome";
 import { DriverHome } from "@/components/views/DriverHome";
 import { RideBooking } from "@/components/ride/RideBooking";
-import { LiveTracking, type TrackingMode } from "@/components/tracking/LiveTracking";
 import { RealtimeTripScreen } from "@/components/trip/RealtimeTripScreen";
 import { QrScanner } from "@/components/scanner/QrScanner";
 import { toast } from "@/hooks/use-toast";
