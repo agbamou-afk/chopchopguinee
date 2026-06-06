@@ -1,11 +1,13 @@
 import { ModulePage } from "@/components/admin/ModulePage";
 import { AdminToolbar, DataTable, FilterChip, StatGrid, StatusBadge } from "@/components/admin/AdminMock";
-import { Users, UserCheck, UserX, ShieldAlert, Trash2, Loader2, Ban, ShieldCheck } from "lucide-react";
+import { Users, UserCheck, UserX, ShieldAlert, Trash2, Loader2, Ban, ShieldCheck, MailSearch, Send } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
