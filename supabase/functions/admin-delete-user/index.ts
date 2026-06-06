@@ -127,26 +127,60 @@ Deno.serve(async (req) => {
       return json({
         ok: true,
         mode: "anonymized",
+        email_reusable: false,
         steps: a.steps ?? null,
         message:
-          "Ce compte contient des données financières. Il a été anonymisé plutôt que supprimé.",
+          "Ce compte contient un historique financier ou opérationnel. Il a été anonymisé plutôt que supprimé.",
       });
     }
 
-    // Hard delete: auth user first, then profile rows (FKs allow)
-    const { error: delErr } = await admin.auth.admin.deleteUser(target);
+    // Clean test account path: purge safe app rows first to clear any FK that
+    // could prevent auth.admin.deleteUser from succeeding, then hard-delete the
+    // auth user, then verify the auth row is actually gone.
+    const { data: purgeData, error: purgeErr } = await admin.rpc("admin_pre_purge_test_user", {
+      _target: target,
+    });
+    if (purgeErr) {
+      console.error("[admin-delete-user] pre-purge failed", purgeErr);
+      return json(
+        { error: "pre_purge_failed", message: "Échec du nettoyage préalable.", detail: purgeErr.message ?? null },
+        500,
+      );
+    }
+    const purge = (purgeData ?? {}) as { ok?: boolean; reason?: string; steps?: unknown };
+    if (purge.ok === false && purge.reason === "has_financial_history") {
+      // Race: history appeared between checks. Fall back to anonymize.
+      const { data: anonData2 } = await admin.rpc("admin_anonymize_user", { _target: target, _reason: reason });
+      return json({
+        ok: true,
+        mode: "anonymized",
+        email_reusable: false,
+        steps: (anonData2 as { steps?: unknown } | null)?.steps ?? null,
+        message: "Historique détecté entre les vérifications. Compte anonymisé.",
+      });
+    }
+
+    // Hard-delete the auth user (shouldSoftDelete defaults to false in supabase-js v2).
+    const { error: delErr } = await admin.auth.admin.deleteUser(target, false);
     if (delErr) {
       console.error("[admin-delete-user] auth delete failed", delErr);
       const msg = /not.?found/i.test(delErr.message ?? "")
         ? "Suppression impossible : utilisateur introuvable."
         : "Impossible de supprimer ce compte pour le moment.";
-      return json({ error: "auth_delete_failed", message: msg }, 500);
+      return json({ error: "auth_delete_failed", message: msg, detail: delErr.message ?? null }, 500);
     }
 
-    // Clean up obvious app-side rows (best-effort, ignore missing tables).
-    for (const table of ["driver_profiles", "driver_applications", "user_pins", "user_roles", "profiles"]) {
-      const { error: cleanupErr } = await admin.from(table).delete().eq("user_id", target);
-      if (cleanupErr) console.warn(`[admin-delete-user] cleanup ${table} failed`, cleanupErr.message);
+    // Post-delete verification: confirm auth.users no longer has this id.
+    const { data: stillExists } = await admin.rpc("admin_auth_user_exists", { _target: target });
+    if (stillExists === true) {
+      console.error("[admin-delete-user] auth user still present after delete", { target });
+      return json(
+        {
+          error: "auth_user_still_present",
+          message: "L'utilisateur Auth est toujours présent après la suppression. L'email ne peut pas être réutilisé immédiatement.",
+        },
+        500,
+      );
     }
 
     const { error: logErr } = await admin.rpc("admin_log_test_delete", {
@@ -158,7 +192,9 @@ Deno.serve(async (req) => {
 
     return json({
       ok: true,
-      mode: "hard_deleted",
+      mode: "deleted",
+      email_reusable: true,
+      purge_steps: purge.steps ?? null,
       message: "Compte test supprimé. L'email peut être réutilisé.",
     });
   } catch (e) {

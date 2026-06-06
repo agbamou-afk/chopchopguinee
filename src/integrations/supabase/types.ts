@@ -3329,6 +3329,11 @@ export type Database = {
         Args: { _reason?: string; _target: string }
         Returns: Json
       }
+      admin_auth_user_exists: { Args: { _target: string }; Returns: boolean }
+      admin_check_email_reuse_blocker: {
+        Args: { p_email: string }
+        Returns: Json
+      }
       admin_create_agent: {
         Args: {
           p_business_name: string
@@ -3362,6 +3367,7 @@ export type Database = {
         Args: { _caller: string; _reason: string; _target: string }
         Returns: undefined
       }
+      admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
       analytics_summary: { Args: { p_days?: number }; Returns: Json }
       analyze_route_learning_v1: {
         Args: { p_window_days?: number }
