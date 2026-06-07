@@ -1,107 +1,120 @@
+# Account Control System — Delete / Ban / Freeze
 
-# Merchant Signup, Onboarding, Approval & Mode Toggle
+## State of play (already in place)
 
-Extends the V0 merchant onboarding already shipped (`MerchantOnboarding.tsx`, `merchant_stores.onboarding_status`, `admin_merchant_decision` RPC) with the full disciplined flow that mirrors driver signup.
+- `account_bans` table, `admin_ban_user`, `admin_unban_user`, `is_user_banned`, `check_signup_allowed`, `admin_check_email_reuse_blocker` already exist.
+- `admin-delete-user` edge function does pre-purge → hard delete → verify, or anonymize when financial history exists.
+- `Auth.tsx` already calls `check_signup_allowed` before signup with generic copy.
+- `AuthContext` signs the user out when `account_status` is `banned` or `deleted`.
+- `UsersAdmin` already has separated Delete / Ban / Unban actions with required ban reason.
 
-## Agent routing
-- **Lead:** Marché Agent
-- **Reviewers:** Platform/QA/Security (auth branching, RLS, private storage), Admin & Ops (approval queue)
+What is missing and what this plan delivers: the **Freeze** state, ban/freeze **notifications**, a shared **FrozenAccountScreen**, **required reason on unban**, freeze enforcement at sensitive write paths, and one tighter signup precheck (phone + email).
 
-## Flow target
+## 1. Database migration — freeze schema, notifications, hardening
+
+New table `public.account_freezes` (lifecycle, audited, RLS admin-only read):
+
+```text
+id uuid pk
+user_id uuid not null  → auth.users
+reason text not null         (>= 3 chars enforced)
+freeze_type text not null default 'admin_review'
+                              (admin_review | payment_review | security_review | dispute | document_review)
+status text not null default 'active'  (active | lifted)
+frozen_by uuid not null
+frozen_at timestamptz default now()
+expires_at timestamptz null
+lifted_by uuid null
+lifted_at timestamptz null
+lift_reason text null
+metadata jsonb default '{}'
+created_at / updated_at
 ```
-Signup (Marchand) → Merchant Onboarding Slides → Merchant Application
-  → Merchant Dashboard (pending) → Admin Approval → Approved Dashboard
-  ↔ Client Mode toggle (status & catalog preserved)
-```
 
-## 1. Signup branch (Platform)
-- `Auth.tsx` already exposes Client / Chauffeur-Coursier / Marchand. Verify Marchand sets `signup_intent='merchant'` in profile metadata and skips client onboarding/conversion gate.
-- Post-signup redirect:
-  - `merchant` + slides not completed → `/merchant/onboarding-slides`
-  - `merchant` + slides done + no store → `/merchant/onboarding`
-  - `merchant` + store exists → `/merchant`
-- Persist `merchant_slides_completed_at` on `profiles` (or `user_preferences`).
+Indexes on `user_id WHERE status='active'`, `status`, `expires_at`.
 
-## 2. Merchant onboarding slides (new)
-`src/pages/MerchantOnboardingSlides.tsx` — 4 slides (Vendez / Catalogue / Vérification / Position) + CTA "Créer ma boutique". Same visual family as driver slides. Mark completion in DB; never re-show. Not shown to clients or drivers.
+Add `'frozen'` as an allowed value for `profiles.account_status` (currently free-text but enforced by application; update guard if a CHECK exists).
 
-## 3. Merchant application form (extends existing `MerchantOnboarding.tsx`)
-Required: business_name, owner_name, phone_e164 (+224), category, store location, ID photo, selfie.
-Recommended: storefront photo, market_name, stall_number, landmark, description, opening_hours, whatsapp.
+RPCs (SECURITY DEFINER, `search_path=public`, REVOKE PUBLIC, GRANT to authenticated, internal `admin_users` role gate, audit_log row, returns `{ok, freeze_id|ban_id, error?}`):
 
-### Store location picker (new component `StoreLocationPicker`)
-- Button "Utiliser ma position actuelle" → geolocation API, capture lat/lng/accuracy, reverse geocode, confirm.
-- Button "Choisir sur la carte" → map with draggable pin (reuse existing map components).
-- Saves `lat`, `lng`, `district`, `address_label`, `landmark`, `location_source` (`current_location`|`manual_pin`), `location_accuracy_m`, `location_confirmed_at`.
-- No Kaloum default. Permission denial → manual pin fallback with clear copy.
+- `admin_freeze_user(_target uuid, _reason text, _freeze_type text default 'admin_review', _expires_at timestamptz default null)` — requires `god_admin`/`super_admin`/`operations_admin`. Rejects empty reason. Closes any existing active freeze (idempotent), inserts new one, sets `profiles.account_status='frozen'`, sets driver offline if `driver_profiles` row exists, inserts an `inapp` row in `notification_log` with template `account_frozen`. Notification failure is logged, not fatal.
+- `admin_unfreeze_user(_freeze_id uuid default null, _target uuid default null, _lift_reason text)` — lifts active freeze, restores `account_status='active'` only when no other freeze/ban is active. Notification `account_unfrozen`.
+- `is_user_frozen(_user uuid) returns boolean` — STABLE, used by RLS/triggers and client.
+- `current_freeze(_user uuid) returns table(...)` — returns active freeze with reason for the frozen screen.
 
-## 4. Data model migration
-Add to `merchant_stores` (if missing): `owner_name`, `lat`, `lng`, `district`, `address_label`, `landmark`, `location_source`, `location_accuracy_m`, `location_confirmed_at`, `id_photo_path`, `selfie_photo_path`, `storefront_photo_path`, `submitted_at`, `decided_at`, `decided_by`, `decision_reason`.
-Keep existing `status` / `onboarding_status` / `visibility`. Default new merchants: `status='pending'`, `visibility='private'`, `onboarding_status='submitted'`.
+Hardening:
 
-## 5. Private storage bucket
-Create **private** bucket `merchant-docs`. Paths: `merchant-docs/{user_id}/id-card.{ext}`, `/selfie.{ext}`, `/storefront.{ext}`.
-RLS on `storage.objects`:
-- INSERT/SELECT/UPDATE: `auth.uid()::text = (storage.foldername(name))[1]`
-- SELECT also allowed for admins via `has_role(auth.uid(),'admin')` or `operations_admin`.
-- No anon access. Never store ID/selfie in avatar or product image buckets.
+- `admin_unban_user`: require `_lift_reason` length >= 3, also send `account_unbanned` notification (best-effort).
+- `admin_ban_user`: also send `account_banned` notification (best-effort).
+- `check_signup_allowed(_email, _phone_e164)`: already exists — extend to also block when an active ban exists for that **phone** (`phone_e164`). Freeze does **not** block signup of a new email.
 
-## 6. Merchant dashboard pending state
-Extend `MerchantHub` + `MerchantPendingBanner`:
-- Title "Boutique en vérification" + body.
-- Checklist (info / position / ID / selfie / storefront / produits).
-- Actions: add product, edit info, add documents, view status, switch to client mode.
-- Pending merchants CAN create products (drafts) but products are forced `status='draft'`, `visibility='private'` via DB trigger.
+Sensitive-action triggers (defense in depth — UI also blocks):
 
-## 7. Product visibility enforcement
-DB trigger on `marketplace_listings` insert/update:
-- If owning store not `approved` → force `visibility='private'`, `status='draft'`.
-- Public marketplace query (`get_public_listings` or RLS): require `store.status='approved'` AND `store.visibility='public'` AND `listing.visibility='public'` AND `listing.status='active'`.
+- Trigger on `rides`, `food_orders`, `topup_requests`, `marketplace_listings` (INSERT/UPDATE that publishes), `driver_locations` (going online) → raise `frozen_account` exception when `is_user_frozen(auth.uid())`.
 
-## 8. Admin approval (extends `MerchantsAdmin.tsx`)
-Detail panel shows: business + owner + phone, location map preview, ID photo, selfie, storefront, draft product count, notes.
-Actions wired to existing `admin_merchant_decision` RPC: Approve / Reject / Request Info / Suspend / Reactivate. Reason captured. Audit log entry.
-Approve → `status='approved'`, `onboarding_status='approved'`, `visibility='public'` allowed; merchant unlocks public publishing.
-Reject → reason visible to merchant; products stay private.
-Needs info → `onboarding_status='needs_info'`; dashboard surfaces request.
+All new tables: `GRANT` block per cloud-db rules. `account_freezes` is admin-only read (no `anon`, no `authenticated` self-read — use `current_freeze` RPC which the user can call for themselves only).
 
-## 9. Mode toggle (new)
-New hook `useAppMode` + UI toggle in header/menu:
-- Stores `app_mode` in `user_preferences` (`merchant` | `client`) per user.
-- Merchant users default to Merchant Mode after onboarding.
-- "Passer en mode client" → routes to `/` client home; merchant store untouched.
-- "Passer en mode marchand" → routes to `/merchant`.
-- Toggle visible only to users with a `merchant_stores` row.
-- Switching never deletes store or alters approval status.
+## 2. Edge function — `admin-delete-user`
 
-## 10. Routing guard updates
-`App.tsx` / `AuthContext`: post-login resolver checks intent + slides + store status to land on correct surface. Existing client / driver routing untouched.
+Extend pre-purge to also clear active reuse blockers when a clean delete succeeds (no history):
 
-## 11. Security / RLS verification
-- Merchant: select/update own store only; insert/select own docs only; cannot set `status`/`decided_*`.
-- Admin/ops: full read via `has_role`.
-- Customers: cannot read pending stores, pending products, or any merchant doc.
-- All sensitive writes via SECURITY DEFINER RPCs already in place.
+- delete `profiles` row (already cascaded by auth.users delete in many cases — verify and add explicit cleanup of `user_preferences`, `user_pins`, `user_roles`, `user_legal_consents`, `saved_places`, `notification_preferences`, `driver_applications`, `merchant_stores` only when status is pending/none, `account_freezes`).
+- Keep current anonymize path untouched when history exists.
+- Response unchanged: `{mode:'deleted'|'anonymized', email_reusable}`.
 
-## 12. QA matrix (A–L per spec)
-Fresh merchant signup → slides → app → submit; current-location pin; manual map pin; ID/selfie upload to private bucket; pending dashboard; draft product invisible to clients; admin approve unlocks public; mode toggle round-trip; client and driver signup regression.
+## 3. Frontend
 
-## Files to create
-- `src/pages/MerchantOnboardingSlides.tsx`
-- `src/components/merchant/StoreLocationPicker.tsx`
-- `src/components/merchant/MerchantDocUpload.tsx`
-- `src/components/merchant/ModeToggle.tsx`
-- `src/hooks/useAppMode.ts`
-- Migration: schema additions + bucket policies + visibility trigger
-- `docs/marche/MERCHANT_SIGNUP_FLOW.md`
+`src/contexts/AuthContext.tsx`:
 
-## Files to edit
-- `src/pages/Auth.tsx`, `src/contexts/AuthContext.tsx`, `src/App.tsx`
-- `src/pages/MerchantOnboarding.tsx` (extend with new fields, docs, location)
-- `src/components/merchant/MerchantHub.tsx`, `MerchantPendingBanner.tsx`
-- `src/pages/admin/MerchantsAdmin.tsx` (detail panel + doc previews via signed URLs)
+- Load active freeze via `current_freeze` RPC alongside profile/roles. Expose `freeze: { id, reason, freeze_type, frozen_at, expires_at } | null` and `isFrozen` boolean on context.
+- Banned/deleted handling unchanged.
 
-## Out of scope (won't touch)
-- Wallet credit logic, ride/repas verticals, driver flow, client conversion gate.
+`src/components/account/FrozenAccountScreen.tsx` (new):
 
-**Lock candidate:** `merchant-signup-onboarding-dashboard-approval-stable`
+- Full-screen replacement for the app shell when `isFrozen`.
+- Shows title "Compte temporairement gelé", reason, freeze type, "Contacter le support" CTA → opens existing `ReportIssueButton` / mailto.
+- No bottom nav, no navigation away.
+
+`src/App.tsx`:
+
+- After `AuthProvider` ready, if `isFrozen` and not on `/auth`, `/legal`, `/privacy`, `/help`, render `FrozenAccountScreen` instead of routed content.
+
+`src/hooks/useAuthGuard.ts`:
+
+- Block `requireAuth` when `isFrozen`, toast and route to `/account/frozen` (or stay).
+
+`src/pages/admin/UsersAdmin.tsx`:
+
+- Add **Geler** action button (snowflake/Lock icon) next to Bannir, visible when `account_status !== 'frozen'` and not banned/deleted.
+- Add **Lever le gel** action button when `account_status === 'frozen'`.
+- New **Freeze dialog**: required `reason` textarea (>=3 chars), `freeze_type` select with 5 options, optional `expires_at` date input, confirm button.
+- New **Unfreeze dialog**: required `lift_reason`.
+- Make **unban dialog** `lift_reason` required (currently optional).
+- Add `frozen` to `StatusBadge` (amber/blue).
+- Filter chip "Gelés".
+
+`src/pages/Auth.tsx`:
+
+- Already gated by `check_signup_allowed`. After migration extends phone check, no UI change needed.
+
+## 4. QA matrix
+
+A. Clean test delete → `mode=deleted`, email + phone reusable, signup succeeds.
+B. Ban user → blocked at login, signup with same email blocked, same phone blocked, generic copy shown.
+C. Unban (with reason) → signup/login restored.
+D. Freeze → user sees `FrozenAccountScreen` with reason, no nav.
+E. Unfreeze → app shell restored.
+F. Frozen driver → forced offline, `driver_locations` insert raises `frozen_account`.
+G. Frozen merchant → cannot publish listing (trigger + UI guard).
+H. Frozen client → cannot insert ride / food_order / topup_request.
+I. Notifications: `account_log` rows present for freeze/unfreeze/ban/unban.
+J. Non-admin caller → `admin_freeze_user` rejects with `forbidden`.
+K. History account → still anonymized, never hard-deleted.
+
+## 5. Out of scope
+
+- Email/SMS delivery for ban/freeze (in-app only, queued through existing notification pipeline if/when worker picks it up).
+- Self-serve unfreeze.
+- Per-vertical UX polish beyond the global frozen screen + RPC-level block.
+
+**Lock candidate:** `account-control-delete-ban-freeze-stable`
