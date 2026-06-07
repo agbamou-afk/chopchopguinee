@@ -26,6 +26,15 @@ export interface ProfileRecord {
   account_status: string;
 }
 
+export interface FreezeRecord {
+  id: string;
+  user_id: string;
+  reason: string;
+  freeze_type: string;
+  frozen_at: string;
+  expires_at: string | null;
+}
+
 const ADMIN_ROLES: AppRole[] = ["admin", "operations_admin", "finance_admin", "god_admin"];
 
 interface AuthContextValue {
@@ -38,6 +47,8 @@ interface AuthContextValue {
   isLoggedIn: boolean;
   isAdmin: boolean;
   isGodAdmin: boolean;
+  freeze: FreezeRecord | null;
+  isFrozen: boolean;
   hasRole: (role: AppRole) => boolean;
   isProfileComplete: boolean;
   /**
@@ -67,20 +78,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [freeze, setFreeze] = useState<FreezeRecord | null>(null);
   const [ready, setReady] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
 
   const loadProfileAndRoles = useCallback(async (userId: string, authUser?: User | null) => {
     setProfileLoading(true);
     try {
-      const [{ data: prof }, { data: roleRows }] = await Promise.all([
+      const [{ data: prof }, { data: roleRows }, { data: freezeRows }] = await Promise.all([
         supabase
           .from("profiles")
           .select("user_id,first_name,last_name,display_name,full_name,phone,email,avatar_url,account_status")
           .eq("user_id", userId)
           .maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
+        supabase.rpc("current_freeze", { _user: userId }),
       ]);
+      const freezeRow = Array.isArray(freezeRows) && freezeRows.length > 0
+        ? (freezeRows[0] as FreezeRecord)
+        : null;
+      setFreeze(freezeRow);
       let resolved = (prof as ProfileRecord) ?? null;
       // If the profile is marked deleted OR banned, sign the user out
       // immediately and surface a clear message via toast.
@@ -143,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       setProfile(null);
       setRoles([]);
+      setFreeze(null);
     } finally {
       setProfileLoading(false);
     }
@@ -174,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setRoles([]);
+        setFreeze(null);
       }
     });
 
@@ -206,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setRoles([]);
+    setFreeze(null);
   }, []);
 
   const value: AuthContextValue = {
@@ -218,6 +238,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoggedIn: !!session,
     isAdmin: roles.some((r) => ADMIN_ROLES.includes(r)),
     isGodAdmin: roles.includes("god_admin"),
+    freeze,
+    isFrozen: !!freeze,
     hasRole: (r) => roles.includes(r),
     isProfileComplete: profileComplete(profile),
     signupIntent: (() => {

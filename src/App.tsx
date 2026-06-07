@@ -2,16 +2,29 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppEnvProvider } from "@/contexts/AppEnvContext";
 import { OfflineBanner } from "@/components/system/OfflineBanner";
 import { InstallPrompt } from "@/components/system/InstallPrompt";
 import { ProfileCompletionRedirect } from "@/components/auth/ProfileCompletionRedirect";
+import { FrozenAccountScreen } from "@/components/account/FrozenAccountScreen";
 import { useTopupNotifications } from "@/hooks/useTopupNotifications";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
 import { isSandboxMode } from "@/lib/runtimeMode";
+import { useLocation } from "react-router-dom";
+
+const FREEZE_ALLOWED_PATHS = ["/auth", "/legal", "/privacy", "/terms", "/help", "/unsubscribe", "/offline"];
+
+function FreezeGate({ children }: { children: React.ReactNode }) {
+  const { isFrozen, ready } = useAuth();
+  const location = useLocation();
+  if (!ready || !isFrozen) return <>{children}</>;
+  const allowed = FREEZE_ALLOWED_PATHS.some((p) => location.pathname.startsWith(p));
+  if (allowed) return <>{children}</>;
+  return <FrozenAccountScreen />;
+}
 
 function TopupNotificationsMount() {
   useTopupNotifications();
@@ -127,6 +140,7 @@ const App = () => {
             /[?&](sandbox|debug)=1/.test(window.location.search))) && (
           <Suspense fallback={null}><SandboxOpsPanel /></Suspense>
         )}
+        <FreezeGate>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
@@ -180,6 +194,7 @@ const App = () => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </FreezeGate>
       </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

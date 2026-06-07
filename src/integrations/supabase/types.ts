@@ -110,6 +110,57 @@ export type Database = {
         }
         Relationships: []
       }
+      account_freezes: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          freeze_type: string
+          frozen_at: string
+          frozen_by: string
+          id: string
+          lift_reason: string | null
+          lifted_at: string | null
+          lifted_by: string | null
+          metadata: Json
+          reason: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          freeze_type?: string
+          frozen_at?: string
+          frozen_by: string
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          metadata?: Json
+          reason: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          freeze_type?: string
+          frozen_at?: string
+          frozen_by?: string
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          metadata?: Json
+          reason?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           admin_role: Database["public"]["Enums"]["admin_role"]
@@ -3575,6 +3626,16 @@ export type Database = {
         Returns: Json
       }
       _is_god_admin: { Args: { _user: string }; Returns: boolean }
+      _is_ops_or_god_admin: { Args: { _user: string }; Returns: boolean }
+      _notify_account_event: {
+        Args: {
+          _body: string
+          _template: string
+          _title: string
+          _user: string
+        }
+        Returns: undefined
+      }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -3649,6 +3710,15 @@ export type Database = {
         Args: { p_email: string }
         Returns: Json
       }
+      admin_freeze_user: {
+        Args: {
+          _expires_at?: string
+          _freeze_type?: string
+          _reason: string
+          _target: string
+        }
+        Returns: Json
+      }
       admin_log_test_delete: {
         Args: { _caller: string; _reason: string; _target: string }
         Returns: undefined
@@ -3705,8 +3775,14 @@ export type Database = {
         }
       }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
-      admin_unban_user: {
-        Args: { _lift_reason: string; _target: string }
+      admin_unban_user:
+        | {
+            Args: { _ban_id?: string; _lift_reason?: string; _target?: string }
+            Returns: Json
+          }
+        | { Args: { _lift_reason: string; _target: string }; Returns: Json }
+      admin_unfreeze_user: {
+        Args: { _freeze_id?: string; _lift_reason?: string; _target?: string }
         Returns: Json
       }
       analytics_summary: { Args: { p_days?: number }; Returns: Json }
@@ -3786,6 +3862,17 @@ export type Database = {
       current_admin_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["admin_role"]
+      }
+      current_freeze: {
+        Args: { _user?: string }
+        Returns: {
+          expires_at: string
+          freeze_type: string
+          frozen_at: string
+          id: string
+          reason: string
+          user_id: string
+        }[]
       }
       debug_create_offer_for_current_driver: { Args: never; Returns: Json }
       delete_email: {
@@ -4120,6 +4207,7 @@ export type Database = {
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
       is_god_admin: { Args: { _user_id: string }; Returns: boolean }
       is_user_banned: { Args: { _user: string }; Returns: boolean }
+      is_user_frozen: { Args: { _user: string }; Returns: boolean }
       list_my_topup_requests: {
         Args: { p_limit?: number }
         Returns: {

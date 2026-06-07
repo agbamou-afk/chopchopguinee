@@ -1,6 +1,6 @@
 import { ModulePage } from "@/components/admin/ModulePage";
 import { AdminToolbar, DataTable, FilterChip, StatGrid, StatusBadge } from "@/components/admin/AdminMock";
-import { Users, UserCheck, UserX, ShieldAlert, Trash2, Loader2, Ban, ShieldCheck, MailSearch, Send } from "lucide-react";
+import { Users, UserCheck, UserX, ShieldAlert, Trash2, Loader2, Ban, ShieldCheck, MailSearch, Send, Snowflake, Sun } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
@@ -9,6 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,7 +70,8 @@ export default function UsersAdmin() {
   const { isSuperAdmin, role } = useAdminAuth();
   const canHardDelete = isSuperAdmin || role === "god_admin";
   const canBan = canHardDelete;
-  const [filter, setFilter] = useState<"Tous" | "Actifs" | "Suspendus" | "KYC">("Tous");
+  const canFreeze = canHardDelete || role === "operations_admin";
+  const [filter, setFilter] = useState<"Tous" | "Actifs" | "Suspendus" | "Gelés" | "KYC">("Tous");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, actifs: 0, suspendus: 0, kyc: 0 });
@@ -77,6 +81,12 @@ export default function UsersAdmin() {
   const [banReason, setBanReason] = useState("");
   const [unbanTarget, setUnbanTarget] = useState<Row | null>(null);
   const [unbanReason, setUnbanReason] = useState("");
+  const [freezeTarget, setFreezeTarget] = useState<Row | null>(null);
+  const [freezeReason, setFreezeReason] = useState("");
+  const [freezeType, setFreezeType] = useState("admin_review");
+  const [freezeExpires, setFreezeExpires] = useState("");
+  const [unfreezeTarget, setUnfreezeTarget] = useState<Row | null>(null);
+  const [unfreezeReason, setUnfreezeReason] = useState("");
 
   // Email diagnostics
   const [diagEmail, setDiagEmail] = useState("");
@@ -195,6 +205,7 @@ export default function UsersAdmin() {
   const filtered = useMemo(() => {
     if (filter === "Actifs") return rows.filter((r) => r.account_status === "active");
     if (filter === "Suspendus") return rows.filter((r) => r.account_status === "suspended");
+    if (filter === "Gelés") return rows.filter((r) => r.account_status === "frozen");
     if (filter === "KYC") return rows.filter((r) => (r.kyc_level ?? 0) === 0);
     return rows;
   }, [rows, filter]);
@@ -225,10 +236,14 @@ export default function UsersAdmin() {
 
   const confirmUnban = async () => {
     if (!unbanTarget) return;
+    if (unbanReason.trim().length < 3) {
+      toast({ title: "Raison requise", description: "Indiquez une raison (3 caractères min)." });
+      return;
+    }
     setBusyId(unbanTarget.user_id);
     const { data, error } = await supabase.rpc("admin_unban_user", {
       _target: unbanTarget.user_id,
-      _lift_reason: unbanReason.trim() || "réactivation admin",
+      _lift_reason: unbanReason.trim(),
     });
     setBusyId(null);
     const res = (data ?? {}) as { ok?: boolean; error?: string };
@@ -239,6 +254,56 @@ export default function UsersAdmin() {
     toast({ title: "Compte réactivé", description: "L'utilisateur peut de nouveau accéder à CHOPCHOP." });
     setUnbanTarget(null);
     setUnbanReason("");
+    await reload();
+  };
+
+  const confirmFreeze = async () => {
+    if (!freezeTarget) return;
+    if (freezeReason.trim().length < 3) {
+      toast({ title: "Raison requise", description: "Indiquez une raison (3 caractères min)." });
+      return;
+    }
+    setBusyId(freezeTarget.user_id);
+    const { data, error } = await supabase.rpc("admin_freeze_user", {
+      _target: freezeTarget.user_id,
+      _reason: freezeReason.trim(),
+      _freeze_type: freezeType,
+      _expires_at: freezeExpires ? new Date(freezeExpires).toISOString() : null,
+    });
+    setBusyId(null);
+    const res = (data ?? {}) as { ok?: boolean; error?: string };
+    if (error || res.ok === false) {
+      toast({ title: "Gel impossible", description: error?.message ?? res.error ?? "Erreur inconnue." });
+      return;
+    }
+    toast({ title: "Compte gelé", description: "L'utilisateur a été notifié." });
+    setFreezeTarget(null);
+    setFreezeReason("");
+    setFreezeType("admin_review");
+    setFreezeExpires("");
+    await reload();
+  };
+
+  const confirmUnfreeze = async () => {
+    if (!unfreezeTarget) return;
+    if (unfreezeReason.trim().length < 3) {
+      toast({ title: "Raison requise", description: "Indiquez une raison (3 caractères min)." });
+      return;
+    }
+    setBusyId(unfreezeTarget.user_id);
+    const { data, error } = await supabase.rpc("admin_unfreeze_user", {
+      _target: unfreezeTarget.user_id,
+      _lift_reason: unfreezeReason.trim(),
+    });
+    setBusyId(null);
+    const res = (data ?? {}) as { ok?: boolean; error?: string };
+    if (error || res.ok === false) {
+      toast({ title: "Levée du gel impossible", description: error?.message ?? res.error ?? "Erreur inconnue." });
+      return;
+    }
+    toast({ title: "Gel levé", description: "L'utilisateur a été notifié." });
+    setUnfreezeTarget(null);
+    setUnfreezeReason("");
     await reload();
   };
 
@@ -323,7 +388,7 @@ export default function UsersAdmin() {
 
       <AdminToolbar placeholder="Recherche à connecter..." />
       <div className="flex gap-2 flex-wrap">
-        {(["Tous", "Actifs", "Suspendus", "KYC"] as const).map((f) => (
+        {(["Tous", "Actifs", "Suspendus", "Gelés", "KYC"] as const).map((f) => (
           <FilterChip key={f} label={f === "KYC" ? "KYC à compléter" : f} active={filter === f} onClick={() => setFilter(f)} />
         ))}
       </div>
@@ -360,11 +425,32 @@ export default function UsersAdmin() {
                   <span className="ml-1 text-[11px]">Bannir</span>
                 </Button>
               )}
+              {canFreeze && u.account_status !== "banned" && u.account_status !== "deleted" && (
+                u.account_status === "frozen" ? (
+                  <Button
+                    variant="ghost" size="sm" className="h-7 px-2 text-sky-600 hover:text-sky-600"
+                    disabled={busyId === u.user_id}
+                    onClick={() => { setUnfreezeTarget(u); setUnfreezeReason(""); }}
+                  >
+                    <Sun className="w-3.5 h-3.5" />
+                    <span className="ml-1 text-[11px]">Lever le gel</span>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost" size="sm" className="h-7 px-2 text-sky-600 hover:text-sky-600"
+                    disabled={busyId === u.user_id}
+                    onClick={() => { setFreezeTarget(u); setFreezeReason(""); setFreezeType("admin_review"); setFreezeExpires(""); }}
+                  >
+                    <Snowflake className="w-3.5 h-3.5" />
+                    <span className="ml-1 text-[11px]">Geler</span>
+                  </Button>
+                )
+              )}
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-destructive hover:text-destructive h-7 px-2"
-                disabled={busyId === u.user_id || u.account_status === "deleted" || u.account_status === "banned"}
+                disabled={busyId === u.user_id || u.account_status === "deleted" || u.account_status === "banned" || u.account_status === "frozen"}
                 onClick={() => setPending(u)}
               >
                 {busyId === u.user_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
@@ -452,7 +538,7 @@ export default function UsersAdmin() {
             <p className="text-sm font-medium">
               {unbanTarget?.display_name || unbanTarget?.full_name || unbanTarget?.user_id}
             </p>
-            <label className="text-xs text-muted-foreground">Raison (optionnel)</label>
+            <label className="text-xs text-muted-foreground">Raison de la levée (requis)</label>
             <Textarea
               value={unbanReason}
               onChange={(e) => setUnbanReason(e.target.value)}
@@ -463,6 +549,78 @@ export default function UsersAdmin() {
             <Button variant="outline" onClick={() => setUnbanTarget(null)}>Annuler</Button>
             <Button onClick={confirmUnban} disabled={busyId === unbanTarget?.user_id} className="gradient-primary">
               {busyId === unbanTarget?.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Réactiver"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Freeze dialog */}
+      <Dialog open={!!freezeTarget} onOpenChange={(o) => !o && setFreezeTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Geler ce compte</DialogTitle>
+            <DialogDescription>
+              Le compte sera temporairement gelé. L'utilisateur ne pourra plus effectuer d'actions sensibles
+              (commande, course, recharge, publication) tant que le gel n'est pas levé. Il sera notifié.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm font-medium">
+              {freezeTarget?.display_name || freezeTarget?.full_name || freezeTarget?.user_id}
+            </p>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Type de gel</label>
+              <Select value={freezeType} onValueChange={setFreezeType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin_review">Vérification administrative</SelectItem>
+                  <SelectItem value="payment_review">Vérification de paiement</SelectItem>
+                  <SelectItem value="security_review">Vérification de sécurité</SelectItem>
+                  <SelectItem value="dispute">Litige en cours</SelectItem>
+                  <SelectItem value="document_review">Vérification de documents</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Raison (requise)</label>
+              <Textarea value={freezeReason} onChange={(e) => setFreezeReason(e.target.value)} rows={3}
+                placeholder="Ex. transaction suspecte, document manquant…" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Expiration (optionnel)</label>
+              <Input type="datetime-local" value={freezeExpires} onChange={(e) => setFreezeExpires(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFreezeTarget(null)}>Annuler</Button>
+            <Button className="bg-sky-600 hover:bg-sky-700 text-white"
+              onClick={confirmFreeze} disabled={busyId === freezeTarget?.user_id}>
+              {busyId === freezeTarget?.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmer le gel"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unfreeze dialog */}
+      <Dialog open={!!unfreezeTarget} onOpenChange={(o) => !o && setUnfreezeTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lever le gel</DialogTitle>
+            <DialogDescription>
+              L'accès complet sera restauré. L'utilisateur sera notifié.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              {unfreezeTarget?.display_name || unfreezeTarget?.full_name || unfreezeTarget?.user_id}
+            </p>
+            <label className="text-xs text-muted-foreground">Raison de la levée (requise)</label>
+            <Textarea value={unfreezeReason} onChange={(e) => setUnfreezeReason(e.target.value)} rows={2} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUnfreezeTarget(null)}>Annuler</Button>
+            <Button onClick={confirmUnfreeze} disabled={busyId === unfreezeTarget?.user_id} className="gradient-primary">
+              {busyId === unfreezeTarget?.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Lever le gel"}
             </Button>
           </DialogFooter>
         </DialogContent>
