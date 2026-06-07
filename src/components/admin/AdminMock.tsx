@@ -39,6 +39,7 @@ export function StatusBadge({ status }: { status: string }) {
     pending: "chip-warn", open: "chip-warn", medium: "chip-warn",
     investigating: "chip-info",
     suspended: "chip-err", failed: "chip-err", escalated: "chip-err", high: "chip-err",
+    banned: "chip-err", deleted: "chip-mute", frozen: "chip-info",
     offline: "chip-mute",
     reversed: "chip-violet",
   };
