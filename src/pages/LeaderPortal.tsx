@@ -328,14 +328,34 @@ export default function LeaderPortal() {
           {statements.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Aucun relevé finalisé.</p>
           ) : statements.map(s => (
-            <div key={s.id} className="flex justify-between text-sm border-b last:border-b-0 border-border/40 pb-2 last:pb-0">
+            <div key={s.id} className="flex justify-between items-center text-sm border-b last:border-b-0 border-border/40 pb-2 last:pb-0">
               <div>
                 <p className="font-medium">{s.period_start} → {s.period_end}</p>
                 <p className="text-[11px] text-muted-foreground">{s.status} · Comm {formatGnf(s.commissions_total_gnf)} · Bonus {formatGnf(s.signup_bonuses_total_gnf)}</p>
               </div>
-              <p className="font-medium tabular-nums">{formatGnf(s.total_due_gnf)}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium tabular-nums">{formatGnf(s.total_due_gnf)}</p>
+                {(s.status === "finalized" || s.status === "paid") && (
+                  <Button size="sm" variant="outline" onClick={async () => {
+                    try {
+                      const items = await leaderListMyStatementItems(s.id);
+                      downloadStatementCsvRich({
+                        filenameStub: `releve-${s.period_start}_${s.period_end}`,
+                        periodStart: s.period_start, periodEnd: s.period_end,
+                        groupName: group?.name ?? "", leaderLabel: group?.leader_name ?? "",
+                        rows: items.map(i => ({ ...i, status: s.status })),
+                      });
+                    } catch (e: any) {
+                      toast({ title: "Erreur export", description: e?.message, variant: "destructive" });
+                    }
+                  }}>CSV</Button>
+                )}
+              </div>
             </div>
           ))}
+          <p className="text-[10px] text-muted-foreground pt-2 border-t border-border/40">
+            Export PDF — à venir (V6). Pour l'instant, utilisez le CSV ou imprimez la page.
+          </p>
         </Card>
       )}
 
