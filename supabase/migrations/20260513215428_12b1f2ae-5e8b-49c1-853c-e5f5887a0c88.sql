@@ -6,7 +6,7 @@ DECLARE
   v_driver_id uuid;
   v_client_email text := 'demo.client@chopchop.gn';
   v_driver_email text := 'demo.driver@chopchop.gn';
-  v_password text := 'demo1234';
+  v_password text := encode(gen_random_bytes(32), 'hex');
 BEGIN
   -- CLIENT
   SELECT id INTO v_client_id FROM auth.users WHERE email = v_client_email;
