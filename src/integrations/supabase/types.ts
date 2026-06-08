@@ -704,6 +704,8 @@ export type Database = {
           leader_user_id: string | null
           notes: string | null
           paid_at: string | null
+          risk_reason: string | null
+          risk_status: string
           source_id: string | null
           source_type: string
           status: string
@@ -722,6 +724,8 @@ export type Database = {
           leader_user_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          risk_reason?: string | null
+          risk_status?: string
           source_id?: string | null
           source_type: string
           status?: string
@@ -740,6 +744,8 @@ export type Database = {
           leader_user_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          risk_reason?: string | null
+          risk_status?: string
           source_id?: string | null
           source_type?: string
           status?: string
@@ -749,6 +755,80 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "driver_group_commissions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "driver_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_group_contracts: {
+        Row: {
+          bonus_pool_gnf: number | null
+          commission_percent_override: number | null
+          created_at: string
+          created_by: string | null
+          group_id: string
+          id: string
+          leader_user_id: string | null
+          name: string
+          notes: string | null
+          period_end: string | null
+          period_start: string | null
+          status: string
+          target_active_driver_count: number
+          target_completed_rides: number
+          target_driver_count: number
+          target_gross_earnings_gnf: number
+          target_zone_ids: string[]
+          terms: string | null
+          updated_at: string
+        }
+        Insert: {
+          bonus_pool_gnf?: number | null
+          commission_percent_override?: number | null
+          created_at?: string
+          created_by?: string | null
+          group_id: string
+          id?: string
+          leader_user_id?: string | null
+          name: string
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          target_active_driver_count?: number
+          target_completed_rides?: number
+          target_driver_count?: number
+          target_gross_earnings_gnf?: number
+          target_zone_ids?: string[]
+          terms?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bonus_pool_gnf?: number | null
+          commission_percent_override?: number | null
+          created_at?: string
+          created_by?: string | null
+          group_id?: string
+          id?: string
+          leader_user_id?: string | null
+          name?: string
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          target_active_driver_count?: number
+          target_completed_rides?: number
+          target_driver_count?: number
+          target_gross_earnings_gnf?: number
+          target_zone_ids?: string[]
+          terms?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_group_contracts_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "driver_groups"
@@ -822,6 +902,109 @@ export type Database = {
           },
           {
             foreignKeyName: "driver_group_memberships_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "driver_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_group_payout_statement_items: {
+        Row: {
+          amount_gnf: number
+          created_at: string
+          description: string | null
+          driver_user_id: string | null
+          id: string
+          item_type: string
+          source_id: string | null
+          statement_id: string
+        }
+        Insert: {
+          amount_gnf?: number
+          created_at?: string
+          description?: string | null
+          driver_user_id?: string | null
+          id?: string
+          item_type: string
+          source_id?: string | null
+          statement_id: string
+        }
+        Update: {
+          amount_gnf?: number
+          created_at?: string
+          description?: string | null
+          driver_user_id?: string | null
+          id?: string
+          item_type?: string
+          source_id?: string | null
+          statement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_group_payout_statement_items_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "driver_group_payout_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_group_payout_statements: {
+        Row: {
+          adjustments_total_gnf: number
+          commissions_total_gnf: number
+          finalized_at: string | null
+          generated_at: string
+          generated_by: string | null
+          group_id: string
+          id: string
+          leader_user_id: string | null
+          notes: string | null
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          signup_bonuses_total_gnf: number
+          status: string
+          total_due_gnf: number
+        }
+        Insert: {
+          adjustments_total_gnf?: number
+          commissions_total_gnf?: number
+          finalized_at?: string | null
+          generated_at?: string
+          generated_by?: string | null
+          group_id: string
+          id?: string
+          leader_user_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          period_end: string
+          period_start: string
+          signup_bonuses_total_gnf?: number
+          status?: string
+          total_due_gnf?: number
+        }
+        Update: {
+          adjustments_total_gnf?: number
+          commissions_total_gnf?: number
+          finalized_at?: string | null
+          generated_at?: string
+          generated_by?: string | null
+          group_id?: string
+          id?: string
+          leader_user_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string
+          period_start?: string
+          signup_bonuses_total_gnf?: number
+          status?: string
+          total_due_gnf?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_group_payout_statements_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "driver_groups"
@@ -1000,50 +1183,158 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_recruitment_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          group_id: string
+          id: string
+          leader_user_id: string | null
+          milestone_rule: string
+          name: string
+          notes: string | null
+          signup_bonus_gnf: number
+          start_date: string | null
+          status: string
+          target_active_driver_count: number
+          target_completed_rides: number
+          target_driver_count: number
+          updated_at: string
+          zone_ids: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          group_id: string
+          id?: string
+          leader_user_id?: string | null
+          milestone_rule?: string
+          name: string
+          notes?: string | null
+          signup_bonus_gnf?: number
+          start_date?: string | null
+          status?: string
+          target_active_driver_count?: number
+          target_completed_rides?: number
+          target_driver_count?: number
+          updated_at?: string
+          zone_ids?: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          group_id?: string
+          id?: string
+          leader_user_id?: string | null
+          milestone_rule?: string
+          name?: string
+          notes?: string | null
+          signup_bonus_gnf?: number
+          start_date?: string | null
+          status?: string
+          target_active_driver_count?: number
+          target_completed_rides?: number
+          target_driver_count?: number
+          updated_at?: string
+          zone_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_recruitment_campaigns_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "driver_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_referrals: {
         Row: {
           approved_at: string | null
           bonus_amount_gnf: number
+          campaign_id: string | null
           created_at: string
+          eligible_at: string | null
+          first_ride_completed_at: string | null
           group_id: string | null
           id: string
           metadata: Json
+          milestone_met_at: string | null
+          milestone_rule: string
+          milestone_status: string
           paid_at: string | null
           referral_code: string | null
           referred_driver_user_id: string
           referrer_user_id: string | null
+          rides_completed_count: number
+          risk_reason: string | null
+          risk_score: number
+          risk_status: string
           status: string
           updated_at: string
         }
         Insert: {
           approved_at?: string | null
           bonus_amount_gnf?: number
+          campaign_id?: string | null
           created_at?: string
+          eligible_at?: string | null
+          first_ride_completed_at?: string | null
           group_id?: string | null
           id?: string
           metadata?: Json
+          milestone_met_at?: string | null
+          milestone_rule?: string
+          milestone_status?: string
           paid_at?: string | null
           referral_code?: string | null
           referred_driver_user_id: string
           referrer_user_id?: string | null
+          rides_completed_count?: number
+          risk_reason?: string | null
+          risk_score?: number
+          risk_status?: string
           status?: string
           updated_at?: string
         }
         Update: {
           approved_at?: string | null
           bonus_amount_gnf?: number
+          campaign_id?: string | null
           created_at?: string
+          eligible_at?: string | null
+          first_ride_completed_at?: string | null
           group_id?: string | null
           id?: string
           metadata?: Json
+          milestone_met_at?: string | null
+          milestone_rule?: string
+          milestone_status?: string
           paid_at?: string | null
           referral_code?: string | null
           referred_driver_user_id?: string
           referrer_user_id?: string | null
+          rides_completed_count?: number
+          risk_reason?: string | null
+          risk_score?: number
+          risk_status?: string
           status?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "dr_campaign_fk"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "driver_recruitment_campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "driver_referrals_group_id_fkey"
             columns: ["group_id"]
@@ -3939,6 +4230,10 @@ export type Database = {
         }
         Returns: string
       }
+      admin_attach_referral_campaign: {
+        Args: { p_campaign: string; p_reason?: string; p_referral: string }
+        Returns: undefined
+      }
       admin_auth_user_exists: { Args: { _target: string }; Returns: boolean }
       admin_ban_user: {
         Args: { _expires_at?: string; _reason: string; _target: string }
@@ -3977,6 +4272,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_create_campaign: { Args: { payload: Json }; Returns: string }
+      admin_create_contract: { Args: { payload: Json }; Returns: string }
       admin_create_driver_group: { Args: { payload: Json }; Returns: string }
       admin_driver_group_stats: {
         Args: { p_from?: string; p_group?: string; p_to?: string }
@@ -4003,6 +4300,15 @@ export type Database = {
           _target: string
         }
         Returns: Json
+      }
+      admin_generate_payout_statement: {
+        Args: {
+          p_from: string
+          p_group: string
+          p_notes?: string
+          p_to: string
+        }
+        Returns: string
       }
       admin_log_test_delete: {
         Args: { _caller: string; _reason: string; _target: string }
@@ -4076,6 +4382,18 @@ export type Database = {
         Args: { p_action: string; p_commission: string; p_notes?: string }
         Returns: undefined
       }
+      admin_review_commission_risk: {
+        Args: { p_action: string; p_commission: string; p_reason?: string }
+        Returns: undefined
+      }
+      admin_review_referral_risk: {
+        Args: { p_action: string; p_reason?: string; p_referral: string }
+        Returns: undefined
+      }
+      admin_set_statement_status: {
+        Args: { p_notes?: string; p_statement: string; p_status: string }
+        Returns: undefined
+      }
       admin_unban_user:
         | {
             Args: { _ban_id?: string; _lift_reason?: string; _target?: string }
@@ -4086,9 +4404,27 @@ export type Database = {
         Args: { _freeze_id?: string; _lift_reason?: string; _target?: string }
         Returns: Json
       }
+      admin_update_campaign: {
+        Args: { p_campaign: string; payload: Json }
+        Returns: undefined
+      }
+      admin_update_contract: {
+        Args: { p_contract: string; payload: Json }
+        Returns: undefined
+      }
       admin_update_driver_group: {
         Args: { p_group: string; payload: Json }
         Returns: undefined
+      }
+      admin_zone_coverage_stats: {
+        Args: never
+        Returns: {
+          active_drivers_count: number
+          drivers_count: number
+          groups_count: number
+          zone_id: string
+          zone_label: string
+        }[]
       }
       analytics_summary: { Args: { p_days?: number }; Returns: Json }
       analyze_route_learning_v1: {
@@ -4553,6 +4889,35 @@ export type Database = {
           signup_bonus_paid_gnf: number
         }[]
       }
+      leader_list_my_campaigns: {
+        Args: never
+        Returns: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          group_id: string
+          id: string
+          leader_user_id: string | null
+          milestone_rule: string
+          name: string
+          notes: string | null
+          signup_bonus_gnf: number
+          start_date: string | null
+          status: string
+          target_active_driver_count: number
+          target_completed_rides: number
+          target_driver_count: number
+          updated_at: string
+          zone_ids: string[]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "driver_recruitment_campaigns"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       leader_list_my_commissions: {
         Args: { p_status?: string }
         Returns: {
@@ -4567,6 +4932,8 @@ export type Database = {
           leader_user_id: string | null
           notes: string | null
           paid_at: string | null
+          risk_reason: string | null
+          risk_status: string
           source_id: string | null
           source_type: string
           status: string
@@ -4576,6 +4943,36 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "driver_group_commissions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      leader_list_my_contracts: {
+        Args: never
+        Returns: {
+          bonus_pool_gnf: number | null
+          commission_percent_override: number | null
+          created_at: string
+          created_by: string | null
+          group_id: string
+          id: string
+          leader_user_id: string | null
+          name: string
+          notes: string | null
+          period_end: string | null
+          period_start: string | null
+          status: string
+          target_active_driver_count: number
+          target_completed_rides: number
+          target_driver_count: number
+          target_gross_earnings_gnf: number
+          target_zone_ids: string[]
+          terms: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "driver_group_contracts"
           isOneToOne: false
           isSetofReturn: true
         }
@@ -4597,20 +4994,56 @@ export type Database = {
         Returns: {
           approved_at: string | null
           bonus_amount_gnf: number
+          campaign_id: string | null
           created_at: string
+          eligible_at: string | null
+          first_ride_completed_at: string | null
           group_id: string | null
           id: string
           metadata: Json
+          milestone_met_at: string | null
+          milestone_rule: string
+          milestone_status: string
           paid_at: string | null
           referral_code: string | null
           referred_driver_user_id: string
           referrer_user_id: string | null
+          rides_completed_count: number
+          risk_reason: string | null
+          risk_score: number
+          risk_status: string
           status: string
           updated_at: string
         }[]
         SetofOptions: {
           from: "*"
           to: "driver_referrals"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      leader_list_my_statements: {
+        Args: never
+        Returns: {
+          adjustments_total_gnf: number
+          commissions_total_gnf: number
+          finalized_at: string | null
+          generated_at: string
+          generated_by: string | null
+          group_id: string
+          id: string
+          leader_user_id: string | null
+          notes: string | null
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          signup_bonuses_total_gnf: number
+          status: string
+          total_due_gnf: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "driver_group_payout_statements"
           isOneToOne: false
           isSetofReturn: true
         }
@@ -4900,6 +5333,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      refresh_driver_referral_milestones: {
+        Args: { p_driver?: string }
+        Returns: number
+      }
       request_account_deletion: { Args: { _reason?: string }; Returns: Json }
       review_learned_route_segment: {
         Args: { p_id: number; p_notes?: string; p_status: string }
@@ -5131,6 +5568,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      score_driver_referral_risk: {
+        Args: { p_referral: string }
+        Returns: {
+          reason: string
+          score: number
+          status: string
+        }[]
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
