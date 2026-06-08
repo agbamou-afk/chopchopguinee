@@ -225,14 +225,14 @@ export function AppHeader({
                   {!isLoggedIn && (
                     <>
                       <button
-                        onClick={() => go("/auth")}
+                        onClick={() => go("/auth?mode=signin")}
                         className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
                       >
                         <LogIn className="w-5 h-5 text-primary" />
                         <span className="font-medium text-foreground text-sm">Se connecter</span>
                       </button>
                       <button
-                        onClick={() => go("/auth")}
+                        onClick={() => go("/auth?mode=signup")}
                         className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
                       >
                         <User className="w-5 h-5 text-primary" />
