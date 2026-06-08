@@ -3373,6 +3373,7 @@ export type Database = {
           kyc_level: number
           language: string
           last_name: string | null
+          last_profile_confirmed_at: string | null
           phone: string | null
           updated_at: string
           user_id: string
@@ -3391,6 +3392,7 @@ export type Database = {
           kyc_level?: number
           language?: string
           last_name?: string | null
+          last_profile_confirmed_at?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -3409,6 +3411,7 @@ export type Database = {
           kyc_level?: number
           language?: string
           last_name?: string | null
+          last_profile_confirmed_at?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
