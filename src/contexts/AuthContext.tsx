@@ -24,6 +24,8 @@ export interface ProfileRecord {
   email: string | null;
   avatar_url: string | null;
   account_status: string;
+  created_at?: string | null;
+  last_profile_confirmed_at?: string | null;
 }
 
 export interface FreezeRecord {
@@ -52,6 +54,12 @@ interface AuthContextValue {
   hasRole: (role: AppRole) => boolean;
   isProfileComplete: boolean;
   /**
+   * True when the user has a complete profile but has not reconfirmed their
+   * info in the last 60 days (or never confirmed, falling back to profile
+   * created_at). False for incomplete or recently-confirmed profiles.
+   */
+  needsProfileReconfirmation: boolean;
+  /**
    * Signup intent persisted in auth user_metadata at registration time.
    * Survives email confirmation and re-logins, unlike sessionStorage. Used
    * to route returning driver applicants to /driver/apply even before they
@@ -74,6 +82,18 @@ function profileComplete(p: ProfileRecord | null): boolean {
   return hasName && hasPhone;
 }
 
+const PROFILE_RECONFIRM_INTERVAL_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
+
+function profileNeedsReconfirmation(p: ProfileRecord | null): boolean {
+  if (!p) return false;
+  if (!profileComplete(p)) return false; // completion gate handles this case
+  const ref = p.last_profile_confirmed_at ?? p.created_at ?? null;
+  if (!ref) return false; // unknown: don't nag
+  const ts = Date.parse(ref);
+  if (Number.isNaN(ts)) return false;
+  return Date.now() - ts >= PROFILE_RECONFIRM_INTERVAL_MS;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
@@ -88,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const [{ data: prof }, { data: roleRows }, { data: freezeRows }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("user_id,first_name,last_name,display_name,full_name,phone,email,avatar_url,account_status")
+          .select("user_id,first_name,last_name,display_name,full_name,phone,email,avatar_url,account_status,created_at,last_profile_confirmed_at")
           .eq("user_id", userId)
           .maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
@@ -147,10 +167,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 display_name: display || null,
                 phone: phone.startsWith("+") ? phone : `+${phone}`,
                 email,
+                last_profile_confirmed_at: new Date().toISOString(),
               },
               { onConflict: "user_id" },
             )
-            .select("user_id,first_name,last_name,display_name,full_name,phone,email,avatar_url,account_status")
+            .select("user_id,first_name,last_name,display_name,full_name,phone,email,avatar_url,account_status,created_at,last_profile_confirmed_at")
             .maybeSingle();
           if (upserted) resolved = upserted as ProfileRecord;
         }
@@ -242,6 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isFrozen: !!freeze,
     hasRole: (r) => roles.includes(r),
     isProfileComplete: profileComplete(profile),
+    needsProfileReconfirmation: profileNeedsReconfirmation(profile),
     signupIntent: (() => {
       const v = (session?.user?.user_metadata as Record<string, unknown> | undefined)?.signup_intent;
       return v === "driver" || v === "client" || v === "merchant" ? v : null;
