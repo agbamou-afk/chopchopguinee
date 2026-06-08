@@ -4746,6 +4746,16 @@ export type Database = {
         }
       }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
+      admin_record_om_receipt: {
+        Args: {
+          p_amount_gnf: number
+          p_note?: string
+          p_payer_phone?: string
+          p_provider_transaction_id: string
+          p_receiving_account_id?: string
+        }
+        Returns: Json
+      }
       admin_regenerate_group_referral_code: {
         Args: { p_code?: string; p_group: string }
         Returns: string
