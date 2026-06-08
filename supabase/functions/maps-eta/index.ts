@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
         error_message: data?.error?.message ?? data?.[0]?.error?.message ?? 'ERROR',
         latency_ms: Date.now() - start,
       });
-      return new Response(JSON.stringify({ error: data?.error?.status ?? 'ERROR', details: data?.error?.message }), {
+      return new Response(JSON.stringify({ ok: false, code: 'ETA_UNAVAILABLE', error: 'Estimation indisponible. Réessayez.' }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

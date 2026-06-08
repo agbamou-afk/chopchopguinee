@@ -356,13 +356,14 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.error("send-message providers failed", { error: lastError });
     return new Response(
-      JSON.stringify({ ok: false, error: lastError }),
+      JSON.stringify({ ok: false, code: "MESSAGE_SEND_FAILED", error: "Message indisponible. Réessayez." }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
     console.error("send-message fatal", e);
-    return new Response(JSON.stringify({ ok: false, error: String((e as Error).message) }), {
+    return new Response(JSON.stringify({ ok: false, code: "MESSAGE_SEND_FAILED", error: "Message indisponible. Réessayez." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

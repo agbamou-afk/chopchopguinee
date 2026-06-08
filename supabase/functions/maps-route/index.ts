@@ -252,7 +252,7 @@ Deno.serve(async (req) => {
         error_message: data?.error?.message ?? 'NO_ROUTE',
         latency_ms: Date.now() - start,
       });
-      return new Response(JSON.stringify({ error: data?.error?.status ?? 'NO_ROUTE', details: data?.error?.message }), {
+      return new Response(JSON.stringify({ ok: false, code: 'ROUTE_UNAVAILABLE', error: 'Itinéraire indisponible. Réessayez.' }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -302,7 +302,7 @@ Deno.serve(async (req) => {
     await logMapsRequest(admin, {
       user_id: userId, provider: 'google', action: 'route',
       input: {}, status: 'error',
-      error_message: (e as Error).message, latency_ms: Date.now() - start,
+      error_message: e instanceof Error ? e.message : String(e), latency_ms: Date.now() - start,
     });
     console.error('maps-route error', e);
     return new Response(JSON.stringify({ ok: false, code: 'ROUTE_UNAVAILABLE', error: 'Itinéraire indisponible. Réessayez.' }), {
