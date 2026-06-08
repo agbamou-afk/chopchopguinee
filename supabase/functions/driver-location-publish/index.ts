@@ -51,7 +51,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
+    console.error('driver-location-publish error', e);
+    return new Response(JSON.stringify({ ok: false, code: 'LOCATION_PUBLISH_FAILED', error: 'Mise à jour de position échouée.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

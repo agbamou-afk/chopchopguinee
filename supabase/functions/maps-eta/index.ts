@@ -123,7 +123,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
+    console.error('maps-eta error', e);
+    return new Response(JSON.stringify({ ok: false, code: 'ETA_UNAVAILABLE', error: 'Estimation indisponible. Réessayez.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
