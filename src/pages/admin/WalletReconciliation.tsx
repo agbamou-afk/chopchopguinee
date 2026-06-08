@@ -742,12 +742,21 @@ export default function WalletReconciliation() {
                   <tbody>
                     {qConflicts.map((e) => (
                       <tr key={`e-${e.id}`} className="border-t">
-                        <td className="p-3"><Badge variant="outline" className="text-[10px]">Reçu admin</Badge></td>
+                        <td className="p-3">
+                          <Badge variant="outline" className={`text-[10px] ${e.processing_status === "credit_failed" ? "border-destructive/40 text-destructive" : ""}`}>
+                            {STATUS_LABEL[e.processing_status] ?? "Reçu admin"}
+                          </Badge>
+                        </td>
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(e.created_at)}</td>
                         <td className="p-3 font-mono text-xs">{e.om_code_normalized ?? e.provider_transaction_id}</td>
                         <td className="p-3 text-right font-medium">{formatGNF(e.amount_gnf)}</td>
                         <td className="p-3 text-xs text-muted-foreground max-w-[220px] truncate">{e.notes ?? STATUS_LABEL[e.processing_status] ?? e.processing_status}</td>
                         <td className="p-3 text-right">
+                          {e.processing_status === "credit_failed" && (
+                            <Button size="sm" variant="default" disabled={acting} onClick={() => retryCredit(e.id)} className="mr-1">
+                              <RefreshCcw className="w-3.5 h-3.5 mr-1" /> Réessayer crédit
+                            </Button>
+                          )}
                           <Button size="sm" variant="ghost" onClick={() => openReview(e)}>
                             <Eye className="w-3.5 h-3.5 mr-1" /> Détails
                           </Button>
