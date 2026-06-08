@@ -14,11 +14,12 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   listDriverGroups, listMemberships, listCommissions, listReferrals,
   createDriverGroup, assignDriverToGroup, removeDriverFromGroup,
-  reviewCommission, markReferral, formatGnf,
+  reviewCommission, markReferral, formatGnf, adminDriverGroupStats,
   type DriverGroup, type DriverGroupMembership, type DriverGroupCommission, type DriverReferral,
+  type DriverGroupStats,
 } from "@/lib/admin/driverGroups";
 
-type Tab = "overview" | "groups" | "members" | "commissions" | "referrals";
+type Tab = "overview" | "groups" | "members" | "commissions" | "referrals" | "analytics";
 
 export default function DriverGroupsAdmin() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -86,7 +87,8 @@ export default function DriverGroupsAdmin() {
           ["groups", `Groupes (${groups.length})`],
           ["members", `Membres (${members.filter(m => m.status === "active").length})`],
           ["commissions", `Commissions (${commissions.length})`],
-          ["referrals", `Référrals (${referrals.length})`],
+          ["referrals", `Parrainages (${referrals.length})`],
+          ["analytics", "Analytics"],
         ] as [Tab, string][]).map(([k, l]) => (
           <FilterChip key={k} label={l} active={tab === k} onClick={() => setTab(k)} />
         ))}
@@ -102,8 +104,10 @@ export default function DriverGroupsAdmin() {
         <MembersTable members={members} groupById={groupById} onChanged={reload} />
       ) : tab === "commissions" ? (
         <CommissionsTable rows={commissions} groupById={groupById} onChanged={reload} />
-      ) : (
+      ) : tab === "referrals" ? (
         <ReferralsTable rows={referrals} groupById={groupById} onChanged={reload} />
+      ) : (
+        <AnalyticsPanel groupById={groupById} />
       )}
 
       <CreateGroupSheet open={createOpen} onOpenChange={setCreateOpen} onCreated={reload} />
@@ -220,17 +224,23 @@ function CommissionsTable({ rows, groupById, onChanged }: {
     return <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">Aucune commission enregistrée.</Card>;
   }
   const act = async (id: string, action: "approve" | "mark_paid" | "reverse") => {
-    try { await reviewCommission(id, action); toast({ title: "Commission mise à jour" }); onChanged(); }
+    try {
+      let reason: string | null = null;
+      if (action === "reverse") reason = window.prompt("Raison de l'annulation ?") ?? null;
+      await reviewCommission(id, action, reason);
+      toast({ title: action === "mark_paid" ? "Commission payée via ChopWallet" : "Commission mise à jour" });
+      onChanged();
+    }
     catch (e: any) { toast({ title: "Erreur", description: e?.message, variant: "destructive" }); }
   };
   return (
     <>
       <Card className="p-3 bg-muted/30 border-dashed text-[11px] text-muted-foreground flex items-start gap-2">
         <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-        <span>v0: « Marqué payé » est un suivi hors-wallet. Le crédit ChopWallet sera câblé dans la prochaine itération via une RPC sécurisée.</span>
+        <span>« Payer (ChopWallet) » crédite le portefeuille du leader via RPC sécurisée. L'annulation après paiement débite automatiquement le leader.</span>
       </Card>
       <DataTable
-        columns={["Date", "Groupe", "Chauffeur", "Source", "Gain chauffeur", "%", "Commission", "Statut", "Actions"]}
+        columns={["Date", "Groupe", "Chauffeur", "Source", "Gain chauffeur", "%", "Commission", "Statut", "Wallet TX", "Actions"]}
         rows={rows.map(c => [
           new Date(c.created_at).toLocaleDateString("fr-FR"),
           groupById[c.group_id]?.name ?? "—",
@@ -240,10 +250,11 @@ function CommissionsTable({ rows, groupById, onChanged }: {
           `${Number(c.commission_percent).toFixed(2)}%`,
           formatGnf(c.commission_amount_gnf),
           <StatusBadge status={c.status} />,
+          <span className="font-mono text-[10px] text-muted-foreground">{(c as any).wallet_transaction_id ? String((c as any).wallet_transaction_id).slice(0, 8) + "…" : "—"}</span>,
           <div className="flex gap-1">
             {c.status === "pending" && <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => act(c.id, "approve")}>Approuver</Button>}
-            {c.status === "approved" && <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => act(c.id, "mark_paid")}>Marquer payé</Button>}
-            {(c.status === "pending" || c.status === "approved") && <Button size="sm" variant="ghost" className="h-6 text-[10px] text-destructive" onClick={() => act(c.id, "reverse")}>Annuler</Button>}
+            {c.status === "approved" && <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => act(c.id, "mark_paid")}>Payer (ChopWallet)</Button>}
+            {(c.status === "pending" || c.status === "approved" || c.status === "paid") && <Button size="sm" variant="ghost" className="h-6 text-[10px] text-destructive" onClick={() => act(c.id, "reverse")}>{c.status === "paid" ? "Annuler & rembourser" : "Annuler"}</Button>}
           </div>,
         ])}
       />
@@ -255,10 +266,10 @@ function ReferralsTable({ rows, groupById, onChanged }: {
   rows: DriverReferral[]; groupById: Record<string, DriverGroup>; onChanged: () => void;
 }) {
   if (rows.length === 0) {
-    return <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">Aucun référral enregistré.</Card>;
+    return <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">Aucun parrainage enregistré.</Card>;
   }
   const act = async (id: string, action: "approve" | "mark_eligible" | "mark_paid" | "reject") => {
-    try { await markReferral(id, action); toast({ title: "Référral mis à jour" }); onChanged(); }
+    try { await markReferral(id, action); toast({ title: "Parrainage mis à jour" }); onChanged(); }
     catch (e: any) { toast({ title: "Erreur", description: e?.message, variant: "destructive" }); }
   };
   return (
