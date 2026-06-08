@@ -425,7 +425,17 @@ function AssignDriverDialog({ group, onClose, onAssigned, zones }: {
               {drivers.map(d => <option key={d.user_id} value={d.user_id}>{d.user_id.slice(0, 8)}… ({d.status})</option>)}
             </select>
           </Field>
-          <Field label="Zone assignée"><Input value={zone} onChange={e => setZone(e.target.value)} placeholder="Kaloum, Dixinn…" /></Field>
+          {zones.length > 0 ? (
+            <Field label="Zone assignée">
+              <select className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                value={zoneId} onChange={(e) => setZoneId(e.target.value)}>
+                <option value="">— Aucune —</option>
+                {zones.map(z => <option key={z.id} value={z.id}>{zoneLabel(z)}</option>)}
+              </select>
+            </Field>
+          ) : (
+            <Field label="Zone assignée"><Input value={zone} onChange={e => setZone(e.target.value)} placeholder="Kaloum, Dixinn…" /></Field>
+          )}
           <Field label="Notes"><Textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} /></Field>
           <Button className="w-full" onClick={submit} disabled={!driverId || saving}>{saving ? "Assignation…" : "Assigner"}</Button>
         </div>
