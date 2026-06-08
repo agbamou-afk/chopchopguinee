@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera, ImagePlus, Loader2 } from "lucide-react";
+import { Camera, ImagePlus, Loader2, Sparkles, RotateCw, Check } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   PRODUCT_CATEGORIES,
@@ -13,6 +13,10 @@ import {
   uploadProductImage,
   getProductImages,
   getListingMinimumPrice,
+  listProductImages,
+  setPrimaryProductImage,
+  cleanProductImage,
+  type ProductImage,
   type MerchantProduct,
 } from "@/lib/marche/products";
 
@@ -42,6 +46,8 @@ export function ProductFormSheet({
   const [barcode, setBarcode] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [images, setImages] = useState<ProductImage[]>([]);
+  const [cleaning, setCleaning] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -61,7 +67,12 @@ export function ProductFormSheet({
       setDescription(product.description || "");
       setNegotiable(product.pricing_mode === "negotiable");
       setAllowOffers(!!product.allow_offers);
-      getProductImages(product.id).then(setImageUrls).catch(() => setImageUrls([]));
+      listProductImages(product.id)
+        .then((imgs) => {
+          setImages(imgs);
+          setImageUrls(imgs.map((i) => i.url));
+        })
+        .catch(() => { setImages([]); setImageUrls([]); });
       getListingMinimumPrice(product.id)
         .then((m) => setMinPrice(m ? String(m) : ""))
         .catch(() => setMinPrice(""));
@@ -73,6 +84,7 @@ export function ProductFormSheet({
       setBarcode("");
       setDescription("");
       setImageUrls([]);
+      setImages([]);
       setNegotiable(false);
       setAllowOffers(false);
       setMinPrice("");
@@ -80,6 +92,49 @@ export function ProductFormSheet({
     setPendingFile(null);
     setPreviewUrl(null);
   }, [open, product, defaultCategory]);
+
+  const original = images.find((i) => i.image_type === "original" && i.is_primary)
+    ?? images.find((i) => i.image_type === "original")
+    ?? null;
+  const cleaned = images.find((i) => i.image_type === "cleaned"
+    && (!original || i.source_image_id === original.id))
+    ?? images.find((i) => i.image_type === "cleaned")
+    ?? null;
+
+  const reloadImages = async (listingId: string) => {
+    try {
+      const imgs = await listProductImages(listingId);
+      setImages(imgs);
+      setImageUrls(imgs.map((i) => i.url));
+    } catch { /* noop */ }
+  };
+
+  const handleClean = async () => {
+    if (!product) return;
+    setCleaning(true);
+    try {
+      await cleanProductImage({ listingId: product.id, setPrimary: true });
+      await reloadImages(product.id);
+      toast({ title: "Image nettoyée avec succès." });
+    } catch (e: any) {
+      toast({
+        title: "Nettoyage impossible",
+        description: e?.message ?? "Vous pouvez utiliser la photo originale.",
+      });
+    } finally {
+      setCleaning(false);
+    }
+  };
+
+  const useImageAsPrimary = async (imageId: string, label: string) => {
+    try {
+      await setPrimaryProductImage(imageId);
+      if (product) await reloadImages(product.id);
+      toast({ title: label });
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message ?? "Action impossible." });
+    }
+  };
 
   const onPickFile = (f: File | null) => {
     if (!f) return;
@@ -191,7 +246,26 @@ export function ProductFormSheet({
                 <Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
                   <Camera className="w-4 h-4 mr-1" /> Prendre / choisir
                 </Button>
-                <span className="text-[10px] text-muted-foreground">Suppression d'arrière-plan — bientôt</span>
+                {isEdit && original && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={cleaning}
+                    onClick={handleClean}
+                  >
+                    {cleaning ? (
+                      <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Nettoyage de l'image…</>
+                    ) : (
+                      <><Sparkles className="w-4 h-4 mr-1" /> {cleaned ? "Réessayer" : "Nettoyer l'image"}</>
+                    )}
+                  </Button>
+                )}
+                {!isEdit && (
+                  <span className="text-[10px] text-muted-foreground">
+                    Enregistrez le produit pour activer le nettoyage de l'image.
+                  </span>
+                )}
               </div>
               <input
                 ref={fileRef}
@@ -202,6 +276,68 @@ export function ProductFormSheet({
                 onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
               />
             </div>
+
+            {isEdit && original && cleaned && (
+              <div className="mt-3 rounded-xl border border-border/60 p-3 bg-muted/20 space-y-3">
+                <div className="text-xs text-muted-foreground">
+                  Comparez les deux versions et choisissez celle à utiliser.
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="aspect-square rounded-lg overflow-hidden border border-border/60 bg-background">
+                      <img src={original.url} alt="Original" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium">Original</span>
+                      {original.is_primary ? (
+                        <span className="inline-flex items-center text-[10px] text-emerald-600">
+                          <Check className="w-3 h-3 mr-0.5" /> Choisi
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-[11px] text-primary underline"
+                          onClick={() => useImageAsPrimary(original.id, "Image originale utilisée.")}
+                        >
+                          Garder l'original
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="aspect-square rounded-lg overflow-hidden border border-border/60 bg-background">
+                      <img src={cleaned.url} alt="Image nettoyée" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium">Image nettoyée</span>
+                      {cleaned.is_primary ? (
+                        <span className="inline-flex items-center text-[10px] text-emerald-600">
+                          <Check className="w-3 h-3 mr-0.5" /> Choisi
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-[11px] text-primary underline"
+                          onClick={() => useImageAsPrimary(cleaned.id, "Image nettoyée utilisée.")}
+                        >
+                          Utiliser l'image nettoyée
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="w-full"
+                  disabled={cleaning}
+                  onClick={handleClean}
+                >
+                  <RotateCw className="w-3 h-3 mr-1" /> Réessayer le nettoyage
+                </Button>
+              </div>
+            )}
           </div>
 
           <div>

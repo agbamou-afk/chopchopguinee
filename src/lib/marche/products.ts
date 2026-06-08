@@ -74,9 +74,53 @@ export async function getProductImages(listingId: string): Promise<string[]> {
     .from("listing_images")
     .select("url")
     .eq("listing_id", listingId)
+    .order("is_primary", { ascending: false })
     .order("position", { ascending: true });
   if (error) throw error;
   return ((data ?? []) as { url: string }[]).map((r) => r.url);
+}
+
+export interface ProductImage {
+  id: string;
+  url: string;
+  image_type: "original" | "cleaned" | "thumbnail";
+  source_image_id: string | null;
+  processing_status: "pending" | "processing" | "ready" | "failed";
+  is_primary: boolean;
+  position: number;
+}
+
+export async function listProductImages(listingId: string): Promise<ProductImage[]> {
+  const { data, error } = await (supabase as any)
+    .from("listing_images")
+    .select("id, url, image_type, source_image_id, processing_status, is_primary, position")
+    .eq("listing_id", listingId)
+    .order("is_primary", { ascending: false })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ProductImage[];
+}
+
+export async function setPrimaryProductImage(imageId: string): Promise<void> {
+  const { error } = await (supabase as any).rpc("set_primary_listing_image", { p_image_id: imageId });
+  if (error) throw error;
+}
+
+export async function cleanProductImage(opts: {
+  listingId: string;
+  imageId?: string;
+  setPrimary?: boolean;
+}): Promise<{ id: string; url: string }> {
+  const { data, error } = await (supabase as any).functions.invoke("clean-product-image", {
+    body: {
+      listing_id: opts.listingId,
+      image_id: opts.imageId ?? null,
+      set_primary: opts.setPrimary ?? true,
+    },
+  });
+  if (error) throw new Error(error.message || "Nettoyage impossible.");
+  if (!data?.ok) throw new Error(data?.error || "Nettoyage impossible.");
+  return { id: data.image_id, url: data.url };
 }
 
 export interface CreateProductInput {
@@ -218,7 +262,14 @@ export async function uploadProductImage(opts: {
   const url = pub?.publicUrl as string;
   const { error: insErr } = await (supabase as any)
     .from("listing_images")
-    .insert({ listing_id: listingId, url, position: opts.position ?? 0 });
+    .insert({
+      listing_id: listingId,
+      url,
+      position: opts.position ?? 0,
+      image_type: "original",
+      is_primary: (opts.position ?? 0) === 0,
+      processing_status: "ready",
+    });
   if (insErr) throw insErr;
   return url;
 }
