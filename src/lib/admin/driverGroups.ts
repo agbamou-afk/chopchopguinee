@@ -115,6 +115,25 @@ export async function removeDriverFromGroup(p_membership: string, p_reason?: str
 }
 
 export async function reviewCommission(p_commission: string, p_action: "approve" | "mark_paid" | "reverse", p_notes?: string | null) {
+  if (p_action === "mark_paid") {
+    const { error } = await supabase.rpc("wallet_pay_driver_commission", { p_commission_id: p_commission });
+    if (error) throw error;
+    return;
+  }
+  if (p_action === "reverse") {
+    // Reverse path: if commission is already paid, debit leader via wallet RPC; otherwise admin cancellation.
+    const { error } = await supabase.rpc("wallet_reverse_driver_commission", {
+      p_commission_id: p_commission,
+      p_reason: p_notes && p_notes.trim().length > 0 ? p_notes : "Annulation administrative",
+    });
+    if (!error) return;
+    // Fall back to the v0 admin review (commission still pending/approved, no wallet impact).
+    const msg = (error as { message?: string })?.message ?? "";
+    if (!/not_paid|paid|missing/i.test(msg)) throw error;
+    const { error: err2 } = await supabase.rpc("admin_review_commission", { p_commission, p_action, p_notes: p_notes ?? null });
+    if (err2) throw err2;
+    return;
+  }
   const { error } = await supabase.rpc("admin_review_commission", { p_commission, p_action, p_notes: p_notes ?? null });
   if (error) throw error;
 }
@@ -127,4 +146,25 @@ export async function markReferral(p_referral: string, p_action: "approve" | "ma
 export function formatGnf(n: number | null | undefined) {
   const v = Number(n ?? 0);
   return v.toLocaleString("fr-FR") + " GNF";
+}
+
+export type DriverGroupStats = {
+  group_id: string;
+  active_drivers: number;
+  rides_completed: number;
+  gross_driver_earnings_gnf: number;
+  commissions_pending_gnf: number;
+  commissions_paid_gnf: number;
+  signup_bonus_eligible_count: number;
+  signup_bonus_paid_gnf: number;
+};
+
+export async function adminDriverGroupStats(opts: { groupId?: string | null; from?: Date; to?: Date } = {}) {
+  const { data, error } = await supabase.rpc("admin_driver_group_stats", {
+    p_group: opts.groupId ?? null,
+    p_from: (opts.from ?? new Date(Date.now() - 30 * 86_400_000)).toISOString(),
+    p_to: (opts.to ?? new Date()).toISOString(),
+  });
+  if (error) throw error;
+  return (data ?? []) as unknown as DriverGroupStats[];
 }

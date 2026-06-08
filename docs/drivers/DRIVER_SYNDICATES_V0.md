@@ -20,15 +20,31 @@ Admin-managed groups of drivers under a syndicate leader. Default commission **1
 - `admin_review_commission(p_commission, p_action)` — `approve | mark_paid | reverse`
 - `admin_mark_referral(p_referral, p_action)` — `approve | mark_eligible | mark_paid | reject`
 
-## Wallet safety (v0)
-**No wallet mutation.** "Marqué payé" is admin bookkeeping only; `wallet_transaction_id` stays `NULL`. v1 will introduce a ChopWallet-reviewed payout RPC.
+## Wallet (v1)
+`wallet_pay_driver_commission(p_commission_id)` — finance/god admin only. Locks the commission row, validates `status='approved'` and absence of `wallet_transaction_id`, then debits the master wallet and credits the leader's driver wallet exactly once (idempotent via `reference='CC-COMM-<id>'`). Updates the commission to `paid` with the new `wallet_transaction_id`.
+
+`wallet_reverse_driver_commission(p_commission_id, p_reason)` — debits the leader and credits the master wallet, marks the commission `reversed`, and writes a `CC-COMM-REV-<id>` ledger row. Idempotent.
+
+No frontend wallet mutation. Both RPCs write `audit_logs` entries.
+
+## Leader self-service portal
+`/leader` — read-only. Auth required. RPCs (all SECURITY DEFINER, leader-gate `auth.uid() = driver_groups.leader_user_id`):
+- `leader_get_my_group()` · `leader_list_my_members()` (sanitized: full name + phone last4) · `leader_list_my_commissions(p_status)` · `leader_list_my_referrals(p_status)` · `leader_get_my_stats(p_from, p_to)`.
+Leader cannot approve drivers, change commission %, or assign drivers.
+
+## Analytics
+`admin_driver_group_stats(p_group, p_from, p_to)` returns per-group: active drivers, completed rides, gross driver earnings, commissions pending/paid, signup-bonus eligible count, signup-bonus paid. Surfaced in Admin → Driver Groups → Analytics tab and (own-group only) in the leader portal overview.
+
+## Zones (v1 transition)
+New columns `driver_groups.assigned_zone_ids uuid[]` and `driver_group_memberships.assigned_zone_id uuid` reference `public.zones`. A trigger keeps the legacy text columns (`assigned_zones`, `assigned_zone`) in sync from `coalesce(neighborhood, commune, city, kind)`. UI still accepts free-form text until `public.zones` is populated; controlled multi-select is wired to switch on automatically.
 
 ## Admin UI
 `/admin/driver-groups` · sidebar "Groupes chauffeurs" (Opérations).
-Tabs: Vue d'ensemble · Groupes · Membres · Commissions · Référrals.
+Tabs: Vue d'ensemble · Groupes · Membres · Commissions · **Parrainages** · Analytics.
 
 ## Permissions
 - `god_admin`: ALL.
-- `operations_admin`: view + edit.
-- `finance_admin`: view + approve.
-- Drivers can read their own membership row only. No leader portal in v0.
+- `operations_admin`: view + edit (groups, memberships).
+- `finance_admin`: view + approve + **pay commissions via ChopWallet**.
+- Drivers can read their own membership row.
+- Leaders use `/leader` (RPC-gated, no direct table access).

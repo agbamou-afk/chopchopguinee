@@ -70,6 +70,7 @@ const AnalyticsAdmin = lazy(() => import("./pages/admin/AnalyticsAdmin"));
 const PaymentsAdmin = lazy(() => import("./pages/admin/PaymentsAdmin"));
 const PilotCommandCenter = lazy(() => import("./pages/admin/PilotCommandCenter"));
 const DriverGroupsAdmin = lazy(() => import("./pages/admin/DriverGroupsAdmin"));
+const LeaderPortal = lazy(() => import("./pages/LeaderPortal"));
 const DriverApply = lazy(() => import("./pages/DriverApply"));
 const MerchantQR = lazy(() => import("./pages/MerchantQR"));
 const Merchant = lazy(() => import("./pages/Merchant"));
@@ -193,6 +194,7 @@ const App = () => {
           <Route path="/merchant/hub" element={<Suspense fallback={null}><Merchant /></Suspense>} />
           <Route path="/merchant/onboarding" element={<Suspense fallback={null}><MerchantOnboarding /></Suspense>} />
           <Route path="/merchant/onboarding-slides" element={<Suspense fallback={null}><MerchantOnboardingSlides /></Suspense>} />
+          <Route path="/leader" element={<Suspense fallback={null}><LeaderPortal /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
