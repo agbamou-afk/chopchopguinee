@@ -364,16 +364,7 @@ export default function LeaderPortal() {
           {checkins.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Aucun check-in enregistré.</p>
           ) : checkins.map(c => (
-            <div key={c.id} className="border-b last:border-b-0 border-border/40 pb-2 last:pb-0 text-sm space-y-1">
-              <div className="flex justify-between">
-                <p className="font-medium text-[12px]">{c.checkin_type}</p>
-                <span className="text-[10px] text-muted-foreground">{new Date(c.created_at).toLocaleString("fr-FR")}</span>
-              </div>
-              {c.notes && <p className="text-[11px] text-muted-foreground">{c.notes}</p>}
-              {(c.lat && c.lng) && (
-                <p className="text-[10px] text-muted-foreground tabular-nums">{c.lat.toFixed(5)}, {c.lng.toFixed(5)}</p>
-              )}
-            </div>
+            <CheckinRow key={c.id} c={c} />
           ))}
         </Card>
       )}
