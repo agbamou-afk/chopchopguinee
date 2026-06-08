@@ -95,3 +95,9 @@ A create group · B assign leader (no admin powers) · C assign driver (one-acti
 2. No frontend wallet write anywhere in this feature — confirmed by design.
 
 Proceed?
+
+---
+
+## Milestone: driver-groups-syndicates-commissions-v0 (lock candidate)
+
+Driver syndicate v0 shipped. Admin-only management at `/admin/driver-groups`. Four tables (`driver_groups`, `driver_group_memberships`, `driver_referrals`, `driver_group_commissions`) with admin RLS + service_role grants. Six SECURITY DEFINER RPCs. Ride completion trigger writes pending commission rows (1% default, configurable). Driver approval trigger activates pending memberships + marks referrals bonus_eligible. No wallet mutation — payout deferred to v1 ChopWallet RPC.
