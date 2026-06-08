@@ -71,6 +71,7 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: "Rejeté",
   expired: "Expiré",
   suspicious: "Suspect",
+  credit_failed: "Crédit échoué",
 };
 
 function fmtDate(iso: string) {
