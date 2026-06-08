@@ -91,13 +91,13 @@ export async function listReferrals(groupId?: string) {
 }
 
 export async function createDriverGroup(payload: Record<string, unknown>) {
-  const { data, error } = await supabase.rpc("admin_create_driver_group", { payload });
+  const { data, error } = await supabase.rpc("admin_create_driver_group", { payload: payload as any });
   if (error) throw error;
   return data as string;
 }
 
 export async function updateDriverGroup(p_group: string, payload: Record<string, unknown>) {
-  const { error } = await supabase.rpc("admin_update_driver_group", { p_group, payload });
+  const { error } = await supabase.rpc("admin_update_driver_group", { p_group, payload: payload as any });
   if (error) throw error;
 }
 
