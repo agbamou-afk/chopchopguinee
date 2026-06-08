@@ -436,9 +436,76 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
             </Button>
           </div>
         )}
+
+        {/* Bargaining — only if merchant enabled it */}
+        {selfId !== listing.seller_id && listing.allow_offers && listing.pricing_mode === "negotiable" && (
+          <div className="rounded-2xl border border-primary/40 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Tag className="w-4 h-4 text-primary" /> Négociable
+            </div>
+            {myOffer ? (
+              <div className="space-y-1.5">
+                <p className="text-xs text-muted-foreground">
+                  Votre offre : <b>{formatGNF(myOffer.offer_amount_gnf)}</b> · {offerStatusLabel(myOffer.status)}
+                </p>
+                {myOffer.status === "countered" && myOffer.counter_amount_gnf && (
+                  <p className="text-xs text-foreground">
+                    Contre-proposition du marchand : <b>{formatGNF(myOffer.counter_amount_gnf)}</b>
+                  </p>
+                )}
+                {myOffer.merchant_message && (
+                  <p className="text-xs text-muted-foreground italic">« {myOffer.merchant_message} »</p>
+                )}
+                {(myOffer.status === "pending" || myOffer.status === "countered") && (
+                  <Button
+                    variant="outline" size="sm" className="w-full"
+                    onClick={async () => {
+                      try {
+                        await withdrawOffer(myOffer.id);
+                        const refreshed = selfId ? await getMyOfferForListing(listing.id, selfId) : null;
+                        setMyOffer(refreshed);
+                        toast({ title: "Offre retirée" });
+                      } catch (e: any) {
+                        toast({ title: "Erreur", description: e?.message });
+                      }
+                    }}
+                  >
+                    Retirer mon offre
+                  </Button>
+                )}
+                {(myOffer.status === "rejected" || myOffer.status === "withdrawn" || myOffer.status === "expired") && (
+                  <Button size="sm" className="w-full" onClick={() => requireAuth(() => setOfferOpen(true))}>
+                    Faire une nouvelle offre
+                  </Button>
+                )}
+                {myOffer.status === "accepted" && (
+                  <p className="text-xs text-success">
+                    Offre acceptée — finalisation de la commande à connecter.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <Button size="sm" className="w-full" onClick={() => requireAuth(() => setOfferOpen(true))}>
+                <Tag className="w-4 h-4 mr-1" /> Faire une offre
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <ReportModal listingId={listing.id} open={reportOpen} onOpenChange={setReportOpen} />
+      <OfferSheet
+        open={offerOpen}
+        onOpenChange={setOfferOpen}
+        listingId={listing.id}
+        askingPrice={listing.asking_price_gnf ?? listing.price_gnf}
+        onCreated={async () => {
+          if (selfId) {
+            const o = await getMyOfferForListing(listing.id, selfId);
+            setMyOffer(o);
+          }
+        }}
+      />
       {openConv && selfId && (
         <ChatThread
           conversationId={openConv}
