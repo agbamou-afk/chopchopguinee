@@ -4605,6 +4605,10 @@ export type Database = {
         }
         Returns: string
       }
+      admin_get_driver_application_detail: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       admin_group_risk_scorecard: {
         Args: never
         Returns: {
@@ -4630,6 +4634,31 @@ export type Database = {
           signal: Json
           target_group: string
           target_zone: string
+        }[]
+      }
+      admin_list_driver_applications: {
+        Args: { p_status?: string }
+        Returns: {
+          application_decision: string
+          application_id: string
+          decision_reason: string
+          display_name: string
+          driver_created_at: string
+          email: string
+          has_id_doc: boolean
+          has_selfie: boolean
+          has_vehicle_photo: boolean
+          is_complete: boolean
+          missing_required: string[]
+          phone: string
+          plate_number: string
+          rejected_reason: string
+          status: string
+          submitted_at: string
+          suspended_reason: string
+          user_id: string
+          vehicle_type: string
+          zones: string[]
         }[]
       }
       admin_list_field_checkins: {
@@ -4723,6 +4752,10 @@ export type Database = {
       }
       admin_remove_driver_from_group: {
         Args: { p_membership: string; p_reason?: string }
+        Returns: undefined
+      }
+      admin_request_driver_info: {
+        Args: { p_missing: string[]; p_note: string; p_user_id: string }
         Returns: undefined
       }
       admin_review_commission: {
