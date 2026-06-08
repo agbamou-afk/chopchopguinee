@@ -348,7 +348,24 @@ function CreateGroupSheet({ open, onOpenChange, onCreated, zones }: {
             <Field label="Commission %"><Input type="number" step="0.01" value={form.commission_percent} onChange={e => setForm(f => ({ ...f, commission_percent: e.target.value }))} /></Field>
             <Field label="Bonus signup (GNF)"><Input type="number" value={form.signup_bonus_gnf} onChange={e => setForm(f => ({ ...f, signup_bonus_gnf: e.target.value }))} /></Field>
           </div>
-          <Field label="Zones (séparées par ,)"><Input placeholder="Kaloum, Dixinn, Ratoma" value={form.assigned_zones} onChange={e => setForm(f => ({ ...f, assigned_zones: e.target.value }))} /></Field>
+          {zones.length > 0 ? (
+            <Field label="Zones (multi-sélection)">
+              <div className="flex flex-wrap gap-1 max-h-44 overflow-y-auto p-2 border rounded-md">
+                {zones.map(z => {
+                  const active = zoneIds.includes(z.id);
+                  return (
+                    <button key={z.id} type="button"
+                      onClick={() => setZoneIds(cur => active ? cur.filter(x => x !== z.id) : [...cur, z.id])}
+                      className={`text-[11px] px-2 py-1 rounded-full border ${active ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border"}`}>
+                      {zoneLabel(z)}
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+          ) : (
+            <Field label="Zones (séparées par ,)"><Input placeholder="Kaloum, Dixinn, Ratoma" value={form.assigned_zones} onChange={e => setForm(f => ({ ...f, assigned_zones: e.target.value }))} /></Field>
+          )}
           <Field label="Code de référral (optionnel)"><Input value={form.referral_code} onChange={e => setForm(f => ({ ...f, referral_code: e.target.value }))} /></Field>
           <Field label="Notes"><Textarea rows={3} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></Field>
           <Button className="w-full" onClick={submit} disabled={saving}>{saving ? "Création…" : "Créer le groupe"}</Button>
