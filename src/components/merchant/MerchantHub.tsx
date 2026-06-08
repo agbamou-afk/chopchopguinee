@@ -8,6 +8,7 @@ import { OrdersSection } from "./OrdersSection";
 import { AvailabilitySection } from "./AvailabilitySection";
 import { CatalogSection } from "./CatalogSection";
 import { ProductCatalogSection } from "./ProductCatalogSection";
+import { MerchantOffersSection } from "./MerchantOffersSection";
 import { DeliverySection } from "./DeliverySection";
 import { ChopPayActivitySection } from "./ChopPayActivitySection";
 import { AnalyticsStrip } from "./AnalyticsStrip";
@@ -98,6 +99,7 @@ export function MerchantHub() {
             approved={store.onboarding_status === "approved" && store.status === "active"}
           />
         )}
+        {store && <MerchantOffersSection merchantId={user.id} />}
         <DeliverySection merchantUserId={user.id} />
         <ChopPayActivitySection
           enabled={!!(restaurant?.choppay_enabled || store?.choppay_enabled)}
