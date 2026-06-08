@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera, ImagePlus, Loader2 } from "lucide-react";
+import { Camera, ImagePlus, Loader2, Sparkles, RotateCw, Check } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   PRODUCT_CATEGORIES,
@@ -13,6 +13,10 @@ import {
   uploadProductImage,
   getProductImages,
   getListingMinimumPrice,
+  listProductImages,
+  setPrimaryProductImage,
+  cleanProductImage,
+  type ProductImage,
   type MerchantProduct,
 } from "@/lib/marche/products";
 
@@ -42,6 +46,8 @@ export function ProductFormSheet({
   const [barcode, setBarcode] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [images, setImages] = useState<ProductImage[]>([]);
+  const [cleaning, setCleaning] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -61,7 +67,12 @@ export function ProductFormSheet({
       setDescription(product.description || "");
       setNegotiable(product.pricing_mode === "negotiable");
       setAllowOffers(!!product.allow_offers);
-      getProductImages(product.id).then(setImageUrls).catch(() => setImageUrls([]));
+      listProductImages(product.id)
+        .then((imgs) => {
+          setImages(imgs);
+          setImageUrls(imgs.map((i) => i.url));
+        })
+        .catch(() => { setImages([]); setImageUrls([]); });
       getListingMinimumPrice(product.id)
         .then((m) => setMinPrice(m ? String(m) : ""))
         .catch(() => setMinPrice(""));
@@ -73,6 +84,7 @@ export function ProductFormSheet({
       setBarcode("");
       setDescription("");
       setImageUrls([]);
+      setImages([]);
       setNegotiable(false);
       setAllowOffers(false);
       setMinPrice("");
@@ -80,6 +92,49 @@ export function ProductFormSheet({
     setPendingFile(null);
     setPreviewUrl(null);
   }, [open, product, defaultCategory]);
+
+  const original = images.find((i) => i.image_type === "original" && i.is_primary)
+    ?? images.find((i) => i.image_type === "original")
+    ?? null;
+  const cleaned = images.find((i) => i.image_type === "cleaned"
+    && (!original || i.source_image_id === original.id))
+    ?? images.find((i) => i.image_type === "cleaned")
+    ?? null;
+
+  const reloadImages = async (listingId: string) => {
+    try {
+      const imgs = await listProductImages(listingId);
+      setImages(imgs);
+      setImageUrls(imgs.map((i) => i.url));
+    } catch { /* noop */ }
+  };
+
+  const handleClean = async () => {
+    if (!product) return;
+    setCleaning(true);
+    try {
+      await cleanProductImage({ listingId: product.id, setPrimary: true });
+      await reloadImages(product.id);
+      toast({ title: "Image nettoyée avec succès." });
+    } catch (e: any) {
+      toast({
+        title: "Nettoyage impossible",
+        description: e?.message ?? "Vous pouvez utiliser la photo originale.",
+      });
+    } finally {
+      setCleaning(false);
+    }
+  };
+
+  const useImageAsPrimary = async (imageId: string, label: string) => {
+    try {
+      await setPrimaryProductImage(imageId);
+      if (product) await reloadImages(product.id);
+      toast({ title: label });
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message ?? "Action impossible." });
+    }
+  };
 
   const onPickFile = (f: File | null) => {
     if (!f) return;
