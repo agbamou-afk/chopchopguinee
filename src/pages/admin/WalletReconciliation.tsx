@@ -309,6 +309,18 @@ export default function WalletReconciliation() {
     void loadCustomerTopups();
   };
 
+  const retryCredit = async (eventId: string) => {
+    setActing(true);
+    const { data, error } = await supabase.rpc("admin_retry_om_credit" as never, { p_event_id: eventId } as never);
+    setActing(false);
+    if (error) { toast.error(error.message); return; }
+    const r = (data as { status?: string; error?: string } | null) ?? {};
+    if (r.status === "credited") toast.success("Wallet crédité");
+    else if (r.status === "credit_failed") toast.error(`Crédit échoué : ${r.error ?? "erreur"}`);
+    else toast.message(`Statut : ${r.status ?? "inconnu"}`);
+    refreshAll();
+  };
+
   const openReview = async (e: Event) => {
     setReviewEvent(e);
     setCandidates([]);
