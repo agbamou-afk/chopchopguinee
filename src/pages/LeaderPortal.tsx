@@ -13,6 +13,8 @@ import {
 import { formatGnf, type DriverGroup, type DriverGroupCommission, type DriverReferral, type DriverGroupStats } from "@/lib/admin/driverGroups";
 import type { RecruitmentCampaign, GroupContract, PayoutStatement } from "@/lib/admin/driverGroupsV3";
 import type { FieldCheckin } from "@/lib/admin/driverGroupsV4";
+import { uploadCheckinPhoto, leaderMyScorecard, signedCheckinPhotoUrl, downloadStatementCsvRich, type GroupScorecard } from "@/lib/admin/driverGroupsV5";
+import { leaderListMyStatementItems } from "@/lib/leader/driverGroup";
 import { Users2, Coins, Gift, Map as MapIcon, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
