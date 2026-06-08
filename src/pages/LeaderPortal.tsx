@@ -10,6 +10,7 @@ import {
 } from "@/lib/leader/driverGroup";
 import { formatGnf, type DriverGroup, type DriverGroupCommission, type DriverReferral, type DriverGroupStats } from "@/lib/admin/driverGroups";
 import { Users2, Coins, Gift, Map as MapIcon, ArrowLeft } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 type Tab = "overview" | "drivers" | "commissions" | "referrals";
 
@@ -110,6 +111,30 @@ export default function LeaderPortal() {
           </div>
         )}
       </Card>
+
+      {group.referral_code && (
+        <Card className="p-4 space-y-2 bg-primary/5 border-primary/30">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Votre code de parrainage</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-mono text-lg font-semibold">{group.referral_code}</p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(group.referral_code!);
+                  toast({ title: "Code copié" });
+                } catch {
+                  toast({ title: "Impossible de copier", variant: "destructive" });
+                }
+              }}
+            >Copier</Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Partagez ce code avec les chauffeurs que vous recrutez. L'équipe CHOPCHOP vérifie chaque inscription avant validation.
+          </p>
+        </Card>
+      )}
 
       {isSuspended && (
         <Card className="p-3 text-sm bg-destructive/10 text-destructive border-destructive/30">

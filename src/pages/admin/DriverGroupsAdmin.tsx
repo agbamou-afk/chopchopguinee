@@ -15,6 +15,8 @@ import {
   listDriverGroups, listMemberships, listCommissions, listReferrals,
   createDriverGroup, assignDriverToGroup, removeDriverFromGroup,
   reviewCommission, markReferral, formatGnf, adminDriverGroupStats,
+  listZones, zoneLabel, regenerateGroupReferralCode, payCommissionsBatch,
+  type Zone,
   type DriverGroup, type DriverGroupMembership, type DriverGroupCommission, type DriverReferral,
   type DriverGroupStats,
 } from "@/lib/admin/driverGroups";
@@ -27,6 +29,7 @@ export default function DriverGroupsAdmin() {
   const [members, setMembers] = useState<DriverGroupMembership[]>([]);
   const [commissions, setCommissions] = useState<DriverGroupCommission[]>([]);
   const [referrals, setReferrals] = useState<DriverReferral[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<DriverGroup | null>(null);
@@ -34,10 +37,10 @@ export default function DriverGroupsAdmin() {
   const reload = async () => {
     setLoading(true);
     try {
-      const [g, m, c, r] = await Promise.all([
-        listDriverGroups(), listMemberships(), listCommissions(), listReferrals(),
+      const [g, m, c, r, z] = await Promise.all([
+        listDriverGroups(), listMemberships(), listCommissions(), listReferrals(), listZones(),
       ]);
-      setGroups(g); setMembers(m); setCommissions(c); setReferrals(r);
+      setGroups(g); setMembers(m); setCommissions(c); setReferrals(r); setZones(z);
     } catch (e: any) {
       toast({ title: "Erreur de chargement", description: e?.message ?? String(e), variant: "destructive" });
     } finally { setLoading(false); }
@@ -110,8 +113,8 @@ export default function DriverGroupsAdmin() {
         <AnalyticsPanel groupById={groupById} />
       )}
 
-      <CreateGroupSheet open={createOpen} onOpenChange={setCreateOpen} onCreated={reload} />
-      <AssignDriverDialog group={assignFor} onClose={() => setAssignFor(null)} onAssigned={reload} />
+      <CreateGroupSheet open={createOpen} onOpenChange={setCreateOpen} onCreated={reload} zones={zones} />
+      <AssignDriverDialog group={assignFor} onClose={() => setAssignFor(null)} onAssigned={reload} zones={zones} />
     </ModulePage>
   );
 }
@@ -172,9 +175,20 @@ function GroupsTable({ groups, members, onAssign, onChanged }: {
   if (groups.length === 0) {
     return <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">Aucun groupe chauffeur configuré.</Card>;
   }
+  const regen = async (g: DriverGroup) => {
+    const custom = window.prompt(`Code pour « ${g.name} » ? Laissez vide pour générer automatiquement.`, "");
+    if (custom === null) return;
+    try {
+      const code = await regenerateGroupReferralCode(g.id, custom.trim() || null);
+      toast({ title: "Code mis à jour", description: code });
+      onChanged();
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message, variant: "destructive" });
+    }
+  };
   return (
     <DataTable
-      columns={["Nom", "Leader", "Statut", "Commission", "Bonus", "Chauffeurs", "Zones", "Actions"]}
+      columns={["Nom", "Leader", "Statut", "Commission", "Bonus", "Chauffeurs", "Zones", "Code", "Actions"]}
       rows={groups.map(g => [
         <span className="font-medium">{g.name}</span>,
         <span className="text-xs">{g.leader_name || "—"}<br /><span className="text-muted-foreground">{g.leader_phone || ""}</span></span>,
@@ -183,9 +197,13 @@ function GroupsTable({ groups, members, onAssign, onChanged }: {
         formatGnf(g.signup_bonus_gnf),
         String(members.filter(m => m.group_id === g.id && m.status === "active").length),
         <span className="text-xs">{g.assigned_zones?.join(", ") || "—"}</span>,
-        <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onAssign(g)}>
-          <UserPlus className="w-3 h-3 mr-1" /> Assigner
-        </Button>,
+        <span className="font-mono text-[11px]">{g.referral_code || "—"}</span>,
+        <div className="flex gap-1">
+          <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onAssign(g)}>
+            <UserPlus className="w-3 h-3 mr-1" /> Assigner
+          </Button>
+          <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => regen(g)}>Code</Button>
+        </div>,
       ])}
     />
   );
@@ -220,6 +238,48 @@ function MembersTable({ members, groupById, onChanged }: {
 function CommissionsTable({ rows, groupById, onChanged }: {
   rows: DriverGroupCommission[]; groupById: Record<string, DriverGroup>; onChanged: () => void;
 }) {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [groupFilter, setGroupFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [paying, setPaying] = useState(false);
+
+  const filtered = useMemo(() => rows.filter(r =>
+    (statusFilter === "all" || r.status === statusFilter) &&
+    (groupFilter === "all" || r.group_id === groupFilter)
+  ), [rows, statusFilter, groupFilter]);
+
+  const payableSelected = useMemo(
+    () => filtered.filter(r => selected.has(r.id) && (r.status === "pending" || r.status === "approved")),
+    [filtered, selected],
+  );
+  const selectedTotal = payableSelected.reduce((s, r) => s + Number(r.commission_amount_gnf || 0), 0);
+
+  const toggle = (id: string) => {
+    setSelected(cur => {
+      const next = new Set(cur);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const batchPay = async () => {
+    if (payableSelected.length === 0) return;
+    if (!window.confirm(`Payer ${payableSelected.length} commission(s) pour un total de ${formatGnf(selectedTotal)} ?`)) return;
+    setPaying(true);
+    try {
+      const r = await payCommissionsBatch(payableSelected.map(c => c.id));
+      toast({
+        title: `Payés : ${r.paid_count} · Ignorés : ${r.skipped_count}`,
+        description: `Total payé : ${formatGnf(r.total_paid_gnf)}${r.errors.length ? ` · ${r.errors.length} erreur(s)` : ""}`,
+        variant: r.errors.length ? "destructive" : "default",
+      });
+      setSelected(new Set());
+      onChanged();
+    } catch (e: any) {
+      toast({ title: "Erreur paiement batch", description: e?.message, variant: "destructive" });
+    } finally { setPaying(false); }
+  };
+
   if (rows.length === 0) {
     return <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">Aucune commission enregistrée.</Card>;
   }
@@ -239,9 +299,31 @@ function CommissionsTable({ rows, groupById, onChanged }: {
         <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <span>« Payer (ChopWallet) » crédite le portefeuille du leader via RPC sécurisée. L'annulation après paiement débite automatiquement le leader.</span>
       </Card>
+      <div className="flex flex-wrap gap-2 items-center">
+        <Label className="text-xs">Statut :</Label>
+        {["all", "pending", "approved", "paid", "reversed"].map(s => (
+          <FilterChip key={s} label={s} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
+        ))}
+        <Label className="text-xs ml-2">Groupe :</Label>
+        <select className="h-7 rounded-md border border-input bg-background px-2 text-xs"
+          value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
+          <option value="all">Tous</option>
+          {Object.values(groupById).map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+        </select>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-[11px] text-muted-foreground">
+            {payableSelected.length} sélectionnée(s) · {formatGnf(selectedTotal)}
+          </span>
+          <Button size="sm" disabled={payableSelected.length === 0 || paying} onClick={batchPay} className="h-7 text-[11px]">
+            {paying ? "Paiement…" : "Payer le batch (ChopWallet)"}
+          </Button>
+        </div>
+      </div>
       <DataTable
-        columns={["Date", "Groupe", "Chauffeur", "Source", "Gain chauffeur", "%", "Commission", "Statut", "Wallet TX", "Actions"]}
-        rows={rows.map(c => [
+        columns={["✓", "Date", "Groupe", "Chauffeur", "Source", "Gain chauffeur", "%", "Commission", "Statut", "Wallet TX", "Actions"]}
+        rows={filtered.map(c => [
+          <input type="checkbox" disabled={c.status !== "pending" && c.status !== "approved"}
+            checked={selected.has(c.id)} onChange={() => toggle(c.id)} />,
           new Date(c.created_at).toLocaleDateString("fr-FR"),
           groupById[c.group_id]?.name ?? "—",
           <span className="font-mono text-[11px]">{c.driver_user_id.slice(0, 8)}…</span>,
@@ -292,32 +374,38 @@ function ReferralsTable({ rows, groupById, onChanged }: {
   );
 }
 
-function CreateGroupSheet({ open, onOpenChange, onCreated }: {
-  open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void;
+function CreateGroupSheet({ open, onOpenChange, onCreated, zones }: {
+  open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void; zones: Zone[];
 }) {
   const [form, setForm] = useState({
     name: "", leader_name: "", leader_phone: "",
     commission_percent: "1.00", signup_bonus_gnf: "0",
     assigned_zones: "", referral_code: "", notes: "",
   });
+  const [zoneIds, setZoneIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
     if (!form.name.trim()) { toast({ title: "Nom requis", variant: "destructive" }); return; }
     setSaving(true);
     try {
+      const zoneNamesFromIds = zones.filter(z => zoneIds.includes(z.id)).map(zoneLabel);
+      const freeFormZones = form.assigned_zones.split(",").map(z => z.trim()).filter(Boolean);
+      const mergedNames = zoneNamesFromIds.length > 0 ? zoneNamesFromIds : freeFormZones;
       await createDriverGroup({
         name: form.name.trim(),
         leader_name: form.leader_name || null,
         leader_phone: form.leader_phone || null,
         commission_percent: Number(form.commission_percent) || 1,
         signup_bonus_gnf: Number(form.signup_bonus_gnf) || 0,
-        assigned_zones: form.assigned_zones.split(",").map(z => z.trim()).filter(Boolean),
+        assigned_zones: mergedNames,
+        assigned_zone_ids: zoneIds,
         referral_code: form.referral_code || null,
         notes: form.notes || null,
       });
       toast({ title: "Groupe créé" });
       setForm({ name: "", leader_name: "", leader_phone: "", commission_percent: "1.00", signup_bonus_gnf: "0", assigned_zones: "", referral_code: "", notes: "" });
+      setZoneIds([]);
       onOpenChange(false);
       onCreated();
     } catch (e: any) {
@@ -339,7 +427,24 @@ function CreateGroupSheet({ open, onOpenChange, onCreated }: {
             <Field label="Commission %"><Input type="number" step="0.01" value={form.commission_percent} onChange={e => setForm(f => ({ ...f, commission_percent: e.target.value }))} /></Field>
             <Field label="Bonus signup (GNF)"><Input type="number" value={form.signup_bonus_gnf} onChange={e => setForm(f => ({ ...f, signup_bonus_gnf: e.target.value }))} /></Field>
           </div>
-          <Field label="Zones (séparées par ,)"><Input placeholder="Kaloum, Dixinn, Ratoma" value={form.assigned_zones} onChange={e => setForm(f => ({ ...f, assigned_zones: e.target.value }))} /></Field>
+          {zones.length > 0 ? (
+            <Field label="Zones (multi-sélection)">
+              <div className="flex flex-wrap gap-1 max-h-44 overflow-y-auto p-2 border rounded-md">
+                {zones.map(z => {
+                  const active = zoneIds.includes(z.id);
+                  return (
+                    <button key={z.id} type="button"
+                      onClick={() => setZoneIds(cur => active ? cur.filter(x => x !== z.id) : [...cur, z.id])}
+                      className={`text-[11px] px-2 py-1 rounded-full border ${active ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border"}`}>
+                      {zoneLabel(z)}
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+          ) : (
+            <Field label="Zones (séparées par ,)"><Input placeholder="Kaloum, Dixinn, Ratoma" value={form.assigned_zones} onChange={e => setForm(f => ({ ...f, assigned_zones: e.target.value }))} /></Field>
+          )}
           <Field label="Code de référral (optionnel)"><Input value={form.referral_code} onChange={e => setForm(f => ({ ...f, referral_code: e.target.value }))} /></Field>
           <Field label="Notes"><Textarea rows={3} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></Field>
           <Button className="w-full" onClick={submit} disabled={saving}>{saving ? "Création…" : "Créer le groupe"}</Button>
@@ -349,11 +454,12 @@ function CreateGroupSheet({ open, onOpenChange, onCreated }: {
   );
 }
 
-function AssignDriverDialog({ group, onClose, onAssigned }: {
-  group: DriverGroup | null; onClose: () => void; onAssigned: () => void;
+function AssignDriverDialog({ group, onClose, onAssigned, zones }: {
+  group: DriverGroup | null; onClose: () => void; onAssigned: () => void; zones: Zone[];
 }) {
   const [driverId, setDriverId] = useState("");
   const [zone, setZone] = useState("");
+  const [zoneId, setZoneId] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [drivers, setDrivers] = useState<{ user_id: string; status: string }[]>([]);
@@ -375,9 +481,11 @@ function AssignDriverDialog({ group, onClose, onAssigned }: {
     if (!group || !driverId) return;
     setSaving(true);
     try {
-      await assignDriverToGroup(group.id, driverId, zone || null, notes || null);
+      const z = zones.find(x => x.id === zoneId);
+      const zoneName = z ? zoneLabel(z) : (zone || null);
+      await assignDriverToGroup(group.id, driverId, zoneName, notes || null);
       toast({ title: "Chauffeur assigné" });
-      setDriverId(""); setZone(""); setNotes("");
+      setDriverId(""); setZone(""); setZoneId(""); setNotes("");
       onClose(); onAssigned();
     } catch (e: any) {
       toast({ title: "Erreur", description: e?.message, variant: "destructive" });
@@ -396,7 +504,17 @@ function AssignDriverDialog({ group, onClose, onAssigned }: {
               {drivers.map(d => <option key={d.user_id} value={d.user_id}>{d.user_id.slice(0, 8)}… ({d.status})</option>)}
             </select>
           </Field>
-          <Field label="Zone assignée"><Input value={zone} onChange={e => setZone(e.target.value)} placeholder="Kaloum, Dixinn…" /></Field>
+          {zones.length > 0 ? (
+            <Field label="Zone assignée">
+              <select className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                value={zoneId} onChange={(e) => setZoneId(e.target.value)}>
+                <option value="">— Aucune —</option>
+                {zones.map(z => <option key={z.id} value={z.id}>{zoneLabel(z)}</option>)}
+              </select>
+            </Field>
+          ) : (
+            <Field label="Zone assignée"><Input value={zone} onChange={e => setZone(e.target.value)} placeholder="Kaloum, Dixinn…" /></Field>
+          )}
           <Field label="Notes"><Textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} /></Field>
           <Button className="w-full" onClick={submit} disabled={!driverId || saving}>{saving ? "Assignation…" : "Assigner"}</Button>
         </div>

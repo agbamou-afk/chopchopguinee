@@ -138,6 +138,67 @@ export async function reviewCommission(p_commission: string, p_action: "approve"
   if (error) throw error;
 }
 
+export type Zone = {
+  id: string;
+  country: string;
+  city: string | null;
+  commune: string | null;
+  neighborhood: string | null;
+  kind: string;
+};
+
+export async function listZones(): Promise<Zone[]> {
+  const { data, error } = await supabase
+    .from("zones")
+    .select("id,country,city,commune,neighborhood,kind")
+    .eq("kind", "service")
+    .order("commune", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as Zone[];
+}
+
+export function zoneLabel(z: Zone): string {
+  return z.commune || z.neighborhood || z.city || z.country;
+}
+
+export async function regenerateGroupReferralCode(p_group: string, p_code?: string | null) {
+  const { data, error } = await supabase.rpc("admin_regenerate_group_referral_code", {
+    p_group, p_code: p_code ?? null,
+  });
+  if (error) throw error;
+  return data as string;
+}
+
+export type ValidateReferralResult = {
+  group_id: string;
+  group_name: string;
+  leader_name: string | null;
+  status: string;
+  valid: boolean;
+} | null;
+
+export async function validateReferralCode(p_code: string): Promise<ValidateReferralResult> {
+  const code = p_code.trim();
+  if (!code) return null;
+  const { data, error } = await supabase.rpc("validate_referral_code", { p_code: code });
+  if (error) throw error;
+  const rows = (data ?? []) as ValidateReferralResult[];
+  return (Array.isArray(rows) ? rows[0] : (rows as unknown)) as ValidateReferralResult;
+}
+
+export type BatchPayoutResult = {
+  paid_count: number;
+  skipped_count: number;
+  total_paid_gnf: number;
+  errors: Array<{ id: string; error: string }>;
+};
+
+export async function payCommissionsBatch(p_commission_ids: string[]): Promise<BatchPayoutResult> {
+  const { data, error } = await supabase.rpc("wallet_pay_driver_commission_batch", { p_commission_ids });
+  if (error) throw error;
+  return data as unknown as BatchPayoutResult;
+}
+
 export async function markReferral(p_referral: string, p_action: "approve" | "mark_eligible" | "mark_paid" | "reject") {
   const { error } = await supabase.rpc("admin_mark_referral", { p_referral, p_action });
   if (error) throw error;

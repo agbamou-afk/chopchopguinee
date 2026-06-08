@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.validate_referral_code(text) FROM anon, PUBLIC;

@@ -7,6 +7,7 @@ import { useDriverProfile, type DriverVehicle } from "@/hooks/useDriverProfile";
 import { toast } from "@/hooks/use-toast";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { cn } from "@/lib/utils";
+import { validateReferralCode } from "@/lib/admin/driverGroups";
 
 const VEHICLE_OPTIONS: Array<{ id: DriverVehicle; label: string; sub: string; icon: typeof Bike }> = [
   { id: "moto", label: "Moto", sub: "Course rapide en ville", icon: Bike },
@@ -37,6 +38,8 @@ export default function DriverApply() {
   const [driverPhoto, setDriverPhoto] = useState<string | null>(profile?.driver_photo_url ?? null);
   const [idDoc, setIdDoc] = useState<string | null>(profile?.id_doc_url ?? null);
   const [vehiclePhoto, setVehiclePhoto] = useState<string | null>(profile?.vehicle_photo_url ?? null);
+  const [referralCode, setReferralCode] = useState<string>("");
+  const [referralCheck, setReferralCheck] = useState<{ state: "idle" | "checking" | "valid" | "invalid"; group_name?: string }>({ state: "idle" });
 
   if (!user) {
     navigate("/auth?redirect=/driver/apply");
@@ -80,6 +83,7 @@ export default function DriverApply() {
         zones,
         missing_documents: missingDocuments,
         required_documents_status: missingDocuments ? "incomplete" : "submitted",
+        referral_code: referralCode.trim() || null,
       },
     });
     setSubmitting(false);
@@ -235,6 +239,46 @@ export default function DriverApply() {
               <Row label="Photo chauffeur" value={driverPhoto ? "Téléversée" : "Manquante"} />
               <Row label="Pièce d'identité" value={idDoc ? "Téléversée" : "Manquante"} />
               <Row label="Photo véhicule" value={vehiclePhoto ? "Téléversée" : "Optionnel"} />
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
+              <label className="block">
+                <span className="text-xs font-medium text-muted-foreground">Code de parrainage, si vous en avez un</span>
+                <input
+                  value={referralCode}
+                  onChange={(e) => {
+                    const v = e.target.value.toUpperCase();
+                    setReferralCode(v);
+                    setReferralCheck({ state: "idle" });
+                  }}
+                  onBlur={async () => {
+                    const v = referralCode.trim();
+                    if (!v) { setReferralCheck({ state: "idle" }); return; }
+                    setReferralCheck({ state: "checking" });
+                    try {
+                      const r = await validateReferralCode(v);
+                      if (r && r.valid) setReferralCheck({ state: "valid", group_name: r.group_name });
+                      else setReferralCheck({ state: "invalid" });
+                    } catch {
+                      setReferralCheck({ state: "invalid" });
+                    }
+                  }}
+                  placeholder="ex. CHOP-MAMADOU-4242"
+                  maxLength={40}
+                  className="mt-1 w-full h-11 px-3 rounded-2xl border border-border bg-background text-foreground"
+                />
+              </label>
+              {referralCheck.state === "checking" && (
+                <p className="text-xs text-muted-foreground">Vérification…</p>
+              )}
+              {referralCheck.state === "valid" && (
+                <p className="text-xs text-primary">Code valide · {referralCheck.group_name}. L'équipe CHOPCHOP vérifiera votre dossier avant validation.</p>
+              )}
+              {referralCheck.state === "invalid" && (
+                <p className="text-xs text-destructive">Code de parrainage introuvable.</p>
+              )}
+              {referralCheck.state === "idle" && !referralCode && (
+                <p className="text-[11px] text-muted-foreground">Laissez vide si vous n'avez pas de code.</p>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               En soumettant, vous acceptez les conditions chauffeur de CHOPCHOP. Votre dossier sera examiné sous 24-48 h.
