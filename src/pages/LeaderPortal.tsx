@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import Seo from "@/components/Seo";
+import { Seo } from "@/components/Seo";
 import {
   leaderGetMyGroup, leaderListMyMembers, leaderListMyCommissions,
   leaderListMyReferrals, leaderGetMyStats, type LeaderMember,
@@ -14,7 +14,8 @@ import { Users2, Coins, Gift, Map as MapIcon, ArrowLeft } from "lucide-react";
 type Tab = "overview" | "drivers" | "commissions" | "referrals";
 
 export default function LeaderPortal() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, ready: authReady } = useAuth();
+  const authLoading = !authReady;
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("overview");
   const [group, setGroup] = useState<DriverGroup | null>(null);
