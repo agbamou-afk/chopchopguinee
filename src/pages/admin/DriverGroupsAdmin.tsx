@@ -108,6 +108,9 @@ export default function DriverGroupsAdmin() {
           ["jobs", "Jalons"],
           ["checkins", "Check-ins"],
           ["zones", "Zones"],
+          ["scorecards", "Scorecards"],
+          ["risk_scorecard", "Risque (scorecard)"],
+          ["suggestions", "Suggestions"],
           ["analytics", "Analytics"],
         ] as [Tab, string][]).map(([k, l]) => (
           <FilterChip key={k} label={l} active={tab === k} onClick={() => setTab(k)} />
@@ -139,9 +142,18 @@ export default function DriverGroupsAdmin() {
       ) : tab === "jobs" ? (
         <MilestoneJobsPanel />
       ) : tab === "checkins" ? (
-        <FieldCheckinsPanel groups={groups} />
+        <div className="space-y-3">
+          <CheckinsWithPhotos groups={groups} />
+          <FieldCheckinsPanel groups={groups} />
+        </div>
       ) : tab === "zones" ? (
         <ZoneCoveragePanel />
+      ) : tab === "scorecards" ? (
+        <ScorecardsPanel groups={groups} />
+      ) : tab === "risk_scorecard" ? (
+        <RiskScorecardPanel />
+      ) : tab === "suggestions" ? (
+        <SuggestionsPanel />
       ) : (
         <AnalyticsPanel groupById={groupById} />
       )}
