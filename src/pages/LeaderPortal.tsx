@@ -157,6 +157,28 @@ export default function LeaderPortal() {
         </Card>
       )}
 
+      {(commissions.some(c => (c as any).risk_status && (c as any).risk_status !== "clear")
+        || referrals.some(r => (r as any).risk_status && (r as any).risk_status !== "clear")) && (
+        <Card className="p-3 text-sm bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30">
+          Certains paiements peuvent être temporairement en vérification par l'équipe CHOPCHOP.
+        </Card>
+      )}
+
+      <Sheet open={checkinOpen} onOpenChange={setCheckinOpen}>
+        <SheetTrigger asChild>
+          <Button size="sm" variant="outline" className="w-full">
+            <MapIcon className="w-4 h-4 mr-1" /> Nouveau check-in terrain
+          </Button>
+        </SheetTrigger>
+        <SheetContent className="w-full sm:max-w-md">
+          <SheetHeader><SheetTitle>Check-in terrain</SheetTitle></SheetHeader>
+          <CheckinForm groupId={group.id} onSaved={async () => {
+            setCheckinOpen(false);
+            try { setCheckins(await leaderListMyCheckins(50)); } catch {}
+          }} />
+        </SheetContent>
+      </Sheet>
+
       <div className="flex flex-wrap gap-2">
         {([
           ["overview", "Vue d'ensemble"],
@@ -166,6 +188,7 @@ export default function LeaderPortal() {
           ["campaigns", `Campagnes (${campaigns.length})`],
           ["contracts", `Contrats (${contracts.length})`],
           ["statements", `Relevés (${statements.length})`],
+          ["checkins", `Check-ins (${checkins.length})`],
         ] as [Tab, string][]).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)}
             className={`px-3 py-1.5 text-xs rounded-full border ${tab === k ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>
