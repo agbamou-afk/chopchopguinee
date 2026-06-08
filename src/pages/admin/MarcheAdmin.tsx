@@ -1,9 +1,10 @@
 import { ModulePage } from "@/components/admin/ModulePage";
 import { StatGrid, DataTable, FilterChip, StatusBadge, AdminToolbar } from "@/components/admin/AdminMock";
-import { ShoppingBag, Flag, Eye, TrendingUp } from "lucide-react";
+import { ShoppingBag, Flag, Eye, TrendingUp, Tag } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatGNF } from "@/lib/format";
+import { listAllOffersAdmin, offerStatusLabel, type MarketplaceOffer } from "@/lib/marche/offers";
 
 type Row = {
   id: string;
@@ -24,6 +25,8 @@ export default function MarcheAdmin() {
   const [f, setF] = useState<"Tous" | "Actives" | "Suspendues" | "Boostées">("Tous");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [offers, setOffers] = useState<MarketplaceOffer[]>([]);
+  const [offersLoading, setOffersLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -35,6 +38,11 @@ export default function MarcheAdmin() {
         .limit(200);
       setRows((data ?? []) as Row[]);
       setLoading(false);
+    })();
+    (async () => {
+      setOffersLoading(true);
+      setOffers(await listAllOffersAdmin());
+      setOffersLoading(false);
     })();
   }, []);
 
@@ -81,6 +89,21 @@ export default function MarcheAdmin() {
           new Date(r.created_at).toLocaleDateString("fr-FR"),
         ])}
       />
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5"><Tag className="w-4 h-4" /> Offres marketplace</h3>
+        <DataTable
+          columns={["Date", "Annonce", "Acheteur", "Marchand", "Offre", "Contre", "Statut"]}
+          rows={offersLoading ? [] : offers.map((o) => [
+            new Date(o.created_at).toLocaleString("fr-FR"),
+            <span className="font-mono text-xs">{o.listing_id.slice(0, 8)}…</span>,
+            <span className="font-mono text-xs">{o.buyer_user_id.slice(0, 8)}…</span>,
+            <span className="font-mono text-xs">{o.merchant_user_id.slice(0, 8)}…</span>,
+            formatGNF(o.offer_amount_gnf),
+            o.counter_amount_gnf ? formatGNF(o.counter_amount_gnf) : "—",
+            <StatusBadge status={offerStatusLabel(o.status)} />,
+          ])}
+        />
+      </div>
     </ModulePage>
   );
 }

@@ -2495,6 +2495,8 @@ export type Database = {
       }
       marketplace_listings: {
         Row: {
+          allow_offers: boolean
+          asking_price_gnf: number | null
           availability: Database["public"]["Enums"]["listing_availability"]
           barcode: string | null
           category: string
@@ -2509,9 +2511,12 @@ export type Database = {
           is_urgent: boolean
           kind: Database["public"]["Enums"]["listing_kind"]
           landmark: string | null
+          minimum_price_gnf: number | null
           neighborhood: string | null
+          offer_increment_gnf: number | null
           photo_count: number
           price_gnf: number | null
+          pricing_mode: string
           promoted: boolean
           quantity_in_stock: number | null
           seller_id: string
@@ -2524,6 +2529,8 @@ export type Database = {
           visibility: string
         }
         Insert: {
+          allow_offers?: boolean
+          asking_price_gnf?: number | null
           availability?: Database["public"]["Enums"]["listing_availability"]
           barcode?: string | null
           category: string
@@ -2538,9 +2545,12 @@ export type Database = {
           is_urgent?: boolean
           kind?: Database["public"]["Enums"]["listing_kind"]
           landmark?: string | null
+          minimum_price_gnf?: number | null
           neighborhood?: string | null
+          offer_increment_gnf?: number | null
           photo_count?: number
           price_gnf?: number | null
+          pricing_mode?: string
           promoted?: boolean
           quantity_in_stock?: number | null
           seller_id: string
@@ -2553,6 +2563,8 @@ export type Database = {
           visibility?: string
         }
         Update: {
+          allow_offers?: boolean
+          asking_price_gnf?: number | null
           availability?: Database["public"]["Enums"]["listing_availability"]
           barcode?: string | null
           category?: string
@@ -2567,9 +2579,12 @@ export type Database = {
           is_urgent?: boolean
           kind?: Database["public"]["Enums"]["listing_kind"]
           landmark?: string | null
+          minimum_price_gnf?: number | null
           neighborhood?: string | null
+          offer_increment_gnf?: number | null
           photo_count?: number
           price_gnf?: number | null
+          pricing_mode?: string
           promoted?: boolean
           quantity_in_stock?: number | null
           seller_id?: string
@@ -2587,6 +2602,68 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_offers: {
+        Row: {
+          buyer_message: string | null
+          buyer_user_id: string
+          counter_amount_gnf: number | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          listing_id: string
+          merchant_message: string | null
+          merchant_store_id: string | null
+          merchant_user_id: string
+          metadata: Json
+          offer_amount_gnf: number
+          responded_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_message?: string | null
+          buyer_user_id: string
+          counter_amount_gnf?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          listing_id: string
+          merchant_message?: string | null
+          merchant_store_id?: string | null
+          merchant_user_id: string
+          metadata?: Json
+          offer_amount_gnf: number
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_message?: string | null
+          buyer_user_id?: string
+          counter_amount_gnf?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          listing_id?: string
+          merchant_message?: string | null
+          merchant_store_id?: string | null
+          merchant_user_id?: string
+          metadata?: Json
+          offer_amount_gnf?: number
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_offers_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -4745,6 +4822,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_marketplace_offer: {
+        Args: { p_amount_gnf: number; p_listing_id: string; p_message?: string }
+        Returns: string
+      }
       current_admin_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["admin_role"]
@@ -5018,6 +5099,53 @@ export type Database = {
         }[]
       }
       get_demo_driver: { Args: never; Returns: string }
+      get_listing_minimum_price: {
+        Args: { p_listing_id: string }
+        Returns: number
+      }
+      get_merchant_listing_full: {
+        Args: { p_listing_id: string }
+        Returns: {
+          allow_offers: boolean
+          asking_price_gnf: number | null
+          availability: Database["public"]["Enums"]["listing_availability"]
+          barcode: string | null
+          category: string
+          commune: string | null
+          condition: string | null
+          created_at: string
+          delivery_available: boolean
+          description: string | null
+          fulfillment_options: string[]
+          id: string
+          is_negotiable: boolean
+          is_urgent: boolean
+          kind: Database["public"]["Enums"]["listing_kind"]
+          landmark: string | null
+          minimum_price_gnf: number | null
+          neighborhood: string | null
+          offer_increment_gnf: number | null
+          photo_count: number
+          price_gnf: number | null
+          pricing_mode: string
+          promoted: boolean
+          quantity_in_stock: number | null
+          seller_id: string
+          sold_count: number
+          status: Database["public"]["Enums"]["listing_status"]
+          store_id: string | null
+          title: string
+          updated_at: string
+          view_count: number
+          visibility: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marketplace_listings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_my_driver_application_status: {
         Args: never
         Returns: {
@@ -5365,6 +5493,15 @@ export type Database = {
       merchant_ensure_wallet: {
         Args: { p_merchant_id: string }
         Returns: string
+      }
+      merchant_respond_marketplace_offer: {
+        Args: {
+          p_action: string
+          p_counter_amount_gnf?: number
+          p_message?: string
+          p_offer_id: string
+        }
+        Returns: undefined
       }
       mission_claim: {
         Args: { _mission_id: string }
@@ -6304,6 +6441,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      withdraw_marketplace_offer: {
+        Args: { p_offer_id: string }
+        Returns: undefined
       }
     }
     Enums: {

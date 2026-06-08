@@ -22,6 +22,14 @@ import {
   type InterestKind,
 } from "@/lib/marche/interests";
 import { CalendarCheck, PackageSearch } from "lucide-react";
+import { Tag } from "lucide-react";
+import { OfferSheet } from "./OfferSheet";
+import {
+  getMyOfferForListing,
+  withdrawOffer,
+  offerStatusLabel,
+  type MarketplaceOffer,
+} from "@/lib/marche/offers";
 
 // Module-level guard so a single listing view counts once per session,
 // even under StrictMode double-mount or quick back/forward navigation.
@@ -47,6 +55,10 @@ interface FullListing {
   fulfillment_options?: string[] | null;
   photo_count?: number | null;
   store_id?: string | null;
+  pricing_mode?: string | null;
+  asking_price_gnf?: number | null;
+  allow_offers?: boolean | null;
+  quantity_in_stock?: number | null;
 }
 
 export function ListingDetail({ listingId, onBack }: { listingId: string; onBack: () => void }) {
@@ -65,6 +77,8 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
     pending: 0,
   });
   const [askedKinds, setAskedKinds] = useState<Set<InterestKind>>(new Set());
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [myOffer, setMyOffer] = useState<MarketplaceOffer | null>(null);
   const { requireAuth } = useAuthGuard();
 
   useEffect(() => {
@@ -76,7 +90,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
 
       const { data: l } = await supabase
         .from("marketplace_listings")
-        .select("id, seller_id, kind, category, title, description, price_gnf, is_negotiable, is_urgent, delivery_available, condition, neighborhood, commune, landmark, created_at, availability, fulfillment_options, photo_count, store_id")
+        .select("id, seller_id, kind, category, title, description, price_gnf, is_negotiable, is_urgent, delivery_available, condition, neighborhood, commune, landmark, created_at, availability, fulfillment_options, photo_count, store_id, pricing_mode, asking_price_gnf, allow_offers, quantity_in_stock")
         .eq("id", listingId)
         .maybeSingle();
       if (!mounted || !l) return;
@@ -110,6 +124,8 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           .eq("user_id", uid)
           .maybeSingle();
         if (mounted) setSaved(!!sv);
+        const off = await getMyOfferForListing(listingId, uid);
+        if (mounted) setMyOffer(off);
       }
     })();
     return () => {
@@ -420,9 +436,76 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
             </Button>
           </div>
         )}
+
+        {/* Bargaining — only if merchant enabled it */}
+        {selfId !== listing.seller_id && listing.allow_offers && listing.pricing_mode === "negotiable" && (
+          <div className="rounded-2xl border border-primary/40 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Tag className="w-4 h-4 text-primary" /> Négociable
+            </div>
+            {myOffer ? (
+              <div className="space-y-1.5">
+                <p className="text-xs text-muted-foreground">
+                  Votre offre : <b>{formatGNF(myOffer.offer_amount_gnf)}</b> · {offerStatusLabel(myOffer.status)}
+                </p>
+                {myOffer.status === "countered" && myOffer.counter_amount_gnf && (
+                  <p className="text-xs text-foreground">
+                    Contre-proposition du marchand : <b>{formatGNF(myOffer.counter_amount_gnf)}</b>
+                  </p>
+                )}
+                {myOffer.merchant_message && (
+                  <p className="text-xs text-muted-foreground italic">« {myOffer.merchant_message} »</p>
+                )}
+                {(myOffer.status === "pending" || myOffer.status === "countered") && (
+                  <Button
+                    variant="outline" size="sm" className="w-full"
+                    onClick={async () => {
+                      try {
+                        await withdrawOffer(myOffer.id);
+                        const refreshed = selfId ? await getMyOfferForListing(listing.id, selfId) : null;
+                        setMyOffer(refreshed);
+                        toast({ title: "Offre retirée" });
+                      } catch (e: any) {
+                        toast({ title: "Erreur", description: e?.message });
+                      }
+                    }}
+                  >
+                    Retirer mon offre
+                  </Button>
+                )}
+                {(myOffer.status === "rejected" || myOffer.status === "withdrawn" || myOffer.status === "expired") && (
+                  <Button size="sm" className="w-full" onClick={() => requireAuth(() => setOfferOpen(true))}>
+                    Faire une nouvelle offre
+                  </Button>
+                )}
+                {myOffer.status === "accepted" && (
+                  <p className="text-xs text-success">
+                    Offre acceptée — finalisation de la commande à connecter.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <Button size="sm" className="w-full" onClick={() => requireAuth(() => setOfferOpen(true))}>
+                <Tag className="w-4 h-4 mr-1" /> Faire une offre
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <ReportModal listingId={listing.id} open={reportOpen} onOpenChange={setReportOpen} />
+      <OfferSheet
+        open={offerOpen}
+        onOpenChange={setOfferOpen}
+        listingId={listing.id}
+        askingPrice={listing.asking_price_gnf ?? listing.price_gnf}
+        onCreated={async () => {
+          if (selfId) {
+            const o = await getMyOfferForListing(listing.id, selfId);
+            setMyOffer(o);
+          }
+        }}
+      />
       {openConv && selfId && (
         <ChatThread
           conversationId={openConv}
