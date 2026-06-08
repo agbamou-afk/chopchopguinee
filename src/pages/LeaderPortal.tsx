@@ -203,13 +203,27 @@ export default function LeaderPortal() {
       </div>
 
       {tab === "overview" && (
-        <div className="grid grid-cols-2 gap-2">
-          <Stat label="Chauffeurs actifs" value={String(stats?.active_drivers ?? 0)} icon={Users2} />
-          <Stat label="Courses 30j" value={String(stats?.rides_completed ?? 0)} icon={Coins} />
-          <Stat label="Commissions en attente" value={formatGnf(stats?.commissions_pending_gnf ?? 0)} icon={Coins} />
-          <Stat label="Commissions payées 30j" value={formatGnf(stats?.commissions_paid_gnf ?? 0)} icon={Coins} />
-          <Stat label="Parrainages éligibles" value={String(stats?.signup_bonus_eligible_count ?? 0)} icon={Gift} />
-          <Stat label="Bonus payés 30j" value={formatGnf(stats?.signup_bonus_paid_gnf ?? 0)} icon={Gift} />
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Stat label="Chauffeurs actifs" value={String(stats?.active_drivers ?? 0)} icon={Users2} />
+            <Stat label="Courses 30j" value={String(stats?.rides_completed ?? 0)} icon={Coins} />
+            <Stat label="Commissions en attente" value={formatGnf(stats?.commissions_pending_gnf ?? 0)} icon={Coins} />
+            <Stat label="Commissions payées 30j" value={formatGnf(stats?.commissions_paid_gnf ?? 0)} icon={Coins} />
+            <Stat label="Parrainages éligibles" value={String(stats?.signup_bonus_eligible_count ?? 0)} icon={Gift} />
+            <Stat label="Bonus payés 30j" value={formatGnf(stats?.signup_bonus_paid_gnf ?? 0)} icon={Gift} />
+          </div>
+          {scorecard && (
+            <Card className="p-3 space-y-2">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Scorecard (30 jours)</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div><span className="text-muted-foreground text-[11px]">Recrutés</span><p className="font-semibold tabular-nums">{scorecard.recruited}</p></div>
+                <div><span className="text-muted-foreground text-[11px]">Approuvés</span><p className="font-semibold tabular-nums">{scorecard.approved}</p></div>
+                <div><span className="text-muted-foreground text-[11px]">Check-ins</span><p className="font-semibold tabular-nums">{scorecard.checkins_count}</p></div>
+                <div><span className="text-muted-foreground text-[11px]">Bonus éligibles</span><p className="font-semibold tabular-nums">{scorecard.signup_bonuses_eligible}</p></div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Prochaine action conseillée : {scorecard.active_drivers < 3 ? "recruter de nouveaux chauffeurs." : scorecard.checkins_count === 0 ? "effectuer un check-in terrain." : "suivre les chauffeurs inactifs."}</p>
+            </Card>
+          )}
         </div>
       )}
 
