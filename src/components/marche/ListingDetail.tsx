@@ -22,6 +22,14 @@ import {
   type InterestKind,
 } from "@/lib/marche/interests";
 import { CalendarCheck, PackageSearch } from "lucide-react";
+import { Tag } from "lucide-react";
+import { OfferSheet } from "./OfferSheet";
+import {
+  getMyOfferForListing,
+  withdrawOffer,
+  offerStatusLabel,
+  type MarketplaceOffer,
+} from "@/lib/marche/offers";
 
 // Module-level guard so a single listing view counts once per session,
 // even under StrictMode double-mount or quick back/forward navigation.
@@ -47,6 +55,10 @@ interface FullListing {
   fulfillment_options?: string[] | null;
   photo_count?: number | null;
   store_id?: string | null;
+  pricing_mode?: string | null;
+  asking_price_gnf?: number | null;
+  allow_offers?: boolean | null;
+  quantity_in_stock?: number | null;
 }
 
 export function ListingDetail({ listingId, onBack }: { listingId: string; onBack: () => void }) {
@@ -65,6 +77,8 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
     pending: 0,
   });
   const [askedKinds, setAskedKinds] = useState<Set<InterestKind>>(new Set());
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [myOffer, setMyOffer] = useState<MarketplaceOffer | null>(null);
   const { requireAuth } = useAuthGuard();
 
   useEffect(() => {
@@ -76,7 +90,7 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
 
       const { data: l } = await supabase
         .from("marketplace_listings")
-        .select("id, seller_id, kind, category, title, description, price_gnf, is_negotiable, is_urgent, delivery_available, condition, neighborhood, commune, landmark, created_at, availability, fulfillment_options, photo_count, store_id")
+        .select("id, seller_id, kind, category, title, description, price_gnf, is_negotiable, is_urgent, delivery_available, condition, neighborhood, commune, landmark, created_at, availability, fulfillment_options, photo_count, store_id, pricing_mode, asking_price_gnf, allow_offers, quantity_in_stock")
         .eq("id", listingId)
         .maybeSingle();
       if (!mounted || !l) return;
@@ -110,6 +124,8 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           .eq("user_id", uid)
           .maybeSingle();
         if (mounted) setSaved(!!sv);
+        const off = await getMyOfferForListing(listingId, uid);
+        if (mounted) setMyOffer(off);
       }
     })();
     return () => {
