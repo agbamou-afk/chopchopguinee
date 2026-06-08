@@ -2,6 +2,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type {
   DriverGroup, DriverGroupCommission, DriverReferral, DriverGroupStats,
 } from "@/lib/admin/driverGroups";
+import type {
+  RecruitmentCampaign, GroupContract, PayoutStatement, PayoutStatementItem,
+} from "@/lib/admin/driverGroupsV3";
 
 export type LeaderMember = {
   id: string;
@@ -48,4 +51,30 @@ export async function leaderGetMyStats(days = 30): Promise<DriverGroupStats | nu
   if (error) throw error;
   const rows = (data ?? []) as unknown as DriverGroupStats[];
   return rows[0] ?? null;
+}
+
+export async function leaderListMyCampaigns(): Promise<RecruitmentCampaign[]> {
+  const { data, error } = await supabase.rpc("leader_list_my_campaigns");
+  if (error) throw error;
+  return (data ?? []) as unknown as RecruitmentCampaign[];
+}
+
+export async function leaderListMyContracts(): Promise<GroupContract[]> {
+  const { data, error } = await supabase.rpc("leader_list_my_contracts");
+  if (error) throw error;
+  return (data ?? []) as unknown as GroupContract[];
+}
+
+export async function leaderListMyStatements(): Promise<PayoutStatement[]> {
+  const { data, error } = await supabase.rpc("leader_list_my_statements");
+  if (error) throw error;
+  return (data ?? []) as unknown as PayoutStatement[];
+}
+
+export async function leaderListMyStatementItems(statementId: string): Promise<PayoutStatementItem[]> {
+  const { data, error } = await supabase
+    .from("driver_group_payout_statement_items").select("*")
+    .eq("statement_id", statementId).order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as PayoutStatementItem[];
 }
