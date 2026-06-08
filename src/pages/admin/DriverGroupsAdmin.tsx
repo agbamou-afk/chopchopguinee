@@ -358,11 +358,12 @@ function CreateGroupSheet({ open, onOpenChange, onCreated, zones }: {
   );
 }
 
-function AssignDriverDialog({ group, onClose, onAssigned }: {
-  group: DriverGroup | null; onClose: () => void; onAssigned: () => void;
+function AssignDriverDialog({ group, onClose, onAssigned, zones }: {
+  group: DriverGroup | null; onClose: () => void; onAssigned: () => void; zones: Zone[];
 }) {
   const [driverId, setDriverId] = useState("");
   const [zone, setZone] = useState("");
+  const [zoneId, setZoneId] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [drivers, setDrivers] = useState<{ user_id: string; status: string }[]>([]);
@@ -384,9 +385,11 @@ function AssignDriverDialog({ group, onClose, onAssigned }: {
     if (!group || !driverId) return;
     setSaving(true);
     try {
-      await assignDriverToGroup(group.id, driverId, zone || null, notes || null);
+      const z = zones.find(x => x.id === zoneId);
+      const zoneName = z ? zoneLabel(z) : (zone || null);
+      await assignDriverToGroup(group.id, driverId, zoneName, notes || null);
       toast({ title: "Chauffeur assigné" });
-      setDriverId(""); setZone(""); setNotes("");
+      setDriverId(""); setZone(""); setZoneId(""); setNotes("");
       onClose(); onAssigned();
     } catch (e: any) {
       toast({ title: "Erreur", description: e?.message, variant: "destructive" });
