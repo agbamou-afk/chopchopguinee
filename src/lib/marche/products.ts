@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type ProductStatus = "active" | "paused" | "removed" | "sold";
 export type ProductVisibility = "public" | "private";
+export type PricingMode = "fixed" | "negotiable" | "quote";
 
 export interface MerchantProduct {
   id: string;
@@ -19,11 +20,18 @@ export interface MerchantProduct {
   availability: string;
   created_at: string;
   updated_at: string;
+  pricing_mode: PricingMode;
+  asking_price_gnf: number | null;
+  allow_offers: boolean;
+  // minimum_price_gnf is intentionally NOT here — load via getListingMinimumPrice
 }
 
 const BUCKET = "marche-listings";
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
+
+const PRODUCT_COLS =
+  "id, seller_id, store_id, title, description, category, price_gnf, quantity_in_stock, barcode, status, visibility, photo_count, availability, created_at, updated_at, pricing_mode, asking_price_gnf, allow_offers";
 
 export const PRODUCT_CATEGORIES = [
   "Alimentation",
@@ -40,7 +48,7 @@ export const PRODUCT_CATEGORIES = [
 export async function listOwnProducts(sellerId: string): Promise<MerchantProduct[]> {
   const { data, error } = await (supabase as any)
     .from("marketplace_listings")
-    .select("*")
+    .select(PRODUCT_COLS)
     .eq("seller_id", sellerId)
     .eq("kind", "merchant")
     .order("created_at", { ascending: false })
@@ -52,7 +60,7 @@ export async function listOwnProducts(sellerId: string): Promise<MerchantProduct
 export async function listStoreProducts(storeId: string): Promise<MerchantProduct[]> {
   const { data, error } = await (supabase as any)
     .from("marketplace_listings")
-    .select("*")
+    .select(PRODUCT_COLS)
     .eq("store_id", storeId)
     .eq("kind", "merchant")
     .order("created_at", { ascending: false })
@@ -81,11 +89,18 @@ export interface CreateProductInput {
   barcode: string | null;
   description: string | null;
   publish: boolean; // requested public/active
+  pricing_mode?: PricingMode;
+  asking_price_gnf?: number | null;
+  minimum_price_gnf?: number | null;
+  allow_offers?: boolean;
 }
 
 export async function createProduct(input: CreateProductInput): Promise<MerchantProduct> {
   const status: ProductStatus = input.publish ? "active" : "paused";
   const visibility: ProductVisibility = input.publish ? "public" : "private";
+  const pricing_mode: PricingMode = input.pricing_mode ?? "fixed";
+  const allow_offers = pricing_mode === "negotiable" ? !!input.allow_offers : false;
+  const asking_price_gnf = input.asking_price_gnf ?? input.price_gnf ?? null;
   const payload = {
     seller_id: input.sellerId,
     store_id: input.storeId,
@@ -94,6 +109,10 @@ export async function createProduct(input: CreateProductInput): Promise<Merchant
     title: input.title.trim(),
     description: input.description?.trim() || null,
     price_gnf: input.price_gnf,
+    asking_price_gnf,
+    minimum_price_gnf: allow_offers ? input.minimum_price_gnf ?? null : null,
+    pricing_mode,
+    allow_offers,
     quantity_in_stock: input.quantity_in_stock,
     barcode: input.barcode?.trim() || null,
     status,
@@ -102,7 +121,7 @@ export async function createProduct(input: CreateProductInput): Promise<Merchant
   const { data, error } = await (supabase as any)
     .from("marketplace_listings")
     .insert(payload)
-    .select("*")
+    .select(PRODUCT_COLS)
     .single();
   if (error) throw error;
   return data as MerchantProduct;
@@ -117,6 +136,10 @@ export interface UpdateProductInput {
   description?: string | null;
   status?: ProductStatus;
   visibility?: ProductVisibility;
+  pricing_mode?: PricingMode;
+  asking_price_gnf?: number | null;
+  minimum_price_gnf?: number | null;
+  allow_offers?: boolean;
 }
 
 export async function updateProduct(id: string, patch: UpdateProductInput): Promise<void> {
@@ -125,6 +148,15 @@ export async function updateProduct(id: string, patch: UpdateProductInput): Prom
     .update(patch)
     .eq("id", id);
   if (error) throw error;
+}
+
+// Owner/admin-only: returns the private minimum price (or null).
+export async function getListingMinimumPrice(listingId: string): Promise<number | null> {
+  const { data, error } = await (supabase as any).rpc("get_listing_minimum_price", {
+    p_listing_id: listingId,
+  });
+  if (error) return null;
+  return (data as number | null) ?? null;
 }
 
 export async function adjustStock(id: string, delta: number): Promise<number> {
