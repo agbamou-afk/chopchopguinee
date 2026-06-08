@@ -20,8 +20,11 @@ import {
   type DriverGroup, type DriverGroupMembership, type DriverGroupCommission, type DriverReferral,
   type DriverGroupStats,
 } from "@/lib/admin/driverGroups";
+import {
+  CampaignsPanel, ContractsPanel, StatementsPanel, RiskQueuePanel, ZoneCoveragePanel,
+} from "@/components/admin/DriverGroupsV3Panels";
 
-type Tab = "overview" | "groups" | "members" | "commissions" | "referrals" | "analytics";
+type Tab = "overview" | "groups" | "members" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements" | "risk" | "zones" | "analytics";
 
 export default function DriverGroupsAdmin() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -91,6 +94,11 @@ export default function DriverGroupsAdmin() {
           ["members", `Membres (${members.filter(m => m.status === "active").length})`],
           ["commissions", `Commissions (${commissions.length})`],
           ["referrals", `Parrainages (${referrals.length})`],
+          ["campaigns", "Campagnes"],
+          ["contracts", "Contrats"],
+          ["statements", "Relevés"],
+          ["risk", "Risque"],
+          ["zones", "Zones"],
           ["analytics", "Analytics"],
         ] as [Tab, string][]).map(([k, l]) => (
           <FilterChip key={k} label={l} active={tab === k} onClick={() => setTab(k)} />
@@ -109,6 +117,16 @@ export default function DriverGroupsAdmin() {
         <CommissionsTable rows={commissions} groupById={groupById} onChanged={reload} />
       ) : tab === "referrals" ? (
         <ReferralsTable rows={referrals} groupById={groupById} onChanged={reload} />
+      ) : tab === "campaigns" ? (
+        <CampaignsPanel groups={groups} onChanged={reload} />
+      ) : tab === "contracts" ? (
+        <ContractsPanel groups={groups} />
+      ) : tab === "statements" ? (
+        <StatementsPanel groups={groups} />
+      ) : tab === "risk" ? (
+        <RiskQueuePanel referrals={referrals} commissions={commissions} onChanged={reload} />
+      ) : tab === "zones" ? (
+        <ZoneCoveragePanel />
       ) : (
         <AnalyticsPanel groupById={groupById} />
       )}

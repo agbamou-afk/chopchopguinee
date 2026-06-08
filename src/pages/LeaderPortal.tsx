@@ -7,12 +7,14 @@ import { Seo } from "@/components/Seo";
 import {
   leaderGetMyGroup, leaderListMyMembers, leaderListMyCommissions,
   leaderListMyReferrals, leaderGetMyStats, type LeaderMember,
+  leaderListMyCampaigns, leaderListMyContracts, leaderListMyStatements,
 } from "@/lib/leader/driverGroup";
 import { formatGnf, type DriverGroup, type DriverGroupCommission, type DriverReferral, type DriverGroupStats } from "@/lib/admin/driverGroups";
+import type { RecruitmentCampaign, GroupContract, PayoutStatement } from "@/lib/admin/driverGroupsV3";
 import { Users2, Coins, Gift, Map as MapIcon, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-type Tab = "overview" | "drivers" | "commissions" | "referrals";
+type Tab = "overview" | "drivers" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements";
 
 export default function LeaderPortal() {
   const { user, ready: authReady } = useAuth();
@@ -24,6 +26,9 @@ export default function LeaderPortal() {
   const [commissions, setCommissions] = useState<DriverGroupCommission[]>([]);
   const [referrals, setReferrals] = useState<DriverReferral[]>([]);
   const [stats, setStats] = useState<DriverGroupStats | null>(null);
+  const [campaigns, setCampaigns] = useState<RecruitmentCampaign[]>([]);
+  const [contracts, setContracts] = useState<GroupContract[]>([]);
+  const [statements, setStatements] = useState<PayoutStatement[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -37,11 +42,13 @@ export default function LeaderPortal() {
         if (cancel) return;
         if (!g) { setGroup(null); setLoading(false); return; }
         setGroup(g);
-        const [m, c, r, s] = await Promise.all([
+        const [m, c, r, s, ca, co, st] = await Promise.all([
           leaderListMyMembers(), leaderListMyCommissions(), leaderListMyReferrals(), leaderGetMyStats(30),
+          leaderListMyCampaigns(), leaderListMyContracts(), leaderListMyStatements(),
         ]);
         if (cancel) return;
         setMembers(m); setCommissions(c); setReferrals(r); setStats(s);
+        setCampaigns(ca); setContracts(co); setStatements(st);
       } catch (e: any) {
         if (!cancel) setErr(e?.message ?? String(e));
       } finally {
@@ -148,6 +155,9 @@ export default function LeaderPortal() {
           ["drivers", `Chauffeurs (${members.filter(m => m.status === "active").length})`],
           ["commissions", `Commissions (${commissions.length})`],
           ["referrals", `Parrainages (${referrals.length})`],
+          ["campaigns", `Campagnes (${campaigns.length})`],
+          ["contracts", `Contrats (${contracts.length})`],
+          ["statements", `Relevés (${statements.length})`],
         ] as [Tab, string][]).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)}
             className={`px-3 py-1.5 text-xs rounded-full border ${tab === k ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>
@@ -221,6 +231,59 @@ export default function LeaderPortal() {
                 </p>
               </div>
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted">{r.status}</span>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {tab === "campaigns" && (
+        <Card className="p-3 space-y-2">
+          {campaigns.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Aucune campagne pour votre groupe.</p>
+          ) : campaigns.map(c => (
+            <div key={c.id} className="border-b last:border-b-0 border-border/40 pb-2 last:pb-0 text-sm space-y-1">
+              <div className="flex justify-between"><p className="font-medium">{c.name}</p><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted">{c.status}</span></div>
+              <p className="text-[11px] text-muted-foreground">
+                Cible: {c.target_driver_count} chauffeurs · {c.target_completed_rides} courses · Bonus {formatGnf(c.signup_bonus_gnf)} · {c.milestone_rule}
+              </p>
+              {(c.start_date || c.end_date) && (
+                <p className="text-[11px] text-muted-foreground">{c.start_date ?? "—"} → {c.end_date ?? "—"}</p>
+              )}
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {tab === "contracts" && (
+        <Card className="p-3 space-y-2">
+          {contracts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Aucun contrat enregistré.</p>
+          ) : contracts.map(c => (
+            <div key={c.id} className="border-b last:border-b-0 border-border/40 pb-2 last:pb-0 text-sm space-y-1">
+              <div className="flex justify-between"><p className="font-medium">{c.name}</p><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted">{c.status}</span></div>
+              <p className="text-[11px] text-muted-foreground">
+                Cibles: {c.target_driver_count} chauffeurs · {c.target_completed_rides} courses · {formatGnf(c.target_gross_earnings_gnf)}
+              </p>
+              <p className="text-[11px] text-muted-foreground">{c.period_start ?? "—"} → {c.period_end ?? "—"}</p>
+            </div>
+          ))}
+          <p className="text-[10px] text-muted-foreground pt-2 border-t border-border/40">
+            Lecture seule. Pour toute modification, contactez l'admin CHOP CHOP.
+          </p>
+        </Card>
+      )}
+
+      {tab === "statements" && (
+        <Card className="p-3 space-y-2">
+          {statements.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Aucun relevé finalisé.</p>
+          ) : statements.map(s => (
+            <div key={s.id} className="flex justify-between text-sm border-b last:border-b-0 border-border/40 pb-2 last:pb-0">
+              <div>
+                <p className="font-medium">{s.period_start} → {s.period_end}</p>
+                <p className="text-[11px] text-muted-foreground">{s.status} · Comm {formatGnf(s.commissions_total_gnf)} · Bonus {formatGnf(s.signup_bonuses_total_gnf)}</p>
+              </div>
+              <p className="font-medium tabular-nums">{formatGnf(s.total_due_gnf)}</p>
             </div>
           ))}
         </Card>
