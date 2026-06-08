@@ -36,8 +36,6 @@ interface Suggestion {
   district?: string | null;
 }
 
-const POI_KEYWORDS = ["rond-point", "marché", "carrefour", "commune", "quartier", "place"];
-
 interface RideBookingProps {
   type: "moto" | "toktok";
   onClose: () => void;
