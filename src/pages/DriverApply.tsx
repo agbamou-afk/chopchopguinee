@@ -7,6 +7,7 @@ import { useDriverProfile, type DriverVehicle } from "@/hooks/useDriverProfile";
 import { toast } from "@/hooks/use-toast";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { cn } from "@/lib/utils";
+import { validateReferralCode } from "@/lib/admin/driverGroups";
 
 const VEHICLE_OPTIONS: Array<{ id: DriverVehicle; label: string; sub: string; icon: typeof Bike }> = [
   { id: "moto", label: "Moto", sub: "Course rapide en ville", icon: Bike },
@@ -37,6 +38,8 @@ export default function DriverApply() {
   const [driverPhoto, setDriverPhoto] = useState<string | null>(profile?.driver_photo_url ?? null);
   const [idDoc, setIdDoc] = useState<string | null>(profile?.id_doc_url ?? null);
   const [vehiclePhoto, setVehiclePhoto] = useState<string | null>(profile?.vehicle_photo_url ?? null);
+  const [referralCode, setReferralCode] = useState<string>("");
+  const [referralCheck, setReferralCheck] = useState<{ state: "idle" | "checking" | "valid" | "invalid"; group_name?: string }>({ state: "idle" });
 
   if (!user) {
     navigate("/auth?redirect=/driver/apply");
@@ -80,6 +83,7 @@ export default function DriverApply() {
         zones,
         missing_documents: missingDocuments,
         required_documents_status: missingDocuments ? "incomplete" : "submitted",
+        referral_code: referralCode.trim() || null,
       },
     });
     setSubmitting(false);
