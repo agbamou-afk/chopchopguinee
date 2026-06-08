@@ -242,6 +242,61 @@ export function ProductFormSheet({
             <Textarea id="p-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
 
+          <div className="rounded-xl border border-border/60 p-3 space-y-3 bg-muted/30">
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={negotiable}
+                onChange={(e) => {
+                  setNegotiable(e.target.checked);
+                  if (!e.target.checked) { setAllowOffers(false); setMinPrice(""); }
+                }}
+              />
+              <span>
+                <span className="font-medium">Prix négociable</span>
+                <span className="block text-[11px] text-muted-foreground">
+                  Le prix saisi devient votre <b>1er prix</b> public.
+                </span>
+              </span>
+            </label>
+            {negotiable && (
+              <>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={allowOffers}
+                    onChange={(e) => setAllowOffers(e.target.checked)}
+                  />
+                  <span>
+                    <span className="font-medium">Accepter les offres des clients</span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      Les clients pourront proposer un prix. Vous gardez le contrôle (accepter / refuser / contre-offre).
+                    </span>
+                  </span>
+                </label>
+                {allowOffers && (
+                  <div>
+                    <Label htmlFor="p-min">Dernier prix (privé — jamais montré au client)</Label>
+                    <Input
+                      id="p-min"
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                      placeholder="Ex. 80000"
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Sert d'aide-mémoire pour vous. Seul vous et les administrateurs peuvent le voir.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
           {!isEdit && onToggleFastAdd && (
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
               <input type="checkbox" checked={!!fastAdd} onChange={(e) => onToggleFastAdd(e.target.checked)} />
