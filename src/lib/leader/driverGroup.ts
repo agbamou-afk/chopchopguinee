@@ -1,3 +1,4 @@
+import type { FieldCheckin } from "@/lib/admin/driverGroupsV4";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   DriverGroup, DriverGroupCommission, DriverReferral, DriverGroupStats,
@@ -77,4 +78,16 @@ export async function leaderListMyStatementItems(statementId: string): Promise<P
     .eq("statement_id", statementId).order("created_at", { ascending: true });
   if (error) throw error;
   return (data ?? []) as unknown as PayoutStatementItem[];
+}
+
+export async function leaderListMyCheckins(limit = 100): Promise<FieldCheckin[]> {
+  const { data, error } = await supabase.rpc("leader_list_my_checkins", { p_limit: limit });
+  if (error) throw error;
+  return (data ?? []) as unknown as FieldCheckin[];
+}
+
+export async function leaderCreateCheckin(payload: Record<string, unknown>): Promise<string> {
+  const { data, error } = await supabase.rpc("leader_create_field_checkin", { payload: payload as any });
+  if (error) throw error;
+  return data as string;
 }

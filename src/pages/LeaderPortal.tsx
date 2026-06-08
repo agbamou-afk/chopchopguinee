@@ -8,13 +8,17 @@ import {
   leaderGetMyGroup, leaderListMyMembers, leaderListMyCommissions,
   leaderListMyReferrals, leaderGetMyStats, type LeaderMember,
   leaderListMyCampaigns, leaderListMyContracts, leaderListMyStatements,
+  leaderListMyCheckins, leaderCreateCheckin,
 } from "@/lib/leader/driverGroup";
 import { formatGnf, type DriverGroup, type DriverGroupCommission, type DriverReferral, type DriverGroupStats } from "@/lib/admin/driverGroups";
 import type { RecruitmentCampaign, GroupContract, PayoutStatement } from "@/lib/admin/driverGroupsV3";
+import type { FieldCheckin } from "@/lib/admin/driverGroupsV4";
 import { Users2, Coins, Gift, Map as MapIcon, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
-type Tab = "overview" | "drivers" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements";
+type Tab = "overview" | "drivers" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements" | "checkins";
 
 export default function LeaderPortal() {
   const { user, ready: authReady } = useAuth();
@@ -29,6 +33,8 @@ export default function LeaderPortal() {
   const [campaigns, setCampaigns] = useState<RecruitmentCampaign[]>([]);
   const [contracts, setContracts] = useState<GroupContract[]>([]);
   const [statements, setStatements] = useState<PayoutStatement[]>([]);
+  const [checkins, setCheckins] = useState<FieldCheckin[]>([]);
+  const [checkinOpen, setCheckinOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -42,13 +48,15 @@ export default function LeaderPortal() {
         if (cancel) return;
         if (!g) { setGroup(null); setLoading(false); return; }
         setGroup(g);
-        const [m, c, r, s, ca, co, st] = await Promise.all([
+        const [m, c, r, s, ca, co, st, ck] = await Promise.all([
           leaderListMyMembers(), leaderListMyCommissions(), leaderListMyReferrals(), leaderGetMyStats(30),
           leaderListMyCampaigns(), leaderListMyContracts(), leaderListMyStatements(),
+          leaderListMyCheckins(50),
         ]);
         if (cancel) return;
         setMembers(m); setCommissions(c); setReferrals(r); setStats(s);
         setCampaigns(ca); setContracts(co); setStatements(st);
+        setCheckins(ck);
       } catch (e: any) {
         if (!cancel) setErr(e?.message ?? String(e));
       } finally {
@@ -149,6 +157,28 @@ export default function LeaderPortal() {
         </Card>
       )}
 
+      {(commissions.some(c => (c as any).risk_status && (c as any).risk_status !== "clear")
+        || referrals.some(r => (r as any).risk_status && (r as any).risk_status !== "clear")) && (
+        <Card className="p-3 text-sm bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30">
+          Certains paiements peuvent être temporairement en vérification par l'équipe CHOPCHOP.
+        </Card>
+      )}
+
+      <Sheet open={checkinOpen} onOpenChange={setCheckinOpen}>
+        <SheetTrigger asChild>
+          <Button size="sm" variant="outline" className="w-full">
+            <MapIcon className="w-4 h-4 mr-1" /> Nouveau check-in terrain
+          </Button>
+        </SheetTrigger>
+        <SheetContent className="w-full sm:max-w-md">
+          <SheetHeader><SheetTitle>Check-in terrain</SheetTitle></SheetHeader>
+          <CheckinForm groupId={group.id} onSaved={async () => {
+            setCheckinOpen(false);
+            try { setCheckins(await leaderListMyCheckins(50)); } catch {}
+          }} />
+        </SheetContent>
+      </Sheet>
+
       <div className="flex flex-wrap gap-2">
         {([
           ["overview", "Vue d'ensemble"],
@@ -158,6 +188,7 @@ export default function LeaderPortal() {
           ["campaigns", `Campagnes (${campaigns.length})`],
           ["contracts", `Contrats (${contracts.length})`],
           ["statements", `Relevés (${statements.length})`],
+          ["checkins", `Check-ins (${checkins.length})`],
         ] as [Tab, string][]).map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)}
             className={`px-3 py-1.5 text-xs rounded-full border ${tab === k ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>
@@ -288,6 +319,88 @@ export default function LeaderPortal() {
           ))}
         </Card>
       )}
+
+      {tab === "checkins" && (
+        <Card className="p-3 space-y-2">
+          {checkins.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Aucun check-in enregistré.</p>
+          ) : checkins.map(c => (
+            <div key={c.id} className="border-b last:border-b-0 border-border/40 pb-2 last:pb-0 text-sm space-y-1">
+              <div className="flex justify-between">
+                <p className="font-medium text-[12px]">{c.checkin_type}</p>
+                <span className="text-[10px] text-muted-foreground">{new Date(c.created_at).toLocaleString("fr-FR")}</span>
+              </div>
+              {c.notes && <p className="text-[11px] text-muted-foreground">{c.notes}</p>}
+              {(c.lat && c.lng) && (
+                <p className="text-[10px] text-muted-foreground tabular-nums">{c.lat.toFixed(5)}, {c.lng.toFixed(5)}</p>
+              )}
+            </div>
+          ))}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function CheckinForm({ groupId, onSaved }: { groupId: string; onSaved: () => void }) {
+  const [type, setType] = useState<string>("field_visit");
+  const [notes, setNotes] = useState("");
+  const [coords, setCoords] = useState<{ lat?: number; lng?: number; acc?: number }>({});
+  const [saving, setSaving] = useState(false);
+
+  const capture = () => {
+    if (!navigator.geolocation) { toast({ title: "Géolocalisation indisponible", variant: "destructive" }); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy }),
+      () => toast({ title: "Position refusée", description: "Vous pouvez quand même enregistrer sans localisation." }),
+      { enableHighAccuracy: true, timeout: 10_000 },
+    );
+  };
+
+  const submit = async () => {
+    if (type === "issue_report" && !notes.trim()) {
+      toast({ title: "Notes obligatoires pour un signalement", variant: "destructive" }); return;
+    }
+    setSaving(true);
+    try {
+      await leaderCreateCheckin({
+        group_id: groupId,
+        checkin_type: type,
+        notes,
+        lat: coords.lat, lng: coords.lng, accuracy_m: coords.acc,
+      });
+      toast({ title: "Check-in enregistré" });
+      onSaved();
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="space-y-3 mt-4">
+      <div>
+        <label className="text-xs text-muted-foreground">Type</label>
+        <select className="w-full mt-1 bg-background border border-border rounded h-9 px-2 text-sm"
+          value={type} onChange={e => setType(e.target.value)}>
+          <option value="field_visit">Visite terrain</option>
+          <option value="recruitment_visit">Recrutement</option>
+          <option value="driver_meeting">Réunion chauffeurs</option>
+          <option value="market_station">Station marché</option>
+          <option value="issue_report">Signalement</option>
+          <option value="training">Formation</option>
+        </select>
+      </div>
+      <div>
+        <label className="text-xs text-muted-foreground">Notes</label>
+        <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Que s'est-il passé sur le terrain ?" />
+      </div>
+      <div className="flex items-center justify-between gap-2 text-[11px]">
+        <Button size="sm" variant="outline" onClick={capture}>Capturer ma position</Button>
+        {coords.lat ? (
+          <span className="text-muted-foreground tabular-nums">{coords.lat.toFixed(4)}, {coords.lng!.toFixed(4)}{coords.acc ? ` ±${Math.round(coords.acc)}m` : ""}</span>
+        ) : <span className="text-muted-foreground">Position optionnelle</span>}
+      </div>
+      <Button className="w-full" disabled={saving} onClick={submit}>{saving ? "Envoi…" : "Enregistrer"}</Button>
     </div>
   );
 }
