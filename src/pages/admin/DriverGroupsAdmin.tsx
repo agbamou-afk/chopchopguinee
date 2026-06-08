@@ -295,32 +295,38 @@ function ReferralsTable({ rows, groupById, onChanged }: {
   );
 }
 
-function CreateGroupSheet({ open, onOpenChange, onCreated }: {
-  open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void;
+function CreateGroupSheet({ open, onOpenChange, onCreated, zones }: {
+  open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void; zones: Zone[];
 }) {
   const [form, setForm] = useState({
     name: "", leader_name: "", leader_phone: "",
     commission_percent: "1.00", signup_bonus_gnf: "0",
     assigned_zones: "", referral_code: "", notes: "",
   });
+  const [zoneIds, setZoneIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
     if (!form.name.trim()) { toast({ title: "Nom requis", variant: "destructive" }); return; }
     setSaving(true);
     try {
+      const zoneNamesFromIds = zones.filter(z => zoneIds.includes(z.id)).map(zoneLabel);
+      const freeFormZones = form.assigned_zones.split(",").map(z => z.trim()).filter(Boolean);
+      const mergedNames = zoneNamesFromIds.length > 0 ? zoneNamesFromIds : freeFormZones;
       await createDriverGroup({
         name: form.name.trim(),
         leader_name: form.leader_name || null,
         leader_phone: form.leader_phone || null,
         commission_percent: Number(form.commission_percent) || 1,
         signup_bonus_gnf: Number(form.signup_bonus_gnf) || 0,
-        assigned_zones: form.assigned_zones.split(",").map(z => z.trim()).filter(Boolean),
+        assigned_zones: mergedNames,
+        assigned_zone_ids: zoneIds,
         referral_code: form.referral_code || null,
         notes: form.notes || null,
       });
       toast({ title: "Groupe créé" });
       setForm({ name: "", leader_name: "", leader_phone: "", commission_percent: "1.00", signup_bonus_gnf: "0", assigned_zones: "", referral_code: "", notes: "" });
+      setZoneIds([]);
       onOpenChange(false);
       onCreated();
     } catch (e: any) {
