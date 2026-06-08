@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { MapPin, Navigation, X, Bike, Car, Clock, CreditCard, Loader2, LocateFixed, CheckCircle2 } from "lucide-react";
+import { MapPin, Navigation, X, Bike, Car, Loader2, LocateFixed, CheckCircle2, Map as MapIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChopMap, type ChopMapHandle, RoutePolyline, NearbyAvailableDrivers, DraggablePickupPin } from "@/components/map";
 import { Marker } from "react-map-gl";
 import { MapMarker } from "@/components/map/MapMarker";
-import { RoutingService, decodePolyline, bbox as bboxOf, formatDistance, formatDuration } from "@/lib/maps";
+import { RoutingService, formatDistance, formatDuration, searchPlaces, reverseGeocode } from "@/lib/maps";
 import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
 import { searchConakryPlaces, categoryLabel, confidenceLabel } from "@/lib/locations/searchPlaces";
 import { useLiveUserLocation, CONAKRY_FALLBACK } from "@/lib/location/useLiveUserLocation";
@@ -29,14 +29,12 @@ interface Suggestion {
   sub: string;
   coords: [number, number];
   kind: string;
-  source?: 'gazetteer' | 'nominatim';
+  source?: 'gazetteer' | 'nominatim' | 'google';
   placeId?: string;
   confidenceLabel?: string | null;
   category?: string;
   district?: string | null;
 }
-
-const POI_KEYWORDS = ["rond-point", "marché", "carrefour", "commune", "quartier", "place"];
 
 interface RideBookingProps {
   type: "moto" | "toktok";
@@ -73,6 +71,10 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const [destCoords, setDestCoords] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
   const [activeField, setActiveField] = useState<"pickup" | "destination" | null>(null);
+  // When set, the next map tap assigns to this field. Survives blur so the
+  // user can dismiss the keyboard and tap the map.
+  const [mapPickMode, setMapPickMode] = useState<"pickup" | "destination" | null>(null);
+  const [searchUnavailable, setSearchUnavailable] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [searching, setSearching] = useState(false);
   const [routePolyline, setRoutePolyline] = useState<string | null>(null);
@@ -91,35 +93,30 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const option = rideOptions[type];
   const Icon = option.icon;
 
-  // Reverse-geocode a coordinate; returns the best short label or null.
+  // Reverse-geocode through the backend (Google → Nominatim). Always returns
+  // a usable label so map taps never appear to fail.
   const reverseLabel = async (lat: number, lng: number): Promise<string> => {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`,
-        { headers: { "Accept-Language": "fr" } },
-      );
-      const d = await res.json();
-      return d?.display_name?.split(",").slice(0, 2).join(",") ?? "Position sélectionnée";
-    } catch {
-      return "Position sélectionnée";
-    }
+    const r = await reverseGeocode(lat, lng);
+    return r?.label ?? "Position sélectionnée";
   };
 
   const handleMapTap = async ({ lat, lng }: { lat: number; lng: number }) => {
-    // Respect the focused field; otherwise first tap sets pickup, next taps set destination.
-    const target = activeField ?? (!pickupCoords ? "pickup" : "destination");
+    // Priority: explicit "choose on map" mode > focused input > first-empty heuristic.
+    const target = mapPickMode ?? activeField ?? (!pickupCoords ? "pickup" : "destination");
     if (target === "pickup") {
       setPickupCoords([lat, lng]);
       setPickupIsReal(true);
       const label = await reverseLabel(lat, lng);
       setPickup(label);
       setActiveField(null);
+      setMapPickMode(null);
       return;
     }
     setDestCoords([lat, lng]);
     const label = await reverseLabel(lat, lng);
     setDestination(label);
     setActiveField(null);
+    setMapPickMode(null);
   };
 
   // Visual map center — falls back to Conakry but is never sent as pickup.
@@ -163,15 +160,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         setPickupCoords(coords);
         setPickupIsReal(true);
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords[0]}&lon=${coords[1]}&zoom=16`,
-          );
-          const data = await res.json();
-          setPickup(data.display_name?.split(",").slice(0, 2).join(",") ?? "Ma position");
-        } catch {
-          setPickup("Ma position");
-        }
+        setPickup(await reverseLabel(coords[0], coords[1]) || "Ma position");
         setLocating(false);
       },
       () => {
@@ -185,8 +174,8 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   // Search Nominatim biased around pickup
   const runSearch = async (q: string) => {
     setSearching(true);
+    setSearchUnavailable(false);
     try {
-      const [lat, lng] = pickupCoords ?? [CONAKRY_FALLBACK.lat, CONAKRY_FALLBACK.lng];
       // 1) Local Conakry gazetteer first — handles "km5", "kippe", "hamdalaye", etc.
       const local = searchConakryPlaces(q, { limit: 6 }).filter(
         (p) => p.latitude != null && p.longitude != null,
@@ -202,32 +191,31 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
         category: categoryLabel(p.category),
         district: p.commune,
       }));
-      const delta = 0.25;
-      const viewbox = `${lng - delta},${lat + delta},${lng + delta},${lat - delta}`;
-      const query = q.trim().length < 2 ? POI_KEYWORDS.join(" OR ") : q;
-      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&countrycodes=gn&viewbox=${viewbox}&bounded=1&q=${encodeURIComponent(query)}`;
-      const res = await fetch(url, { headers: { "Accept-Language": "fr" } });
-      const data = await res.json();
-      const remote: Suggestion[] = (data as Array<Record<string, unknown>>).map((d) => {
-        const a = (d.address ?? {}) as Record<string, string>;
-        const sub = [a.suburb, a.city_district, a.city, a.town, a.village, a.county]
-          .filter(Boolean)
-          .slice(0, 2)
-          .join(" • ");
-        return {
-          label: (d.name as string) || (d.display_name as string).split(",")[0],
-          sub: sub || (d.display_name as string).split(",").slice(1, 3).join(", "),
-          coords: [parseFloat(d.lat as string), parseFloat(d.lon as string)],
-          kind: (d.type as string) ?? "",
-          source: 'nominatim' as const,
-        };
-      });
-      // Deduplicate remote rows that duplicate a gazetteer hit by label
+      // 2) Backend provider search (Google → Nominatim fallback). Never exposes keys.
+      let remote: Suggestion[] = [];
+      if (q.trim().length >= 2) {
+        const proximity = pickupCoords
+          ? { lat: pickupCoords[0], lng: pickupCoords[1] }
+          : live.coords
+            ? { lat: live.coords.lat, lng: live.coords.lng }
+            : undefined;
+        const { results, provider } = await searchPlaces(q, { proximity, limit: 8 });
+        if (provider === 'error') setSearchUnavailable(true);
+        remote = results.map((r) => ({
+          label: r.label,
+          sub: r.secondary_label ?? '',
+          coords: [r.lat, r.lng],
+          kind: r.category ?? '',
+          source: r.source,
+          placeId: r.id,
+          confidenceLabel: r.confidence === 'approximate' ? 'Position approximative' : null,
+        }));
+      }
       const localLabels = new Set(localItems.map((i) => i.label.toLowerCase()));
-      const merged = [...localItems, ...remote.filter((r) => !localLabels.has(r.label.toLowerCase()))];
-      setSuggestions(merged);
+      setSuggestions([...localItems, ...remote.filter((r) => !localLabels.has(r.label.toLowerCase()))]);
     } catch {
-      // Network/external geocoder failure — still surface gazetteer matches
+      // Network failure — still surface gazetteer matches and offer manual pin.
+      setSearchUnavailable(true);
       const local = searchConakryPlaces(q, { limit: 6 }).filter(
         (p) => p.latitude != null && p.longitude != null,
       );
@@ -412,6 +400,11 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
                   Tapez un rond-point, marché, KM, commune ou quartier
                 </div>
               )}
+              {!searching && searchUnavailable && (
+                <div className="p-3 text-xs text-amber-600 dark:text-amber-400 border-b border-border/60">
+                  Recherche indisponible. Choisissez le point sur la carte.
+                </div>
+              )}
               {suggestions.map((s, i) => (
                 <button
                   key={i}
@@ -438,6 +431,20 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
                   </div>
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const target = activeField ?? 'destination';
+                  setMapPickMode(target);
+                  setActiveField(null);
+                  setSuggestions([]);
+                  (document.activeElement as HTMLElement | null)?.blur?.();
+                }}
+                className="w-full p-3 text-xs font-semibold text-primary hover:bg-muted flex items-center justify-center gap-2 border-t border-border/60"
+              >
+                <MapIcon className="w-3.5 h-3.5" />
+                Choisir {(activeField ?? 'destination') === 'pickup' ? 'le départ' : 'la destination'} sur la carte
+              </button>
               <button
                 type="button"
                 onClick={() => setActiveField(null)}
@@ -497,12 +504,22 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
             </Marker>
           )}
         </ChopMap>
-        {!pickupCoords && (
+        {mapPickMode === 'pickup' && (
+          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-3 py-1.5 text-[11px] font-semibold max-w-[88%] text-center">
+            Touchez la carte pour choisir le départ
+          </div>
+        )}
+        {mapPickMode === 'destination' && (
+          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-3 py-1.5 text-[11px] font-semibold max-w-[88%] text-center">
+            Touchez la carte pour choisir la destination
+          </div>
+        )}
+        {!mapPickMode && !pickupCoords && (
           <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
             Touchez la carte pour choisir votre point de départ.
           </div>
         )}
-        {pickupCoords && !destCoords && (
+        {!mapPickMode && pickupCoords && !destCoords && (
           <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
             Touchez la carte pour placer la destination.
           </div>
