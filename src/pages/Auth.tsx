@@ -71,9 +71,21 @@ export default function Auth() {
   const [params] = useSearchParams();
   const nextParam = params.get("next");
   const safeNext = nextParam && nextParam.startsWith("/") ? nextParam : null;
+  const modeParam = params.get("mode");
+  const intentParam = params.get("intent");
+  const initialMode: Mode =
+    modeParam === "signup" || intentParam === "driver" || intentParam === "merchant" || intentParam === "client"
+      ? "signup"
+      : modeParam === "signin"
+        ? "signin"
+        : "signin";
+  const initialIntent: SignupIntent =
+    intentParam === "driver" || intentParam === "merchant" || intentParam === "client"
+      ? (intentParam as SignupIntent)
+      : "client";
   const { ready, isLoggedIn, isAdmin, isProfileComplete, signupIntent, requestedDriverVehicle } = useAuth();
 
-  const [mode, setMode] = useState<Mode>("signin");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
   const [phone, setPhone] = useState("");
@@ -81,7 +93,7 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [acceptLegal, setAcceptLegal] = useState(false);
-  const [intent, setIntent] = useState<SignupIntent>("client");
+  const [intent, setIntent] = useState<SignupIntent>(initialIntent);
   const [vehicle, setVehicle] = useState<DriverVehicleIntent>("moto");
   const [pendingConfirm, setPendingConfirm] = useState<
     { email: string; intent: SignupIntent } | null
