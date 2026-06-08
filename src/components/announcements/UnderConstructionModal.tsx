@@ -91,7 +91,7 @@ export function UnderConstructionModal({ open, onClose }: Props) {
               {/* Badge */}
               <div className="self-start inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f7ead0]/90 text-[#0f3d2e] text-[11px] font-semibold tracking-wide uppercase">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#e8a23a]" />
-                En préparation
+                Bêta
               </div>
 
               {/* Spacer pushes copy to bottom over the dark gradient */}
@@ -106,11 +106,34 @@ export function UnderConstructionModal({ open, onClose }: Props) {
                 </h2>
                 <p className="text-[15px] leading-relaxed text-[#f7ead0]/90">
                   Nous finalisons encore l'application. Vous pouvez déjà la
-                  parcourir et découvrir l'expérience, mais certaines
-                  fonctionnalités sont encore en cours de mise en place.
+                  parcourir et découvrir l'expérience pendant que nous préparons
+                  le lancement.
                 </p>
-                <p className="text-[12.5px] text-[#f7ead0]/70">
-                  Merci de votre patience — le lancement complet approche.
+
+                {/* Recruitment callouts — light pills, Guinean pilot energy */}
+                <div className="mt-4 space-y-2">
+                  <div className="rounded-xl bg-[#f7ead0]/8 border border-[#f7ead0]/12 px-3.5 py-2.5">
+                    <p className="text-[12.5px] leading-snug text-[#f7ead0]/90">
+                      Vous êtes chauffeur ou coursier ?{" "}
+                      <span className="font-semibold text-[#e8a23a]">
+                        CHOPCHOP recrute ses premiers partenaires.
+                      </span>
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-[#f7ead0]/8 border border-[#f7ead0]/12 px-3.5 py-2.5">
+                    <p className="text-[12.5px] leading-snug text-[#f7ead0]/90">
+                      Vous êtes marchand ?{" "}
+                      <span className="font-semibold text-[#e8a23a]">
+                        Inscrivez votre boutique dès maintenant pour préparer
+                        votre catalogue et toucher plus de clients.
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-[11.5px] text-[#f7ead0]/60 leading-relaxed">
+                  Les premiers partenaires nous aideront à construire le réseau
+                  CHOPCHOP à Conakry.
                 </p>
               </div>
 
