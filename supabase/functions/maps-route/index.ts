@@ -304,7 +304,8 @@ Deno.serve(async (req) => {
       input: {}, status: 'error',
       error_message: (e as Error).message, latency_ms: Date.now() - start,
     });
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
+    console.error('maps-route error', e);
+    return new Response(JSON.stringify({ ok: false, code: 'ROUTE_UNAVAILABLE', error: 'Itinéraire indisponible. Réessayez.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
