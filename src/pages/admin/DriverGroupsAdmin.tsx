@@ -413,3 +413,66 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function AnalyticsPanel({ groupById }: { groupById: Record<string, DriverGroup> }) {
+  const [rows, setRows] = useState<DriverGroupStats[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState(30);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    const from = new Date(Date.now() - days * 86_400_000);
+    adminDriverGroupStats({ from, to: new Date() })
+      .then((r) => { if (!cancelled) setRows(r); })
+      .catch((e: any) => toast({ title: "Erreur analytics", description: e?.message, variant: "destructive" }))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [days]);
+
+  const totals = useMemo(() => rows.reduce((acc, r) => ({
+    active_drivers: acc.active_drivers + Number(r.active_drivers || 0),
+    rides_completed: acc.rides_completed + Number(r.rides_completed || 0),
+    gross: acc.gross + Number(r.gross_driver_earnings_gnf || 0),
+    pending: acc.pending + Number(r.commissions_pending_gnf || 0),
+    paid: acc.paid + Number(r.commissions_paid_gnf || 0),
+    bonus_eligible: acc.bonus_eligible + Number(r.signup_bonus_eligible_count || 0),
+    bonus_paid: acc.bonus_paid + Number(r.signup_bonus_paid_gnf || 0),
+  }), { active_drivers: 0, rides_completed: 0, gross: 0, pending: 0, paid: 0, bonus_eligible: 0, bonus_paid: 0 }), [rows]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2 items-center">
+        <Label className="text-xs">Période :</Label>
+        {[7, 30, 90].map(d => (
+          <FilterChip key={d} label={`${d} j`} active={days === d} onClick={() => setDays(d)} />
+        ))}
+      </div>
+      <StatGrid items={[
+        { label: "Chauffeurs actifs", value: loading ? "…" : String(totals.active_drivers), icon: Users2 },
+        { label: "Courses terminées", value: loading ? "…" : String(totals.rides_completed), icon: Coins },
+        { label: "Gains chauffeurs", value: loading ? "…" : formatGnf(totals.gross), icon: Coins },
+        { label: "Commissions payées", value: loading ? "…" : formatGnf(totals.paid), icon: Coins },
+      ]} />
+      {loading ? (
+        <Card className="p-6 text-center text-sm text-muted-foreground">Chargement…</Card>
+      ) : rows.length === 0 ? (
+        <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">Aucune donnée sur la période.</Card>
+      ) : (
+        <DataTable
+          columns={["Groupe", "Chauffeurs actifs", "Courses", "Gains chauffeurs", "Commissions en attente", "Commissions payées", "Bonus éligibles", "Bonus payés"]}
+          rows={rows.map(r => [
+            groupById[r.group_id]?.name ?? "—",
+            String(r.active_drivers),
+            String(r.rides_completed),
+            formatGnf(r.gross_driver_earnings_gnf),
+            formatGnf(r.commissions_pending_gnf),
+            formatGnf(r.commissions_paid_gnf),
+            String(r.signup_bonus_eligible_count),
+            formatGnf(r.signup_bonus_paid_gnf),
+          ])}
+        />
+      )}
+    </div>
+  );
+}
