@@ -224,7 +224,9 @@ export default function WalletReconciliation() {
   // E. Conflits : events needs_review/rejected + customer topups needs_review.
   const qConflicts = useMemo(() => {
     const evs = events.filter(
-      (e) => e.processing_status === "needs_review" || e.processing_status === "rejected",
+      (e) => e.processing_status === "needs_review"
+          || e.processing_status === "rejected"
+          || e.processing_status === "credit_failed",
     );
     return evs;
   }, [events]);
@@ -273,6 +275,8 @@ export default function WalletReconciliation() {
       toast.message("Reçu déjà enregistré · aucun double-crédit");
     } else if (result.match?.status === "credited") {
       toast.success("Reçu enregistré · recharge créditée");
+    } else if (result.match?.status === "credit_failed") {
+      toast.error(`Reçu enregistré · crédit wallet ÉCHOUÉ : ${(result.match as { error?: string }).error ?? "erreur inconnue"}`);
     } else {
       toast.success("Reçu enregistré · matching lancé");
     }
