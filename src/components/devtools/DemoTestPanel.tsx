@@ -3,16 +3,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical, LogIn, Wallet, Car, Bell, Trash2, RefreshCw, User, ShieldCheck, Send } from "lucide-react";
+import { FlaskConical, Wallet, Car, Bell, Trash2, RefreshCw, User, ShieldCheck, Send, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { chopToast } from "@/lib/toast";
 import { notifications } from "@/lib/notifications";
 import { useAuth } from "@/contexts/AuthContext";
-
-const DEMO = {
-  client: { email: "demo.client@chopchop.gn", password: "demo1234", label: "Demo Client" },
-  driver: { email: "demo.driver@chopchop.gn", password: "demo1234", label: "Demo Chauffeur" },
-} as const;
 
 const DEFAULT_TEST_BALANCE = 100_000;
 
@@ -40,22 +35,6 @@ export function DemoTestPanel() {
     setBusy(key);
     try { await fn(); } finally { setBusy(null); }
   };
-
-  const quickLogin = (which: keyof typeof DEMO) =>
-    run(`login:${which}`, async () => {
-      await supabase.auth.signOut().catch(() => {});
-      const creds = DEMO[which];
-      const { error } = await supabase.auth.signInWithPassword({
-        email: creds.email,
-        password: creds.password,
-      });
-      if (error) {
-        chopToast.error(`Échec ${creds.label}`, { description: error.message });
-        return;
-      }
-      chopToast.success(`Connecté — ${creds.label}`);
-      setOpen(false);
-    });
 
   const resetActiveRides = () =>
     run("rides", async () => {
