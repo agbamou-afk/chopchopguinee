@@ -262,7 +262,14 @@ export async function uploadProductImage(opts: {
   const url = pub?.publicUrl as string;
   const { error: insErr } = await (supabase as any)
     .from("listing_images")
-    .insert({ listing_id: listingId, url, position: opts.position ?? 0 });
+    .insert({
+      listing_id: listingId,
+      url,
+      position: opts.position ?? 0,
+      image_type: "original",
+      is_primary: (opts.position ?? 0) === 0,
+      processing_status: "ready",
+    });
   if (insErr) throw insErr;
   return url;
 }
