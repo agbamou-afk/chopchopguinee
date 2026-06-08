@@ -211,28 +211,15 @@ export function DemoTestPanel() {
             <h4 className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
               Connexion rapide
             </h4>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!!busy}
-                onClick={() => quickLogin("client")}
-                className="gap-1.5"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                {busy === "login:client" ? "…" : "Client"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!!busy}
-                onClick={() => quickLogin("driver")}
-                className="gap-1.5"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                {busy === "login:driver" ? "…" : "Chauffeur"}
-              </Button>
-            </div>
+            <Card className="p-3 text-xs text-muted-foreground flex items-start gap-2">
+              <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <span>
+                Les comptes démo sont gérés par l'admin uniquement.
+                Connecte-toi via la page d'authentification standard avec tes
+                identifiants admin/démo — aucun mot de passe n'est embarqué
+                dans l'application.
+              </span>
+            </Card>
           </div>
 
           <div>
