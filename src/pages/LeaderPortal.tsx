@@ -376,6 +376,7 @@ function CheckinForm({ groupId, onSaved }: { groupId: string; onSaved: () => voi
   const [type, setType] = useState<string>("field_visit");
   const [notes, setNotes] = useState("");
   const [coords, setCoords] = useState<{ lat?: number; lng?: number; acc?: number }>({});
+  const [photo, setPhoto] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   const capture = () => {
@@ -393,11 +394,17 @@ function CheckinForm({ groupId, onSaved }: { groupId: string; onSaved: () => voi
     }
     setSaving(true);
     try {
+      let photo_url: string | null = null;
+      if (photo) {
+        try { photo_url = await uploadCheckinPhoto(groupId, photo); }
+        catch (e: any) { toast({ title: "Photo non envoyée", description: e?.message, variant: "destructive" }); }
+      }
       await leaderCreateCheckin({
         group_id: groupId,
         checkin_type: type,
         notes,
         lat: coords.lat, lng: coords.lng, accuracy_m: coords.acc,
+        photo_url,
       });
       toast({ title: "Check-in enregistré" });
       onSaved();
@@ -430,7 +437,35 @@ function CheckinForm({ groupId, onSaved }: { groupId: string; onSaved: () => voi
           <span className="text-muted-foreground tabular-nums">{coords.lat.toFixed(4)}, {coords.lng!.toFixed(4)}{coords.acc ? ` ±${Math.round(coords.acc)}m` : ""}</span>
         ) : <span className="text-muted-foreground">Position optionnelle</span>}
       </div>
+      <div>
+        <label className="text-xs text-muted-foreground">Photo (optionnelle, ≤ 5 Mo, jpg/png/webp)</label>
+        <input type="file" accept="image/jpeg,image/png,image/webp"
+          onChange={e => setPhoto(e.target.files?.[0] ?? null)}
+          className="block mt-1 w-full text-xs" />
+      </div>
       <Button className="w-full" disabled={saving} onClick={submit}>{saving ? "Envoi…" : "Enregistrer"}</Button>
+    </div>
+  );
+}
+
+function CheckinRow({ c }: { c: FieldCheckin }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (c.photo_url) signedCheckinPhotoUrl(c.photo_url, 600).then(setUrl);
+  }, [c.photo_url]);
+  return (
+    <div className="border-b last:border-b-0 border-border/40 pb-2 last:pb-0 text-sm flex gap-2">
+      {url && <a href={url} target="_blank" rel="noreferrer"><img src={url} alt="check-in" loading="lazy" className="w-14 h-14 rounded object-cover border border-border/40" /></a>}
+      <div className="flex-1 space-y-1">
+        <div className="flex justify-between">
+          <p className="font-medium text-[12px]">{c.checkin_type}</p>
+          <span className="text-[10px] text-muted-foreground">{new Date(c.created_at).toLocaleString("fr-FR")}</span>
+        </div>
+        {c.notes && <p className="text-[11px] text-muted-foreground">{c.notes}</p>}
+        {(c.lat && c.lng) && (
+          <p className="text-[10px] text-muted-foreground tabular-nums">{c.lat.toFixed(5)}, {c.lng.toFixed(5)}</p>
+        )}
+      </div>
     </div>
   );
 }
