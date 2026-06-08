@@ -2095,22 +2095,40 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_type: string
+          is_primary: boolean
           listing_id: string
           position: number
+          processing_error_code: string | null
+          processing_status: string
+          source_image_id: string | null
+          updated_at: string
           url: string
         }
         Insert: {
           created_at?: string
           id?: string
+          image_type?: string
+          is_primary?: boolean
           listing_id: string
           position?: number
+          processing_error_code?: string | null
+          processing_status?: string
+          source_image_id?: string | null
+          updated_at?: string
           url: string
         }
         Update: {
           created_at?: string
           id?: string
+          image_type?: string
+          is_primary?: boolean
           listing_id?: string
           position?: number
+          processing_error_code?: string | null
+          processing_status?: string
+          source_image_id?: string | null
+          updated_at?: string
           url?: string
         }
         Relationships: [
@@ -2119,6 +2137,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_images_source_image_id_fkey"
+            columns: ["source_image_id"]
+            isOneToOne: false
+            referencedRelation: "listing_images"
             referencedColumns: ["id"]
           },
         ]
@@ -6023,6 +6048,10 @@ export type Database = {
           reason_codes: string[]
           score: number
         }[]
+      }
+      set_primary_listing_image: {
+        Args: { p_image_id: string }
+        Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
