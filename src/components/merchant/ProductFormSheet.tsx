@@ -246,7 +246,26 @@ export function ProductFormSheet({
                 <Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
                   <Camera className="w-4 h-4 mr-1" /> Prendre / choisir
                 </Button>
-                <span className="text-[10px] text-muted-foreground">Suppression d'arrière-plan — bientôt</span>
+                {isEdit && original && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={cleaning}
+                    onClick={handleClean}
+                  >
+                    {cleaning ? (
+                      <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Nettoyage de l'image…</>
+                    ) : (
+                      <><Sparkles className="w-4 h-4 mr-1" /> {cleaned ? "Réessayer" : "Nettoyer l'image"}</>
+                    )}
+                  </Button>
+                )}
+                {!isEdit && (
+                  <span className="text-[10px] text-muted-foreground">
+                    Enregistrez le produit pour activer le nettoyage de l'image.
+                  </span>
+                )}
               </div>
               <input
                 ref={fileRef}
@@ -257,6 +276,68 @@ export function ProductFormSheet({
                 onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
               />
             </div>
+
+            {isEdit && original && cleaned && (
+              <div className="mt-3 rounded-xl border border-border/60 p-3 bg-muted/20 space-y-3">
+                <div className="text-xs text-muted-foreground">
+                  Comparez les deux versions et choisissez celle à utiliser.
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="aspect-square rounded-lg overflow-hidden border border-border/60 bg-background">
+                      <img src={original.url} alt="Original" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium">Original</span>
+                      {original.is_primary ? (
+                        <span className="inline-flex items-center text-[10px] text-emerald-600">
+                          <Check className="w-3 h-3 mr-0.5" /> Choisi
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-[11px] text-primary underline"
+                          onClick={() => useImageAsPrimary(original.id, "Image originale utilisée.")}
+                        >
+                          Garder l'original
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="aspect-square rounded-lg overflow-hidden border border-border/60 bg-background">
+                      <img src={cleaned.url} alt="Image nettoyée" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium">Image nettoyée</span>
+                      {cleaned.is_primary ? (
+                        <span className="inline-flex items-center text-[10px] text-emerald-600">
+                          <Check className="w-3 h-3 mr-0.5" /> Choisi
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-[11px] text-primary underline"
+                          onClick={() => useImageAsPrimary(cleaned.id, "Image nettoyée utilisée.")}
+                        >
+                          Utiliser l'image nettoyée
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="w-full"
+                  disabled={cleaning}
+                  onClick={handleClean}
+                >
+                  <RotateCw className="w-3 h-3 mr-1" /> Réessayer le nettoyage
+                </Button>
+              </div>
+            )}
           </div>
 
           <div>
