@@ -175,9 +175,20 @@ function GroupsTable({ groups, members, onAssign, onChanged }: {
   if (groups.length === 0) {
     return <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">Aucun groupe chauffeur configuré.</Card>;
   }
+  const regen = async (g: DriverGroup) => {
+    const custom = window.prompt(`Code pour « ${g.name} » ? Laissez vide pour générer automatiquement.`, "");
+    if (custom === null) return;
+    try {
+      const code = await regenerateGroupReferralCode(g.id, custom.trim() || null);
+      toast({ title: "Code mis à jour", description: code });
+      onChanged();
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message, variant: "destructive" });
+    }
+  };
   return (
     <DataTable
-      columns={["Nom", "Leader", "Statut", "Commission", "Bonus", "Chauffeurs", "Zones", "Actions"]}
+      columns={["Nom", "Leader", "Statut", "Commission", "Bonus", "Chauffeurs", "Zones", "Code", "Actions"]}
       rows={groups.map(g => [
         <span className="font-medium">{g.name}</span>,
         <span className="text-xs">{g.leader_name || "—"}<br /><span className="text-muted-foreground">{g.leader_phone || ""}</span></span>,
@@ -186,9 +197,13 @@ function GroupsTable({ groups, members, onAssign, onChanged }: {
         formatGnf(g.signup_bonus_gnf),
         String(members.filter(m => m.group_id === g.id && m.status === "active").length),
         <span className="text-xs">{g.assigned_zones?.join(", ") || "—"}</span>,
-        <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onAssign(g)}>
-          <UserPlus className="w-3 h-3 mr-1" /> Assigner
-        </Button>,
+        <span className="font-mono text-[11px]">{g.referral_code || "—"}</span>,
+        <div className="flex gap-1">
+          <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onAssign(g)}>
+            <UserPlus className="w-3 h-3 mr-1" /> Assigner
+          </Button>
+          <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => regen(g)}>Code</Button>
+        </div>,
       ])}
     />
   );
