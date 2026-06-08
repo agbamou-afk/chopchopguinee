@@ -37,6 +37,7 @@ export default function LeaderPortal() {
   const [statements, setStatements] = useState<PayoutStatement[]>([]);
   const [checkins, setCheckins] = useState<FieldCheckin[]>([]);
   const [checkinOpen, setCheckinOpen] = useState(false);
+  const [scorecard, setScorecard] = useState<GroupScorecard | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -50,15 +51,17 @@ export default function LeaderPortal() {
         if (cancel) return;
         if (!g) { setGroup(null); setLoading(false); return; }
         setGroup(g);
-        const [m, c, r, s, ca, co, st, ck] = await Promise.all([
+        const [m, c, r, s, ca, co, st, ck, sc] = await Promise.all([
           leaderListMyMembers(), leaderListMyCommissions(), leaderListMyReferrals(), leaderGetMyStats(30),
           leaderListMyCampaigns(), leaderListMyContracts(), leaderListMyStatements(),
           leaderListMyCheckins(50),
+          leaderMyScorecard(30),
         ]);
         if (cancel) return;
         setMembers(m); setCommissions(c); setReferrals(r); setStats(s);
         setCampaigns(ca); setContracts(co); setStatements(st);
         setCheckins(ck);
+        setScorecard(sc);
       } catch (e: any) {
         if (!cancel) setErr(e?.message ?? String(e));
       } finally {
