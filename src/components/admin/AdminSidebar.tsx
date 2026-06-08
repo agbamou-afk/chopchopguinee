@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Activity, Users, Bike, Store, Wallet, Coins, Tag,
   ClipboardList, UtensilsCrossed, ShoppingBag, LifeBuoy, ShieldAlert, Smartphone,
   MessageSquare, Megaphone, BarChart3, MapPin, ToggleLeft, Settings,
-  UserCog, ScrollText, Sparkles, Scale, Radar,
+  UserCog, ScrollText, Sparkles, Scale, Radar, Users2,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -28,6 +28,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
     items: [
       { title: "Utilisateurs", url: "/admin/users", icon: Users, module: "users" },
       { title: "Chauffeurs", url: "/admin/drivers", icon: Bike, module: "drivers" },
+      { title: "Groupes chauffeurs", url: "/admin/driver-groups", icon: Users2, module: "driver_groups" },
       { title: "Marchands", url: "/admin/merchants", icon: Store, module: "merchants" },
       { title: "Courses & livraisons", url: "/admin/orders", icon: ClipboardList, module: "orders" },
       { title: "Repas", url: "/admin/repas", icon: UtensilsCrossed, module: "repas" },

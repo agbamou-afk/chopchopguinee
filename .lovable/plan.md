@@ -1,120 +1,103 @@
-# Account Control System — Delete / Ban / Freeze
+# Driver Syndicate / Group Leader System — v0
 
-## State of play (already in place)
+**Routing:** Rides Agent (lead) · ChopWallet Agent (review ledger safety) · Admin & Ops Agent (review tab)
 
-- `account_bans` table, `admin_ban_user`, `admin_unban_user`, `is_user_banned`, `check_signup_allowed`, `admin_check_email_reuse_blocker` already exist.
-- `admin-delete-user` edge function does pre-purge → hard delete → verify, or anonymize when financial history exists.
-- `Auth.tsx` already calls `check_signup_allowed` before signup with generic copy.
-- `AuthContext` signs the user out when `account_status` is `banned` or `deleted`.
-- `UsersAdmin` already has separated Delete / Ban / Unban actions with required ban reason.
+**Lock candidate:** `driver-groups-syndicates-commissions-v0-stable`
 
-What is missing and what this plan delivers: the **Freeze** state, ban/freeze **notifications**, a shared **FrozenAccountScreen**, **required reason on unban**, freeze enforcement at sensitive write paths, and one tighter signup precheck (phone + email).
+## Scope (v0)
 
-## 1. Database migration — freeze schema, notifications, hardening
+Admin-only management. No leader portal yet. Commissions written as **pending ledger rows only** — no wallet credits in v0 (ChopWallet review gate). Default 1%, configurable per group.
 
-New table `public.account_freezes` (lifecycle, audited, RLS admin-only read):
+## A. Database (one migration)
 
-```text
-id uuid pk
-user_id uuid not null  → auth.users
-reason text not null         (>= 3 chars enforced)
-freeze_type text not null default 'admin_review'
-                              (admin_review | payment_review | security_review | dispute | document_review)
-status text not null default 'active'  (active | lifted)
-frozen_by uuid not null
-frozen_at timestamptz default now()
-expires_at timestamptz null
-lifted_by uuid null
-lifted_at timestamptz null
-lift_reason text null
-metadata jsonb default '{}'
-created_at / updated_at
-```
+Tables (all `public`, with GRANTs + RLS + admin-only policies via `is_admin(auth.uid())` or `has_role`):
 
-Indexes on `user_id WHERE status='active'`, `status`, `expires_at`.
+1. **`driver_groups`** — id, name, description, leader_user_id (nullable, fk profiles), leader_name, leader_phone, status (`active|suspended|archived`, default active), commission_percent numeric default 1.00, signup_bonus_gnf bigint default 0, assigned_zones text[] default '{}', referral_code text unique nullable, notes, created_by, created_at, updated_at.
+2. **`driver_group_memberships`** — id, group_id fk, driver_user_id uuid, driver_profile_id fk driver_profiles nullable, status (`active|removed|pending`), assigned_zone text, joined_at, added_by, removed_at, removed_by, notes. **Partial unique index** on `(driver_user_id) WHERE status='active'`.
+3. **`driver_referrals`** — id, group_id, referrer_user_id, referred_driver_user_id, referral_code, status (`pending|approved|bonus_eligible|paid|rejected`), bonus_amount_gnf bigint, approved_at, paid_at, created_at, metadata jsonb.
+4. **`driver_group_commissions`** — id, group_id, leader_user_id, driver_user_id, source_type (`ride_earning|signup_bonus|adjustment`), source_id uuid, gross_driver_earning_gnf bigint, commission_percent numeric, commission_amount_gnf bigint, status (`pending|approved|paid|reversed`, default pending), wallet_transaction_id uuid nullable, created_at, approved_at, paid_at, notes. **Unique** on `(source_type, source_id, driver_user_id)` to prevent double-write.
 
-Add `'frozen'` as an allowed value for `profiles.account_status` (currently free-text but enforced by application; update guard if a CHECK exists).
+All four tables: `GRANT SELECT,INSERT,UPDATE,DELETE ... TO authenticated; GRANT ALL ... TO service_role;` plus RLS policies that only admin roles can read/write (drivers may `SELECT` their own membership row in v0; no leader access).
 
-RPCs (SECURITY DEFINER, `search_path=public`, REVOKE PUBLIC, GRANT to authenticated, internal `admin_users` role gate, audit_log row, returns `{ok, freeze_id|ban_id, error?}`):
+## B. RPCs (SECURITY DEFINER, `set search_path=public`, REVOKE PUBLIC, admin gate)
 
-- `admin_freeze_user(_target uuid, _reason text, _freeze_type text default 'admin_review', _expires_at timestamptz default null)` — requires `god_admin`/`super_admin`/`operations_admin`. Rejects empty reason. Closes any existing active freeze (idempotent), inserts new one, sets `profiles.account_status='frozen'`, sets driver offline if `driver_profiles` row exists, inserts an `inapp` row in `notification_log` with template `account_frozen`. Notification failure is logged, not fatal.
-- `admin_unfreeze_user(_freeze_id uuid default null, _target uuid default null, _lift_reason text)` — lifts active freeze, restores `account_status='active'` only when no other freeze/ban is active. Notification `account_unfrozen`.
-- `is_user_frozen(_user uuid) returns boolean` — STABLE, used by RLS/triggers and client.
-- `current_freeze(_user uuid) returns table(...)` — returns active freeze with reason for the frozen screen.
+- `admin_create_driver_group(payload jsonb)` → uuid
+- `admin_update_driver_group(p_group uuid, payload jsonb)`
+- `admin_assign_driver_to_group(p_group uuid, p_driver uuid, p_zone text, p_notes text)` — enforces one-active-membership rule.
+- `admin_remove_driver_from_group(p_membership uuid, p_reason text)`
+- `admin_review_commission(p_commission uuid, p_action text, p_notes text)` — pending→approved→paid (paid path is a no-op in v0, just sets status + timestamp; **no wallet mutation**).
+- `admin_mark_referral(p_referral uuid, p_action text)`
 
-Hardening:
+### Trigger: commission auto-creation
+`trg_ride_commission_after_complete` on `public.rides` AFTER UPDATE when `status` transitions to a completed/paid terminal state (whatever the rides agent currently uses — read existing earnings column; if no driver_earning column exists yet, no-op safely):
+- look up active membership for `driver_user_id`
+- if found and group active and commission_percent > 0:
+  - insert `driver_group_commissions` row (`source_type='ride_earning'`, `source_id=ride.id`, status=`pending`)
+  - ON CONFLICT do nothing (idempotent)
 
-- `admin_unban_user`: require `_lift_reason` length >= 3, also send `account_unbanned` notification (best-effort).
-- `admin_ban_user`: also send `account_banned` notification (best-effort).
-- `check_signup_allowed(_email, _phone_e164)`: already exists — extend to also block when an active ban exists for that **phone** (`phone_e164`). Freeze does **not** block signup of a new email.
+Reversal hook (best-effort): if a ride is later cancelled/refunded, set matching commission row to `reversed`.
 
-Sensitive-action triggers (defense in depth — UI also blocks):
+### Trigger: on driver approval (`driver_applications` → approved)
+- If a `driver_referrals` row exists for that user with status `pending`, set to `bonus_eligible` and copy `signup_bonus_gnf` from the group as `bonus_amount_gnf`.
+- Activate matching pending `driver_group_memberships` (status `pending`→`active`).
 
-- Trigger on `rides`, `food_orders`, `topup_requests`, `marketplace_listings` (INSERT/UPDATE that publishes), `driver_locations` (going online) → raise `frozen_account` exception when `is_user_frozen(auth.uid())`.
+## C. Admin UI
 
-All new tables: `GRANT` block per cloud-db rules. `account_freezes` is admin-only read (no `anon`, no `authenticated` self-read — use `current_freeze` RPC which the user can call for themselves only).
+New module `driver_groups` in `src/lib/admin/permissions.ts` (god_admin: ALL; operations_admin: view+edit; finance_admin: view+approve).
 
-## 2. Edge function — `admin-delete-user`
+New page `src/pages/admin/DriverGroupsAdmin.tsx` at route `/admin/driver-groups`, added to `AdminSidebar` under **Opérations** as **"Groupes chauffeurs"** (icon: `Users2`).
 
-Extend pre-purge to also clear active reuse blockers when a clean delete succeeds (no history):
+Sub-views (tabs inside the page):
+- **Vue d'ensemble** — Stat cards: groupes, leaders actifs, chauffeurs assignés, chauffeurs non assignés, commissions en attente (sum GNF), bonus en attente.
+- **Groupes** — table + "Créer un groupe" sheet (name, leader pick/manual, phone, commission %, signup bonus, zones multi-select from district hubs, notes).
+- **Détail groupe** (drawer) — leader info, drivers table with assign/remove, zone chips, commission ledger, signup bonus list.
+- **Commissions** — global ledger with filters and approve/mark-paid actions.
+- **Référrals / Bonus** — list with mark-paid/reject.
 
-- delete `profiles` row (already cascaded by auth.users delete in many cases — verify and add explicit cleanup of `user_preferences`, `user_pins`, `user_roles`, `user_legal_consents`, `saved_places`, `notification_preferences`, `driver_applications`, `merchant_stores` only when status is pending/none, `account_freezes`).
-- Keep current anonymize path untouched when history exists.
-- Response unchanged: `{mode:'deleted'|'anonymized', email_reusable}`.
+All empty states: `"Aucun groupe chauffeur configuré."` etc. No mock data.
 
-## 3. Frontend
+## D. Wallet / Ledger safety
 
-`src/contexts/AuthContext.tsx`:
+**v0 does not credit wallets.** `paid` status is admin bookkeeping only; `wallet_transaction_id` stays NULL until ChopWallet agent provides a secure payout RPC in a follow-up. The UI clearly labels paid-status as "Marqué payé (hors-wallet)" with a tooltip explaining v1 will wire `wallet_internal_transfer`.
 
-- Load active freeze via `current_freeze` RPC alongside profile/roles. Expose `freeze: { id, reason, freeze_type, frozen_at, expires_at } | null` and `isFrozen` boolean on context.
-- Banned/deleted handling unchanged.
+## E. Security
 
-`src/components/account/FrozenAccountScreen.tsx` (new):
+- Admin-only RLS via `has_role(auth.uid(),'admin')` / `is_admin()` (use whichever helper already exists in project).
+- Driver may `SELECT` own membership row (`driver_user_id = auth.uid()`).
+- No anon grants.
+- RPCs `REVOKE EXECUTE ... FROM PUBLIC; GRANT EXECUTE ... TO authenticated;` with internal admin check that raises on non-admin.
+- Linter run after migration; resolve any new warnings tied to these objects.
 
-- Full-screen replacement for the app shell when `isFrozen`.
-- Shows title "Compte temporairement gelé", reason, freeze type, "Contacter le support" CTA → opens existing `ReportIssueButton` / mailto.
-- No bottom nav, no navigation away.
+## F. Files touched
 
-`src/App.tsx`:
+**Created**
+- `supabase/migrations/<ts>_driver_groups_v0.sql`
+- `src/pages/admin/DriverGroupsAdmin.tsx`
+- `src/components/admin/driver-groups/GroupFormSheet.tsx`
+- `src/components/admin/driver-groups/GroupDetailDrawer.tsx`
+- `src/components/admin/driver-groups/AssignDriverSheet.tsx`
+- `src/lib/admin/driverGroups.ts` (typed RPC + query helpers)
+- `docs/drivers/DRIVER_SYNDICATES_V0.md`
 
-- After `AuthProvider` ready, if `isFrozen` and not on `/auth`, `/legal`, `/privacy`, `/help`, render `FrozenAccountScreen` instead of routed content.
+**Edited**
+- `src/lib/admin/permissions.ts` — add `driver_groups` module.
+- `src/components/admin/AdminSidebar.tsx` — add nav entry.
+- `src/App.tsx` — add lazy route under admin layout.
+- `.lovable/plan.md` — append milestone entry.
 
-`src/hooks/useAuthGuard.ts`:
+## G. QA matrix
 
-- Block `requireAuth` when `isFrozen`, toast and route to `/account/frozen` (or stay).
+A create group · B assign leader (no admin powers) · C assign driver (one-active enforced) · D ride completes → pending commission row appears · E 1% math verified on sample · F change % → next ride uses new % · G approve driver with pending referral → bonus_eligible · H suspended driver group → no new commission · I non-admin user blocked by RLS+RPC · J admin tab shows real rows or honest empty states · K build clean · L security linter no new errors.
 
-`src/pages/admin/UsersAdmin.tsx`:
+## H. Blockers to surface before coding
 
-- Add **Geler** action button (snowflake/Lock icon) next to Bannir, visible when `account_status !== 'frozen'` and not banned/deleted.
-- Add **Lever le gel** action button when `account_status === 'frozen'`.
-- New **Freeze dialog**: required `reason` textarea (>=3 chars), `freeze_type` select with 5 options, optional `expires_at` date input, confirm button.
-- New **Unfreeze dialog**: required `lift_reason`.
-- Make **unban dialog** `lift_reason` required (currently optional).
-- Add `frozen` to `StatusBadge` (amber/blue).
-- Filter chip "Gelés".
+1. **Driver earnings field on `rides`**: I'll read `rides` columns first; if no per-driver-earning column exists, commission trigger uses `fare_gnf` minus platform fee if present, otherwise stores `gross_driver_earning_gnf=0` and logs a TODO in the commission row's `notes`. Will report exactly what's used in the final return.
+2. No frontend wallet write anywhere in this feature — confirmed by design.
 
-`src/pages/Auth.tsx`:
+Proceed?
 
-- Already gated by `check_signup_allowed`. After migration extends phone check, no UI change needed.
+---
 
-## 4. QA matrix
+## Milestone: driver-groups-syndicates-commissions-v0 (lock candidate)
 
-A. Clean test delete → `mode=deleted`, email + phone reusable, signup succeeds.
-B. Ban user → blocked at login, signup with same email blocked, same phone blocked, generic copy shown.
-C. Unban (with reason) → signup/login restored.
-D. Freeze → user sees `FrozenAccountScreen` with reason, no nav.
-E. Unfreeze → app shell restored.
-F. Frozen driver → forced offline, `driver_locations` insert raises `frozen_account`.
-G. Frozen merchant → cannot publish listing (trigger + UI guard).
-H. Frozen client → cannot insert ride / food_order / topup_request.
-I. Notifications: `account_log` rows present for freeze/unfreeze/ban/unban.
-J. Non-admin caller → `admin_freeze_user` rejects with `forbidden`.
-K. History account → still anonymized, never hard-deleted.
-
-## 5. Out of scope
-
-- Email/SMS delivery for ban/freeze (in-app only, queued through existing notification pipeline if/when worker picks it up).
-- Self-serve unfreeze.
-- Per-vertical UX polish beyond the global frozen screen + RPC-level block.
-
-**Lock candidate:** `account-control-delete-ban-freeze-stable`
+Driver syndicate v0 shipped. Admin-only management at `/admin/driver-groups`. Four tables (`driver_groups`, `driver_group_memberships`, `driver_referrals`, `driver_group_commissions`) with admin RLS + service_role grants. Six SECURITY DEFINER RPCs. Ride completion trigger writes pending commission rows (1% default, configurable). Driver approval trigger activates pending memberships + marks referrals bonus_eligible. No wallet mutation — payout deferred to v1 ChopWallet RPC.

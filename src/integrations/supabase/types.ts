@@ -691,6 +691,188 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_group_commissions: {
+        Row: {
+          approved_at: string | null
+          commission_amount_gnf: number
+          commission_percent: number
+          created_at: string
+          driver_user_id: string
+          gross_driver_earning_gnf: number
+          group_id: string
+          id: string
+          leader_user_id: string | null
+          notes: string | null
+          paid_at: string | null
+          source_id: string | null
+          source_type: string
+          status: string
+          updated_at: string
+          wallet_transaction_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          commission_amount_gnf?: number
+          commission_percent?: number
+          created_at?: string
+          driver_user_id: string
+          gross_driver_earning_gnf?: number
+          group_id: string
+          id?: string
+          leader_user_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          source_id?: string | null
+          source_type: string
+          status?: string
+          updated_at?: string
+          wallet_transaction_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          commission_amount_gnf?: number
+          commission_percent?: number
+          created_at?: string
+          driver_user_id?: string
+          gross_driver_earning_gnf?: number
+          group_id?: string
+          id?: string
+          leader_user_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          source_id?: string | null
+          source_type?: string
+          status?: string
+          updated_at?: string
+          wallet_transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_group_commissions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "driver_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_group_memberships: {
+        Row: {
+          added_by: string | null
+          assigned_zone: string | null
+          created_at: string
+          driver_profile_id: string | null
+          driver_user_id: string
+          group_id: string
+          id: string
+          joined_at: string
+          notes: string | null
+          removed_at: string | null
+          removed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string | null
+          assigned_zone?: string | null
+          created_at?: string
+          driver_profile_id?: string | null
+          driver_user_id: string
+          group_id: string
+          id?: string
+          joined_at?: string
+          notes?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string | null
+          assigned_zone?: string | null
+          created_at?: string
+          driver_profile_id?: string | null
+          driver_user_id?: string
+          group_id?: string
+          id?: string
+          joined_at?: string
+          notes?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_group_memberships_driver_profile_id_fkey"
+            columns: ["driver_profile_id"]
+            isOneToOne: false
+            referencedRelation: "driver_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "driver_group_memberships_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "driver_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_groups: {
+        Row: {
+          assigned_zones: string[]
+          commission_percent: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          leader_name: string | null
+          leader_phone: string | null
+          leader_user_id: string | null
+          name: string
+          notes: string | null
+          referral_code: string | null
+          signup_bonus_gnf: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_zones?: string[]
+          commission_percent?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          leader_name?: string | null
+          leader_phone?: string | null
+          leader_user_id?: string | null
+          name: string
+          notes?: string | null
+          referral_code?: string | null
+          signup_bonus_gnf?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_zones?: string[]
+          commission_percent?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          leader_name?: string | null
+          leader_phone?: string | null
+          leader_user_id?: string | null
+          name?: string
+          notes?: string | null
+          referral_code?: string | null
+          signup_bonus_gnf?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       driver_locations: {
         Row: {
           heading: number | null
@@ -804,6 +986,59 @@ export type Database = {
           zones?: string[]
         }
         Relationships: []
+      }
+      driver_referrals: {
+        Row: {
+          approved_at: string | null
+          bonus_amount_gnf: number
+          created_at: string
+          group_id: string | null
+          id: string
+          metadata: Json
+          paid_at: string | null
+          referral_code: string | null
+          referred_driver_user_id: string
+          referrer_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          bonus_amount_gnf?: number
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          referral_code?: string | null
+          referred_driver_user_id: string
+          referrer_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          bonus_amount_gnf?: number
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          referral_code?: string | null
+          referred_driver_user_id?: string
+          referrer_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_referrals_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "driver_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_route_traces: {
         Row: {
@@ -3668,6 +3903,15 @@ export type Database = {
         Args: { _reason?: string; _target: string }
         Returns: Json
       }
+      admin_assign_driver_to_group: {
+        Args: {
+          p_driver: string
+          p_group: string
+          p_notes?: string
+          p_zone?: string
+        }
+        Returns: string
+      }
       admin_auth_user_exists: { Args: { _target: string }; Returns: boolean }
       admin_ban_user: {
         Args: { _expires_at?: string; _reason: string; _target: string }
@@ -3706,6 +3950,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_create_driver_group: { Args: { payload: Json }; Returns: string }
       admin_email_delivery_diagnostics: {
         Args: { p_email: string }
         Returns: Json
@@ -3721,6 +3966,10 @@ export type Database = {
       }
       admin_log_test_delete: {
         Args: { _caller: string; _reason: string; _target: string }
+        Returns: undefined
+      }
+      admin_mark_referral: {
+        Args: { p_action: string; p_referral: string }
         Returns: undefined
       }
       admin_merchant_decision: {
@@ -3775,6 +4024,14 @@ export type Database = {
         }
       }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
+      admin_remove_driver_from_group: {
+        Args: { p_membership: string; p_reason?: string }
+        Returns: undefined
+      }
+      admin_review_commission: {
+        Args: { p_action: string; p_commission: string; p_notes?: string }
+        Returns: undefined
+      }
       admin_unban_user:
         | {
             Args: { _ban_id?: string; _lift_reason?: string; _target?: string }
@@ -3784,6 +4041,10 @@ export type Database = {
       admin_unfreeze_user: {
         Args: { _freeze_id?: string; _lift_reason?: string; _target?: string }
         Returns: Json
+      }
+      admin_update_driver_group: {
+        Args: { p_group: string; payload: Json }
+        Returns: undefined
       }
       analytics_summary: { Args: { p_days?: number }; Returns: Json }
       analyze_route_learning_v1: {
