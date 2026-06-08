@@ -26,8 +26,11 @@ import {
 import {
   MilestoneJobsPanel, FieldCheckinsPanel, RiskAuditPanel,
 } from "@/components/admin/DriverGroupsV4Panels";
+import {
+  ScorecardsPanel, SuggestionsPanel, RiskScorecardPanel, SchedulerStatusPanel, CheckinsWithPhotos,
+} from "@/components/admin/DriverGroupsV5Panels";
 
-type Tab = "overview" | "groups" | "members" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements" | "risk" | "audit" | "jobs" | "checkins" | "zones" | "analytics";
+type Tab = "overview" | "groups" | "members" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements" | "risk" | "audit" | "jobs" | "checkins" | "zones" | "analytics" | "scorecards" | "suggestions" | "risk_scorecard";
 
 export default function DriverGroupsAdmin() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -105,6 +108,9 @@ export default function DriverGroupsAdmin() {
           ["jobs", "Jalons"],
           ["checkins", "Check-ins"],
           ["zones", "Zones"],
+          ["scorecards", "Scorecards"],
+          ["risk_scorecard", "Risque (scorecard)"],
+          ["suggestions", "Suggestions"],
           ["analytics", "Analytics"],
         ] as [Tab, string][]).map(([k, l]) => (
           <FilterChip key={k} label={l} active={tab === k} onClick={() => setTab(k)} />
@@ -134,11 +140,23 @@ export default function DriverGroupsAdmin() {
       ) : tab === "audit" ? (
         <RiskAuditPanel />
       ) : tab === "jobs" ? (
-        <MilestoneJobsPanel />
+        <div className="space-y-3">
+          <SchedulerStatusPanel />
+          <MilestoneJobsPanel />
+        </div>
       ) : tab === "checkins" ? (
-        <FieldCheckinsPanel groups={groups} />
+        <div className="space-y-3">
+          <CheckinsWithPhotos groups={groups} />
+          <FieldCheckinsPanel groups={groups} />
+        </div>
       ) : tab === "zones" ? (
         <ZoneCoveragePanel />
+      ) : tab === "scorecards" ? (
+        <ScorecardsPanel groups={groups} />
+      ) : tab === "risk_scorecard" ? (
+        <RiskScorecardPanel />
+      ) : tab === "suggestions" ? (
+        <SuggestionsPanel />
       ) : (
         <AnalyticsPanel groupById={groupById} />
       )}

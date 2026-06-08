@@ -1371,6 +1371,36 @@ export type Database = {
           },
         ]
       }
+      driver_referral_milestone_job_runs: {
+        Row: {
+          eligible: number
+          error: string | null
+          failed: number
+          id: string
+          processed: number
+          ran_at: string
+          source: string
+        }
+        Insert: {
+          eligible?: number
+          error?: string | null
+          failed?: number
+          id?: string
+          processed?: number
+          ran_at?: string
+          source?: string
+        }
+        Update: {
+          eligible?: number
+          error?: string | null
+          failed?: number
+          id?: string
+          processed?: number
+          ran_at?: string
+          source?: string
+        }
+        Relationships: []
+      }
       driver_referral_milestone_jobs: {
         Row: {
           attempts: number
@@ -4470,6 +4500,33 @@ export type Database = {
         }
         Returns: string
       }
+      admin_group_risk_scorecard: {
+        Args: never
+        Returns: {
+          commissions_held: number
+          group_id: string
+          group_name: string
+          last_review_at: string
+          referrals_count: number
+          risk_held: number
+          risk_review: number
+        }[]
+      }
+      admin_group_scorecard: {
+        Args: { p_days?: number; p_group: string }
+        Returns: Json
+      }
+      admin_incentive_suggestions: {
+        Args: never
+        Returns: {
+          kind: string
+          message: string
+          severity: string
+          signal: Json
+          target_group: string
+          target_zone: string
+        }[]
+      }
       admin_list_field_checkins: {
         Args: { p_group?: string; p_limit?: number }
         Returns: {
@@ -5062,6 +5119,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      leader_get_my_scorecard: { Args: { p_days?: number }; Returns: Json }
       leader_get_my_stats: {
         Args: { p_from?: string; p_to?: string }
         Returns: {
@@ -5548,6 +5606,24 @@ export type Database = {
           processed: number
         }[]
       }
+      process_driver_referral_milestone_jobs_cron: {
+        Args: { p_limit?: number }
+        Returns: {
+          eligible: number
+          error: string | null
+          failed: number
+          id: string
+          processed: number
+          ran_at: string
+          source: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_referral_milestone_job_runs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -5798,6 +5874,14 @@ export type Database = {
           reason: string
           score: number
           status: string
+        }[]
+      }
+      score_driver_referral_risk_v2: {
+        Args: { p_referral: string }
+        Returns: {
+          level: string
+          reason_codes: string[]
+          score: number
         }[]
       }
       show_limit: { Args: never; Returns: number }

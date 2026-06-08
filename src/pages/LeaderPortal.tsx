@@ -13,6 +13,8 @@ import {
 import { formatGnf, type DriverGroup, type DriverGroupCommission, type DriverReferral, type DriverGroupStats } from "@/lib/admin/driverGroups";
 import type { RecruitmentCampaign, GroupContract, PayoutStatement } from "@/lib/admin/driverGroupsV3";
 import type { FieldCheckin } from "@/lib/admin/driverGroupsV4";
+import { uploadCheckinPhoto, leaderMyScorecard, signedCheckinPhotoUrl, downloadStatementCsvRich, type GroupScorecard } from "@/lib/admin/driverGroupsV5";
+import { leaderListMyStatementItems } from "@/lib/leader/driverGroup";
 import { Users2, Coins, Gift, Map as MapIcon, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +37,7 @@ export default function LeaderPortal() {
   const [statements, setStatements] = useState<PayoutStatement[]>([]);
   const [checkins, setCheckins] = useState<FieldCheckin[]>([]);
   const [checkinOpen, setCheckinOpen] = useState(false);
+  const [scorecard, setScorecard] = useState<GroupScorecard | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -48,15 +51,17 @@ export default function LeaderPortal() {
         if (cancel) return;
         if (!g) { setGroup(null); setLoading(false); return; }
         setGroup(g);
-        const [m, c, r, s, ca, co, st, ck] = await Promise.all([
+        const [m, c, r, s, ca, co, st, ck, sc] = await Promise.all([
           leaderListMyMembers(), leaderListMyCommissions(), leaderListMyReferrals(), leaderGetMyStats(30),
           leaderListMyCampaigns(), leaderListMyContracts(), leaderListMyStatements(),
           leaderListMyCheckins(50),
+          leaderMyScorecard(30),
         ]);
         if (cancel) return;
         setMembers(m); setCommissions(c); setReferrals(r); setStats(s);
         setCampaigns(ca); setContracts(co); setStatements(st);
         setCheckins(ck);
+        setScorecard(sc);
       } catch (e: any) {
         if (!cancel) setErr(e?.message ?? String(e));
       } finally {
@@ -198,13 +203,27 @@ export default function LeaderPortal() {
       </div>
 
       {tab === "overview" && (
-        <div className="grid grid-cols-2 gap-2">
-          <Stat label="Chauffeurs actifs" value={String(stats?.active_drivers ?? 0)} icon={Users2} />
-          <Stat label="Courses 30j" value={String(stats?.rides_completed ?? 0)} icon={Coins} />
-          <Stat label="Commissions en attente" value={formatGnf(stats?.commissions_pending_gnf ?? 0)} icon={Coins} />
-          <Stat label="Commissions payées 30j" value={formatGnf(stats?.commissions_paid_gnf ?? 0)} icon={Coins} />
-          <Stat label="Parrainages éligibles" value={String(stats?.signup_bonus_eligible_count ?? 0)} icon={Gift} />
-          <Stat label="Bonus payés 30j" value={formatGnf(stats?.signup_bonus_paid_gnf ?? 0)} icon={Gift} />
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Stat label="Chauffeurs actifs" value={String(stats?.active_drivers ?? 0)} icon={Users2} />
+            <Stat label="Courses 30j" value={String(stats?.rides_completed ?? 0)} icon={Coins} />
+            <Stat label="Commissions en attente" value={formatGnf(stats?.commissions_pending_gnf ?? 0)} icon={Coins} />
+            <Stat label="Commissions payées 30j" value={formatGnf(stats?.commissions_paid_gnf ?? 0)} icon={Coins} />
+            <Stat label="Parrainages éligibles" value={String(stats?.signup_bonus_eligible_count ?? 0)} icon={Gift} />
+            <Stat label="Bonus payés 30j" value={formatGnf(stats?.signup_bonus_paid_gnf ?? 0)} icon={Gift} />
+          </div>
+          {scorecard && (
+            <Card className="p-3 space-y-2">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Scorecard (30 jours)</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div><span className="text-muted-foreground text-[11px]">Recrutés</span><p className="font-semibold tabular-nums">{scorecard.recruited}</p></div>
+                <div><span className="text-muted-foreground text-[11px]">Approuvés</span><p className="font-semibold tabular-nums">{scorecard.approved}</p></div>
+                <div><span className="text-muted-foreground text-[11px]">Check-ins</span><p className="font-semibold tabular-nums">{scorecard.checkins_count}</p></div>
+                <div><span className="text-muted-foreground text-[11px]">Bonus éligibles</span><p className="font-semibold tabular-nums">{scorecard.signup_bonuses_eligible}</p></div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Prochaine action conseillée : {scorecard.active_drivers < 3 ? "recruter de nouveaux chauffeurs." : scorecard.checkins_count === 0 ? "effectuer un check-in terrain." : "suivre les chauffeurs inactifs."}</p>
+            </Card>
+          )}
         </div>
       )}
 
@@ -309,14 +328,34 @@ export default function LeaderPortal() {
           {statements.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Aucun relevé finalisé.</p>
           ) : statements.map(s => (
-            <div key={s.id} className="flex justify-between text-sm border-b last:border-b-0 border-border/40 pb-2 last:pb-0">
+            <div key={s.id} className="flex justify-between items-center text-sm border-b last:border-b-0 border-border/40 pb-2 last:pb-0">
               <div>
                 <p className="font-medium">{s.period_start} → {s.period_end}</p>
                 <p className="text-[11px] text-muted-foreground">{s.status} · Comm {formatGnf(s.commissions_total_gnf)} · Bonus {formatGnf(s.signup_bonuses_total_gnf)}</p>
               </div>
-              <p className="font-medium tabular-nums">{formatGnf(s.total_due_gnf)}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium tabular-nums">{formatGnf(s.total_due_gnf)}</p>
+                {(s.status === "finalized" || s.status === "paid") && (
+                  <Button size="sm" variant="outline" onClick={async () => {
+                    try {
+                      const items = await leaderListMyStatementItems(s.id);
+                      downloadStatementCsvRich({
+                        filenameStub: `releve-${s.period_start}_${s.period_end}`,
+                        periodStart: s.period_start, periodEnd: s.period_end,
+                        groupName: group?.name ?? "", leaderLabel: group?.leader_name ?? "",
+                        rows: items.map(i => ({ ...i, status: s.status })),
+                      });
+                    } catch (e: any) {
+                      toast({ title: "Erreur export", description: e?.message, variant: "destructive" });
+                    }
+                  }}>CSV</Button>
+                )}
+              </div>
             </div>
           ))}
+          <p className="text-[10px] text-muted-foreground pt-2 border-t border-border/40">
+            Export PDF — à venir (V6). Pour l'instant, utilisez le CSV ou imprimez la page.
+          </p>
         </Card>
       )}
 
@@ -325,16 +364,7 @@ export default function LeaderPortal() {
           {checkins.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Aucun check-in enregistré.</p>
           ) : checkins.map(c => (
-            <div key={c.id} className="border-b last:border-b-0 border-border/40 pb-2 last:pb-0 text-sm space-y-1">
-              <div className="flex justify-between">
-                <p className="font-medium text-[12px]">{c.checkin_type}</p>
-                <span className="text-[10px] text-muted-foreground">{new Date(c.created_at).toLocaleString("fr-FR")}</span>
-              </div>
-              {c.notes && <p className="text-[11px] text-muted-foreground">{c.notes}</p>}
-              {(c.lat && c.lng) && (
-                <p className="text-[10px] text-muted-foreground tabular-nums">{c.lat.toFixed(5)}, {c.lng.toFixed(5)}</p>
-              )}
-            </div>
+            <CheckinRow key={c.id} c={c} />
           ))}
         </Card>
       )}
@@ -346,6 +376,7 @@ function CheckinForm({ groupId, onSaved }: { groupId: string; onSaved: () => voi
   const [type, setType] = useState<string>("field_visit");
   const [notes, setNotes] = useState("");
   const [coords, setCoords] = useState<{ lat?: number; lng?: number; acc?: number }>({});
+  const [photo, setPhoto] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   const capture = () => {
@@ -363,11 +394,17 @@ function CheckinForm({ groupId, onSaved }: { groupId: string; onSaved: () => voi
     }
     setSaving(true);
     try {
+      let photo_url: string | null = null;
+      if (photo) {
+        try { photo_url = await uploadCheckinPhoto(groupId, photo); }
+        catch (e: any) { toast({ title: "Photo non envoyée", description: e?.message, variant: "destructive" }); }
+      }
       await leaderCreateCheckin({
         group_id: groupId,
         checkin_type: type,
         notes,
         lat: coords.lat, lng: coords.lng, accuracy_m: coords.acc,
+        photo_url,
       });
       toast({ title: "Check-in enregistré" });
       onSaved();
@@ -400,7 +437,35 @@ function CheckinForm({ groupId, onSaved }: { groupId: string; onSaved: () => voi
           <span className="text-muted-foreground tabular-nums">{coords.lat.toFixed(4)}, {coords.lng!.toFixed(4)}{coords.acc ? ` ±${Math.round(coords.acc)}m` : ""}</span>
         ) : <span className="text-muted-foreground">Position optionnelle</span>}
       </div>
+      <div>
+        <label className="text-xs text-muted-foreground">Photo (optionnelle, ≤ 5 Mo, jpg/png/webp)</label>
+        <input type="file" accept="image/jpeg,image/png,image/webp"
+          onChange={e => setPhoto(e.target.files?.[0] ?? null)}
+          className="block mt-1 w-full text-xs" />
+      </div>
       <Button className="w-full" disabled={saving} onClick={submit}>{saving ? "Envoi…" : "Enregistrer"}</Button>
+    </div>
+  );
+}
+
+function CheckinRow({ c }: { c: FieldCheckin }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (c.photo_url) signedCheckinPhotoUrl(c.photo_url, 600).then(setUrl);
+  }, [c.photo_url]);
+  return (
+    <div className="border-b last:border-b-0 border-border/40 pb-2 last:pb-0 text-sm flex gap-2">
+      {url && <a href={url} target="_blank" rel="noreferrer"><img src={url} alt="check-in" loading="lazy" className="w-14 h-14 rounded object-cover border border-border/40" /></a>}
+      <div className="flex-1 space-y-1">
+        <div className="flex justify-between">
+          <p className="font-medium text-[12px]">{c.checkin_type}</p>
+          <span className="text-[10px] text-muted-foreground">{new Date(c.created_at).toLocaleString("fr-FR")}</span>
+        </div>
+        {c.notes && <p className="text-[11px] text-muted-foreground">{c.notes}</p>}
+        {(c.lat && c.lng) && (
+          <p className="text-[10px] text-muted-foreground tabular-nums">{c.lat.toFixed(5)}, {c.lng.toFixed(5)}</p>
+        )}
+      </div>
     </div>
   );
 }
