@@ -4690,6 +4690,10 @@ export type Database = {
         Args: { _caller: string; _reason: string; _target: string }
         Returns: undefined
       }
+      admin_mark_om_conflict: {
+        Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
+      }
       admin_mark_referral: {
         Args: { p_action: string; p_referral: string }
         Returns: undefined
@@ -4768,6 +4772,7 @@ export type Database = {
         Args: { p_missing: string[]; p_note: string; p_user_id: string }
         Returns: undefined
       }
+      admin_retry_om_credit: { Args: { p_event_id: string }; Returns: Json }
       admin_review_commission: {
         Args: { p_action: string; p_commission: string; p_notes?: string }
         Returns: undefined

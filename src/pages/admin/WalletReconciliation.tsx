@@ -71,6 +71,7 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: "Rejeté",
   expired: "Expiré",
   suspicious: "Suspect",
+  credit_failed: "Crédit échoué",
 };
 
 function fmtDate(iso: string) {
@@ -223,7 +224,9 @@ export default function WalletReconciliation() {
   // E. Conflits : events needs_review/rejected + customer topups needs_review.
   const qConflicts = useMemo(() => {
     const evs = events.filter(
-      (e) => e.processing_status === "needs_review" || e.processing_status === "rejected",
+      (e) => e.processing_status === "needs_review"
+          || e.processing_status === "rejected"
+          || e.processing_status === "credit_failed",
     );
     return evs;
   }, [events]);
@@ -272,6 +275,8 @@ export default function WalletReconciliation() {
       toast.message("Reçu déjà enregistré · aucun double-crédit");
     } else if (result.match?.status === "credited") {
       toast.success("Reçu enregistré · recharge créditée");
+    } else if (result.match?.status === "credit_failed") {
+      toast.error(`Reçu enregistré · crédit wallet ÉCHOUÉ : ${(result.match as { error?: string }).error ?? "erreur inconnue"}`);
     } else {
       toast.success("Reçu enregistré · matching lancé");
     }
@@ -302,6 +307,18 @@ export default function WalletReconciliation() {
     if (error) { toast.error(error.message); return; }
     toast.success("Demande marquée expirée");
     void loadCustomerTopups();
+  };
+
+  const retryCredit = async (eventId: string) => {
+    setActing(true);
+    const { data, error } = await supabase.rpc("admin_retry_om_credit" as never, { p_event_id: eventId } as never);
+    setActing(false);
+    if (error) { toast.error(error.message); return; }
+    const r = (data as { status?: string; error?: string } | null) ?? {};
+    if (r.status === "credited") toast.success("Wallet crédité");
+    else if (r.status === "credit_failed") toast.error(`Crédit échoué : ${r.error ?? "erreur"}`);
+    else toast.message(`Statut : ${r.status ?? "inconnu"}`);
+    refreshAll();
   };
 
   const openReview = async (e: Event) => {
@@ -725,12 +742,21 @@ export default function WalletReconciliation() {
                   <tbody>
                     {qConflicts.map((e) => (
                       <tr key={`e-${e.id}`} className="border-t">
-                        <td className="p-3"><Badge variant="outline" className="text-[10px]">Reçu admin</Badge></td>
+                        <td className="p-3">
+                          <Badge variant="outline" className={`text-[10px] ${e.processing_status === "credit_failed" ? "border-destructive/40 text-destructive" : ""}`}>
+                            {STATUS_LABEL[e.processing_status] ?? "Reçu admin"}
+                          </Badge>
+                        </td>
                         <td className="p-3 text-xs whitespace-nowrap">{fmtDate(e.created_at)}</td>
                         <td className="p-3 font-mono text-xs">{e.om_code_normalized ?? e.provider_transaction_id}</td>
                         <td className="p-3 text-right font-medium">{formatGNF(e.amount_gnf)}</td>
                         <td className="p-3 text-xs text-muted-foreground max-w-[220px] truncate">{e.notes ?? STATUS_LABEL[e.processing_status] ?? e.processing_status}</td>
                         <td className="p-3 text-right">
+                          {e.processing_status === "credit_failed" && (
+                            <Button size="sm" variant="default" disabled={acting} onClick={() => retryCredit(e.id)} className="mr-1">
+                              <RefreshCcw className="w-3.5 h-3.5 mr-1" /> Réessayer crédit
+                            </Button>
+                          )}
                           <Button size="sm" variant="ghost" onClick={() => openReview(e)}>
                             <Eye className="w-3.5 h-3.5 mr-1" /> Détails
                           </Button>
