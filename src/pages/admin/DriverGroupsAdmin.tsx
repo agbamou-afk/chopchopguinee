@@ -140,7 +140,10 @@ export default function DriverGroupsAdmin() {
       ) : tab === "audit" ? (
         <RiskAuditPanel />
       ) : tab === "jobs" ? (
-        <MilestoneJobsPanel />
+        <div className="space-y-3">
+          <SchedulerStatusPanel />
+          <MilestoneJobsPanel />
+        </div>
       ) : tab === "checkins" ? (
         <div className="space-y-3">
           <CheckinsWithPhotos groups={groups} />
