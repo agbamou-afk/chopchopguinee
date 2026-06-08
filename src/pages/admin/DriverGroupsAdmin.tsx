@@ -15,6 +15,8 @@ import {
   listDriverGroups, listMemberships, listCommissions, listReferrals,
   createDriverGroup, assignDriverToGroup, removeDriverFromGroup,
   reviewCommission, markReferral, formatGnf, adminDriverGroupStats,
+  listZones, zoneLabel, regenerateGroupReferralCode, payCommissionsBatch,
+  type Zone,
   type DriverGroup, type DriverGroupMembership, type DriverGroupCommission, type DriverReferral,
   type DriverGroupStats,
 } from "@/lib/admin/driverGroups";
@@ -27,6 +29,7 @@ export default function DriverGroupsAdmin() {
   const [members, setMembers] = useState<DriverGroupMembership[]>([]);
   const [commissions, setCommissions] = useState<DriverGroupCommission[]>([]);
   const [referrals, setReferrals] = useState<DriverReferral[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<DriverGroup | null>(null);
@@ -34,10 +37,10 @@ export default function DriverGroupsAdmin() {
   const reload = async () => {
     setLoading(true);
     try {
-      const [g, m, c, r] = await Promise.all([
-        listDriverGroups(), listMemberships(), listCommissions(), listReferrals(),
+      const [g, m, c, r, z] = await Promise.all([
+        listDriverGroups(), listMemberships(), listCommissions(), listReferrals(), listZones(),
       ]);
-      setGroups(g); setMembers(m); setCommissions(c); setReferrals(r);
+      setGroups(g); setMembers(m); setCommissions(c); setReferrals(r); setZones(z);
     } catch (e: any) {
       toast({ title: "Erreur de chargement", description: e?.message ?? String(e), variant: "destructive" });
     } finally { setLoading(false); }
@@ -110,8 +113,8 @@ export default function DriverGroupsAdmin() {
         <AnalyticsPanel groupById={groupById} />
       )}
 
-      <CreateGroupSheet open={createOpen} onOpenChange={setCreateOpen} onCreated={reload} />
-      <AssignDriverDialog group={assignFor} onClose={() => setAssignFor(null)} onAssigned={reload} />
+      <CreateGroupSheet open={createOpen} onOpenChange={setCreateOpen} onCreated={reload} zones={zones} />
+      <AssignDriverDialog group={assignFor} onClose={() => setAssignFor(null)} onAssigned={reload} zones={zones} />
     </ModulePage>
   );
 }
