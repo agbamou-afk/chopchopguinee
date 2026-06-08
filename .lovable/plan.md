@@ -1,103 +1,77 @@
-# Driver Syndicate / Group Leader System — v0
+# Driver Groups / Syndicates v1
 
-**Routing:** Rides Agent (lead) · ChopWallet Agent (review ledger safety) · Admin & Ops Agent (review tab)
+Routed to Rides Agent with ChopWallet Agent review and Admin & Operations review. Scope is divided into 5 workstreams, sequenced to avoid contract collisions.
 
-**Lock candidate:** `driver-groups-syndicates-commissions-v0-stable`
+## 1. ChopWallet payout RPC (ChopWallet agent owns)
 
-## Scope (v0)
+Goal: move commission rows `pending → approved → paid` and credit the leader's wallet exactly once, only from the backend.
 
-Admin-only management. No leader portal yet. Commissions written as **pending ledger rows only** — no wallet credits in v0 (ChopWallet review gate). Default 1%, configurable per group.
+**Migration**
+- New SECURITY DEFINER RPC `wallet_pay_driver_commission(p_commission_id uuid)`:
+  - Admin gate via `is_admin()` (finance_admin or god_admin).
+  - Lock the `driver_group_commissions` row `FOR UPDATE`.
+  - Reject unless `status='approved'` and `wallet_transaction_id IS NULL` and `leader_user_id IS NOT NULL` and `commission_amount_gnf > 0`.
+  - Idempotency guard: unique partial index `(source_type, source_id, driver_user_id) WHERE status IN ('approved','paid')` already exists; additionally check no prior `wallet_transactions.reference = 'driver_commission:'||commission_id`.
+  - Insert into `wallet_transactions` (kind=`commission_credit`, direction=`credit`, amount=commission_amount_gnf, user_id=leader_user_id, reference=`driver_commission:<id>`, metadata=group/source).
+  - Update `wallets.balance_gnf` via existing secure helper (same path used by topup credit).
+  - Update commission row: `status='paid'`, `wallet_transaction_id=<new id>`, `paid_at=now()`.
+- New RPC `wallet_reverse_driver_commission(p_commission_id uuid, p_reason text)` for paid reversals: debit leader wallet, mark commission `reversed`, write reversal `wallet_transactions` row referencing the original.
+- `REVOKE ALL ... FROM PUBLIC; GRANT EXECUTE ... TO authenticated`.
 
-## A. Database (one migration)
+**Frontend**
+- `src/lib/admin/driverGroups.ts`: replace `reviewCommission('mark_paid')` to call `wallet_pay_driver_commission`. Keep `approve`/`reverse` actions.
+- `CommissionsTable`: relabel "Marquer payé" → "Payer (ChopWallet)", show resulting `wallet_transaction_id`, remove the v0 "hors-wallet" banner.
+- Zero frontend wallet balance writes; verify with grep.
 
-Tables (all `public`, with GRANTs + RLS + admin-only policies via `is_admin(auth.uid())` or `has_role`):
+## 2. Group leader self-service portal (Rides agent)
 
-1. **`driver_groups`** — id, name, description, leader_user_id (nullable, fk profiles), leader_name, leader_phone, status (`active|suspended|archived`, default active), commission_percent numeric default 1.00, signup_bonus_gnf bigint default 0, assigned_zones text[] default '{}', referral_code text unique nullable, notes, created_by, created_at, updated_at.
-2. **`driver_group_memberships`** — id, group_id fk, driver_user_id uuid, driver_profile_id fk driver_profiles nullable, status (`active|removed|pending`), assigned_zone text, joined_at, added_by, removed_at, removed_by, notes. **Partial unique index** on `(driver_user_id) WHERE status='active'`.
-3. **`driver_referrals`** — id, group_id, referrer_user_id, referred_driver_user_id, referral_code, status (`pending|approved|bonus_eligible|paid|rejected`), bonus_amount_gnf bigint, approved_at, paid_at, created_at, metadata jsonb.
-4. **`driver_group_commissions`** — id, group_id, leader_user_id, driver_user_id, source_type (`ride_earning|signup_bonus|adjustment`), source_id uuid, gross_driver_earning_gnf bigint, commission_percent numeric, commission_amount_gnf bigint, status (`pending|approved|paid|reversed`, default pending), wallet_transaction_id uuid nullable, created_at, approved_at, paid_at, notes. **Unique** on `(source_type, source_id, driver_user_id)` to prevent double-write.
+Read-only portal for the authenticated leader.
 
-All four tables: `GRANT SELECT,INSERT,UPDATE,DELETE ... TO authenticated; GRANT ALL ... TO service_role;` plus RLS policies that only admin roles can read/write (drivers may `SELECT` their own membership row in v0; no leader access).
+**RPCs (SECURITY DEFINER, leader gate = `auth.uid() = group.leader_user_id`)**
+- `leader_get_my_group()` → group row + summary counts.
+- `leader_list_my_members()` → membership rows (sanitized: driver display name, phone last 4, zone, joined_at).
+- `leader_list_my_commissions(p_status text default null)` → commission rows for own group.
+- `leader_list_my_referrals(p_status text default null)` → referrals for own group.
+- `leader_get_my_stats(p_from date, p_to date)` → counts/sums (see §5).
 
-## B. RPCs (SECURITY DEFINER, `set search_path=public`, REVOKE PUBLIC, admin gate)
+**Frontend**
+- New route `/leader` → `src/pages/LeaderPortal.tsx`.
+- Tabs: Vue d'ensemble · Chauffeurs · Parrainages · Commissions.
+- Strictly read-only. No approve, no edit %, no assignment. CTA "Contacter l'admin" for changes.
+- Routing guard: redirect to `/` if user has no group; show empty state if group `suspended`.
 
-- `admin_create_driver_group(payload jsonb)` → uuid
-- `admin_update_driver_group(p_group uuid, payload jsonb)`
-- `admin_assign_driver_to_group(p_group uuid, p_driver uuid, p_zone text, p_notes text)` — enforces one-active-membership rule.
-- `admin_remove_driver_from_group(p_membership uuid, p_reason text)`
-- `admin_review_commission(p_commission uuid, p_action text, p_notes text)` — pending→approved→paid (paid path is a no-op in v0, just sets status + timestamp; **no wallet mutation**).
-- `admin_mark_referral(p_referral uuid, p_action text)`
+## 3. Terminology cleanup
 
-### Trigger: commission auto-creation
-`trg_ride_commission_after_complete` on `public.rides` AFTER UPDATE when `status` transitions to a completed/paid terminal state (whatever the rides agent currently uses — read existing earnings column; if no driver_earning column exists yet, no-op safely):
-- look up active membership for `driver_user_id`
-- if found and group active and commission_percent > 0:
-  - insert `driver_group_commissions` row (`source_type='ride_earning'`, `source_id=ride.id`, status=`pending`)
-  - ON CONFLICT do nothing (idempotent)
+- Replace "Référrals" / "Référral" with **"Parrainages"** / **"Parrainage"** everywhere in `DriverGroupsAdmin.tsx`, leader portal, docs.
+- Update `docs/drivers/DRIVER_SYNDICATES_V0.md` (rename copy only; file path stays).
 
-Reversal hook (best-effort): if a ride is later cancelled/refunded, set matching commission row to `reversed`.
+## 4. Zones: controlled vocabulary
 
-### Trigger: on driver approval (`driver_applications` → approved)
-- If a `driver_referrals` row exists for that user with status `pending`, set to `bonus_eligible` and copy `signup_bonus_gnf` from the group as `bonus_amount_gnf`.
-- Activate matching pending `driver_group_memberships` (status `pending`→`active`).
+- Switch `assigned_zones text[]` UX from free-form input to multi-select fed by `public.zones` (existing table).
+- Migration: add `assigned_zone_ids uuid[]` on `driver_groups` and `driver_group_memberships`. Keep `assigned_zone(s)` text columns for backwards compatibility, populated via trigger from the joined `zones.name`.
+- `GroupFormSheet` and `AssignDriverDialog`: replace `<Input>` with a checkbox/combobox sourced from `zones` (active only).
+- Polygon coverage stays out of scope (noted as v2 in doc).
 
-## C. Admin UI
+## 5. Performance analytics
 
-New module `driver_groups` in `src/lib/admin/permissions.ts` (god_admin: ALL; operations_admin: view+edit; finance_admin: view+approve).
+- New RPC `admin_driver_group_stats(p_group_id uuid default null, p_from timestamptz, p_to timestamptz)` returning per-group:
+  - active_drivers, rides_completed, gross_driver_earnings_gnf, commissions_pending_gnf, commissions_paid_gnf, signup_bonus_eligible_count, signup_bonus_paid_gnf.
+- Admin: new "Analytics" tab in `DriverGroupsAdmin` with date range + per-group table + totals.
+- Leader portal: same numbers scoped to own group via `leader_get_my_stats`.
 
-New page `src/pages/admin/DriverGroupsAdmin.tsx` at route `/admin/driver-groups`, added to `AdminSidebar` under **Opérations** as **"Groupes chauffeurs"** (icon: `Users2`).
+## Security & QA matrix
 
-Sub-views (tabs inside the page):
-- **Vue d'ensemble** — Stat cards: groupes, leaders actifs, chauffeurs assignés, chauffeurs non assignés, commissions en attente (sum GNF), bonus en attente.
-- **Groupes** — table + "Créer un groupe" sheet (name, leader pick/manual, phone, commission %, signup bonus, zones multi-select from district hubs, notes).
-- **Détail groupe** (drawer) — leader info, drivers table with assign/remove, zone chips, commission ledger, signup bonus list.
-- **Commissions** — global ledger with filters and approve/mark-paid actions.
-- **Référrals / Bonus** — list with mark-paid/reject.
+- RLS unchanged on existing tables; all new access through SECURITY DEFINER RPCs with explicit role gates.
+- Verify: non-leader cannot call `leader_*` RPCs; non-admin cannot call `wallet_pay_driver_commission`; paying a commission twice is rejected; reversal debits exactly the original amount; analytics totals reconcile against raw tables; build clean; security linter clean for new objects.
 
-All empty states: `"Aucun groupe chauffeur configuré."` etc. No mock data.
+## Files (planned)
 
-## D. Wallet / Ledger safety
+- migrations: `wallet_pay_driver_commission` + `leader_*` RPCs + `admin_driver_group_stats` + zone columns
+- edits: `src/lib/admin/driverGroups.ts`, `src/pages/admin/DriverGroupsAdmin.tsx`, `src/App.tsx`, `docs/drivers/DRIVER_SYNDICATES_V0.md`
+- new: `src/pages/LeaderPortal.tsx`, `src/lib/leader/driverGroup.ts`
 
-**v0 does not credit wallets.** `paid` status is admin bookkeeping only; `wallet_transaction_id` stays NULL until ChopWallet agent provides a secure payout RPC in a follow-up. The UI clearly labels paid-status as "Marqué payé (hors-wallet)" with a tooltip explaining v1 will wire `wallet_internal_transfer`.
+## Lock candidate
+`driver-groups-syndicates-v1-stable`
 
-## E. Security
-
-- Admin-only RLS via `has_role(auth.uid(),'admin')` / `is_admin()` (use whichever helper already exists in project).
-- Driver may `SELECT` own membership row (`driver_user_id = auth.uid()`).
-- No anon grants.
-- RPCs `REVOKE EXECUTE ... FROM PUBLIC; GRANT EXECUTE ... TO authenticated;` with internal admin check that raises on non-admin.
-- Linter run after migration; resolve any new warnings tied to these objects.
-
-## F. Files touched
-
-**Created**
-- `supabase/migrations/<ts>_driver_groups_v0.sql`
-- `src/pages/admin/DriverGroupsAdmin.tsx`
-- `src/components/admin/driver-groups/GroupFormSheet.tsx`
-- `src/components/admin/driver-groups/GroupDetailDrawer.tsx`
-- `src/components/admin/driver-groups/AssignDriverSheet.tsx`
-- `src/lib/admin/driverGroups.ts` (typed RPC + query helpers)
-- `docs/drivers/DRIVER_SYNDICATES_V0.md`
-
-**Edited**
-- `src/lib/admin/permissions.ts` — add `driver_groups` module.
-- `src/components/admin/AdminSidebar.tsx` — add nav entry.
-- `src/App.tsx` — add lazy route under admin layout.
-- `.lovable/plan.md` — append milestone entry.
-
-## G. QA matrix
-
-A create group · B assign leader (no admin powers) · C assign driver (one-active enforced) · D ride completes → pending commission row appears · E 1% math verified on sample · F change % → next ride uses new % · G approve driver with pending referral → bonus_eligible · H suspended driver group → no new commission · I non-admin user blocked by RLS+RPC · J admin tab shows real rows or honest empty states · K build clean · L security linter no new errors.
-
-## H. Blockers to surface before coding
-
-1. **Driver earnings field on `rides`**: I'll read `rides` columns first; if no per-driver-earning column exists, commission trigger uses `fare_gnf` minus platform fee if present, otherwise stores `gross_driver_earning_gnf=0` and logs a TODO in the commission row's `notes`. Will report exactly what's used in the final return.
-2. No frontend wallet write anywhere in this feature — confirmed by design.
-
-Proceed?
-
----
-
-## Milestone: driver-groups-syndicates-commissions-v0 (lock candidate)
-
-Driver syndicate v0 shipped. Admin-only management at `/admin/driver-groups`. Four tables (`driver_groups`, `driver_group_memberships`, `driver_referrals`, `driver_group_commissions`) with admin RLS + service_role grants. Six SECURITY DEFINER RPCs. Ride completion trigger writes pending commission rows (1% default, configurable). Driver approval trigger activates pending memberships + marks referrals bonus_eligible. No wallet mutation — payout deferred to v1 ChopWallet RPC.
+## Open question before build
+Should the leader portal entry point live in the main bottom nav for users whose `auth.uid()` is a `driver_groups.leader_user_id`, or be reachable only via a direct `/leader` link (admin-shared)? Default if no answer: direct link only, no nav change.
