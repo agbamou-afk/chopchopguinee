@@ -68,6 +68,7 @@ export default function CompleteProfile() {
           display_name: display,
           phone: normalizeGuineaPhone(phone),
           email: parsed.data.email || null,
+          last_profile_confirmed_at: new Date().toISOString(),
         },
         { onConflict: "user_id" },
       );

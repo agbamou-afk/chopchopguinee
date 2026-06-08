@@ -34,6 +34,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import CompleteProfile from "./pages/CompleteProfile";
+import ConfirmProfile from "./pages/ConfirmProfile";
 import NoAccess from "./pages/NoAccess";
 import AgentTopup from "./pages/AgentTopup";
 import AgentDashboard from "./pages/AgentDashboard";
@@ -147,6 +148,7 @@ const App = () => {
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
+          <Route path="/confirm-profile" element={<ConfirmProfile />} />
           <Route path="/no-access" element={<NoAccess />} />
           <Route path="/admin" element={<Suspense fallback={null}><AdminLayout /></Suspense>}>
             <Route index element={<AdminDashboard />} />

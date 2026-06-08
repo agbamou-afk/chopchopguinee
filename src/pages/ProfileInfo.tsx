@@ -64,7 +64,11 @@ export default function ProfileInfo() {
     if (!sess.session) return;
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, phone: phone ? normalizeGuineaPhone(phone) : null })
+      .update({
+        full_name: fullName,
+        phone: phone ? normalizeGuineaPhone(phone) : null,
+        last_profile_confirmed_at: new Date().toISOString(),
+      })
       .eq("user_id", sess.session.user.id);
     setSaving(false);
     if (error) toast({ title: "Erreur", description: error.message });
