@@ -4064,6 +4064,10 @@ export type Database = {
         }
       }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
+      admin_regenerate_group_referral_code: {
+        Args: { p_code?: string; p_group: string }
+        Returns: string
+      }
       admin_remove_driver_from_group: {
         Args: { p_membership: string; p_reason?: string }
         Returns: undefined
@@ -5145,6 +5149,16 @@ export type Database = {
           updated_at: string
         }[]
       }
+      validate_referral_code: {
+        Args: { p_code: string }
+        Returns: {
+          group_id: string
+          group_name: string
+          leader_name: string
+          status: string
+          valid: boolean
+        }[]
+      }
       wallet_admin_credit: {
         Args: {
           p_amount_gnf: number
@@ -5267,6 +5281,10 @@ export type Database = {
       wallet_pay_driver_commission: {
         Args: { p_commission_id: string }
         Returns: string
+      }
+      wallet_pay_driver_commission_batch: {
+        Args: { p_commission_ids: string[] }
+        Returns: Json
       }
       wallet_pay_merchant: {
         Args: {
