@@ -26,8 +26,11 @@ import {
 import {
   MilestoneJobsPanel, FieldCheckinsPanel, RiskAuditPanel,
 } from "@/components/admin/DriverGroupsV4Panels";
+import {
+  ScorecardsPanel, SuggestionsPanel, RiskScorecardPanel, SchedulerStatusPanel, CheckinsWithPhotos,
+} from "@/components/admin/DriverGroupsV5Panels";
 
-type Tab = "overview" | "groups" | "members" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements" | "risk" | "audit" | "jobs" | "checkins" | "zones" | "analytics";
+type Tab = "overview" | "groups" | "members" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements" | "risk" | "audit" | "jobs" | "checkins" | "zones" | "analytics" | "scorecards" | "suggestions" | "risk_scorecard";
 
 export default function DriverGroupsAdmin() {
   const [tab, setTab] = useState<Tab>("overview");
