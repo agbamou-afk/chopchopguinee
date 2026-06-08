@@ -254,32 +254,27 @@ export default function WalletReconciliation() {
     const acct = activeOMAccounts.find((a) => a.id === mAccountId) ?? activeOMAccounts[0];
     if (!acct) { toast.error("Configurez un numéro de réception OM actif"); return; }
     setMSubmitting(true);
-    const { data: inserted, error } = await supabase
-      .from("payment_provider_events")
-      .insert({
-        provider: "orange_money",
-        event_type: "payment.received",
-        provider_transaction_id: mTxId.trim().toUpperCase(),
-        payer_phone: mPhone.trim() || null,
-        amount_gnf: amt,
-        status: "successful",
-        raw_payload: {
-          source: "admin_manual_entry",
-          note: mNote || null,
-          receiving_account_id: acct.id,
-          receiving_phone: acct.phone_e164,
-          receiving_label: acct.label,
-        },
-      })
-      .select("id")
-      .single();
-    if (error) { setMSubmitting(false); toast.error(error.message); return; }
-    // Trigger the existing auto-match (idempotent; secure RPC).
-    const { error: mErr } = await supabase.rpc("om_auto_match", { p_event_id: inserted.id });
+    const { data, error } = await supabase.rpc("admin_record_om_receipt" as never, {
+      p_provider_transaction_id: mTxId.trim().toUpperCase(),
+      p_amount_gnf: amt,
+      p_payer_phone: mPhone.trim() || null,
+      p_receiving_account_id: acct.id,
+      p_note: mNote || null,
+    } as never);
     setMSubmitting(false);
-    if (mErr) { toast.error(mErr.message); return; }
-    // Try to interpret RPC result, but be defensive about return shape.
-    toast.success("Reçu enregistré · matching lancé");
+    if (error) {
+      console.error("[RECONCILIATION_FAILED]", error);
+      toast.error("Réconciliation impossible pour le moment.");
+      return;
+    }
+    const result = (data as { duplicate?: boolean; match?: { status?: string } } | null) ?? {};
+    if (result.duplicate) {
+      toast.message("Reçu déjà enregistré · aucun double-crédit");
+    } else if (result.match?.status === "credited") {
+      toast.success("Reçu enregistré · recharge créditée");
+    } else {
+      toast.success("Reçu enregistré · matching lancé");
+    }
     setMTxId(""); setMAmount(""); setMPhone(""); setMNote("");
     refreshAll();
   };
