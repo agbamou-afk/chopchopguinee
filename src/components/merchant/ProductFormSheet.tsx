@@ -12,6 +12,7 @@ import {
   updateProduct,
   uploadProductImage,
   getProductImages,
+  getListingMinimumPrice,
   type MerchantProduct,
 } from "@/lib/marche/products";
 
@@ -44,6 +45,9 @@ export function ProductFormSheet({
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [negotiable, setNegotiable] = useState(false);
+  const [allowOffers, setAllowOffers] = useState(false);
+  const [minPrice, setMinPrice] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -55,7 +59,12 @@ export function ProductFormSheet({
       setCategory(product.category || PRODUCT_CATEGORIES[0]);
       setBarcode(product.barcode || "");
       setDescription(product.description || "");
+      setNegotiable(product.pricing_mode === "negotiable");
+      setAllowOffers(!!product.allow_offers);
       getProductImages(product.id).then(setImageUrls).catch(() => setImageUrls([]));
+      getListingMinimumPrice(product.id)
+        .then((m) => setMinPrice(m ? String(m) : ""))
+        .catch(() => setMinPrice(""));
     } else {
       setTitle("");
       setPrice("");
@@ -64,6 +73,9 @@ export function ProductFormSheet({
       setBarcode("");
       setDescription("");
       setImageUrls([]);
+      setNegotiable(false);
+      setAllowOffers(false);
+      setMinPrice("");
     }
     setPendingFile(null);
     setPreviewUrl(null);
@@ -89,9 +101,13 @@ export function ProductFormSheet({
           title: title.trim(),
           category,
           price_gnf: price ? Number(price) : null,
+          asking_price_gnf: price ? Number(price) : null,
           quantity_in_stock: qty ? Number(qty) : 0,
           barcode: barcode.trim() || null,
           description: description.trim() || null,
+          pricing_mode: negotiable ? "negotiable" : "fixed",
+          allow_offers: negotiable ? allowOffers : false,
+          minimum_price_gnf: negotiable && allowOffers && minPrice ? Number(minPrice) : null,
           ...(publish && canPublish ? { status: "active", visibility: "public" } : {}),
         });
         row = { ...product, title, category, price_gnf: price ? Number(price) : null, quantity_in_stock: qty ? Number(qty) : 0, barcode, description };
@@ -106,6 +122,10 @@ export function ProductFormSheet({
           barcode: barcode.trim() || null,
           description: description.trim() || null,
           publish: publish && canPublish,
+          pricing_mode: negotiable ? "negotiable" : "fixed",
+          allow_offers: negotiable ? allowOffers : false,
+          asking_price_gnf: price ? Number(price) : null,
+          minimum_price_gnf: negotiable && allowOffers && minPrice ? Number(minPrice) : null,
         });
       }
       if (pendingFile) {
