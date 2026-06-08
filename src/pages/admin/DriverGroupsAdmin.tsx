@@ -23,8 +23,11 @@ import {
 import {
   CampaignsPanel, ContractsPanel, StatementsPanel, RiskQueuePanel, ZoneCoveragePanel,
 } from "@/components/admin/DriverGroupsV3Panels";
+import {
+  MilestoneJobsPanel, FieldCheckinsPanel, RiskAuditPanel,
+} from "@/components/admin/DriverGroupsV4Panels";
 
-type Tab = "overview" | "groups" | "members" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements" | "risk" | "zones" | "analytics";
+type Tab = "overview" | "groups" | "members" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements" | "risk" | "audit" | "jobs" | "checkins" | "zones" | "analytics";
 
 export default function DriverGroupsAdmin() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -98,6 +101,9 @@ export default function DriverGroupsAdmin() {
           ["contracts", "Contrats"],
           ["statements", "Relevés"],
           ["risk", "Risque"],
+          ["audit", "Audit risque"],
+          ["jobs", "Jalons"],
+          ["checkins", "Check-ins"],
           ["zones", "Zones"],
           ["analytics", "Analytics"],
         ] as [Tab, string][]).map(([k, l]) => (
@@ -125,6 +131,12 @@ export default function DriverGroupsAdmin() {
         <StatementsPanel groups={groups} />
       ) : tab === "risk" ? (
         <RiskQueuePanel referrals={referrals} commissions={commissions} onChanged={reload} />
+      ) : tab === "audit" ? (
+        <RiskAuditPanel />
+      ) : tab === "jobs" ? (
+        <MilestoneJobsPanel />
+      ) : tab === "checkins" ? (
+        <FieldCheckinsPanel groups={groups} />
       ) : tab === "zones" ? (
         <ZoneCoveragePanel />
       ) : (
