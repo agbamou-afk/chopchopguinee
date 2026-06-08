@@ -319,6 +319,88 @@ export default function LeaderPortal() {
           ))}
         </Card>
       )}
+
+      {tab === "checkins" && (
+        <Card className="p-3 space-y-2">
+          {checkins.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Aucun check-in enregistré.</p>
+          ) : checkins.map(c => (
+            <div key={c.id} className="border-b last:border-b-0 border-border/40 pb-2 last:pb-0 text-sm space-y-1">
+              <div className="flex justify-between">
+                <p className="font-medium text-[12px]">{c.checkin_type}</p>
+                <span className="text-[10px] text-muted-foreground">{new Date(c.created_at).toLocaleString("fr-FR")}</span>
+              </div>
+              {c.notes && <p className="text-[11px] text-muted-foreground">{c.notes}</p>}
+              {(c.lat && c.lng) && (
+                <p className="text-[10px] text-muted-foreground tabular-nums">{c.lat.toFixed(5)}, {c.lng.toFixed(5)}</p>
+              )}
+            </div>
+          ))}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function CheckinForm({ groupId, onSaved }: { groupId: string; onSaved: () => void }) {
+  const [type, setType] = useState<string>("field_visit");
+  const [notes, setNotes] = useState("");
+  const [coords, setCoords] = useState<{ lat?: number; lng?: number; acc?: number }>({});
+  const [saving, setSaving] = useState(false);
+
+  const capture = () => {
+    if (!navigator.geolocation) { toast({ title: "Géolocalisation indisponible", variant: "destructive" }); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy }),
+      () => toast({ title: "Position refusée", description: "Vous pouvez quand même enregistrer sans localisation." }),
+      { enableHighAccuracy: true, timeout: 10_000 },
+    );
+  };
+
+  const submit = async () => {
+    if (type === "issue_report" && !notes.trim()) {
+      toast({ title: "Notes obligatoires pour un signalement", variant: "destructive" }); return;
+    }
+    setSaving(true);
+    try {
+      await leaderCreateCheckin({
+        group_id: groupId,
+        checkin_type: type,
+        notes,
+        lat: coords.lat, lng: coords.lng, accuracy_m: coords.acc,
+      });
+      toast({ title: "Check-in enregistré" });
+      onSaved();
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="space-y-3 mt-4">
+      <div>
+        <label className="text-xs text-muted-foreground">Type</label>
+        <select className="w-full mt-1 bg-background border border-border rounded h-9 px-2 text-sm"
+          value={type} onChange={e => setType(e.target.value)}>
+          <option value="field_visit">Visite terrain</option>
+          <option value="recruitment_visit">Recrutement</option>
+          <option value="driver_meeting">Réunion chauffeurs</option>
+          <option value="market_station">Station marché</option>
+          <option value="issue_report">Signalement</option>
+          <option value="training">Formation</option>
+        </select>
+      </div>
+      <div>
+        <label className="text-xs text-muted-foreground">Notes</label>
+        <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Que s'est-il passé sur le terrain ?" />
+      </div>
+      <div className="flex items-center justify-between gap-2 text-[11px]">
+        <Button size="sm" variant="outline" onClick={capture}>Capturer ma position</Button>
+        {coords.lat ? (
+          <span className="text-muted-foreground tabular-nums">{coords.lat.toFixed(4)}, {coords.lng!.toFixed(4)}{coords.acc ? ` ±${Math.round(coords.acc)}m` : ""}</span>
+        ) : <span className="text-muted-foreground">Position optionnelle</span>}
+      </div>
+      <Button className="w-full" disabled={saving} onClick={submit}>{saving ? "Envoi…" : "Enregistrer"}</Button>
     </div>
   );
 }
