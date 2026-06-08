@@ -760,6 +760,7 @@ export type Database = {
         Row: {
           added_by: string | null
           assigned_zone: string | null
+          assigned_zone_id: string | null
           created_at: string
           driver_profile_id: string | null
           driver_user_id: string
@@ -775,6 +776,7 @@ export type Database = {
         Insert: {
           added_by?: string | null
           assigned_zone?: string | null
+          assigned_zone_id?: string | null
           created_at?: string
           driver_profile_id?: string | null
           driver_user_id: string
@@ -790,6 +792,7 @@ export type Database = {
         Update: {
           added_by?: string | null
           assigned_zone?: string | null
+          assigned_zone_id?: string | null
           created_at?: string
           driver_profile_id?: string | null
           driver_user_id?: string
@@ -803,6 +806,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "driver_group_memberships_assigned_zone_id_fkey"
+            columns: ["assigned_zone_id"]
+            isOneToOne: false
+            referencedRelation: "zones"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "driver_group_memberships_driver_profile_id_fkey"
             columns: ["driver_profile_id"]
@@ -821,6 +831,7 @@ export type Database = {
       }
       driver_groups: {
         Row: {
+          assigned_zone_ids: string[]
           assigned_zones: string[]
           commission_percent: number
           created_at: string
@@ -838,6 +849,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_zone_ids?: string[]
           assigned_zones?: string[]
           commission_percent?: number
           created_at?: string
@@ -855,6 +867,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_zone_ids?: string[]
           assigned_zones?: string[]
           commission_percent?: number
           created_at?: string
@@ -3860,8 +3873,22 @@ export type Database = {
         Args: { _suspended_reason: string; _target: string }
         Returns: Json
       }
+      _driver_group_stats: {
+        Args: { p_from: string; p_group: string; p_to: string }
+        Returns: {
+          active_drivers: number
+          commissions_paid_gnf: number
+          commissions_pending_gnf: number
+          gross_driver_earnings_gnf: number
+          group_id: string
+          rides_completed: number
+          signup_bonus_eligible_count: number
+          signup_bonus_paid_gnf: number
+        }[]
+      }
       _is_god_admin: { Args: { _user: string }; Returns: boolean }
       _is_ops_or_god_admin: { Args: { _user: string }; Returns: boolean }
+      _leader_group_id: { Args: { _uid: string }; Returns: string }
       _notify_account_event: {
         Args: {
           _body: string
@@ -3951,6 +3978,19 @@ export type Database = {
         }
       }
       admin_create_driver_group: { Args: { payload: Json }; Returns: string }
+      admin_driver_group_stats: {
+        Args: { p_from?: string; p_group?: string; p_to?: string }
+        Returns: {
+          active_drivers: number
+          commissions_paid_gnf: number
+          commissions_pending_gnf: number
+          gross_driver_earnings_gnf: number
+          group_id: string
+          rides_completed: number
+          signup_bonus_eligible_count: number
+          signup_bonus_paid_gnf: number
+        }[]
+      }
       admin_email_delivery_diagnostics: {
         Args: { p_email: string }
         Returns: Json
@@ -4469,6 +4509,108 @@ export type Database = {
       is_god_admin: { Args: { _user_id: string }; Returns: boolean }
       is_user_banned: { Args: { _user: string }; Returns: boolean }
       is_user_frozen: { Args: { _user: string }; Returns: boolean }
+      leader_get_my_group: {
+        Args: never
+        Returns: {
+          assigned_zone_ids: string[]
+          assigned_zones: string[]
+          commission_percent: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          leader_name: string | null
+          leader_phone: string | null
+          leader_user_id: string | null
+          name: string
+          notes: string | null
+          referral_code: string | null
+          signup_bonus_gnf: number
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_groups"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      leader_get_my_stats: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: {
+          active_drivers: number
+          commissions_paid_gnf: number
+          commissions_pending_gnf: number
+          gross_driver_earnings_gnf: number
+          group_id: string
+          rides_completed: number
+          signup_bonus_eligible_count: number
+          signup_bonus_paid_gnf: number
+        }[]
+      }
+      leader_list_my_commissions: {
+        Args: { p_status?: string }
+        Returns: {
+          approved_at: string | null
+          commission_amount_gnf: number
+          commission_percent: number
+          created_at: string
+          driver_user_id: string
+          gross_driver_earning_gnf: number
+          group_id: string
+          id: string
+          leader_user_id: string | null
+          notes: string | null
+          paid_at: string | null
+          source_id: string | null
+          source_type: string
+          status: string
+          updated_at: string
+          wallet_transaction_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "driver_group_commissions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      leader_list_my_members: {
+        Args: never
+        Returns: {
+          assigned_zone: string
+          driver_display: string
+          driver_phone_last4: string
+          driver_user_id: string
+          id: string
+          joined_at: string
+          status: string
+        }[]
+      }
+      leader_list_my_referrals: {
+        Args: { p_status?: string }
+        Returns: {
+          approved_at: string | null
+          bonus_amount_gnf: number
+          created_at: string
+          group_id: string | null
+          id: string
+          metadata: Json
+          paid_at: string | null
+          referral_code: string | null
+          referred_driver_user_id: string
+          referrer_user_id: string | null
+          status: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "driver_referrals"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       list_my_topup_requests: {
         Args: { p_limit?: number }
         Returns: {
@@ -5122,6 +5264,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      wallet_pay_driver_commission: {
+        Args: { p_commission_id: string }
+        Returns: string
+      }
       wallet_pay_merchant: {
         Args: {
           p_amount_gnf: number
@@ -5173,6 +5319,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      wallet_reverse_driver_commission: {
+        Args: { p_commission_id: string; p_reason: string }
+        Returns: string
       }
       wallet_topup_admin_cancel: {
         Args: { p_reason?: string; p_topup_id: string }
