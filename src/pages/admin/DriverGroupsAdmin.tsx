@@ -238,6 +238,48 @@ function MembersTable({ members, groupById, onChanged }: {
 function CommissionsTable({ rows, groupById, onChanged }: {
   rows: DriverGroupCommission[]; groupById: Record<string, DriverGroup>; onChanged: () => void;
 }) {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [groupFilter, setGroupFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [paying, setPaying] = useState(false);
+
+  const filtered = useMemo(() => rows.filter(r =>
+    (statusFilter === "all" || r.status === statusFilter) &&
+    (groupFilter === "all" || r.group_id === groupFilter)
+  ), [rows, statusFilter, groupFilter]);
+
+  const payableSelected = useMemo(
+    () => filtered.filter(r => selected.has(r.id) && (r.status === "pending" || r.status === "approved")),
+    [filtered, selected],
+  );
+  const selectedTotal = payableSelected.reduce((s, r) => s + Number(r.commission_amount_gnf || 0), 0);
+
+  const toggle = (id: string) => {
+    setSelected(cur => {
+      const next = new Set(cur);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const batchPay = async () => {
+    if (payableSelected.length === 0) return;
+    if (!window.confirm(`Payer ${payableSelected.length} commission(s) pour un total de ${formatGnf(selectedTotal)} ?`)) return;
+    setPaying(true);
+    try {
+      const r = await payCommissionsBatch(payableSelected.map(c => c.id));
+      toast({
+        title: `Payés : ${r.paid_count} · Ignorés : ${r.skipped_count}`,
+        description: `Total payé : ${formatGnf(r.total_paid_gnf)}${r.errors.length ? ` · ${r.errors.length} erreur(s)` : ""}`,
+        variant: r.errors.length ? "destructive" : "default",
+      });
+      setSelected(new Set());
+      onChanged();
+    } catch (e: any) {
+      toast({ title: "Erreur paiement batch", description: e?.message, variant: "destructive" });
+    } finally { setPaying(false); }
+  };
+
   if (rows.length === 0) {
     return <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">Aucune commission enregistrée.</Card>;
   }
@@ -257,9 +299,31 @@ function CommissionsTable({ rows, groupById, onChanged }: {
         <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <span>« Payer (ChopWallet) » crédite le portefeuille du leader via RPC sécurisée. L'annulation après paiement débite automatiquement le leader.</span>
       </Card>
+      <div className="flex flex-wrap gap-2 items-center">
+        <Label className="text-xs">Statut :</Label>
+        {["all", "pending", "approved", "paid", "reversed"].map(s => (
+          <FilterChip key={s} label={s} active={statusFilter === s} onClick={() => setStatusFilter(s)} />
+        ))}
+        <Label className="text-xs ml-2">Groupe :</Label>
+        <select className="h-7 rounded-md border border-input bg-background px-2 text-xs"
+          value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
+          <option value="all">Tous</option>
+          {Object.values(groupById).map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+        </select>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-[11px] text-muted-foreground">
+            {payableSelected.length} sélectionnée(s) · {formatGnf(selectedTotal)}
+          </span>
+          <Button size="sm" disabled={payableSelected.length === 0 || paying} onClick={batchPay} className="h-7 text-[11px]">
+            {paying ? "Paiement…" : "Payer le batch (ChopWallet)"}
+          </Button>
+        </div>
+      </div>
       <DataTable
-        columns={["Date", "Groupe", "Chauffeur", "Source", "Gain chauffeur", "%", "Commission", "Statut", "Wallet TX", "Actions"]}
-        rows={rows.map(c => [
+        columns={["✓", "Date", "Groupe", "Chauffeur", "Source", "Gain chauffeur", "%", "Commission", "Statut", "Wallet TX", "Actions"]}
+        rows={filtered.map(c => [
+          <input type="checkbox" disabled={c.status !== "pending" && c.status !== "approved"}
+            checked={selected.has(c.id)} onChange={() => toggle(c.id)} />,
           new Date(c.created_at).toLocaleDateString("fr-FR"),
           groupById[c.group_id]?.name ?? "—",
           <span className="font-mono text-[11px]">{c.driver_user_id.slice(0, 8)}…</span>,
