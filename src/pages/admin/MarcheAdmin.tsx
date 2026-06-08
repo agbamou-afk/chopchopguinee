@@ -14,6 +14,10 @@ type Row = {
   status: string;
   promoted: boolean;
   created_at: string;
+  visibility?: string;
+  quantity_in_stock?: number | null;
+  store_id?: string | null;
+  kind?: string;
 };
 
 export default function MarcheAdmin() {
@@ -26,7 +30,7 @@ export default function MarcheAdmin() {
       setLoading(true);
       const { data } = await supabase
         .from("marketplace_listings")
-        .select("id,title,category,price_gnf,view_count,status,promoted,created_at")
+        .select("id,title,category,price_gnf,view_count,status,promoted,created_at,visibility,quantity_in_stock,store_id,kind")
         .order("created_at", { ascending: false })
         .limit(200);
       setRows((data ?? []) as Row[]);
@@ -64,13 +68,15 @@ export default function MarcheAdmin() {
         ))}
       </div>
       <DataTable
-        columns={["ID", "Annonce", "Catégorie", "Prix", "Vues", "Statut", "Créée"]}
+        columns={["ID", "Annonce", "Type", "Catégorie", "Prix", "Stock", "Visibilité", "Statut", "Créée"]}
         rows={loading ? [] : filtered.map((r) => [
           <span className="font-mono text-xs">{r.id.slice(0, 8)}…</span>,
           <span className="font-medium flex items-center gap-1">{r.title}{r.promoted && <TrendingUp className="w-3 h-3 text-primary" />}</span>,
+          <span className="text-xs text-muted-foreground">{r.kind ?? "—"}</span>,
           r.category,
           r.price_gnf ? formatGNF(Number(r.price_gnf)) : "—",
-          r.view_count ?? 0,
+          r.quantity_in_stock ?? "—",
+          <StatusBadge status={r.visibility ?? "—"} />,
           <StatusBadge status={r.status} />,
           new Date(r.created_at).toLocaleDateString("fr-FR"),
         ])}
