@@ -8,13 +8,17 @@ import {
   leaderGetMyGroup, leaderListMyMembers, leaderListMyCommissions,
   leaderListMyReferrals, leaderGetMyStats, type LeaderMember,
   leaderListMyCampaigns, leaderListMyContracts, leaderListMyStatements,
+  leaderListMyCheckins, leaderCreateCheckin,
 } from "@/lib/leader/driverGroup";
 import { formatGnf, type DriverGroup, type DriverGroupCommission, type DriverReferral, type DriverGroupStats } from "@/lib/admin/driverGroups";
 import type { RecruitmentCampaign, GroupContract, PayoutStatement } from "@/lib/admin/driverGroupsV3";
+import type { FieldCheckin } from "@/lib/admin/driverGroupsV4";
 import { Users2, Coins, Gift, Map as MapIcon, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
-type Tab = "overview" | "drivers" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements";
+type Tab = "overview" | "drivers" | "commissions" | "referrals" | "campaigns" | "contracts" | "statements" | "checkins";
 
 export default function LeaderPortal() {
   const { user, ready: authReady } = useAuth();
@@ -29,6 +33,8 @@ export default function LeaderPortal() {
   const [campaigns, setCampaigns] = useState<RecruitmentCampaign[]>([]);
   const [contracts, setContracts] = useState<GroupContract[]>([]);
   const [statements, setStatements] = useState<PayoutStatement[]>([]);
+  const [checkins, setCheckins] = useState<FieldCheckin[]>([]);
+  const [checkinOpen, setCheckinOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -42,13 +48,15 @@ export default function LeaderPortal() {
         if (cancel) return;
         if (!g) { setGroup(null); setLoading(false); return; }
         setGroup(g);
-        const [m, c, r, s, ca, co, st] = await Promise.all([
+        const [m, c, r, s, ca, co, st, ck] = await Promise.all([
           leaderListMyMembers(), leaderListMyCommissions(), leaderListMyReferrals(), leaderGetMyStats(30),
           leaderListMyCampaigns(), leaderListMyContracts(), leaderListMyStatements(),
+          leaderListMyCheckins(50),
         ]);
         if (cancel) return;
         setMembers(m); setCommissions(c); setReferrals(r); setStats(s);
         setCampaigns(ca); setContracts(co); setStatements(st);
+        setCheckins(ck);
       } catch (e: any) {
         if (!cancel) setErr(e?.message ?? String(e));
       } finally {
