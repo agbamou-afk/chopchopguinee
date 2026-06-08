@@ -506,12 +506,22 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
             </Marker>
           )}
         </ChopMap>
-        {!pickupCoords && (
+        {mapPickMode === 'pickup' && (
+          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-3 py-1.5 text-[11px] font-semibold max-w-[88%] text-center">
+            Touchez la carte pour choisir le départ
+          </div>
+        )}
+        {mapPickMode === 'destination' && (
+          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-3 py-1.5 text-[11px] font-semibold max-w-[88%] text-center">
+            Touchez la carte pour choisir la destination
+          </div>
+        )}
+        {!mapPickMode && !pickupCoords && (
           <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
             Touchez la carte pour choisir votre point de départ.
           </div>
         )}
-        {pickupCoords && !destCoords && (
+        {!mapPickMode && pickupCoords && !destCoords && (
           <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
             Touchez la carte pour placer la destination.
           </div>
