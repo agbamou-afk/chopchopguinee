@@ -7,5 +7,6 @@ export * from './zones';
 export * from './external';
 export * from './missionGeo';
 export * from './navigationTelemetry';
+export * from './placeSearch';
 export type { NormalizedRoute, RouteMode, EtaMatrixCell } from './providers/types';
 export { prefetchHomeTiles, clearTileCache } from './tileCache';
