@@ -104,9 +104,7 @@ Deno.serve(async (req) => {
           {
             error: "anonymize_failed",
             message: "Impossible d'anonymiser ce compte pour le moment.",
-            detail: anonErr.message ?? null,
             code: (anonErr as { code?: string }).code ?? null,
-            hint: (anonErr as { hint?: string }).hint ?? null,
           },
           500,
         );
@@ -118,7 +116,6 @@ Deno.serve(async (req) => {
           {
             error: "anonymize_failed",
             message: "Impossible d'anonymiser ce compte pour le moment.",
-            detail: a.detail ?? null,
             sqlstate: a.sqlstate ?? null,
           },
           500,
@@ -143,7 +140,7 @@ Deno.serve(async (req) => {
     if (purgeErr) {
       console.error("[admin-delete-user] pre-purge failed", purgeErr);
       return json(
-        { error: "pre_purge_failed", message: "Échec du nettoyage préalable.", detail: purgeErr.message ?? null },
+        { error: "pre_purge_failed", message: "Échec du nettoyage préalable." },
         500,
       );
     }
@@ -167,7 +164,7 @@ Deno.serve(async (req) => {
       const msg = /not.?found/i.test(delErr.message ?? "")
         ? "Suppression impossible : utilisateur introuvable."
         : "Impossible de supprimer ce compte pour le moment.";
-      return json({ error: "auth_delete_failed", message: msg, detail: delErr.message ?? null }, 500);
+      return json({ error: "auth_delete_failed", message: msg }, 500);
     }
 
     // Post-delete verification: confirm auth.users no longer has this id.

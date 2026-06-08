@@ -87,9 +87,9 @@ import { Analytics } from "@/lib/analytics/AnalyticsService";
 const FieldTestingPanel = lazy(() =>
   import("./components/devtools/FieldTestingPanel").then(m => ({ default: m.FieldTestingPanel }))
 );
-const DemoTestPanel = lazy(() =>
-  import("./components/devtools/DemoTestPanel").then(m => ({ default: m.DemoTestPanel }))
-);
+const DemoTestPanel = import.meta.env.DEV
+  ? lazy(() => import("./components/devtools/DemoTestPanel").then(m => ({ default: m.DemoTestPanel })))
+  : null;
 const SandboxOpsPanel = lazy(() =>
   import("./components/devtools/SandboxOpsPanel").then(m => ({ default: m.SandboxOpsPanel }))
 );
@@ -133,7 +133,7 @@ const App = () => {
             /[?&](field|sandbox|debug)=1/.test(window.location.search))) && (
           <Suspense fallback={null}><FieldTestingPanel /></Suspense>
         )}
-        {(isSandboxMode() ||
+        {DemoTestPanel && (isSandboxMode() ||
           (typeof window !== "undefined" &&
             /[?&](field|sandbox|debug)=1/.test(window.location.search))) && (
           <Suspense fallback={null}><DemoTestPanel /></Suspense>

@@ -62,7 +62,10 @@ Deno.serve(async (req) => {
   const { data: summary, error: sumErr } = await userClient.rpc('analytics_summary', {
     p_days: days,
   })
-  if (sumErr) return jsonResponse({ error: sumErr.message }, 500)
+  if (sumErr) {
+    console.error('analytics_summary failed', sumErr)
+    return jsonResponse({ error: 'Analytics summary unavailable' }, 500)
+  }
 
   // Call Lovable AI Gateway
   const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -88,7 +91,8 @@ Deno.serve(async (req) => {
 
   if (!aiRes.ok) {
     const text = await aiRes.text().catch(() => '')
-    return jsonResponse({ error: `AI gateway ${aiRes.status}: ${text.slice(0, 200)}` }, 502)
+    console.error('AI gateway failed', { status: aiRes.status, body: text.slice(0, 500) })
+    return jsonResponse({ error: 'AI insights unavailable' }, 502)
   }
 
   const aiJson = await aiRes.json()
@@ -120,7 +124,10 @@ Deno.serve(async (req) => {
     }))
 
   const { error: insErr } = await admin.from('ai_insights').insert(rows)
-  if (insErr) return jsonResponse({ error: insErr.message }, 500)
+  if (insErr) {
+    console.error('ai_insights insert failed', insErr)
+    return jsonResponse({ error: 'AI insights could not be saved' }, 500)
+  }
 
   return jsonResponse({ ok: true, inserted: rows.length, summary })
 })
