@@ -402,6 +402,11 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
                   Tapez un rond-point, marché, KM, commune ou quartier
                 </div>
               )}
+              {!searching && searchUnavailable && (
+                <div className="p-3 text-xs text-amber-600 dark:text-amber-400 border-b border-border/60">
+                  Recherche indisponible. Choisissez le point sur la carte.
+                </div>
+              )}
               {suggestions.map((s, i) => (
                 <button
                   key={i}
@@ -428,6 +433,20 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
                   </div>
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const target = activeField ?? 'destination';
+                  setMapPickMode(target);
+                  setActiveField(null);
+                  setSuggestions([]);
+                  (document.activeElement as HTMLElement | null)?.blur?.();
+                }}
+                className="w-full p-3 text-xs font-semibold text-primary hover:bg-muted flex items-center justify-center gap-2 border-t border-border/60"
+              >
+                <MapIcon className="w-3.5 h-3.5" />
+                Choisir {(activeField ?? 'destination') === 'pickup' ? 'le départ' : 'la destination'} sur la carte
+              </button>
               <button
                 type="button"
                 onClick={() => setActiveField(null)}
