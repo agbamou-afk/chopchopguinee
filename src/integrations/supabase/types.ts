@@ -836,6 +836,72 @@ export type Database = {
           },
         ]
       }
+      driver_group_field_checkins: {
+        Row: {
+          accuracy_m: number | null
+          checkin_type: string
+          created_at: string
+          created_by: string
+          driver_user_id: string | null
+          group_id: string
+          id: string
+          lat: number | null
+          leader_user_id: string | null
+          lng: number | null
+          metadata: Json
+          notes: string | null
+          photo_url: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          accuracy_m?: number | null
+          checkin_type?: string
+          created_at?: string
+          created_by: string
+          driver_user_id?: string | null
+          group_id: string
+          id?: string
+          lat?: number | null
+          leader_user_id?: string | null
+          lng?: number | null
+          metadata?: Json
+          notes?: string | null
+          photo_url?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          accuracy_m?: number | null
+          checkin_type?: string
+          created_at?: string
+          created_by?: string
+          driver_user_id?: string | null
+          group_id?: string
+          id?: string
+          lat?: number | null
+          leader_user_id?: string | null
+          lng?: number | null
+          metadata?: Json
+          notes?: string | null
+          photo_url?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_group_field_checkins_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "driver_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_group_field_checkins_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_group_memberships: {
         Row: {
           added_by: string | null
@@ -955,6 +1021,7 @@ export type Database = {
           adjustments_total_gnf: number
           commissions_total_gnf: number
           finalized_at: string | null
+          finalized_by: string | null
           generated_at: string
           generated_by: string | null
           group_id: string
@@ -962,16 +1029,20 @@ export type Database = {
           leader_user_id: string | null
           notes: string | null
           paid_at: string | null
+          paid_by: string | null
           period_end: string
           period_start: string
           signup_bonuses_total_gnf: number
           status: string
           total_due_gnf: number
+          void_reason: string | null
+          voided_by: string | null
         }
         Insert: {
           adjustments_total_gnf?: number
           commissions_total_gnf?: number
           finalized_at?: string | null
+          finalized_by?: string | null
           generated_at?: string
           generated_by?: string | null
           group_id: string
@@ -979,16 +1050,20 @@ export type Database = {
           leader_user_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          paid_by?: string | null
           period_end: string
           period_start: string
           signup_bonuses_total_gnf?: number
           status?: string
           total_due_gnf?: number
+          void_reason?: string | null
+          voided_by?: string | null
         }
         Update: {
           adjustments_total_gnf?: number
           commissions_total_gnf?: number
           finalized_at?: string | null
+          finalized_by?: string | null
           generated_at?: string
           generated_by?: string | null
           group_id?: string
@@ -996,11 +1071,14 @@ export type Database = {
           leader_user_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          paid_by?: string | null
           period_end?: string
           period_start?: string
           signup_bonuses_total_gnf?: number
           status?: string
           total_due_gnf?: number
+          void_reason?: string | null
+          voided_by?: string | null
         }
         Relationships: [
           {
@@ -1011,6 +1089,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      driver_group_risk_reviews: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json
+          reason: string | null
+          reviewed_at: string
+          reviewed_by: string | null
+          risk_level: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          reviewed_at?: string
+          reviewed_by?: string | null
+          risk_level?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          reviewed_at?: string
+          reviewed_by?: string | null
+          risk_level?: string | null
+          status?: string
+        }
+        Relationships: []
       }
       driver_groups: {
         Row: {
@@ -1253,6 +1370,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      driver_referral_milestone_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          driver_user_id: string | null
+          event_type: string
+          id: string
+          last_error: string | null
+          processed_at: string | null
+          referral_id: string | null
+          ride_id: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          driver_user_id?: string | null
+          event_type: string
+          id?: string
+          last_error?: string | null
+          processed_at?: string | null
+          referral_id?: string | null
+          ride_id?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          driver_user_id?: string | null
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          processed_at?: string | null
+          referral_id?: string | null
+          ride_id?: string | null
+          status?: string
+        }
+        Relationships: []
       }
       driver_referrals: {
         Row: {
@@ -4292,6 +4448,10 @@ export type Database = {
         Args: { p_email: string }
         Returns: Json
       }
+      admin_enqueue_milestone_refresh: {
+        Args: { p_driver: string; p_event?: string }
+        Returns: string
+      }
       admin_freeze_user: {
         Args: {
           _expires_at?: string
@@ -4309,6 +4469,31 @@ export type Database = {
           p_to: string
         }
         Returns: string
+      }
+      admin_list_field_checkins: {
+        Args: { p_group?: string; p_limit?: number }
+        Returns: {
+          accuracy_m: number | null
+          checkin_type: string
+          created_at: string
+          created_by: string
+          driver_user_id: string | null
+          group_id: string
+          id: string
+          lat: number | null
+          leader_user_id: string | null
+          lng: number | null
+          metadata: Json
+          notes: string | null
+          photo_url: string | null
+          zone_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "driver_group_field_checkins"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       admin_log_test_delete: {
         Args: { _caller: string; _reason: string; _target: string }
@@ -4849,6 +5034,7 @@ export type Database = {
       is_god_admin: { Args: { _user_id: string }; Returns: boolean }
       is_user_banned: { Args: { _user: string }; Returns: boolean }
       is_user_frozen: { Args: { _user: string }; Returns: boolean }
+      leader_create_field_checkin: { Args: { payload: Json }; Returns: string }
       leader_get_my_group: {
         Args: never
         Returns: {
@@ -4914,6 +5100,31 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "driver_recruitment_campaigns"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      leader_list_my_checkins: {
+        Args: { p_limit?: number }
+        Returns: {
+          accuracy_m: number | null
+          checkin_type: string
+          created_at: string
+          created_by: string
+          driver_user_id: string | null
+          group_id: string
+          id: string
+          lat: number | null
+          leader_user_id: string | null
+          lng: number | null
+          metadata: Json
+          notes: string | null
+          photo_url: string | null
+          zone_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "driver_group_field_checkins"
           isOneToOne: false
           isSetofReturn: true
         }
@@ -5028,6 +5239,7 @@ export type Database = {
           adjustments_total_gnf: number
           commissions_total_gnf: number
           finalized_at: string | null
+          finalized_by: string | null
           generated_at: string
           generated_by: string | null
           group_id: string
@@ -5035,11 +5247,14 @@ export type Database = {
           leader_user_id: string | null
           notes: string | null
           paid_at: string | null
+          paid_by: string | null
           period_end: string
           period_start: string
           signup_bonuses_total_gnf: number
           status: string
           total_due_gnf: number
+          void_reason: string | null
+          voided_by: string | null
         }[]
         SetofOptions: {
           from: "*"
@@ -5323,6 +5538,14 @@ export type Database = {
           reference: string
           status: string
           topup_id: string
+        }[]
+      }
+      process_driver_referral_milestone_jobs: {
+        Args: { p_limit?: number }
+        Returns: {
+          eligible: number
+          failed: number
+          processed: number
         }[]
       }
       read_email_batch: {
