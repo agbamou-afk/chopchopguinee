@@ -437,6 +437,48 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
         )}
       </div>
 
+      <Dialog open={cancelOpen} onOpenChange={(o) => { setCancelOpen(o); if (!o) { setCancelReason(""); setCancelOther(""); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Annuler la course</DialogTitle>
+            <DialogDescription>Indiquez une raison — le client sera averti.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 py-2">
+            {["Client introuvable","Adresse incorrecte","Problème moto","Distance trop loin","Urgence","Autre"].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setCancelReason(r)}
+                className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition ${cancelReason === r ? "border-primary bg-primary/10 font-semibold" : "border-border hover:bg-muted/50"}`}
+              >
+                {r}
+              </button>
+            ))}
+            {cancelReason === "Autre" && (
+              <input
+                autoFocus
+                value={cancelOther}
+                onChange={(e) => setCancelOther(e.target.value)}
+                placeholder="Précisez la raison"
+                maxLength={120}
+                className="w-full bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none"
+              />
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setCancelOpen(false)} className="flex-1">Retour</Button>
+            <Button
+              variant="destructive"
+              onClick={confirmCancel}
+              disabled={busy || !cancelReason || (cancelReason === "Autre" && cancelOther.trim().length < 3)}
+              className="flex-1"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmer l'annulation"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="sm:max-w-sm overflow-hidden">
           <AnimatePresence>
