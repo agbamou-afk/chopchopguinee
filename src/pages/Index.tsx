@@ -395,7 +395,12 @@ const Index = () => {
   const closeActiveTrip = async (alsoCancel: boolean) => {
     const trip = activeTrip;
     if (trip?.rideId) {
-      dismissedRidesRef.current.add(trip.rideId);
+      // Only mark as "dismissed for the session" when the user explicitly
+      // cancels. A plain close (header X) is a "minimize" — the customer
+      // must be able to reopen the active ride from Dernière activité.
+      if (alsoCancel) {
+        dismissedRidesRef.current.add(trip.rideId);
+      }
       // If the user closes a still-pending (un-matched) ride, cancel it
       // server-side so it does not stay around as an orphan.
       if (alsoCancel) {
@@ -403,9 +408,45 @@ const Index = () => {
       }
     }
     setActiveTrip(null);
-    setActiveView("orders");
-    setActiveTab("orders");
+    // After an explicit cancel, send the customer to their activity feed.
+    // After a minimize (just close), leave them where they were so they can
+    // reopen the ride from the "Course en cours" tile.
+    if (alsoCancel) {
+      setActiveView("orders");
+      setActiveTab("orders");
+    }
   };
+
+  // Allow any surface (Dernière activité tile, deep-link, peek) to reopen
+  // the active ride dashboard by dispatching a window event with the rideId.
+  useEffect(() => {
+    const handler = async (e: Event) => {
+      const ce = e as CustomEvent<{ rideId?: string }>;
+      const rideId = ce.detail?.rideId;
+      if (!rideId || !user) return;
+      // Re-allow restore for this ride if it was previously dismissed in-session.
+      dismissedRidesRef.current.delete(rideId);
+      const { data: ride } = await supabase
+        .from("rides")
+        .select("id,mode,pickup_lat,pickup_lng,dest_lat,dest_lng,fare_gnf,hold_tx_id,status,driver_id")
+        .eq("id", rideId)
+        .eq("client_id", user.id)
+        .maybeSingle();
+      if (!ride) return;
+      setActiveTrip({
+        mode: ride.mode as TrackingMode,
+        pickupCoords: [Number(ride.pickup_lat), Number(ride.pickup_lng)],
+        destCoords: ride.dest_lat != null && ride.dest_lng != null
+          ? [Number(ride.dest_lat), Number(ride.dest_lng)]
+          : undefined,
+        fare: Number(ride.fare_gnf ?? 0),
+        holdId: ride.hold_tx_id ?? null,
+        rideId: ride.id,
+      });
+    };
+    window.addEventListener("cc:open-active-ride", handler as EventListener);
+    return () => window.removeEventListener("cc:open-active-ride", handler as EventListener);
+  }, [user]);
 
   const enableDriverMode = () => {
     if (!requireAuth()) return;
