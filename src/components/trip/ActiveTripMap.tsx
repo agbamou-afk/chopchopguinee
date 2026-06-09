@@ -42,6 +42,10 @@ interface Props {
   onCancel?: () => void;
   /** Close the screen (after completion or by user). */
   onClose?: () => void;
+  /** When true, hide the in-map bottom sheet so an overlay panel
+   *  (e.g. PickupConfirmCard during 'arrived') can dominate without
+   *  competing for vertical space. */
+  hideBottomSheet?: boolean;
 }
 
 /**
@@ -82,6 +86,7 @@ export function ActiveTripMap({
   onMessageDriver,
   onCancel,
   onClose,
+  hideBottomSheet = false,
 }: Props) {
   const { ride, loading } = useRideRealtime(rideId);
   const driverPos = useDriverLocation(ride?.driver_id ?? null);
@@ -269,6 +274,7 @@ export function ActiveTripMap({
       </div>
 
       {/* Bottom sheet */}
+      {hideBottomSheet ? null : (
       <div className="rounded-t-3xl border-t border-border bg-card p-4 space-y-3 shadow-lg">
         {isSearching ? (
           <div className="space-y-3">
@@ -407,6 +413,7 @@ export function ActiveTripMap({
           </Button>
         )}
       </div>
+      )}
     </div>
   );
 }

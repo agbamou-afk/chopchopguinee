@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScanLine, KeyRound, Loader2, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { ScanLine, KeyRound, Loader2, ShieldCheck, CheckCircle2, Phone, Bike } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { QrScanner } from "@/components/scanner/QrScanner";
@@ -17,6 +17,9 @@ interface Props {
   driverName?: string | null;
   /** The actual pickup code on the ride; used for the demo bypass shortcut. */
   pickupCode?: string | null;
+  vehicleLabel?: string;
+  plate?: string | null;
+  onCallDriver?: () => void;
 }
 
 /**
@@ -24,7 +27,14 @@ interface Props {
  * and metadata.phase === 'arrived'. Calls ride_confirm_pickup which transitions
  * the ride to in_progress on success.
  */
-export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
+export function PickupConfirmCard({
+  rideId,
+  driverName,
+  pickupCode,
+  vehicleLabel,
+  plate,
+  onCallDriver,
+}: Props) {
   const [scanning, setScanning] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [code, setCode] = useState("");
@@ -89,10 +99,10 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
             Votre chauffeur est arrivé
           </p>
           <p className="text-lg font-bold leading-tight mt-0.5">
-            {driverName ? `${driverName} vous attend` : "Votre chauffeur vous attend"}
+            Votre chauffeur est arrivé
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Scannez le code du chauffeur pour démarrer officiellement la course.
+            Scannez le code affiché sur l'application du chauffeur pour démarrer officiellement la course.
           </p>
           <TrustCues
             cues={["verified", "choppay"]}
@@ -100,6 +110,31 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
             compact
           />
         </div>
+
+        {(driverName || vehicleLabel || plate) && (
+          <div className="flex items-center gap-3 rounded-xl bg-muted/40 p-2.5">
+            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Bike className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{driverName ?? "Votre chauffeur"}</p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {[vehicleLabel, plate].filter(Boolean).join(" · ") || "En attente d'infos véhicule"}
+              </p>
+            </div>
+            {onCallDriver && (
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-9 w-9 rounded-full"
+                onClick={onCallDriver}
+                aria-label="Appeler le chauffeur"
+              >
+                <Phone className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        )}
 
         {isDemo && pickupCode && (
           <Button
@@ -116,7 +151,7 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
           <Button
             onClick={() => setScanning(true)}
             disabled={busy}
-            className={`w-full h-12 text-base font-semibold ${isDemo ? "" : "gradient-primary"}`}
+            className={`w-full h-14 text-base font-bold ${isDemo ? "" : "gradient-primary"}`}
             variant={isDemo ? "outline" : "default"}
           >
             <ScanLine className="w-5 h-5 mr-2" /> Scanner le code chauffeur
@@ -127,7 +162,7 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
             disabled={busy}
             className="w-full h-10"
           >
-            <KeyRound className="w-4 h-4 mr-2" /> Entrer le code manuellement
+            <KeyRound className="w-4 h-4 mr-2" /> Entrer le code chauffeur
           </Button>
         </div>
 
@@ -139,7 +174,7 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="ABC123"
+              placeholder="Code chauffeur (ex: ABC123)"
               maxLength={20}
               autoFocus
               className="tracking-[0.25em] font-mono text-center"
