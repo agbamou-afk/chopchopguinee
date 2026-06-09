@@ -61,6 +61,9 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   const [receiptFare, setReceiptFare] = useState<number>(0);
   const [muted, setMuted] = useState(false);
   const { position: driverPos, request: requestGeo, isReady: geoReady } = useGeolocation({ watch: true });
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState<string>("");
+  const [cancelOther, setCancelOther] = useState<string>("");
 
   // External Google Maps fallback — useful when internal routing fails or
   // the driver simply prefers their familiar nav app.
@@ -268,13 +271,19 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     setShowReceipt(true);
   };
 
-  const cancelTrip = async () => {
-    if (!confirm("Annuler cette course ?")) return;
+  const cancelTrip = () => setCancelOpen(true);
+  const confirmCancel = async () => {
+    const reason = (cancelReason === "Autre" ? cancelOther.trim() : cancelReason) || "Annulée par le chauffeur";
     setBusy(true);
-    const { error } = await supabase.rpc("ride_cancel", { p_ride_id: rideId, p_reason: "Annulée par le chauffeur" });
+    const { error } = await supabase.rpc("ride_cancel", { p_ride_id: rideId, p_reason: reason });
     setBusy(false);
-    if (error) { toast({ title: "Erreur", description: error.message }); return; }
-    try { Analytics.track("driver.ride.declined" as any, { metadata: { rideId, after: "accepted" } }); } catch {}
+    if (error) {
+      toast({ title: "Impossible d'annuler la course pour le moment.", description: error.message });
+      return;
+    }
+    try { Analytics.track("driver.ride.declined" as any, { metadata: { rideId, after: "accepted", reason } }); } catch {}
+    toast({ title: "Course annulée." });
+    setCancelOpen(false);
     onClose();
   };
 
