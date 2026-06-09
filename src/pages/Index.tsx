@@ -47,6 +47,7 @@ import { useDriverProfile } from "@/hooks/useDriverProfile";
 import { createSupportIssue } from "@/lib/support/issues";
 import { UnderConstructionModal } from "@/components/announcements/UnderConstructionModal";
 import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
+import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -368,7 +369,7 @@ const Index = () => {
         .from("rides")
         .select("id,mode,pickup_lat,pickup_lng,dest_lat,dest_lng,fare_gnf,hold_tx_id,status,driver_id,created_at")
         .eq("client_id", user.id)
-        .in("status", ["pending", "in_progress"])
+        .in("status", [...ACTIVE_CLIENT_RIDE_STATUSES])
         .gte("created_at", cutoffRecent)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -436,8 +437,7 @@ const Index = () => {
       // Server truth wins: only mount the active dashboard for truly active
       // rides. Completed/cancelled/failed rides must never be opened as
       // "Course en cours" — they belong in history/receipt flows instead.
-      const ACTIVE_RIDE_STATES = new Set(["pending", "accepted", "assigned", "in_progress"]);
-      if (!ACTIVE_RIDE_STATES.has(ride.status)) {
+      if (!isActiveClientRideStatus(ride.status)) {
         toast({
           title: ride.status === "completed" ? "Course terminée" : "Course terminée",
           description:
