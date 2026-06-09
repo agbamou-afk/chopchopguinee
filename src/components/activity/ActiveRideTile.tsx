@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Bike, ChevronRight, Search, MapPin, Navigation } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { ACTIVE_CLIENT_RIDE_STATUSES } from "@/lib/rides/status";
 
 interface ActiveRide {
   id: string;
@@ -35,7 +36,7 @@ export function ActiveRideTile() {
         .from("rides")
         .select("id,status,mode,driver_id,metadata,created_at")
         .eq("client_id", user.id)
-        .in("status", ["pending", "in_progress"])
+        .in("status", [...ACTIVE_CLIENT_RIDE_STATUSES])
         .gte("created_at", cutoff)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -77,7 +78,7 @@ export function ActiveRideTile() {
       return { sub: "Recherche d'un chauffeur…", Icon: Search, accent: "bg-amber-500" };
     }
     if (phase === "arrived") {
-      return { sub: "Chauffeur arrivé · montrez votre code", Icon: MapPin, accent: "bg-emerald-500" };
+      return { sub: "Chauffeur arrivé · scannez son code", Icon: MapPin, accent: "bg-emerald-500" };
     }
     if (phase === "on_trip" || ride.status === "in_progress") {
       return { sub: "Course en cours", Icon: Navigation, accent: "bg-primary" };
