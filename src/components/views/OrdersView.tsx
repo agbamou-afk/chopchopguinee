@@ -3,6 +3,7 @@ import { Timer, ShieldCheck } from "lucide-react";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
+import { ActiveRideTile } from "@/components/activity/ActiveRideTile";
 import { useActivityFeed } from "@/lib/activity/useActivityFeed";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +56,7 @@ export function OrdersView() {
       </div>
 
       <div className="px-3 pb-28">
+        <ActiveRideTile />
         <ActivityTimeline items={items} loading={loading} filter={filter} />
       </div>
     </div>

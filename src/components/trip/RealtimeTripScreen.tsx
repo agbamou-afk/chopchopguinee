@@ -18,7 +18,12 @@ interface Props {
   mode: "moto" | "toktok" | "food";
   /** Wallet hold to release if the user cancels before pickup. */
   holdId?: string | null;
+  /** Close the dashboard but keep the ride active in the background.
+   * Use this for the header "X": the customer can reopen from
+   * Dernière activité → "Course en cours". */
   onClose: () => void;
+  /** Explicit cancellation (releases hold + cancels ride server-side). */
+  onCancel?: () => void;
 }
 
 const TITLES: Record<Props["mode"], string> = {
@@ -32,7 +37,7 @@ const TITLES: Record<Props["mode"], string> = {
  * in the v2 flow. Pure presentation around <ActiveTripMap>, plus header,
  * call/cancel side effects and wallet release on cancel.
  */
-export function RealtimeTripScreen({ rideId, mode, holdId, onClose }: Props) {
+export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: Props) {
   const settled = useRef(false);
   const { ride } = useRideRealtime(rideId);
   useRideLifecycleNotifications(ride, "client");
@@ -88,7 +93,7 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose }: Props) {
   const handleCancel = async () => {
     await releaseHold("Course annulée par le client");
     toast({ title: "Course annulée", description: "Vos fonds réservés ont été libérés." });
-    onClose();
+    (onCancel ?? onClose)();
   };
 
   return (
