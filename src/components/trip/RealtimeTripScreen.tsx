@@ -130,6 +130,7 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose }: Props) {
         <div className="relative h-full">
           <ActiveTripMap
             rideId={rideId}
+            driverName={driverName}
             onCallDriver={handleCallDriver}
             onCancel={handleCancel}
             onClose={onClose}
