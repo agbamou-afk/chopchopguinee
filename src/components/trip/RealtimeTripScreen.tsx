@@ -146,6 +146,8 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
               rideId={rideId}
               driverName={driverName}
               pickupCode={pickupCode}
+              vehicleLabel={mode === "toktok" ? "TokTok" : mode === "moto" ? "Moto" : undefined}
+              onCallDriver={ride?.driver_id ? () => handleCallDriver(ride.driver_id!) : undefined}
             />
           )}
         </div>
