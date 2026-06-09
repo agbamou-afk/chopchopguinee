@@ -33,10 +33,11 @@ export async function registerPwa(): Promise<void> {
 
   try {
     const { registerSW } = await import("virtual:pwa-register");
-    const updateSW = registerSW({
+    let refreshServiceWorker: ((reloadPage?: boolean) => Promise<void>) | undefined;
+    refreshServiceWorker = registerSW({
       immediate: true,
       onNeedRefresh() {
-        updateSW(true).catch(() => {});
+        refreshServiceWorker?.(true).catch(() => {});
       },
       onOfflineReady() {},
       onRegisteredSW(_swUrl, registration) {
