@@ -78,17 +78,21 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="absolute left-3 right-3 bottom-3 z-20 rounded-2xl border border-border bg-card/95 backdrop-blur-md p-4 shadow-elevated space-y-3"
+        className="absolute left-3 right-3 bottom-3 z-20 rounded-2xl border-2 border-primary bg-card/95 backdrop-blur-md p-4 shadow-elevated space-y-3 ring-4 ring-primary/15"
       >
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-primary font-semibold">
-            Chauffeur arrivé · prêt à partir
+          <p className="text-[10px] uppercase tracking-wide text-primary font-semibold flex items-center gap-1.5">
+            <span className="relative inline-flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+            Votre chauffeur est arrivé
           </p>
-          <p className="text-base font-semibold">
+          <p className="text-lg font-bold leading-tight mt-0.5">
             {driverName ? `${driverName} vous attend` : "Votre chauffeur vous attend"}
           </p>
-          <p className="text-xs text-muted-foreground">
-            Confirmez la prise en charge pour sécuriser le départ.
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Scannez le code du chauffeur pour démarrer officiellement la course.
           </p>
           <TrustCues
             cues={["verified", "choppay"]}
@@ -112,10 +116,10 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
           <Button
             onClick={() => setScanning(true)}
             disabled={busy}
-            className={`w-full h-11 ${isDemo ? "" : "gradient-primary"}`}
+            className={`w-full h-12 text-base font-semibold ${isDemo ? "" : "gradient-primary"}`}
             variant={isDemo ? "outline" : "default"}
           >
-            <ScanLine className="w-4 h-4 mr-2" /> Scanner le QR du chauffeur
+            <ScanLine className="w-5 h-5 mr-2" /> Scanner le code chauffeur
           </Button>
           <Button
             variant="outline"
@@ -123,7 +127,7 @@ export function PickupConfirmCard({ rideId, driverName, pickupCode }: Props) {
             disabled={busy}
             className="w-full h-10"
           >
-            <KeyRound className="w-4 h-4 mr-2" /> Saisir le code manuellement
+            <KeyRound className="w-4 h-4 mr-2" /> Entrer le code manuellement
           </Button>
         </div>
 

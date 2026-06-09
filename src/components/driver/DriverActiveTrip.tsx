@@ -61,6 +61,9 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   const [receiptFare, setReceiptFare] = useState<number>(0);
   const [muted, setMuted] = useState(false);
   const { position: driverPos, request: requestGeo, isReady: geoReady } = useGeolocation({ watch: true });
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState<string>("");
+  const [cancelOther, setCancelOther] = useState<string>("");
 
   // External Google Maps fallback — useful when internal routing fails or
   // the driver simply prefers their familiar nav app.
@@ -268,13 +271,19 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
     setShowReceipt(true);
   };
 
-  const cancelTrip = async () => {
-    if (!confirm("Annuler cette course ?")) return;
+  const cancelTrip = () => setCancelOpen(true);
+  const confirmCancel = async () => {
+    const reason = (cancelReason === "Autre" ? cancelOther.trim() : cancelReason) || "Annulée par le chauffeur";
     setBusy(true);
-    const { error } = await supabase.rpc("ride_cancel", { p_ride_id: rideId, p_reason: "Annulée par le chauffeur" });
+    const { error } = await supabase.rpc("ride_cancel", { p_ride_id: rideId, p_reason: reason });
     setBusy(false);
-    if (error) { toast({ title: "Erreur", description: error.message }); return; }
-    try { Analytics.track("driver.ride.declined" as any, { metadata: { rideId, after: "accepted" } }); } catch {}
+    if (error) {
+      toast({ title: "Impossible d'annuler la course pour le moment.", description: error.message });
+      return;
+    }
+    try { Analytics.track("driver.ride.declined" as any, { metadata: { rideId, after: "accepted", reason } }); } catch {}
+    toast({ title: "Course annulée." });
+    setCancelOpen(false);
     onClose();
   };
 
@@ -427,6 +436,48 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
           </Button>
         )}
       </div>
+
+      <Dialog open={cancelOpen} onOpenChange={(o) => { setCancelOpen(o); if (!o) { setCancelReason(""); setCancelOther(""); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Annuler la course</DialogTitle>
+            <DialogDescription>Indiquez une raison — le client sera averti.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 py-2">
+            {["Client introuvable","Adresse incorrecte","Problème moto","Distance trop loin","Urgence","Autre"].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setCancelReason(r)}
+                className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition ${cancelReason === r ? "border-primary bg-primary/10 font-semibold" : "border-border hover:bg-muted/50"}`}
+              >
+                {r}
+              </button>
+            ))}
+            {cancelReason === "Autre" && (
+              <input
+                autoFocus
+                value={cancelOther}
+                onChange={(e) => setCancelOther(e.target.value)}
+                placeholder="Précisez la raison"
+                maxLength={120}
+                className="w-full bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none"
+              />
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setCancelOpen(false)} className="flex-1">Retour</Button>
+            <Button
+              variant="destructive"
+              onClick={confirmCancel}
+              disabled={busy || !cancelReason || (cancelReason === "Autre" && cancelOther.trim().length < 3)}
+              className="flex-1"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmer l'annulation"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="sm:max-w-sm overflow-hidden">
