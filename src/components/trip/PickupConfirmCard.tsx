@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { TrustCues } from "@/components/trust/TrustCues";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { useEffect } from "react";
+import { rideQaDebug } from "@/lib/rides/debug";
 
 interface Props {
   rideId: string;
@@ -46,12 +47,27 @@ export function PickupConfirmCard({
   const isSandbox = mode === "sandbox";
 
   useEffect(() => {
+    rideQaDebug("pickup-confirm-card-mounted", {
+      rideId,
+      hasPickupCode: !!pickupCode,
+      scannerCtaRendered: true,
+      manualFallbackRendered: true,
+    });
     try {
       Analytics.track("ride.trust_message_viewed" as any, {
         metadata: { surface: "pickup_confirm" },
       });
     } catch {}
-  }, []);
+  }, [rideId, pickupCode]);
+
+  const openRidePickupScanner = () => {
+    rideQaDebug("pickup-confirm-scan-cta-tapped", {
+      rideId,
+      target: "RidePickupScanner",
+      usesGlobalScanner: false,
+    });
+    setScanning(true);
+  };
 
   const submit = async (raw: string) => {
     const value = raw.trim();
@@ -91,7 +107,8 @@ export function PickupConfirmCard({
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="absolute left-3 right-3 bottom-3 z-20 rounded-2xl border-2 border-primary bg-card/95 backdrop-blur-md p-4 shadow-elevated space-y-3 ring-4 ring-primary/15"
+        data-ride-pickup-confirm-card="true"
+        className="absolute left-3 right-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[55] max-h-[58vh] overflow-y-auto rounded-2xl border-2 border-primary bg-card/95 p-4 shadow-elevated ring-4 ring-primary/15 backdrop-blur-md space-y-3"
       >
         <div>
           <p className="text-[10px] uppercase tracking-wide text-primary font-semibold flex items-center gap-1.5">
@@ -152,8 +169,9 @@ export function PickupConfirmCard({
 
         <div className="grid grid-cols-1 gap-2">
           <Button
-            onClick={() => setScanning(true)}
+            onClick={openRidePickupScanner}
             disabled={busy}
+            data-ride-pickup-scan-cta="true"
             className={`w-full h-14 text-base font-bold ${isDemo ? "" : "gradient-primary"}`}
             variant={isDemo ? "outline" : "default"}
           >
