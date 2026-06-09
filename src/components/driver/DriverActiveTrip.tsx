@@ -372,7 +372,7 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
                 <QrCode className="h-3 w-3" /> Code de prise en charge
               </p>
               <p className="text-2xl font-bold tracking-[0.2em] tabular-nums">{pickupCode}</p>
-              <p className="text-[11px] text-muted-foreground">Faites scanner ce QR ou dictez le code au client.</p>
+              <p className="text-[11px] text-muted-foreground">Demandez au client de scanner votre code.</p>
               <button
                 onClick={() => setQrOpen(true)}
                 className="mt-1 text-[11px] font-semibold text-primary underline"
@@ -491,9 +491,9 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
                 transition={{ type: "spring", stiffness: 320, damping: 26 }}
               >
                 <DialogHeader>
-                  <DialogTitle className="text-center">Faites scanner ce QR au client</DialogTitle>
+                  <DialogTitle className="text-center">En attente de confirmation client</DialogTitle>
                   <DialogDescription className="text-center">
-                    Le QR se renouvelle toutes les 30 secondes pour la sécurité.
+                    Demandez au client de scanner votre code. Le QR se renouvelle toutes les 30 secondes pour la sécurité.
                   </DialogDescription>
                 </DialogHeader>
 
