@@ -140,7 +140,7 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
         isDriverMode={true}
         onToggleDriverMode={onToggleDriverMode}
         subtitle="Tableau de bord chauffeur"
-        amountLabel="Gains du jour"
+        amountLabel="CHOP Wallet"
         amountValue={driverBalance}
         amountLoading={walletLoading}
         notificationCount={queue.length + (current ? 1 : 0)}
@@ -224,16 +224,26 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
           );
         })()}
 
-        {/* Operational chips: today earnings + nearby demand */}
+        {/* Operational chips: CHOP Wallet (ledger balance) + nearby demand.
+            "Aujourd'hui" lives inside the wallet detail screen as a metric
+            so the wallet number is never confused with today's earnings. */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-2xl bg-card border border-border/50 shadow-card px-3 py-2.5">
+          <button
+            type="button"
+            onClick={() => navigate("/?tab=wallet")}
+            className="text-left rounded-2xl bg-card border border-border/50 shadow-card px-3 py-2.5 hover:bg-muted/40 transition-colors"
+            aria-label="Ouvrir CHOP Wallet"
+          >
             <p className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground inline-flex items-center gap-1.5">
-              <Wallet className="w-3 h-3 text-primary" /> Aujourd'hui
+              <Wallet className="w-3 h-3 text-primary" /> CHOP Wallet
             </p>
             <p className="text-base font-extrabold text-foreground tabular-nums leading-tight mt-0.5 truncate">
-              {formatGNF(e.todayGnf)}
+              {walletLoading ? "…" : formatGNF(driverBalance ?? 0)}
             </p>
-          </div>
+            <p className="text-[9.5px] text-muted-foreground mt-0.5 truncate">
+              Aujourd'hui · {formatGNF(e.todayGnf)}
+            </p>
+          </button>
           <div className="rounded-2xl bg-card border border-border/50 shadow-card px-3 py-2.5 relative">
             <p className="text-[9.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground inline-flex items-center gap-1.5">
               <Users className="w-3 h-3 text-success" /> Demandes

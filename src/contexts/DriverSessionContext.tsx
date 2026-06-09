@@ -239,7 +239,15 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     setCurrent(queue[0]);
   }, [queue]);
 
-  const closeTrip = () => { setActiveTrip(null); setActiveRideId(null); };
+  const closeTrip = () => {
+    setActiveTrip(null);
+    setActiveRideId(null);
+    // After a ride ends, ride_complete/ride_cancel reset presence on the
+    // server. Pull the fresh profile + offer queue so the driver immediately
+    // becomes dispatchable again without needing to disconnect/reconnect.
+    refetch();
+    refetchOffers();
+  };
 
   const createDebugOfferForCurrentDriver = useCallback(async () => {
     setActiveTrip(null);
