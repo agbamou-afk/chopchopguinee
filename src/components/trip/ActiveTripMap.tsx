@@ -18,6 +18,7 @@ import {
   MapMarker,
   PinSet,
   RoutePolyline,
+  StraightLineFallback,
 } from "@/components/map";
 import {
   RoutingService,
@@ -228,6 +229,14 @@ export function ActiveTripMap({
                     : "active"
               }
               animated
+            />
+          )}
+
+          {!route && pickup && (phase === "approach" ? (driverPos ?? pickup) : pickup) && (phase === "approach" ? pickup : dropoff) && (
+            <StraightLineFallback
+              id={`client-ride-${rideId}-fallback-route`}
+              from={phase === "approach" ? (driverPos ?? pickup) : pickup}
+              to={phase === "approach" ? pickup : dropoff!}
             />
           )}
 
