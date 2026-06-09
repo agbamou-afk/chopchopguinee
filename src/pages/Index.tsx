@@ -680,7 +680,8 @@ const Index = () => {
             rideId={activeTrip.rideId}
             mode={activeTrip.mode as "moto" | "toktok"}
             holdId={activeTrip.holdId}
-            onClose={() => closeActiveTrip(true)}
+            onClose={() => closeActiveTrip(false)}
+            onCancel={() => closeActiveTrip(true)}
           />
         )}
       </AnimatePresence>
