@@ -48,6 +48,7 @@ import { createSupportIssue } from "@/lib/support/issues";
 import { UnderConstructionModal } from "@/components/announcements/UnderConstructionModal";
 import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
 import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
+import { rideQaDebug } from "@/lib/rides/debug";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -282,6 +283,10 @@ const Index = () => {
     setActiveTrip(null);
     setShowScanner(false);
   }, [onboardingBlocksApp]);
+
+  useEffect(() => {
+    if (activeTrip) setShowScanner(false);
+  }, [activeTrip]);
 
   // Logout: clear explicit-choice flag and reset to client mode.
   useEffect(() => {
@@ -532,6 +537,53 @@ const Index = () => {
     }
   };
 
+  const handleGlobalScanResult = async (text: string) => {
+    setShowScanner(false);
+    const scanned = text.trim();
+    if (/^CHOP-PICKUP-/i.test(scanned)) {
+      rideQaDebug("global-scanner-pickup-payload", {
+        hasUser: !!user,
+        activeTripMounted: !!activeTrip,
+      });
+      if (user) {
+        const cutoffRecent = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        const { data: ride } = await supabase
+          .from("rides")
+          .select("id,mode,pickup_lat,pickup_lng,dest_lat,dest_lng,fare_gnf,hold_tx_id,status,driver_id,metadata,created_at")
+          .eq("client_id", user.id)
+          .in("status", [...ACTIVE_CLIENT_RIDE_STATUSES])
+          .gte("created_at", cutoffRecent)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const metadata = (ride?.metadata ?? {}) as Record<string, unknown>;
+        if (ride && metadata.phase === "arrived" && ride.driver_id) {
+          setActiveTrip({
+            mode: ride.mode as TrackingMode,
+            pickupCoords: [Number(ride.pickup_lat), Number(ride.pickup_lng)],
+            destCoords: ride.dest_lat != null && ride.dest_lng != null
+              ? [Number(ride.dest_lat), Number(ride.dest_lng)]
+              : undefined,
+            fare: Number(ride.fare_gnf ?? 0),
+            holdId: ride.hold_tx_id ?? null,
+            rideId: ride.id,
+          });
+          toast({
+            title: "Ouvrez votre course en cours",
+            description: "Utilisez le bouton Scanner le code chauffeur dans le tableau de course.",
+          });
+          return;
+        }
+      }
+      toast({
+        title: "Ouvrez votre course en cours",
+        description: "Ouvrez votre course en cours pour confirmer la prise en charge.",
+      });
+      return;
+    }
+    toast({ title: "Code scanné", description: scanned });
+  };
+
   const handleTabChange = (tab: string) => {
     // Home tab is public; every other tab requires an account.
     if (tab !== "home" && !requireAuth()) return;
@@ -780,10 +832,7 @@ const Index = () => {
           title="Scanner un QR CHOPCHOP"
           subtitle="Course, paiement ou code marchand"
           onClose={() => setShowScanner(false)}
-          onResult={(text) => {
-            setShowScanner(false);
-            toast({ title: "Code scanné", description: text });
-          }}
+          onResult={handleGlobalScanResult}
         />
       )}
 
