@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { motion } from "framer-motion";
 import { X, Camera, AlertCircle, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { rideQaDebug } from "@/lib/rides/debug";
 
 interface QrScannerProps {
   onResult: (text: string) => void;
@@ -13,7 +15,7 @@ interface QrScannerProps {
 }
 
 export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle, expectedHint }: QrScannerProps) {
-  const containerId = "qr-reader-region";
+  const containerId = `qr-reader-region-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const startedRef = useRef(false);
   const stoppingRef = useRef(false);
@@ -41,6 +43,7 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
       try {
         const html5 = new Html5Qrcode(containerId, { verbose: false });
         scannerRef.current = html5;
+        rideQaDebug("qr-scanner-starting", { title, containerId });
         await html5.start(
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 240, height: 240 } },
@@ -58,6 +61,11 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
         }
         setStarting(false);
       } catch (e: any) {
+        rideQaDebug("qr-scanner-start-error", {
+          title,
+          name: e?.name,
+          message: e?.message,
+        });
         setError(
           e?.message?.includes("Permission") || e?.name === "NotAllowedError"
             ? "Permission caméra refusée. Activez l'accès dans les réglages du navigateur."
@@ -87,10 +95,11 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
       } catch {}
       stoppingRef.current = false;
     }
+    rideQaDebug("qr-scanner-result", { title, textPreview: text.slice(0, 24) });
     onResult(text);
   };
 
-  return (
+  const scannerUi = (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -174,4 +183,7 @@ export function QrScanner({ onResult, onClose, title = "Scanner un QR", subtitle
       </div>
     </motion.div>
   );
+
+  if (typeof document === "undefined") return scannerUi;
+  return createPortal(scannerUi, document.body);
 }

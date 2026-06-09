@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { RidePhaseChip, deriveRidePhase } from "@/components/ride/RidePhaseChip";
 import { TrustCues } from "@/components/trust/TrustCues";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
+import { rideQaDebug } from "@/lib/rides/debug";
 
 interface Props {
   rideId: string;
@@ -46,9 +47,33 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
   const [showReceipt, setShowReceipt] = useState(false);
 
   const meta = (ride?.metadata ?? {}) as Record<string, unknown>;
+  const phase = (meta.phase as string | undefined) ?? null;
+  const pickupConfirmedBy = (meta.pickup_confirmed_by as string | undefined) ?? null;
   const showPickupConfirm =
-    !!ride && ride.status === "pending" && meta.phase === "arrived" && !!ride.driver_id;
+    !!ride &&
+    phase === "arrived" &&
+    !!ride.driver_id &&
+    pickupConfirmedBy !== "customer" &&
+    ride.status !== "cancelled" &&
+    ride.status !== "completed";
   const pickupCode = (meta.pickup_code as string | undefined) ?? null;
+
+  useEffect(() => {
+    if (!ride) return;
+    rideQaDebug("client-arrived-branch", {
+      rideId,
+      status: ride.status,
+      metadataPhase: phase,
+      pickupConfirmedBy,
+      hasDriver: !!ride.driver_id,
+      hasPickupCode: !!pickupCode,
+      computedDashboardState: showPickupConfirm ? "arrived_confirm_pickup" : deriveRidePhase(ride),
+      shouldShowPickupConfirmCard: showPickupConfirm,
+      pickupConfirmCardMounted: showPickupConfirm,
+      hideBottomSheet: showPickupConfirm,
+      scannerCtaRendered: showPickupConfirm,
+    });
+  }, [ride, rideId, phase, pickupConfirmedBy, pickupCode, showPickupConfirm]);
 
   useEffect(() => {
     if (ride?.status === "completed") setShowReceipt(true);

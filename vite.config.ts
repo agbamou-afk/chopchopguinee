@@ -63,8 +63,8 @@ export default defineConfig(({ mode }) => ({
           {
             urlPattern: ({ request }) =>
               ["style", "script", "worker"].includes(request.destination),
-            handler: "StaleWhileRevalidate",
-            options: { cacheName: "cc-static" },
+            handler: "NetworkFirst",
+            options: { cacheName: "cc-static-v2", networkTimeoutSeconds: 5 },
           },
           {
             urlPattern: ({ request }) => request.destination === "image",

@@ -4,6 +4,7 @@ import { QrScanner } from "@/components/scanner/QrScanner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { rideQaDebug } from "@/lib/rides/debug";
 
 interface RidePickupScannerProps {
   rideId: string;
@@ -12,7 +13,9 @@ interface RidePickupScannerProps {
 }
 
 function normalizeDriverPickupCode(raw: string) {
-  return raw.trim();
+  const trimmed = raw.trim();
+  const pickupPayload = trimmed.match(/CHOP-PICKUP-[A-Z0-9]+(?:-[A-Z0-9-]+)?/i)?.[0];
+  return (pickupPayload ?? trimmed).trim();
 }
 
 /** Ride-specific scanner: unlike the global BottomNav QR scanner, this calls
@@ -24,6 +27,12 @@ export function RidePickupScanner({ rideId, onSuccess, onCancel }: RidePickupSca
   const confirmPickup = async (raw: string) => {
     const code = normalizeDriverPickupCode(raw);
     if (!code || busy) return;
+    rideQaDebug("ride-pickup-scanner-submit", {
+      rideId,
+      rawLooksLikePickupPayload: /^CHOP-PICKUP-/i.test(raw.trim()),
+      parsedCodePreview: code.slice(0, 12),
+      rpc: "ride_confirm_pickup",
+    });
     setPendingCode(code);
     setBusy(true);
     const { error } = await supabase.rpc("ride_confirm_pickup", {
@@ -34,6 +43,10 @@ export function RidePickupScanner({ rideId, onSuccess, onCancel }: RidePickupSca
     setPendingCode(null);
 
     if (error) {
+      rideQaDebug("ride-pickup-scanner-rpc-error", {
+        rideId,
+        message: error.message,
+      });
       toast({
         title: "Code chauffeur invalide",
         description: "Vérifiez que vous scannez le QR de votre chauffeur CHOPCHOP.",
@@ -41,6 +54,7 @@ export function RidePickupScanner({ rideId, onSuccess, onCancel }: RidePickupSca
       return;
     }
 
+    rideQaDebug("ride-pickup-scanner-rpc-success", { rideId });
     toast({
       title: "Pickup confirmé",
       description: "Course démarrée — bon voyage avec CHOPCHOP.",

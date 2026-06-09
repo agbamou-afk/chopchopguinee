@@ -31,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getRuntimeMode } from "@/lib/runtimeMode";
 import { useAuth } from "@/contexts/AuthContext";
 import { playArrivedAtPickup, playRideCompleted } from "@/lib/sound/driverSounds";
+import { rideQaDebug } from "@/lib/rides/debug";
 
 type Phase = "approach" | "arrived" | "on_trip" | "at_destination";
 
@@ -239,10 +240,31 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
   }
 
   const setPhaseRpc = async (p: Phase) => {
+    rideQaDebug("driver-set-phase-before", {
+      rideId,
+      requestedPhase: p,
+      rpc: "ride_set_phase",
+      statusBefore: ride.status,
+      metadataPhaseBefore: phase,
+      hasPickupCodeBefore: !!pickupCode,
+    });
     setBusy(true);
-    const { error } = await supabase.rpc("ride_set_phase", { p_ride_id: rideId, p_phase: p });
+    const { data, error } = await supabase.rpc("ride_set_phase", { p_ride_id: rideId, p_phase: p });
     setBusy(false);
-    if (error) { toast({ title: "Erreur", description: error.message }); return false; }
+    if (error) {
+      rideQaDebug("driver-set-phase-error", { rideId, requestedPhase: p, message: error.message });
+      toast({ title: "Erreur", description: error.message });
+      return false;
+    }
+    const result = data as any;
+    rideQaDebug("driver-set-phase-after", {
+      rideId,
+      requestedPhase: p,
+      statusAfter: result?.status,
+      metadataPhaseAfter: result?.metadata?.phase,
+      pickupCodeExists: !!result?.metadata?.pickup_code,
+      driverQrCodeGenerated: !!result?.metadata?.pickup_code,
+    });
     if (p === "arrived") setQrOpen(true);
     try { Analytics.track("driver.ride.completed" as any, { metadata: { phase: p, rideId } }); } catch {}
     return true;
