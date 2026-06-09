@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Marker } from "react-map-gl";
-import { Phone, MessageCircle, X, AlertTriangle, Clock } from "lucide-react";
+import {
+  Phone,
+  MessageCircle,
+  X,
+  AlertTriangle,
+  Clock,
+  Search,
+  KeyRound,
+  RotateCcw,
+  Bike,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   ChopMap,
@@ -17,9 +27,13 @@ import {
   type LatLng,
 } from "@/lib/maps";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
+import { supabase } from "@/integrations/supabase/client";
+import { formatGNF } from "@/lib/format";
 
 interface Props {
   rideId: string;
+  /** Optional driver display name (already fetched upstream). */
+  driverName?: string | null;
   /** Tap a "call driver" affordance. */
   onCallDriver?: (driverId: string) => void;
   /** Tap "message driver" placeholder. */
@@ -30,19 +44,28 @@ interface Props {
   onClose?: () => void;
 }
 
-const STATUS_COPY: Record<string, string> = {
-  pending: "Recherche d'un chauffeur…",
-  in_progress: "Trajet en cours",
-  completed: "Trajet terminé",
-  cancelled: "Trajet annulé",
-};
-
-function statusColor(status: string): string {
-  if (status === "completed") return "bg-emerald-500";
-  if (status === "cancelled") return "bg-destructive";
-  if (status === "in_progress") return "bg-primary";
-  return "bg-amber-500";
+/**
+ * Resolve a customer-facing label for the current ride state.
+ * We treat pending+no-driver as "searching", and lean on metadata.phase to
+ * distinguish approach / arrived / on-trip once a driver is assigned.
+ */
+function resolveStatusCopy(
+  status: string,
+  phase: string,
+  hasDriver: boolean,
+): { label: string; color: string } {
+  if (status === "completed") return { label: "Trajet terminé", color: "bg-emerald-500" };
+  if (status === "cancelled") return { label: "Trajet annulé", color: "bg-destructive" };
+  if (status === "pending" && !hasDriver) {
+    return { label: "Recherche d'un chauffeur…", color: "bg-amber-500" };
+  }
+  if (phase === "arrived") return { label: "Chauffeur arrivé", color: "bg-emerald-500" };
+  if (phase === "on_trip") return { label: "Course en cours", color: "bg-primary" };
+  return { label: "Votre chauffeur arrive", color: "bg-primary" };
 }
+
+/** Soft window after which we surface a no-driver fallback. */
+const NO_DRIVER_TIMEOUT_S = 90;
 
 /**
  * Synchronized active-trip experience for client side.
@@ -54,6 +77,7 @@ function statusColor(status: string): string {
  */
 export function ActiveTripMap({
   rideId,
+  driverName,
   onCallDriver,
   onMessageDriver,
   onCancel,
@@ -65,6 +89,8 @@ export function ActiveTripMap({
   const [route, setRoute] = useState<{ polyline: string; durationS: number } | null>(
     null,
   );
+  const [searchElapsed, setSearchElapsed] = useState(0);
+  const [retrying, setRetrying] = useState(false);
 
   const pickup: LatLng | null = useMemo(
     () => (ride ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null),
@@ -81,11 +107,11 @@ export function ActiveTripMap({
   // Phase: before pickup we draw driver→pickup; after pickup we draw pickup→dest.
   // We treat metadata.phase = "on_trip" as "after pickup" if backend sets it,
   // otherwise we infer from driver position proximity to pickup.
-  const phase: "approach" | "on_trip" = useMemo(() => {
-    const meta = (ride?.metadata ?? {}) as Record<string, unknown>;
-    if (meta.phase === "on_trip") return "on_trip";
-    return "approach";
-  }, [ride]);
+  const meta = (ride?.metadata ?? {}) as Record<string, unknown>;
+  const phaseRaw = (meta.phase as string | undefined) ?? "approach";
+  const phase: "approach" | "on_trip" = phaseRaw === "on_trip" ? "on_trip" : "approach";
+  const pickupCode = (meta.pickup_code as string | undefined) ?? null;
+  const isSearching = !!ride && ride.status === "pending" && !ride.driver_id;
 
   // Recompute route when phase / endpoints change. RoutingService has
   // internal dedup + caching, so this is cheap.
@@ -123,6 +149,20 @@ export function ActiveTripMap({
     mapRef.current.fitBounds(b, 80);
   }, [pickup, dropoff, driverPos?.lat, driverPos?.lng]);
 
+  // Searching timer — drives the no-driver fallback. Reset whenever the
+  // ride leaves the searching state so we don't surface a stale timeout.
+  useEffect(() => {
+    if (!isSearching) {
+      setSearchElapsed(0);
+      return;
+    }
+    const start = Date.now();
+    const id = window.setInterval(() => {
+      setSearchElapsed(Math.floor((Date.now() - start) / 1000));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [isSearching]);
+
   if (!ride) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground animate-pulse">
@@ -132,8 +172,24 @@ export function ActiveTripMap({
   }
 
   const status = ride.status;
-  const statusLabel = STATUS_COPY[status] ?? status;
+  const { label: statusLabel, color: statusColorClass } = resolveStatusCopy(
+    status,
+    phaseRaw,
+    !!ride.driver_id,
+  );
   const isFinished = status === "completed" || status === "cancelled";
+  const showNoDriverFallback = isSearching && searchElapsed >= NO_DRIVER_TIMEOUT_S;
+  const vehicleLabel = ride.mode === "toktok" ? "TokTok" : "Moto";
+
+  const handleRetryDispatch = async () => {
+    setRetrying(true);
+    try {
+      await supabase.rpc("ride_dispatch", { p_ride_id: rideId });
+      setSearchElapsed(0);
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -195,7 +251,7 @@ export function ActiveTripMap({
 
         {/* Status pill */}
         <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-card/95 backdrop-blur-md border border-border px-3 py-1.5 shadow-md flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-full ${statusColor(status)} animate-pulse`} />
+          <span className={`h-2 w-2 rounded-full ${statusColorClass} animate-pulse`} />
           <span className="text-xs font-semibold">{statusLabel}</span>
         </div>
 
@@ -214,42 +270,138 @@ export function ActiveTripMap({
 
       {/* Bottom sheet */}
       <div className="rounded-t-3xl border-t border-border bg-card p-4 space-y-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              {phase === "approach" ? "Arrivée du chauffeur" : "Arrivée à destination"}
-            </p>
-            <p className="text-2xl font-bold tabular-nums flex items-center gap-1.5">
-              <Clock className="h-5 w-5 text-primary" />
-              {route ? formatDuration(route.durationS) : "—"}
-            </p>
-          </div>
-          {ride.driver_id && !isFinished && (
-            <div className="flex gap-2">
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-10 w-10 rounded-full"
-                onClick={() => onCallDriver?.(ride.driver_id!)}
-                aria-label="Appeler le chauffeur"
-              >
-                <Phone className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-10 w-10 rounded-full opacity-60"
-                onClick={() => onMessageDriver?.(ride.driver_id!)}
-                aria-label="Message au chauffeur (bientôt)"
-                disabled
-              >
-                <MessageCircle className="h-4 w-4" />
-              </Button>
+        {isSearching ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="relative h-12 w-12 shrink-0">
+                <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                <span className="absolute inset-2 rounded-full bg-primary/30 animate-pulse" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Search className="h-5 w-5 text-primary" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Recherche d'un chauffeur {vehicleLabel}…</p>
+                <p className="text-xs text-muted-foreground">
+                  Nous pingons les chauffeurs les plus proches.
+                </p>
+              </div>
+              <span className="text-xs text-muted-foreground tabular-nums">{searchElapsed}s</span>
             </div>
-          )}
-        </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-xl bg-muted/40 p-2">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Véhicule</p>
+                <p className="font-semibold">{vehicleLabel}</p>
+              </div>
+              <div className="rounded-xl bg-muted/40 p-2">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Tarif estimé</p>
+                <p className="font-semibold tabular-nums">{formatGNF(ride.fare_gnf)}</p>
+              </div>
+            </div>
+            {showNoDriverFallback && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                  <p className="text-xs">
+                    Aucun chauffeur n'a répondu pour le moment. Vous pouvez relancer la recherche
+                    ou annuler.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleRetryDispatch}
+                    disabled={retrying}
+                    className="flex-1 gap-1.5"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    {retrying ? "Relance…" : "Relancer la recherche"}
+                  </Button>
+                  {onCancel && (
+                    <Button size="sm" variant="outline" onClick={onCancel}>
+                      Annuler
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            {ride.driver_id && !isFinished && (
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Bike className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">
+                    {driverName ?? "Votre chauffeur"}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {vehicleLabel}
+                    {driverPos
+                      ? null
+                      : <> · <span className="text-amber-600">Position en attente…</span></>}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-10 w-10 rounded-full"
+                    onClick={() => onCallDriver?.(ride.driver_id!)}
+                    aria-label="Appeler le chauffeur"
+                  >
+                    <Phone className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-10 w-10 rounded-full opacity-60"
+                    onClick={() => onMessageDriver?.(ride.driver_id!)}
+                    aria-label="Message au chauffeur (bientôt)"
+                    disabled
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
 
-        {!isFinished && onCancel && (
+            <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {phase === "approach" ? "Arrivée du chauffeur" : "Arrivée à destination"}
+                </p>
+                <p className="text-2xl font-bold tabular-nums flex items-center gap-1.5">
+                  <Clock className="h-5 w-5 text-primary" />
+                  {route ? formatDuration(route.durationS) : isFinished ? "—" : "Calcul…"}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Tarif</p>
+                <p className="text-sm font-semibold tabular-nums">{formatGNF(ride.fare_gnf)}</p>
+              </div>
+            </div>
+
+            {pickupCode && !isFinished && phase !== "on_trip" && (
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-center gap-3">
+                <KeyRound className="h-4 w-4 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Code de prise en charge
+                  </p>
+                  <p className="font-mono text-base tracking-[0.25em] font-bold">{pickupCode}</p>
+                </div>
+                <p className="text-[11px] text-muted-foreground max-w-[10rem] text-right leading-tight">
+                  Montrez ce code au chauffeur à l'arrivée.
+                </p>
+              </div>
+            )}
+          </>
+        )}
+
+        {!isFinished && onCancel && !showNoDriverFallback && (
           <Button
             variant="ghost"
             size="sm"
