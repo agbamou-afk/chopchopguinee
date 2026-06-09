@@ -33,11 +33,16 @@ export async function registerPwa(): Promise<void> {
 
   try {
     const { registerSW } = await import("virtual:pwa-register");
-    registerSW({
+    const updateSW = registerSW({
       immediate: true,
+      onNeedRefresh() {
+        updateSW(true).catch(() => {});
+      },
+      onOfflineReady() {},
       onRegisteredSW(_swUrl, registration) {
         // Hourly update check — tiny network ping, OK on mobile data.
         if (registration) {
+          registration.update().catch(() => {});
           setInterval(() => registration.update().catch(() => {}), 60 * 60 * 1000);
         }
       },
