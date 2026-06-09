@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScanLine, KeyRound, Loader2, ShieldCheck, CheckCircle2, Phone, Bike } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { QrScanner } from "@/components/scanner/QrScanner";
+import { RidePickupScanner } from "./RidePickupScanner";
 import { getRuntimeMode } from "@/lib/runtimeMode";
 import { useAuth } from "@/contexts/AuthContext";
 import { TrustCues } from "@/components/trust/TrustCues";
@@ -78,11 +78,14 @@ export function PickupConfirmCard({
   return (
     <>
       {scanning && (
-        <QrScanner
-          title="Confirmer la prise en charge"
-          subtitle="Scannez le QR affiché par le chauffeur"
-          onClose={() => setScanning(false)}
-          onResult={(t) => submit(t)}
+        <RidePickupScanner
+          rideId={rideId}
+          onCancel={() => setScanning(false)}
+          onSuccess={() => {
+            setScanning(false);
+            setManualOpen(false);
+            setCode("");
+          }}
         />
       )}
       <motion.div

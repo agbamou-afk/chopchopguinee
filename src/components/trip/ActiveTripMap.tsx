@@ -18,6 +18,7 @@ import {
   MapMarker,
   PinSet,
   RoutePolyline,
+  StraightLineFallback,
 } from "@/components/map";
 import {
   RoutingService,
@@ -122,10 +123,8 @@ export function ActiveTripMap({
   // internal dedup + caching, so this is cheap.
   useEffect(() => {
     let alive = true;
-    const origin: LatLng | null =
-      phase === "approach" ? (driverPos ?? pickup) : pickup;
-    const destination: LatLng | null =
-      phase === "approach" ? pickup : dropoff;
+    const origin: LatLng | null = phase === "approach" ? (driverPos ?? pickup) : pickup;
+    const destination: LatLng | null = phase === "approach" ? (driverPos ? pickup : dropoff) : dropoff;
     if (!origin || !destination) return;
     RoutingService.route(origin, destination, "driving")
       .then((r) => {
@@ -185,6 +184,8 @@ export function ActiveTripMap({
   const isFinished = status === "completed" || status === "cancelled";
   const showNoDriverFallback = isSearching && searchElapsed >= NO_DRIVER_TIMEOUT_S;
   const vehicleLabel = ride.mode === "toktok" ? "TokTok" : "Moto";
+  const fallbackRouteOrigin: LatLng | null = phase === "approach" ? (driverPos ?? pickup) : pickup;
+  const fallbackRouteDestination: LatLng | null = phase === "approach" ? (driverPos ? pickup : dropoff) : dropoff;
 
   const handleRetryDispatch = async () => {
     setRetrying(true);
@@ -228,6 +229,14 @@ export function ActiveTripMap({
                     : "active"
               }
               animated
+            />
+          )}
+
+          {!route && fallbackRouteOrigin && fallbackRouteDestination && (
+            <StraightLineFallback
+              id={`client-ride-${rideId}-fallback-route`}
+              from={fallbackRouteOrigin}
+              to={fallbackRouteDestination}
             />
           )}
 

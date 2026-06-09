@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import Map, { type MapRef, type ViewState } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapConfig } from '@/lib/maps';
@@ -25,6 +25,7 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
   const { config, error } = useMapConfig();
   const mapRef = useRef<MapRef>(null);
   const loadedRef = useRef(false);
+  const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const { low } = useLowDataMode();
   React.useEffect(() => {
     if (error) {
@@ -36,11 +37,11 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
     flyTo: (lng, lat, zoom = 14) => mapRef.current?.flyTo({ center: [lng, lat], zoom, essential: true }),
     fitBounds: (b, padding = 60) => mapRef.current?.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding, duration: 600 }),
   }));
-  if (error) {
+  if (error || runtimeError) {
     return (
       <MapFallbackCard
         className={className}
-        message="Mode hors-ligne — vérifiez votre connexion."
+        message={runtimeError ?? "Mode hors-ligne — vérifiez votre connexion."}
         onRetry={() => { try { window.location.reload(); } catch {} }}
       />
     );
@@ -91,7 +92,9 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
           onLoad?.();
         }}
         onError={(e) => {
-          try { Analytics.track('map.load.failed' as any, { metadata: { reason: String((e as any)?.error?.message ?? 'unknown') } }); } catch {}
+          const reason = String((e as any)?.error?.message ?? 'unknown');
+          setRuntimeError('Carte indisponible — nous affichons le suivi dès que les tuiles répondent.');
+          try { Analytics.track('map.load.failed' as any, { metadata: { reason } }); } catch {}
         }}
         reuseMaps>
         {children}
