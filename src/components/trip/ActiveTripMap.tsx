@@ -274,6 +274,7 @@ export function ActiveTripMap({
       </div>
 
       {/* Bottom sheet */}
+      {hideBottomSheet ? null : (
       <div className="rounded-t-3xl border-t border-border bg-card p-4 space-y-3 shadow-lg">
         {isSearching ? (
           <div className="space-y-3">
@@ -412,6 +413,7 @@ export function ActiveTripMap({
           </Button>
         )}
       </div>
+      )}
     </div>
   );
 }
