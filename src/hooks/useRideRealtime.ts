@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { rideQaDebug } from "@/lib/rides/debug";
 
 export interface RideRealtime {
   id: string;
@@ -27,7 +28,15 @@ export function useRideRealtime(rideId: string | null) {
   const fetchRide = useCallback(async () => {
     if (!rideId) return null;
     const { data } = await supabase.from("rides").select("*").eq("id", rideId).maybeSingle();
-    if (data) setRide(data as unknown as RideRealtime);
+    if (data) {
+      const nextRide = data as unknown as RideRealtime;
+      rideQaDebug("ride-realtime-fetch", {
+        rideId,
+        status: nextRide.status,
+        metadataPhase: (nextRide.metadata ?? {}).phase,
+      });
+      setRide(nextRide);
+    }
     return data;
   }, [rideId]);
 
@@ -66,7 +75,14 @@ export function useRideRealtime(rideId: string | null) {
         },
         (payload) => {
           if (!alive) return;
-          setRide(payload.new as unknown as RideRealtime);
+          const nextRide = payload.new as unknown as RideRealtime;
+          rideQaDebug("ride-realtime-update", {
+            rideId,
+            status: nextRide.status,
+            metadataPhase: (nextRide.metadata ?? {}).phase,
+            hasPickupCode: !!(nextRide.metadata ?? {}).pickup_code,
+          });
+          setRide(nextRide);
         },
       )
       .subscribe();
