@@ -139,6 +139,7 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
             onCallDriver={handleCallDriver}
             onCancel={handleCancel}
             onClose={onClose}
+            hideBottomSheet={showPickupConfirm}
           />
           {showPickupConfirm && (
             <PickupConfirmCard
