@@ -433,6 +433,22 @@ const Index = () => {
         .eq("client_id", user.id)
         .maybeSingle();
       if (!ride) return;
+      // Server truth wins: only mount the active dashboard for truly active
+      // rides. Completed/cancelled/failed rides must never be opened as
+      // "Course en cours" — they belong in history/receipt flows instead.
+      const ACTIVE_RIDE_STATES = new Set(["pending", "accepted", "assigned", "in_progress"]);
+      if (!ACTIVE_RIDE_STATES.has(ride.status)) {
+        toast({
+          title: ride.status === "completed" ? "Course terminée" : "Course terminée",
+          description:
+            ride.status === "completed"
+              ? "Cette course est terminée. Retrouvez le reçu dans votre activité."
+              : "Cette course n'est plus active.",
+        });
+        setActiveView("orders");
+        setActiveTab("orders");
+        return;
+      }
       setActiveTrip({
         mode: ride.mode as TrackingMode,
         pickupCoords: [Number(ride.pickup_lat), Number(ride.pickup_lng)],
