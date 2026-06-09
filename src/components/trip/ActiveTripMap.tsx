@@ -384,17 +384,11 @@ export function ActiveTripMap({
               </div>
             </div>
 
-            {pickupCode && !isFinished && phase !== "on_trip" && (
-              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-center gap-3">
+            {!isFinished && phase !== "on_trip" && phaseRaw !== "arrived" && ride.driver_id && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center gap-3">
                 <KeyRound className="h-4 w-4 text-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    Code de prise en charge
-                  </p>
-                  <p className="font-mono text-base tracking-[0.25em] font-bold">{pickupCode}</p>
-                </div>
-                <p className="text-[11px] text-muted-foreground max-w-[10rem] text-right leading-tight">
-                  Montrez ce code au chauffeur à l'arrivée.
+                <p className="text-[11px] text-muted-foreground leading-tight">
+                  À l'arrivée, scannez le code affiché sur l'application du chauffeur pour démarrer la course.
                 </p>
               </div>
             )}
