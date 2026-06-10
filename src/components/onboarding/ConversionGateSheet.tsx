@@ -1,7 +1,7 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Bike, LogIn, UserPlus, Car as SteeringIcon } from "lucide-react";
+import { Bike, LogIn, UserPlus, Car as SteeringIcon, Store } from "lucide-react";
 
 export type ConversionIntent = "client" | "driver" | "wallet" | "ride" | "order" | "message" | "pay";
 
@@ -61,6 +61,13 @@ export function ConversionGateSheet({ open, intent, onOpenChange, onExploreDrive
             onClick={() => { onOpenChange(false); navigate("/auth?intent=driver"); }}
           >
             <SteeringIcon className="w-4 h-4 mr-2" /> Devenir chauffeur
+          </Button>
+          <Button
+            variant="outline"
+            className="h-12 justify-start"
+            onClick={() => { onOpenChange(false); navigate("/merchant/apply"); }}
+          >
+            <Store className="w-4 h-4 mr-2" /> Devenir marchand
           </Button>
           <Button
             variant="ghost"
