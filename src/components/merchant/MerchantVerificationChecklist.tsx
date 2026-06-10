@@ -45,7 +45,7 @@ export function MerchantVerificationChecklist({ store, onChanged }: Props) {
   const [busy, setBusy] = useState(false);
   const [ownerName, setOwnerName] = useState<string>(store.owner_name ?? "");
   const [whatsapp, setWhatsapp] = useState<string>(store.whatsapp ?? "");
-  const [payoutPhone, setPayoutPhone] = useState<string>(store.payout_phone ?? store.phone ?? "");
+  const [payoutPhone, setPayoutPhone] = useState<string>(store.phone ?? "");
 
   const approved = store.onboarding_status === "approved";
 
@@ -158,12 +158,12 @@ export function MerchantVerificationChecklist({ store, onChanged }: Props) {
     {
       key: "payout",
       label: "Numéro de paiement",
-      status: itemStatus(!!(store.payout_phone ?? store.phone)),
+      status: itemStatus(!!store.phone),
       body: (
         <div className="space-y-2">
           <Label className="text-xs">Numéro Mobile Money pour recevoir les paiements</Label>
           <Input value={payoutPhone} inputMode="tel" onChange={(e) => setPayoutPhone(e.target.value)} placeholder="+224..." />
-          <Button size="sm" disabled={busy || !payoutPhone.trim()} onClick={() => patchStore({ payout_phone: payoutPhone.trim() })}>
+          <Button size="sm" disabled={busy || !payoutPhone.trim()} onClick={() => patchStore({ phone: payoutPhone.trim() })}>
             Enregistrer
           </Button>
           <p className="text-[11px] text-muted-foreground">Utilisé pour vos retraits. Visible uniquement par CHOPCHOP.</p>
