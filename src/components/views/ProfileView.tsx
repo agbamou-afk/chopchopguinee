@@ -209,7 +209,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
               : approved
               ? "Passer en mode marchand"
               : "Espace marchand";
-            const target = isMerchant ? "/merchant/hub" : "/merchant/onboarding-slides";
+            const target = isMerchant ? "/merchant/hub" : "/merchant/apply";
             return (
               <button
                 onClick={() => navigate(target)}

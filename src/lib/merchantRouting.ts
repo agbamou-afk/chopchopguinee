@@ -4,6 +4,7 @@ export const MERCHANT_INTENT_STORAGE_KEY = "cc_signup_merchant_intent";
 export const MERCHANT_ONBOARDING_SLIDES_PATH = "/merchant/onboarding-slides";
 export const MERCHANT_ONBOARDING_PATH = "/merchant/onboarding";
 export const MERCHANT_HUB_PATH = "/merchant/hub";
+export const MERCHANT_APPLY_PATH = "/merchant/apply";
 
 export function hasStoredMerchantIntent(): boolean {
   if (typeof window === "undefined") return false;

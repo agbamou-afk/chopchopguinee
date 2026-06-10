@@ -37,7 +37,7 @@ export default function MerchantOnboardingSlides() {
 
   useEffect(() => {
     if (ready && !isLoggedIn) {
-      navigate("/auth?mode=signup&intent=merchant&next=/merchant/onboarding-slides", { replace: true });
+      navigate("/merchant/apply", { replace: true });
     }
   }, [ready, isLoggedIn, navigate]);
 
