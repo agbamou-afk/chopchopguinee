@@ -2704,6 +2704,7 @@ export type Database = {
           business_type: string | null
           category: string | null
           choppay_enabled: boolean
+          commune: string | null
           cover_url: string | null
           created_at: string
           created_by: string | null
@@ -2712,21 +2713,34 @@ export type Database = {
           id: string
           id_photo_path: string | null
           landmark: string | null
+          landmark_note: string | null
           latitude: number | null
           location_accuracy_m: number | null
+          location_capture_method: string | null
           location_confirmed_at: string | null
           location_source: string | null
           longitude: number | null
           market_id: string | null
+          market_name: string | null
           member_since: string
+          merchant_account_number: string | null
+          merchant_qr_payload: string | null
+          merchant_status: string
           name: string
+          onboarding_branch: string
           onboarding_status: string
           operating_hours: string | null
           owner_name: string | null
           owner_user_id: string
           phone: string | null
+          product_categories: string[]
           rejection_reason: string | null
           selfie_photo_path: string | null
+          service_agent_decided_at: string | null
+          service_agent_decided_by: string | null
+          service_agent_notes: string | null
+          service_agent_requested: boolean
+          service_agent_status: string
           slug: string
           stall_number: string | null
           status: string
@@ -2734,6 +2748,9 @@ export type Database = {
           submitted_at: string | null
           updated_at: string
           verification_state: string
+          wants_food: boolean
+          wants_marketplace: boolean
+          wants_wallet_agent: boolean
           whatsapp: string | null
         }
         Insert: {
@@ -2746,6 +2763,7 @@ export type Database = {
           business_type?: string | null
           category?: string | null
           choppay_enabled?: boolean
+          commune?: string | null
           cover_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -2754,21 +2772,34 @@ export type Database = {
           id?: string
           id_photo_path?: string | null
           landmark?: string | null
+          landmark_note?: string | null
           latitude?: number | null
           location_accuracy_m?: number | null
+          location_capture_method?: string | null
           location_confirmed_at?: string | null
           location_source?: string | null
           longitude?: number | null
           market_id?: string | null
+          market_name?: string | null
           member_since?: string
+          merchant_account_number?: string | null
+          merchant_qr_payload?: string | null
+          merchant_status?: string
           name: string
+          onboarding_branch?: string
           onboarding_status?: string
           operating_hours?: string | null
           owner_name?: string | null
           owner_user_id: string
           phone?: string | null
+          product_categories?: string[]
           rejection_reason?: string | null
           selfie_photo_path?: string | null
+          service_agent_decided_at?: string | null
+          service_agent_decided_by?: string | null
+          service_agent_notes?: string | null
+          service_agent_requested?: boolean
+          service_agent_status?: string
           slug: string
           stall_number?: string | null
           status?: string
@@ -2776,6 +2807,9 @@ export type Database = {
           submitted_at?: string | null
           updated_at?: string
           verification_state?: string
+          wants_food?: boolean
+          wants_marketplace?: boolean
+          wants_wallet_agent?: boolean
           whatsapp?: string | null
         }
         Update: {
@@ -2788,6 +2822,7 @@ export type Database = {
           business_type?: string | null
           category?: string | null
           choppay_enabled?: boolean
+          commune?: string | null
           cover_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -2796,21 +2831,34 @@ export type Database = {
           id?: string
           id_photo_path?: string | null
           landmark?: string | null
+          landmark_note?: string | null
           latitude?: number | null
           location_accuracy_m?: number | null
+          location_capture_method?: string | null
           location_confirmed_at?: string | null
           location_source?: string | null
           longitude?: number | null
           market_id?: string | null
+          market_name?: string | null
           member_since?: string
+          merchant_account_number?: string | null
+          merchant_qr_payload?: string | null
+          merchant_status?: string
           name?: string
+          onboarding_branch?: string
           onboarding_status?: string
           operating_hours?: string | null
           owner_name?: string | null
           owner_user_id?: string
           phone?: string | null
+          product_categories?: string[]
           rejection_reason?: string | null
           selfie_photo_path?: string | null
+          service_agent_decided_at?: string | null
+          service_agent_decided_by?: string | null
+          service_agent_notes?: string | null
+          service_agent_requested?: boolean
+          service_agent_status?: string
           slug?: string
           stall_number?: string | null
           status?: string
@@ -2818,6 +2866,9 @@ export type Database = {
           submitted_at?: string | null
           updated_at?: string
           verification_state?: string
+          wants_food?: boolean
+          wants_marketplace?: boolean
+          wants_wallet_agent?: boolean
           whatsapp?: string | null
         }
         Relationships: []
@@ -4710,6 +4761,7 @@ export type Database = {
           business_type: string | null
           category: string | null
           choppay_enabled: boolean
+          commune: string | null
           cover_url: string | null
           created_at: string
           created_by: string | null
@@ -4718,21 +4770,34 @@ export type Database = {
           id: string
           id_photo_path: string | null
           landmark: string | null
+          landmark_note: string | null
           latitude: number | null
           location_accuracy_m: number | null
+          location_capture_method: string | null
           location_confirmed_at: string | null
           location_source: string | null
           longitude: number | null
           market_id: string | null
+          market_name: string | null
           member_since: string
+          merchant_account_number: string | null
+          merchant_qr_payload: string | null
+          merchant_status: string
           name: string
+          onboarding_branch: string
           onboarding_status: string
           operating_hours: string | null
           owner_name: string | null
           owner_user_id: string
           phone: string | null
+          product_categories: string[]
           rejection_reason: string | null
           selfie_photo_path: string | null
+          service_agent_decided_at: string | null
+          service_agent_decided_by: string | null
+          service_agent_notes: string | null
+          service_agent_requested: boolean
+          service_agent_status: string
           slug: string
           stall_number: string | null
           status: string
@@ -4740,6 +4805,77 @@ export type Database = {
           submitted_at: string | null
           updated_at: string
           verification_state: string
+          wants_food: boolean
+          wants_marketplace: boolean
+          wants_wallet_agent: boolean
+          whatsapp: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "merchant_stores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_merchant_service_agent_decision: {
+        Args: { _decision: string; _notes?: string; _store_id: string }
+        Returns: {
+          address_label: string | null
+          approved_at: string | null
+          approved_by: string | null
+          avatar_url: string | null
+          bio: string | null
+          business_name: string | null
+          business_type: string | null
+          category: string | null
+          choppay_enabled: boolean
+          commune: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          delivery_available: boolean
+          district: string | null
+          id: string
+          id_photo_path: string | null
+          landmark: string | null
+          landmark_note: string | null
+          latitude: number | null
+          location_accuracy_m: number | null
+          location_capture_method: string | null
+          location_confirmed_at: string | null
+          location_source: string | null
+          longitude: number | null
+          market_id: string | null
+          market_name: string | null
+          member_since: string
+          merchant_account_number: string | null
+          merchant_qr_payload: string | null
+          merchant_status: string
+          name: string
+          onboarding_branch: string
+          onboarding_status: string
+          operating_hours: string | null
+          owner_name: string | null
+          owner_user_id: string
+          phone: string | null
+          product_categories: string[]
+          rejection_reason: string | null
+          selfie_photo_path: string | null
+          service_agent_decided_at: string | null
+          service_agent_decided_by: string | null
+          service_agent_notes: string | null
+          service_agent_requested: boolean
+          service_agent_status: string
+          slug: string
+          stall_number: string | null
+          status: string
+          storefront_photo_path: string | null
+          submitted_at: string | null
+          updated_at: string
+          verification_state: string
+          wants_food: boolean
+          wants_marketplace: boolean
+          wants_wallet_agent: boolean
           whatsapp: string | null
         }
         SetofOptions: {
@@ -5161,6 +5297,10 @@ export type Database = {
         }[]
       }
       gen_topup_reference: { Args: never; Returns: string }
+      generate_merchant_account_number: {
+        Args: { _commune: string }
+        Returns: string
+      }
       get_active_payment_receiving_accounts: {
         Args: never
         Returns: {

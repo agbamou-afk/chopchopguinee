@@ -18,6 +18,22 @@ export interface MerchantStore {
   verification_state: string;
   onboarding_status?: string;
   rejection_reason?: string | null;
+  // Phase 1 — Merchant pipeline foundation
+  merchant_account_number?: string | null;
+  merchant_qr_payload?: string | null;
+  merchant_status?: "pending" | "active" | "needs_info" | "suspended" | "rejected";
+  onboarding_branch?: string | null;
+  commune?: string | null;
+  market_name?: string | null;
+  landmark_note?: string | null;
+  location_capture_method?: "gps" | "map_pin" | "manual" | null;
+  product_categories?: string[] | null;
+  wants_marketplace?: boolean;
+  wants_food?: boolean;
+  wants_wallet_agent?: boolean;
+  service_agent_requested?: boolean;
+  service_agent_status?: "not_requested" | "pending" | "approved" | "rejected" | "disabled";
+  service_agent_notes?: string | null;
 }
 
 export interface MerchantIdentity {
