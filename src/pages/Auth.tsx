@@ -90,7 +90,7 @@ export default function Auth() {
     intentParam === "driver" || intentParam === "merchant" || intentParam === "client"
       ? (intentParam as SignupIntent)
       : "client";
-  const { ready, isLoggedIn, isAdmin, isProfileComplete, signupIntent, requestedDriverVehicle } = useAuth();
+  const { ready, isLoggedIn, isAdmin, isProfileComplete, signupIntent, requestedDriverVehicle, user } = useAuth();
 
   const [mode, setMode] = useState<Mode>(initialMode);
   const [first, setFirst] = useState("");
@@ -142,11 +142,20 @@ export default function Auth() {
       }
       const wantsMerchant =
         signupIntent === "merchant" ||
-        (typeof window !== "undefined" &&
-          !!sessionStorage.getItem(MERCHANT_INTENT_STORAGE_KEY));
+        intentParam === "merchant" ||
+        safeNext?.startsWith("/merchant") ||
+        hasStoredMerchantIntent();
       if (wantsMerchant) {
-        sessionStorage.removeItem(MERCHANT_INTENT_STORAGE_KEY);
-        navigate("/merchant/onboarding-slides", { replace: true });
+        (async () => {
+          if (user?.id) {
+            try { await persistMerchantAppMode(user.id); } catch { /* noop */ }
+            const route = await resolveMerchantPostAuthRoute(user.id, { preferSlides: true });
+            clearMerchantIntent();
+            navigate(route, { replace: true });
+          } else {
+            navigate("/merchant/onboarding-slides", { replace: true });
+          }
+        })();
         return;
       }
     } catch {
@@ -157,7 +166,7 @@ export default function Auth() {
       return;
     }
     navigate(isAdmin ? "/admin" : "/", { replace: true });
-  }, [ready, isLoggedIn, isAdmin, isProfileComplete, signupIntent, requestedDriverVehicle, safeNext, navigate]);
+  }, [ready, isLoggedIn, isAdmin, isProfileComplete, signupIntent, requestedDriverVehicle, intentParam, safeNext, user?.id, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
