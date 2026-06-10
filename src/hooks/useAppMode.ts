@@ -16,10 +16,12 @@ export function useAppMode() {
       return "client";
     }
   });
+  const [persistedMode, setPersistedMode] = useState<AppMode | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
+      setPersistedMode(null);
       setLoading(false);
       return;
     }
@@ -30,8 +32,11 @@ export function useAppMode() {
         .eq("user_id", user.id)
         .maybeSingle();
       if (data?.app_mode === "merchant" || data?.app_mode === "client" || data?.app_mode === "driver") {
+        setPersistedMode(data.app_mode);
         setModeState(data.app_mode);
         try { window.localStorage.setItem(LS_KEY, data.app_mode); } catch { /* noop */ }
+      } else {
+        setPersistedMode(null);
       }
       setLoading(false);
     })();
@@ -39,6 +44,7 @@ export function useAppMode() {
 
   const setMode = useCallback(async (next: AppMode) => {
     setModeState(next);
+    setPersistedMode(next);
     try { window.localStorage.setItem(LS_KEY, next); } catch { /* noop */ }
     if (!user) return;
     await (supabase as any)
@@ -46,5 +52,5 @@ export function useAppMode() {
       .upsert({ user_id: user.id, app_mode: next }, { onConflict: "user_id" });
   }, [user]);
 
-  return { mode, setMode, loading };
+  return { mode, persistedMode, setMode, loading };
 }
