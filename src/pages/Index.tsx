@@ -115,6 +115,9 @@ const Index = () => {
   const { profile: driverProfile, loading: driverProfileLoading } = useDriverProfile();
   const { mode: appMode, loading: appModeLoading } = useAppMode();
   const { loading: merchantLoading, hasAny: hasMerchantIdentity } = useMerchantIdentity();
+  const navigate = useNavigate();
+  const adminUser = isAdminUser(user, roles);
+  const liveUser = isLiveUser(user, roles);
   // Robust driver-designated check — combines every existing source of truth
   // so sandbox / hybrid / role-only / profile-only accounts all resolve.
   const sandbox = typeof window !== "undefined" && isSandboxMode();
@@ -135,9 +138,6 @@ const Index = () => {
   const merchantResolving = appModeResolving || (merchantTargetRequested && merchantLoading);
   const driverResolving = !ready || (!!user && driverProfileLoading);
   const isDriver = isDriverDesignated;
-  const navigate = useNavigate();
-  const adminUser = isAdminUser(user, roles);
-  const liveUser = isLiveUser(user, roles);
   // PUBLIC = logged-out visitor. First-launch onboarding always opens.
   const publicUser = ready && !user;
 
