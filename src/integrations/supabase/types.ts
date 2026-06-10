@@ -3047,6 +3047,7 @@ export type Database = {
           courier_id: string | null
           created_at: string
           customer_id: string
+          delivery_photo_url: string | null
           dropoff_address: string | null
           dropoff_confirmed_at: string | null
           dropoff_confirmed_by: string | null
@@ -3059,13 +3060,16 @@ export type Database = {
           issue_district: string | null
           issue_hub_id: string | null
           issue_reason: string | null
+          merchant_handoff_code: string | null
           merchant_id: string | null
+          merchant_store_id: string | null
           payload_summary: string | null
           pickup_address: string | null
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
           pickup_lat: number | null
           pickup_lng: number | null
+          pickup_photo_url: string | null
           ref_food_order_id: string | null
           ref_market_order_id: string | null
           ref_ride_id: string | null
@@ -3077,6 +3081,7 @@ export type Database = {
           courier_id?: string | null
           created_at?: string
           customer_id: string
+          delivery_photo_url?: string | null
           dropoff_address?: string | null
           dropoff_confirmed_at?: string | null
           dropoff_confirmed_by?: string | null
@@ -3089,13 +3094,16 @@ export type Database = {
           issue_district?: string | null
           issue_hub_id?: string | null
           issue_reason?: string | null
+          merchant_handoff_code?: string | null
           merchant_id?: string | null
+          merchant_store_id?: string | null
           payload_summary?: string | null
           pickup_address?: string | null
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
+          pickup_photo_url?: string | null
           ref_food_order_id?: string | null
           ref_market_order_id?: string | null
           ref_ride_id?: string | null
@@ -3107,6 +3115,7 @@ export type Database = {
           courier_id?: string | null
           created_at?: string
           customer_id?: string
+          delivery_photo_url?: string | null
           dropoff_address?: string | null
           dropoff_confirmed_at?: string | null
           dropoff_confirmed_by?: string | null
@@ -3119,13 +3128,16 @@ export type Database = {
           issue_district?: string | null
           issue_hub_id?: string | null
           issue_reason?: string | null
+          merchant_handoff_code?: string | null
           merchant_id?: string | null
+          merchant_store_id?: string | null
           payload_summary?: string | null
           pickup_address?: string | null
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
+          pickup_photo_url?: string | null
           ref_food_order_id?: string | null
           ref_market_order_id?: string | null
           ref_ride_id?: string | null
@@ -3133,7 +3145,15 @@ export type Database = {
           type?: Database["public"]["Enums"]["mission_type"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "missions_merchant_store_id_fkey"
+            columns: ["merchant_store_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       navigation_events: {
         Row: {
@@ -5703,6 +5723,57 @@ export type Database = {
         Args: { _listing_id: string }
         Returns: boolean
       }
+      marketplace_create_delivery_mission: {
+        Args: {
+          _dropoff_address: string
+          _dropoff_lat: number
+          _dropoff_lng: number
+          _dropoff_notes?: string
+          _estimated_earning_gnf?: number
+          _offer_id: string
+          _payload_summary: string
+        }
+        Returns: {
+          courier_id: string | null
+          created_at: string
+          customer_id: string
+          delivery_photo_url: string | null
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_district: string | null
+          issue_hub_id: string | null
+          issue_reason: string | null
+          merchant_handoff_code: string | null
+          merchant_id: string | null
+          merchant_store_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          pickup_photo_url: string | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       merchant_ensure_wallet: {
         Args: { p_merchant_id: string }
         Returns: string
@@ -5722,6 +5793,7 @@ export type Database = {
           courier_id: string | null
           created_at: string
           customer_id: string
+          delivery_photo_url: string | null
           dropoff_address: string | null
           dropoff_confirmed_at: string | null
           dropoff_confirmed_by: string | null
@@ -5734,13 +5806,16 @@ export type Database = {
           issue_district: string | null
           issue_hub_id: string | null
           issue_reason: string | null
+          merchant_handoff_code: string | null
           merchant_id: string | null
+          merchant_store_id: string | null
           payload_summary: string | null
           pickup_address: string | null
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
           pickup_lat: number | null
           pickup_lng: number | null
+          pickup_photo_url: string | null
           ref_food_order_id: string | null
           ref_market_order_id: string | null
           ref_ride_id: string | null
@@ -5761,6 +5836,7 @@ export type Database = {
           courier_id: string | null
           created_at: string
           customer_id: string
+          delivery_photo_url: string | null
           dropoff_address: string | null
           dropoff_confirmed_at: string | null
           dropoff_confirmed_by: string | null
@@ -5773,13 +5849,16 @@ export type Database = {
           issue_district: string | null
           issue_hub_id: string | null
           issue_reason: string | null
+          merchant_handoff_code: string | null
           merchant_id: string | null
+          merchant_store_id: string | null
           payload_summary: string | null
           pickup_address: string | null
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
           pickup_lat: number | null
           pickup_lng: number | null
+          pickup_photo_url: string | null
           ref_food_order_id: string | null
           ref_market_order_id: string | null
           ref_ride_id: string | null
@@ -5800,6 +5879,7 @@ export type Database = {
           courier_id: string | null
           created_at: string
           customer_id: string
+          delivery_photo_url: string | null
           dropoff_address: string | null
           dropoff_confirmed_at: string | null
           dropoff_confirmed_by: string | null
@@ -5812,13 +5892,16 @@ export type Database = {
           issue_district: string | null
           issue_hub_id: string | null
           issue_reason: string | null
+          merchant_handoff_code: string | null
           merchant_id: string | null
+          merchant_store_id: string | null
           payload_summary: string | null
           pickup_address: string | null
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
           pickup_lat: number | null
           pickup_lng: number | null
+          pickup_photo_url: string | null
           ref_food_order_id: string | null
           ref_market_order_id: string | null
           ref_ride_id: string | null
@@ -5844,6 +5927,7 @@ export type Database = {
           courier_id: string | null
           created_at: string
           customer_id: string
+          delivery_photo_url: string | null
           dropoff_address: string | null
           dropoff_confirmed_at: string | null
           dropoff_confirmed_by: string | null
@@ -5856,13 +5940,16 @@ export type Database = {
           issue_district: string | null
           issue_hub_id: string | null
           issue_reason: string | null
+          merchant_handoff_code: string | null
           merchant_id: string | null
+          merchant_store_id: string | null
           payload_summary: string | null
           pickup_address: string | null
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
           pickup_lat: number | null
           pickup_lng: number | null
+          pickup_photo_url: string | null
           ref_food_order_id: string | null
           ref_market_order_id: string | null
           ref_ride_id: string | null
@@ -5890,6 +5977,7 @@ export type Database = {
           courier_id: string | null
           created_at: string
           customer_id: string
+          delivery_photo_url: string | null
           dropoff_address: string | null
           dropoff_confirmed_at: string | null
           dropoff_confirmed_by: string | null
@@ -5902,13 +5990,16 @@ export type Database = {
           issue_district: string | null
           issue_hub_id: string | null
           issue_reason: string | null
+          merchant_handoff_code: string | null
           merchant_id: string | null
+          merchant_store_id: string | null
           payload_summary: string | null
           pickup_address: string | null
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
           pickup_lat: number | null
           pickup_lng: number | null
+          pickup_photo_url: string | null
           ref_food_order_id: string | null
           ref_market_order_id: string | null
           ref_ride_id: string | null
