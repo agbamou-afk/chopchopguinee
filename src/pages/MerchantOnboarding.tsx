@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Store, Sparkles } from "lucide-react";
+import { Loader2, Store, Sparkles, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { Seo } from "@/components/Seo";
 import { SecondaryPageHeader } from "@/components/ui/SecondaryPageHeader";
 import { slugify } from "@/lib/marche";
 import { normalizeGuineaPhone } from "@/lib/phone/guinea";
 import { StoreLocationPicker, type StoreLocation } from "@/components/merchant/StoreLocationPicker";
+import { MERCHANT_PRODUCT_CATEGORIES } from "@/lib/merchant/categories";
 
 export default function MerchantOnboarding() {
   const navigate = useNavigate();
@@ -23,8 +25,18 @@ export default function MerchantOnboarding() {
     whatsapp: "",
     category: "",
     district: "",
+    commune: "",
+    market_name: "",
+    landmark_note: "",
   });
   const [location, setLocation] = useState<StoreLocation | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [biz, setBiz] = useState({
+    wants_marketplace: true,
+    wants_food: false,
+    wants_wallet_agent: false,
+  });
+  const [serviceAgentOptIn, setServiceAgentOptIn] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
@@ -54,6 +66,12 @@ export default function MerchantOnboarding() {
   const setField = (k: keyof typeof form) => (v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  const toggleCategory = (id: string) =>
+    setCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
+
+  const captureMethod = (loc: StoreLocation): "gps" | "map_pin" | "manual" =>
+    loc.location_source === "current_location" ? "gps" : "map_pin";
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -63,6 +81,14 @@ export default function MerchantOnboarding() {
     }
     if (!location) {
       toast({ title: "Position requise", description: "Indiquez où se trouve votre boutique." });
+      return;
+    }
+    if (categories.length === 0) {
+      toast({ title: "Catégories requises", description: "Sélectionnez au moins une catégorie de produits." });
+      return;
+    }
+    if (!biz.wants_marketplace && !biz.wants_food && !biz.wants_wallet_agent) {
+      toast({ title: "Type d'activité", description: "Choisissez au moins un type d'activité." });
       return;
     }
     setSubmitting(true);
@@ -77,12 +103,12 @@ export default function MerchantOnboarding() {
       phone: normalizedPhone,
       whatsapp: normalizedPhone,
       district: (location.district || form.district.trim() || null),
-      category: form.category.trim() || null,
+      category: categories[0] ?? null,
       business_type: "shop",
       latitude: location.lat,
       longitude: location.lng,
       address_label: location.address_label ?? null,
-      landmark: location.landmark ?? null,
+      landmark: location.landmark ?? form.landmark_note.trim() ?? null,
       location_source: location.location_source,
       location_accuracy_m: location.location_accuracy_m ?? null,
       location_confirmed_at: new Date().toISOString(),
@@ -92,6 +118,19 @@ export default function MerchantOnboarding() {
       verification_state: "pending",
       delivery_available: false,
       choppay_enabled: false,
+      // Phase 1 — Merchant pipeline foundation
+      commune: form.commune.trim() || null,
+      market_name: form.market_name.trim() || null,
+      landmark_note: form.landmark_note.trim() || null,
+      location_capture_method: captureMethod(location),
+      product_categories: categories,
+      wants_marketplace: biz.wants_marketplace,
+      wants_food: biz.wants_food,
+      wants_wallet_agent: biz.wants_wallet_agent,
+      service_agent_requested: serviceAgentOptIn,
+      service_agent_status: serviceAgentOptIn ? "pending" : "not_requested",
+      onboarding_branch: "merchant",
+      merchant_status: "pending",
     });
     setSubmitting(false);
     if (error) {
@@ -144,25 +183,98 @@ export default function MerchantOnboarding() {
                 <Label htmlFor="business_name">Nom de la boutique *</Label>
                 <Input id="business_name" value={form.business_name} onChange={(e) => setField("business_name")(e.target.value)} placeholder="Ex. Chez Mariama" required />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label htmlFor="category">Catégorie</Label>
-                  <Input id="category" value={form.category} onChange={(e) => setField("category")(e.target.value)} placeholder="Ex. Alimentation" />
-                </div>
-                <div>
-                  <Label htmlFor="whatsapp">WhatsApp *</Label>
-                  <Input id="whatsapp" inputMode="tel" value={form.whatsapp} onChange={(e) => setField("whatsapp")(e.target.value)} placeholder="+224..." required />
-                </div>
+              <div>
+                <Label htmlFor="whatsapp">WhatsApp *</Label>
+                <Input id="whatsapp" inputMode="tel" value={form.whatsapp} onChange={(e) => setField("whatsapp")(e.target.value)} placeholder="+224..." required />
               </div>
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">2. Où se trouve votre boutique ?</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">2. Catégories de produits *</p>
+              <p className="text-[11px] text-muted-foreground">Sélectionnez ce que vous vendez. Modifiable plus tard.</p>
+              <div className="flex flex-wrap gap-1.5">
+                {MERCHANT_PRODUCT_CATEGORIES.map((c) => {
+                  const active = categories.includes(c.id);
+                  return (
+                    <button
+                      type="button"
+                      key={c.id}
+                      onClick={() => toggleCategory(c.id)}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                        active
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card text-foreground border-border/60 hover:border-primary/40"
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">3. Où se trouve votre boutique ?</p>
+              <p className="text-[11px] text-muted-foreground">
+                Astuce : tenez-vous dans ou devant votre boutique puis touchez « Utiliser ma position actuelle ».
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="commune">Commune</Label>
+                  <Input id="commune" value={form.commune} onChange={(e) => setField("commune")(e.target.value)} placeholder="Ex. Kaloum" />
+                </div>
+                <div>
+                  <Label htmlFor="market_name">Marché</Label>
+                  <Input id="market_name" value={form.market_name} onChange={(e) => setField("market_name")(e.target.value)} placeholder="Ex. Madina" />
+                </div>
+              </div>
               <div>
-                <Label htmlFor="district">Marché / quartier</Label>
-                <Input id="district" value={form.district} onChange={(e) => setField("district")(e.target.value)} placeholder="Ex. Madina, Ratoma" />
+                <Label htmlFor="district">Quartier</Label>
+                <Input id="district" value={form.district} onChange={(e) => setField("district")(e.target.value)} placeholder="Ex. Ratoma" />
+              </div>
+              <div>
+                <Label htmlFor="landmark_note">Repère</Label>
+                <Input id="landmark_note" value={form.landmark_note} onChange={(e) => setField("landmark_note")(e.target.value)} placeholder="Ex. En face de la mosquée" />
               </div>
               <StoreLocationPicker value={location} onChange={setLocation} />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">4. Que voulez-vous faire sur CHOPCHOP ?</p>
+              <div className="space-y-2">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card cursor-pointer">
+                  <Checkbox checked={biz.wants_marketplace} onCheckedChange={(v) => setBiz((b) => ({ ...b, wants_marketplace: !!v }))} />
+                  <div className="text-sm">
+                    <p className="font-semibold">Vendre des produits (Marché)</p>
+                    <p className="text-[11px] text-muted-foreground">Cataloguez et vendez vos articles avec CHOP Livraison.</p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card cursor-pointer">
+                  <Checkbox checked={biz.wants_food} onCheckedChange={(v) => setBiz((b) => ({ ...b, wants_food: !!v }))} />
+                  <div className="text-sm">
+                    <p className="font-semibold">Vendre des repas</p>
+                    <p className="text-[11px] text-muted-foreground">Restaurant / cuisine. Activation du module Repas (à venir).</p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card cursor-pointer">
+                  <Checkbox
+                    checked={serviceAgentOptIn}
+                    onCheckedChange={(v) => {
+                      const checked = !!v;
+                      setServiceAgentOptIn(checked);
+                      setBiz((b) => ({ ...b, wants_wallet_agent: checked }));
+                    }}
+                  />
+                  <div className="text-sm">
+                    <p className="font-semibold flex items-center gap-1.5">
+                      Devenir Agent CHOP Wallet <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Aidez les clients à recharger leur wallet. <strong>Validation admin requise</strong> avant activation.
+                    </p>
+                  </div>
+                </label>
+              </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>
