@@ -113,7 +113,7 @@ const Index = () => {
   const { requireAuth } = useAuthGuard();
   const { ready, roles, user, signupIntent } = useAuth();
   const { profile: driverProfile, loading: driverProfileLoading } = useDriverProfile();
-  const { mode: appMode, loading: appModeLoading } = useAppMode();
+  const { mode: appMode, persistedMode, loading: appModeLoading } = useAppMode();
   const { loading: merchantLoading, hasAny: hasMerchantIdentity } = useMerchantIdentity();
   const navigate = useNavigate();
   const adminUser = isAdminUser(user, roles);
@@ -133,7 +133,7 @@ const Index = () => {
   // driver profile lookup. Prevents the client-home flash for drivers.
   const appModeResolving = !!user && appModeLoading;
   const merchantTargetRequested = !!user && !adminUser && signupIntent !== "driver" && (
-    signupIntent === "merchant" || appMode === "merchant" || hasStoredMerchantIntent()
+    signupIntent === "merchant" || persistedMode === "merchant" || hasStoredMerchantIntent()
   );
   const merchantResolving = appModeResolving || (merchantTargetRequested && merchantLoading);
   const driverResolving = !ready || (!!user && driverProfileLoading);
@@ -159,7 +159,7 @@ const Index = () => {
     if (!ready || !user || adminUser || driverResolving || merchantResolving) return;
     if (merchantRedirectedRef.current) return;
     if (signupIntent === "driver") return;
-    const wantsMerchant = signupIntent === "merchant" || appMode === "merchant" || hasStoredMerchantIntent();
+    const wantsMerchant = signupIntent === "merchant" || persistedMode === "merchant" || hasStoredMerchantIntent();
     if (!wantsMerchant) return;
     merchantRedirectedRef.current = true;
     (async () => {
@@ -170,7 +170,7 @@ const Index = () => {
       clearMerchantIntent();
       navigate(route, { replace: true });
     })();
-  }, [ready, user, adminUser, driverResolving, merchantResolving, signupIntent, appMode, hasMerchantIdentity, navigate]);
+  }, [ready, user, adminUser, driverResolving, merchantResolving, signupIntent, persistedMode, hasMerchantIdentity, navigate]);
 
   // Driver applicants who confirmed their email arrive at "/" with a session
   // but no driver_profile yet (the application has not been submitted). Route
