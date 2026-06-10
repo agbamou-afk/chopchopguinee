@@ -27,3 +27,5 @@ project_id = "azbhteplbdwuqdlzadjx"
     verify_jwt = true
   [functions.admin-email-resend]
     verify_jwt = true
+  [functions.qa-merchant-harness]
+    verify_jwt = false
