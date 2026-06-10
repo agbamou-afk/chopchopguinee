@@ -21,6 +21,7 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Link } from "react-router-dom";
 
 interface MarketViewProps {
   onBack: () => void;
@@ -223,6 +224,27 @@ export function MarketView({ onBack }: MarketViewProps) {
             { icon: MapPin, label: "Près de Kipé", bg: "bg-success/10", tone: "text-success" },
           ]}
         />
+      </div>
+
+      {/* Merchant acquisition banner — public */}
+      <div className="px-4 pt-3">
+        <Link
+          to="/merchant/apply"
+          className="flex items-center gap-3 rounded-2xl card-warm p-3 active:scale-[0.99] transition-transform"
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Store className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              Vous êtes marchand ?
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              Vendez sur CHOPCHOP — créez votre boutique en quelques minutes.
+            </p>
+          </div>
+          <span className="text-[11px] font-semibold text-primary shrink-0">Commencer</span>
+        </Link>
       </div>
 
       <div className="px-4 pt-4 space-y-5">
