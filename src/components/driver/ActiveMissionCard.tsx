@@ -23,6 +23,7 @@ import {
   stepIndex,
 } from "@/lib/missions/pipelines";
 import { MissionIssueSheet } from "./MissionIssueSheet";
+import { MarketplaceTrustSheet } from "@/components/missions/MarketplaceTrustSheet";
 import { ChopMap, RoutePolyline, ChopPin, StraightLineFallback } from "@/components/map";
 import { bbox as bboxOf, type LatLng } from "@/lib/maps/geo";
 import { openExternalNavigation } from "@/lib/maps/external";
@@ -46,6 +47,7 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
   const [busy, setBusy] = useState(false);
   const [issueOpen, setIssueOpen] = useState(false);
   const [proofTaken, setProofTaken] = useState(false);
+  const [trustKind, setTrustKind] = useState<"pickup" | "delivery" | null>(null);
   const identity = MISSION_IDENTITY[mission.type];
   const pipeline = MISSION_PIPELINES[mission.type];
   const Icon = identity.icon;
@@ -54,8 +56,11 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
   const terminal = isTerminalState(mission.state);
   const phone = extractPhone(mission.payload_summary);
   const proof = step?.proof;
+  // Marketplace deliveries use a dedicated trust handshake (photo+code RPC)
+  // instead of the lightweight `proofTaken` toggle.
+  const isMarketplace = mission.type === "marketplace_delivery";
   const proofBlocks =
-    !!proof && proof.requirement === "required" && !proofTaken;
+    !isMarketplace && !!proof && proof.requirement === "required" && !proofTaken;
   const dirLabel = useMemo(() => directionsLabel(mission), [mission]);
 
   // ───────── Operational mini-map ─────────
@@ -129,6 +134,14 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
 
   const handleNext = async () => {
     if (busy) return;
+    if (isMarketplace && mission.state === "arrived_pickup") {
+      setTrustKind("pickup");
+      return;
+    }
+    if (isMarketplace && mission.state === "arrived_dropoff") {
+      setTrustKind("delivery");
+      return;
+    }
     if (proofBlocks) {
       toast("Photo requise", { description: proof?.label });
       return;
@@ -342,6 +355,19 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         onOpenChange={setIssueOpen}
         onReported={onChange}
       />
+
+      {isMarketplace && trustKind && (
+        <MarketplaceTrustSheet
+          mission={mission}
+          kind={trustKind}
+          open={!!trustKind}
+          onOpenChange={(o) => { if (!o) setTrustKind(null); }}
+          onDone={() => {
+            // Realtime listener in MissionsPanel will refresh; clear local proof toggle.
+            setProofTaken(false);
+          }}
+        />
+      )}
     </motion.div>
   );
 }
