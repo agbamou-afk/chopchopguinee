@@ -16,6 +16,7 @@ import {
   isValidGuineaLocal,
   normalizeGuineaPhone,
 } from "@/lib/phone/guinea";
+import { persistMerchantAppMode, resolveMerchantPostAuthRoute } from "@/lib/merchantRouting";
 
 const schema = z.object({
   first_name: z.string().trim().min(1, "Prénom requis").max(60),
@@ -92,6 +93,10 @@ export default function CompleteProfile() {
       try { sessionStorage.setItem("cc_driver_mode_choice", "driver"); } catch { /* noop */ }
       const v = requestedDriverVehicle ?? "moto";
       navigate(`/driver/apply?intent=${encodeURIComponent(v)}`, { replace: true });
+    } else if (signupIntent === "merchant") {
+      try { await persistMerchantAppMode(user.id); } catch { /* noop */ }
+      const route = await resolveMerchantPostAuthRoute(user.id, { preferSlides: true });
+      navigate(route, { replace: true });
     } else {
       navigate("/", { replace: true });
     }
