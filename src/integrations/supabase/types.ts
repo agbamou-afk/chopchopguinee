@@ -2185,7 +2185,15 @@ export type Database = {
           state?: Database["public"]["Enums"]["listing_interest_state"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listing_interests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listing_metrics: {
         Row: {
