@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Home, ShoppingBag, Package, Wallet as WalletIcon, Store as StoreIcon, Plus, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Home, ShoppingBag, Package, Wallet as WalletIcon, Store as StoreIcon } from "lucide-react";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import { useAuth } from "@/contexts/AuthContext";
 import { MerchantIdentityStrip } from "./MerchantIdentityStrip";
@@ -8,10 +8,8 @@ import { OrdersSection } from "./OrdersSection";
 import { AvailabilitySection } from "./AvailabilitySection";
 import { CatalogSection } from "./CatalogSection";
 import { ProductCatalogSection } from "./ProductCatalogSection";
-import { MerchantOffersSection } from "./MerchantOffersSection";
 import { DeliverySection } from "./DeliverySection";
 import { ChopPayActivitySection } from "./ChopPayActivitySection";
-import { AnalyticsStrip } from "./AnalyticsStrip";
 import { setRestaurantOpen, setStoreOpen } from "@/lib/merchant/operations";
 import { toast } from "@/hooks/use-toast";
 import { MerchantActivationPanel } from "./MerchantActivationPanel";
@@ -19,6 +17,8 @@ import { MerchantPendingBanner } from "./MerchantPendingBanner";
 import { MerchantModeToggle } from "./ModeToggle";
 import { MerchantVerificationChecklist } from "./MerchantVerificationChecklist";
 import { MerchantWalletSection } from "./MerchantWalletSection";
+import { MerchantSnapshot } from "./MerchantSnapshot";
+import { MerchantCommandesView } from "./MerchantCommandesView";
 
 type Tab = "home" | "orders" | "catalog" | "wallet" | "store";
 
@@ -135,46 +135,20 @@ export function MerchantHub() {
 
             {tab === "home" && (
               <>
-                {!pendingStore && store && (
-                  <div className="rounded-2xl bg-emerald-500/10 text-emerald-900 p-3 text-sm font-medium">
-                    Boutique active. Vos produits sont visibles sur CHOP Marché.
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => setTab("catalog")} className="rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-2 text-left">
-                    <div className="p-2 rounded-xl bg-primary/10"><Plus className="w-4 h-4 text-primary" /></div>
-                    <span className="text-sm font-semibold text-foreground">Ajouter un produit</span>
-                  </button>
-                  <button onClick={() => setTab("orders")} className="rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-2 text-left">
-                    <div className="p-2 rounded-xl bg-primary/10"><ShoppingBag className="w-4 h-4 text-primary" /></div>
-                    <span className="text-sm font-semibold text-foreground">Voir commandes</span>
-                  </button>
-                  <button onClick={() => setTab("wallet")} className="rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-2 text-left">
-                    <div className="p-2 rounded-xl bg-primary/10"><WalletIcon className="w-4 h-4 text-primary" /></div>
-                    <span className="text-sm font-semibold text-foreground">CHOP Wallet</span>
-                  </button>
-                  <button onClick={() => setTab("store")} className="rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-2 text-left">
-                    <div className="p-2 rounded-xl bg-primary/10"><ShieldCheck className="w-4 h-4 text-primary" /></div>
-                    <span className="text-sm font-semibold text-foreground">Vérification</span>
-                  </button>
-                </div>
-                <AnalyticsStrip
-                  restaurantId={restaurant?.id}
-                  sellerId={store ? user.id : undefined}
+                <MerchantSnapshot
+                  userId={user.id}
+                  store={store ?? null}
+                  onGo={(t) => setTab(t)}
                 />
-                {store && (
-                  <MerchantVerificationChecklist store={store as any} onChanged={refresh} />
-                )}
               </>
             )}
 
             {tab === "orders" && (
               <>
-                <OrdersSection
-                  restaurantId={restaurant?.id}
-                  sellerId={store ? user.id : undefined}
-                />
-                {store && <MerchantOffersSection merchantId={user.id} />}
+                {store && <MerchantCommandesView merchantUserId={user.id} />}
+                {restaurant && (
+                  <OrdersSection restaurantId={restaurant.id} sellerId={undefined} />
+                )}
               </>
             )}
 
