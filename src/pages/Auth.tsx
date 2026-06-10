@@ -277,8 +277,11 @@ export default function Auth() {
             JSON.stringify({ vehicle }),
           );
         }
-        if (intent === "merchant" && typeof window !== "undefined") {
-          sessionStorage.setItem(MERCHANT_INTENT_STORAGE_KEY, "1");
+        if (intent === "merchant") {
+          storeMerchantIntent();
+          if (signUpData?.session?.user?.id) {
+            void persistMerchantAppMode(signUpData.session.user.id);
+          }
         }
       } catch {
         /* noop */
