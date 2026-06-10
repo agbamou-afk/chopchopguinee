@@ -49,6 +49,15 @@ import { UnderConstructionModal } from "@/components/announcements/UnderConstruc
 import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
 import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
 import { rideQaDebug } from "@/lib/rides/debug";
+import { useAppMode } from "@/hooks/useAppMode";
+import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
+import {
+  MERCHANT_HUB_PATH,
+  clearMerchantIntent,
+  hasStoredMerchantIntent,
+  persistMerchantAppMode,
+  resolveMerchantPostAuthRoute,
+} from "@/lib/merchantRouting";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -104,6 +113,11 @@ const Index = () => {
   const { requireAuth } = useAuthGuard();
   const { ready, roles, user, signupIntent } = useAuth();
   const { profile: driverProfile, loading: driverProfileLoading } = useDriverProfile();
+  const { persistedMode, loading: appModeLoading } = useAppMode();
+  const { loading: merchantLoading, hasAny: hasMerchantIdentity } = useMerchantIdentity();
+  const navigate = useNavigate();
+  const adminUser = isAdminUser(user, roles);
+  const liveUser = isLiveUser(user, roles);
   // Robust driver-designated check — combines every existing source of truth
   // so sandbox / hybrid / role-only / profile-only accounts all resolve.
   const sandbox = typeof window !== "undefined" && isSandboxMode();
@@ -117,11 +131,13 @@ const Index = () => {
     sandboxDriverEmail;
   // Routing is "resolving" until we have both roles and (if logged in) the
   // driver profile lookup. Prevents the client-home flash for drivers.
+  const appModeResolving = !!user && appModeLoading;
+  const merchantTargetRequested = !!user && !adminUser && signupIntent !== "driver" && (
+    signupIntent === "merchant" || persistedMode === "merchant" || hasStoredMerchantIntent()
+  );
+  const merchantResolving = appModeResolving || (merchantTargetRequested && merchantLoading);
   const driverResolving = !ready || (!!user && driverProfileLoading);
   const isDriver = isDriverDesignated;
-  const navigate = useNavigate();
-  const adminUser = isAdminUser(user, roles);
-  const liveUser = isLiveUser(user, roles);
   // PUBLIC = logged-out visitor. First-launch onboarding always opens.
   const publicUser = ready && !user;
 
@@ -137,6 +153,24 @@ const Index = () => {
     adminRedirectedRef.current = true;
     navigate("/admin", { replace: true });
   }, [adminUser, navigate]);
+
+  const merchantRedirectedRef = useRef(false);
+  useEffect(() => {
+    if (!ready || !user || adminUser || driverResolving || merchantResolving) return;
+    if (merchantRedirectedRef.current) return;
+    if (signupIntent === "driver") return;
+    const wantsMerchant = signupIntent === "merchant" || persistedMode === "merchant" || hasStoredMerchantIntent();
+    if (!wantsMerchant) return;
+    merchantRedirectedRef.current = true;
+    (async () => {
+      try { await persistMerchantAppMode(user.id); } catch { /* noop */ }
+      const route = hasMerchantIdentity
+        ? MERCHANT_HUB_PATH
+        : await resolveMerchantPostAuthRoute(user.id, { preferSlides: true });
+      clearMerchantIntent();
+      navigate(route, { replace: true });
+    })();
+  }, [ready, user, adminUser, driverResolving, merchantResolving, signupIntent, persistedMode, hasMerchantIdentity, navigate]);
 
   // Driver applicants who confirmed their email arrive at "/" with a session
   // but no driver_profile yet (the application has not been submitted). Route
@@ -159,7 +193,7 @@ const Index = () => {
   }, [driverResolving, user, signupIntent, driverProfile, navigate]);
 
   // Public onboarding always shows on launch; live users see it once.
-  const onboardingBlocksApp = driverResolving || showOnboarding || showDriverOnboarding;
+  const onboardingBlocksApp = driverResolving || merchantResolving || showOnboarding || showDriverOnboarding;
 
   // Onboarding rules:
   //   - admin               → never auto-show.

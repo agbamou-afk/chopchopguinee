@@ -36,7 +36,9 @@ export default function MerchantOnboardingSlides() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (ready && !isLoggedIn) navigate("/auth", { replace: true });
+    if (ready && !isLoggedIn) {
+      navigate("/auth?mode=signup&intent=merchant&next=/merchant/onboarding-slides", { replace: true });
+    }
   }, [ready, isLoggedIn, navigate]);
 
   const finish = async () => {
