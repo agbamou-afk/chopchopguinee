@@ -21,11 +21,18 @@ import {
   normalizeGuineaPhone,
 } from "@/lib/phone/guinea";
 import { EmailConfirmationPendingCard } from "@/components/auth/EmailConfirmationPendingCard";
+import {
+  MERCHANT_INTENT_STORAGE_KEY,
+  clearMerchantIntent,
+  hasStoredMerchantIntent,
+  persistMerchantAppMode,
+  resolveMerchantPostAuthRoute,
+  storeMerchantIntent,
+} from "@/lib/merchantRouting";
 
 type SignupIntent = "client" | "driver" | "merchant";
 type DriverVehicleIntent = "moto" | "toktok" | "livraison";
 const DRIVER_INTENT_STORAGE_KEY = "cc_signup_driver_intent";
-const MERCHANT_INTENT_STORAGE_KEY = "cc_signup_merchant_intent";
 
 const emailSchema = z
   .string()
