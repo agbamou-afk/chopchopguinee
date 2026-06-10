@@ -50,6 +50,12 @@ export interface Mission {
   pickup_confirmed_by: string | null;
   dropoff_confirmed_at: string | null;
   dropoff_confirmed_by: string | null;
+  customer_handoff_code: string | null;
+  merchant_handoff_code: string | null;
+  customer_confirmed_at: string | null;
+  customer_confirmed_by: string | null;
+  pickup_photo_url: string | null;
+  delivery_photo_url: string | null;
   issue_reason: string | null;
   created_at: string;
   updated_at: string;
