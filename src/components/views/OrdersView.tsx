@@ -5,6 +5,8 @@ import { LiveStrip } from "@/components/ui/LiveStrip";
 import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { ActiveRideTile } from "@/components/activity/ActiveRideTile";
 import { useActivityFeed } from "@/lib/activity/useActivityFeed";
+import { CustomerMarketplaceDeliveries } from "@/components/missions/CustomerMarketplaceDeliveries";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 type Filter = "all" | "in_progress" | "completed";
@@ -18,6 +20,7 @@ const TABS: { key: Filter; label: string }[] = [
 export function OrdersView() {
   const [filter, setFilter] = useState<Filter>("all");
   const { items, loading } = useActivityFeed("client");
+  const { user } = useAuth();
 
   return (
     <div className="max-w-md mx-auto">
@@ -57,6 +60,7 @@ export function OrdersView() {
 
       <div className="px-3 pb-28">
         <ActiveRideTile />
+        <CustomerMarketplaceDeliveries userId={user?.id ?? null} />
         <ActivityTimeline items={items} loading={loading} filter={filter} />
       </div>
     </div>
