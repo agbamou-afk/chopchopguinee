@@ -126,14 +126,37 @@ export async function setListingAvailability(
 }
 
 export async function listSellerInterests(sellerId: string, limit = 30) {
-  const { data, error } = await (supabase as any)
+  // Try the embedded query first (uses the FK relationship).
+  const embed = await (supabase as any)
     .from("listing_interests")
     .select("*, marketplace_listings(title)")
     .eq("seller_id", sellerId)
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (error) throw error;
-  return data ?? [];
+  if (!embed.error) return embed.data ?? [];
+
+  // Fallback: schema cache may be stale or FK missing — fetch in two steps.
+  if (import.meta.env.DEV) {
+    console.warn("[merchant] listing_interests embed failed, falling back", embed.error?.message);
+  }
+  const base = await (supabase as any)
+    .from("listing_interests")
+    .select("*")
+    .eq("seller_id", sellerId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (base.error) throw base.error;
+  const rows = (base.data ?? []) as any[];
+  const ids = Array.from(new Set(rows.map((r) => r.listing_id).filter(Boolean)));
+  if (ids.length === 0) return rows;
+  const { data: listings } = await (supabase as any)
+    .from("marketplace_listings")
+    .select("id, title")
+    .in("id", ids);
+  const map = new Map<string, { title: string }>(
+    ((listings ?? []) as any[]).map((l) => [l.id, { title: l.title }]),
+  );
+  return rows.map((r) => ({ ...r, marketplace_listings: map.get(r.listing_id) ?? null }));
 }
 
 export async function respondToInterest(

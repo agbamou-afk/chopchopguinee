@@ -22,18 +22,24 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
 
   const refresh = async () => {
     setLoading(true);
-    try {
-      const [i, o] = await Promise.all([
-        listSellerInterests(merchantUserId, 80),
-        listMerchantOffers(merchantUserId),
-      ]);
-      setInterests(i);
-      setOffers(o);
-    } catch (e: any) {
-      toast({ title: "Erreur", description: e?.message ?? "Chargement impossible" });
-    } finally {
-      setLoading(false);
+    const [iRes, oRes] = await Promise.allSettled([
+      listSellerInterests(merchantUserId, 80),
+      listMerchantOffers(merchantUserId),
+    ]);
+    if (iRes.status === "fulfilled") {
+      setInterests(iRes.value);
+    } else {
+      setInterests([]);
+      if (import.meta.env.DEV) console.warn("[merchant] interests load failed", iRes.reason);
+      toast({ title: "Demandes indisponibles pour le moment" });
     }
+    if (oRes.status === "fulfilled") {
+      setOffers(oRes.value);
+    } else {
+      setOffers([]);
+      if (import.meta.env.DEV) console.warn("[merchant] offers load failed", oRes.reason);
+    }
+    setLoading(false);
   };
 
   useEffect(() => { refresh(); /* eslint-disable-next-line */ }, [merchantUserId]);
