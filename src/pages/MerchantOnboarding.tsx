@@ -13,14 +13,6 @@ import { slugify } from "@/lib/marche";
 import { normalizeGuineaPhone } from "@/lib/phone/guinea";
 import { StoreLocationPicker, type StoreLocation } from "@/components/merchant/StoreLocationPicker";
 
-const BUSINESS_TYPES = [
-  { id: "market_stall", label: "Étal de marché" },
-  { id: "shop", label: "Boutique" },
-  { id: "wholesaler", label: "Grossiste" },
-  { id: "home_seller", label: "Vente à domicile" },
-  { id: "other", label: "Autre" },
-];
-
 export default function MerchantOnboarding() {
   const navigate = useNavigate();
   const { user, ready, isLoggedIn } = useAuth();
