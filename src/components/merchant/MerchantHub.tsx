@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Home, ShoppingBag, Package, Wallet as WalletIcon, Store as StoreIcon, Plus, ShieldCheck } from "lucide-react";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import { useAuth } from "@/contexts/AuthContext";
 import { MerchantIdentityStrip } from "./MerchantIdentityStrip";
@@ -17,12 +17,25 @@ import { toast } from "@/hooks/use-toast";
 import { MerchantActivationPanel } from "./MerchantActivationPanel";
 import { MerchantPendingBanner } from "./MerchantPendingBanner";
 import { MerchantModeToggle } from "./ModeToggle";
+import { MerchantVerificationChecklist } from "./MerchantVerificationChecklist";
+import { MerchantWalletSection } from "./MerchantWalletSection";
+
+type Tab = "home" | "orders" | "catalog" | "wallet" | "store";
+
+const TABS: { key: Tab; label: string; icon: typeof Home }[] = [
+  { key: "home", label: "Accueil", icon: Home },
+  { key: "orders", label: "Commandes", icon: ShoppingBag },
+  { key: "catalog", label: "Catalogue", icon: Package },
+  { key: "wallet", label: "Wallet", icon: WalletIcon },
+  { key: "store", label: "Boutique", icon: StoreIcon },
+];
 
 export function MerchantHub() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { loading, store, restaurant, hasAny, refresh } = useMerchantIdentity();
   const [isOpen, setIsOpen] = useState(false);
+  const [tab, setTab] = useState<Tab>("home");
 
   useEffect(() => {
     setIsOpen(restaurant ? !!restaurant.is_open : store ? store.status === "active" : false);
@@ -48,6 +61,17 @@ export function MerchantHub() {
     }
   };
 
+  const pendingStore = store?.onboarding_status && store.onboarding_status !== "approved";
+  const statusBadge = !store
+    ? null
+    : store.onboarding_status === "approved"
+    ? { label: "Active", tone: "bg-emerald-500/15 text-emerald-700" }
+    : store.onboarding_status === "needs_info"
+    ? { label: "À corriger", tone: "bg-amber-500/15 text-amber-800" }
+    : store.onboarding_status === "rejected"
+    ? { label: "Suspendue", tone: "bg-destructive/15 text-destructive" }
+    : { label: "En vérification", tone: "bg-primary/15 text-primary" };
+
   return (
     <div className="min-h-screen bg-background pb-28">
       <header
@@ -61,54 +85,137 @@ export function MerchantHub() {
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-lg font-extrabold text-foreground">Espace marchand</h1>
-        <div className="ml-auto">
-          <MerchantModeToggle compact />
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg font-extrabold text-foreground truncate">
+            {store?.name ?? restaurant?.name ?? "Espace marchand"}
+          </h1>
+          {statusBadge && (
+            <span className={`inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusBadge.tone}`}>
+              {statusBadge.label}
+            </span>
+          )}
         </div>
+        <MerchantModeToggle compact />
       </header>
 
       {!hasAny ? (
         <MerchantActivationPanel onActivated={refresh} />
       ) : (
-      <main className="max-w-md mx-auto px-4 pt-4 space-y-3">
-        {store?.onboarding_status && store.onboarding_status !== "approved" && (
-          <MerchantPendingBanner
-            status={store.onboarding_status}
-            reason={store.rejection_reason ?? null}
-          />
-        )}
-        <MerchantIdentityStrip
-          store={store}
-          restaurant={restaurant}
-          isOpen={isOpen}
-          onToggleOpen={handleOpenToggle}
-        />
-        <OrdersSection
-          restaurantId={restaurant?.id}
-          sellerId={store ? user.id : undefined}
-        />
-        <AvailabilitySection store={store} restaurant={restaurant} onChanged={refresh} />
-        <CatalogSection
-          restaurantId={restaurant?.id}
-          sellerId={store ? user.id : undefined}
-        />
-        {store && (
-          <ProductCatalogSection
-            userId={user.id}
-            storeId={store.id}
-            approved={store.onboarding_status === "approved" && store.status === "active"}
-          />
-        )}
-        {store && <MerchantOffersSection merchantId={user.id} />}
-        <DeliverySection merchantUserId={user.id} />
-        <ChopPayActivitySection
-          enabled={!!(restaurant?.choppay_enabled || store?.choppay_enabled)}
-        />
-        <AnalyticsStrip
-          restaurantId={restaurant?.id}
-          sellerId={store ? user.id : undefined}
-        />
-      </main>
+        <>
+          {/* Sub-tab nav */}
+          <nav className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/40 px-2 py-2 mt-2">
+            <div className="max-w-md mx-auto flex gap-1 overflow-x-auto no-scrollbar">
+              {TABS.map((t) => {
+                const Icon = t.icon;
+                const active = tab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    className={`flex-1 min-w-[64px] flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-[11px] font-semibold transition ${
+                      active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50"
+                    }`}
+                    aria-current={active}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+
+          <main className="max-w-md mx-auto px-4 pt-4 space-y-3">
+            {pendingStore && tab !== "store" && (
+              <MerchantPendingBanner
+                status={store!.onboarding_status!}
+                reason={store!.rejection_reason ?? null}
+              />
+            )}
+
+            {tab === "home" && (
+              <>
+                {!pendingStore && store && (
+                  <div className="rounded-2xl bg-emerald-500/10 text-emerald-900 p-3 text-sm font-medium">
+                    Boutique active. Vos produits sont visibles sur CHOP Marché.
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => setTab("catalog")} className="rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-2 text-left">
+                    <div className="p-2 rounded-xl bg-primary/10"><Plus className="w-4 h-4 text-primary" /></div>
+                    <span className="text-sm font-semibold text-foreground">Ajouter un produit</span>
+                  </button>
+                  <button onClick={() => setTab("orders")} className="rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-2 text-left">
+                    <div className="p-2 rounded-xl bg-primary/10"><ShoppingBag className="w-4 h-4 text-primary" /></div>
+                    <span className="text-sm font-semibold text-foreground">Voir commandes</span>
+                  </button>
+                  <button onClick={() => setTab("wallet")} className="rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-2 text-left">
+                    <div className="p-2 rounded-xl bg-primary/10"><WalletIcon className="w-4 h-4 text-primary" /></div>
+                    <span className="text-sm font-semibold text-foreground">CHOP Wallet</span>
+                  </button>
+                  <button onClick={() => setTab("store")} className="rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-2 text-left">
+                    <div className="p-2 rounded-xl bg-primary/10"><ShieldCheck className="w-4 h-4 text-primary" /></div>
+                    <span className="text-sm font-semibold text-foreground">Vérification</span>
+                  </button>
+                </div>
+                <AnalyticsStrip
+                  restaurantId={restaurant?.id}
+                  sellerId={store ? user.id : undefined}
+                />
+                {store && (
+                  <MerchantVerificationChecklist store={store as any} onChanged={refresh} />
+                )}
+              </>
+            )}
+
+            {tab === "orders" && (
+              <>
+                <OrdersSection
+                  restaurantId={restaurant?.id}
+                  sellerId={store ? user.id : undefined}
+                />
+                {store && <MerchantOffersSection merchantId={user.id} />}
+              </>
+            )}
+
+            {tab === "catalog" && (
+              <>
+                <CatalogSection
+                  restaurantId={restaurant?.id}
+                  sellerId={store ? user.id : undefined}
+                />
+                {store && (
+                  <ProductCatalogSection
+                    userId={user.id}
+                    storeId={store.id}
+                    approved={store.onboarding_status === "approved" && store.status === "active"}
+                  />
+                )}
+              </>
+            )}
+
+            {tab === "wallet" && <MerchantWalletSection />}
+
+            {tab === "store" && (
+              <>
+                <MerchantIdentityStrip
+                  store={store}
+                  restaurant={restaurant}
+                  isOpen={isOpen}
+                  onToggleOpen={handleOpenToggle}
+                />
+                <AvailabilitySection store={store} restaurant={restaurant} onChanged={refresh} />
+                <DeliverySection merchantUserId={user.id} />
+                <ChopPayActivitySection
+                  enabled={!!(restaurant?.choppay_enabled || store?.choppay_enabled)}
+                />
+                {store && (
+                  <MerchantVerificationChecklist store={store as any} onChanged={refresh} />
+                )}
+              </>
+            )}
+          </main>
+        </>
       )}
     </div>
   );
