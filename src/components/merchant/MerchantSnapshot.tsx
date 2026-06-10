@@ -28,7 +28,7 @@ export function MerchantSnapshot({ userId, store, onGo }: Props) {
     let alive = true;
     (async () => {
       setLoading(true);
-      const [pAct, pOos, intCount, offCount] = await Promise.all([
+      const results = await Promise.allSettled([
         (supabase as any).from("marketplace_listings").select("id", { head: true, count: "exact" })
           .eq("seller_id", userId).eq("status", "active").eq("visibility", "public"),
         (supabase as any).from("marketplace_listings").select("id", { head: true, count: "exact" })
@@ -39,11 +39,13 @@ export function MerchantSnapshot({ userId, store, onGo }: Props) {
           .eq("merchant_user_id", userId).in("status", ["pending", "countered"]),
       ]);
       if (!alive) return;
+      const c = (i: number) =>
+        results[i].status === "fulfilled" ? ((results[i] as any).value.count ?? 0) : 0;
       setCounts({
-        activeProducts: pAct.count ?? 0,
-        oos: pOos.count ?? 0,
-        pendingInterests: intCount.count ?? 0,
-        pendingOffers: offCount.count ?? 0,
+        activeProducts: c(0),
+        oos: c(1),
+        pendingInterests: c(2),
+        pendingOffers: c(3),
       });
       setLoading(false);
     })();
