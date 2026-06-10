@@ -24,9 +24,9 @@ function json(body: unknown, status = 200) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  if (Deno.env.get("QA_HARNESS_ENABLED") !== "true") {
-    return json({ error: "QA harness disabled in this environment" }, 403);
-  }
+  const flag = (Deno.env.get("QA_HARNESS_ENABLED") ?? "").trim().toLowerCase();
+  const disabled = flag === "" || ["false", "0", "no", "off", "disabled"].includes(flag);
+  if (disabled) return json({ error: "QA harness disabled in this environment" }, 403);
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
