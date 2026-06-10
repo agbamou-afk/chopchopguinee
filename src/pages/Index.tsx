@@ -113,7 +113,7 @@ const Index = () => {
   const { requireAuth } = useAuthGuard();
   const { ready, roles, user, signupIntent } = useAuth();
   const { profile: driverProfile, loading: driverProfileLoading } = useDriverProfile();
-  const { mode: appMode, persistedMode, loading: appModeLoading } = useAppMode();
+  const { persistedMode, loading: appModeLoading } = useAppMode();
   const { loading: merchantLoading, hasAny: hasMerchantIdentity } = useMerchantIdentity();
   const navigate = useNavigate();
   const adminUser = isAdminUser(user, roles);
