@@ -1,5 +1,6 @@
 import { QuickActions } from "@/components/home/QuickActions";
-import { Home as HomeIcon, Briefcase, Clock, Bike, UtensilsCrossed } from "lucide-react";
+import { Home as HomeIcon, Briefcase, Clock, Bike, UtensilsCrossed, Store, Car as SteeringIcon, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PromoCarousel } from "@/components/home/PromoCarousel";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
 import { AppHeader } from "@/components/ui/AppHeader";
@@ -277,6 +278,49 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
             <span className="text-[10px] text-muted-foreground">En direct</span>
           </div>
           <PromoCarousel />
+        </section>
+
+        {/* Partner acquisition — public, always visible */}
+        <section aria-label="Rejoindre CHOPCHOP">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2 px-0.5">
+            Rejoindre CHOPCHOP
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              to="/merchant/apply"
+              className="rounded-2xl card-warm p-4 flex flex-col gap-2 active:scale-[0.99] transition-transform"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Store className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground leading-tight">Devenir marchand</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                  Vendez vos produits sur CHOPCHOP
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary mt-auto">
+                Créer ma boutique <ArrowRight className="w-3 h-3" />
+              </span>
+            </Link>
+            <Link
+              to="/driver/apply"
+              className="rounded-2xl card-warm p-4 flex flex-col gap-2 active:scale-[0.99] transition-transform"
+            >
+              <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center">
+                <SteeringIcon className="w-5 h-5 text-foreground" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground leading-tight">Devenir chauffeur</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                  Conduisez avec CHOPCHOP
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary mt-auto">
+                Postuler <ArrowRight className="w-3 h-3" />
+              </span>
+            </Link>
+          </div>
         </section>
 
         {/* Popular restaurants */}
