@@ -49,6 +49,15 @@ import { UnderConstructionModal } from "@/components/announcements/UnderConstruc
 import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
 import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
 import { rideQaDebug } from "@/lib/rides/debug";
+import { useAppMode } from "@/hooks/useAppMode";
+import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
+import {
+  MERCHANT_HUB_PATH,
+  clearMerchantIntent,
+  hasStoredMerchantIntent,
+  persistMerchantAppMode,
+  resolveMerchantPostAuthRoute,
+} from "@/lib/merchantRouting";
 
 export type RideType = "moto" | "toktok" | null;
 export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
@@ -104,6 +113,8 @@ const Index = () => {
   const { requireAuth } = useAuthGuard();
   const { ready, roles, user, signupIntent } = useAuth();
   const { profile: driverProfile, loading: driverProfileLoading } = useDriverProfile();
+  const { mode: appMode, loading: appModeLoading } = useAppMode();
+  const { loading: merchantLoading, hasAny: hasMerchantIdentity } = useMerchantIdentity();
   // Robust driver-designated check — combines every existing source of truth
   // so sandbox / hybrid / role-only / profile-only accounts all resolve.
   const sandbox = typeof window !== "undefined" && isSandboxMode();
@@ -117,6 +128,11 @@ const Index = () => {
     sandboxDriverEmail;
   // Routing is "resolving" until we have both roles and (if logged in) the
   // driver profile lookup. Prevents the client-home flash for drivers.
+  const appModeResolving = !!user && appModeLoading;
+  const merchantTargetRequested = !!user && !adminUser && signupIntent !== "driver" && (
+    signupIntent === "merchant" || appMode === "merchant" || hasStoredMerchantIntent()
+  );
+  const merchantResolving = appModeResolving || (merchantTargetRequested && merchantLoading);
   const driverResolving = !ready || (!!user && driverProfileLoading);
   const isDriver = isDriverDesignated;
   const navigate = useNavigate();
