@@ -1,27 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Store } from "lucide-react";
+import { Loader2, Store, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Seo } from "@/components/Seo";
 import { SecondaryPageHeader } from "@/components/ui/SecondaryPageHeader";
 import { slugify } from "@/lib/marche";
 import { normalizeGuineaPhone } from "@/lib/phone/guinea";
 import { StoreLocationPicker, type StoreLocation } from "@/components/merchant/StoreLocationPicker";
-import { MerchantDocUpload } from "@/components/merchant/MerchantDocUpload";
-
-const BUSINESS_TYPES = [
-  { id: "market_stall", label: "Étal de marché" },
-  { id: "shop", label: "Boutique" },
-  { id: "wholesaler", label: "Grossiste" },
-  { id: "home_seller", label: "Vente à domicile" },
-  { id: "other", label: "Autre" },
-];
 
 export default function MerchantOnboarding() {
   const navigate = useNavigate();
@@ -30,20 +20,11 @@ export default function MerchantOnboarding() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     business_name: "",
-    owner_name: "",
-    phone: "",
     whatsapp: "",
-    district: "",
     category: "",
-    business_type: "market_stall",
-    stall_number: "",
-    operating_hours: "",
-    description: "",
+    district: "",
   });
   const [location, setLocation] = useState<StoreLocation | null>(null);
-  const [idPath, setIdPath] = useState<string | null>(null);
-  const [selfiePath, setSelfiePath] = useState<string | null>(null);
-  const [storefrontPath, setStorefrontPath] = useState<string | null>(null);
 
   useEffect(() => {
     if (!ready) return;
@@ -54,28 +35,17 @@ export default function MerchantOnboarding() {
     (async () => {
       const { data } = await (supabase as any)
         .from("merchant_stores")
-        .select("id, onboarding_status")
+        .select("id")
         .eq("owner_user_id", user!.id)
         .maybeSingle();
       if (data) {
         navigate("/merchant/hub", { replace: true });
         return;
       }
-      // Gate: slides must be completed first.
-      const { data: pref } = await (supabase as any)
-        .from("user_preferences")
-        .select("merchant_slides_completed_at")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-      if (!pref?.merchant_slides_completed_at) {
-        navigate("/merchant/onboarding-slides", { replace: true });
-        return;
-      }
       const meta = (user?.user_metadata as Record<string, unknown> | undefined) ?? {};
       setForm((f) => ({
         ...f,
-        owner_name: typeof meta.full_name === "string" ? (meta.full_name as string) : f.owner_name,
-        phone: typeof meta.phone === "string" ? (meta.phone as string) : f.phone,
+        whatsapp: typeof meta.phone === "string" ? (meta.phone as string) : f.whatsapp,
       }));
       setLoading(false);
     })();
@@ -87,20 +57,16 @@ export default function MerchantOnboarding() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!form.business_name.trim() || !form.owner_name.trim() || !form.phone.trim()) {
-      toast({ title: "Champs requis", description: "Nom de la boutique, propriétaire et téléphone." });
+    if (!form.business_name.trim() || !form.whatsapp.trim()) {
+      toast({ title: "Champs requis", description: "Nom de la boutique et WhatsApp." });
       return;
     }
     if (!location) {
-      toast({ title: "Position requise", description: "Indiquez l'emplacement de la boutique." });
-      return;
-    }
-    if (!idPath || !selfiePath) {
-      toast({ title: "Vérification requise", description: "Envoyez votre pièce d'identité et votre selfie." });
+      toast({ title: "Position requise", description: "Indiquez où se trouve votre boutique." });
       return;
     }
     setSubmitting(true);
-    const normalizedPhone = normalizeGuineaPhone(form.phone) || form.phone.trim();
+    const normalizedPhone = normalizeGuineaPhone(form.whatsapp) || form.whatsapp.trim();
     const slug = `${slugify(form.business_name)}-${user.id.slice(0, 6)}`;
     const { error } = await (supabase as any).from("merchant_stores").insert({
       owner_user_id: user.id,
@@ -108,15 +74,11 @@ export default function MerchantOnboarding() {
       name: form.business_name.trim(),
       slug,
       business_name: form.business_name.trim(),
-      owner_name: form.owner_name.trim(),
       phone: normalizedPhone,
-      whatsapp: form.whatsapp.trim() || null,
+      whatsapp: normalizedPhone,
       district: (location.district || form.district.trim() || null),
       category: form.category.trim() || null,
-      business_type: form.business_type,
-      stall_number: form.stall_number.trim() || null,
-      operating_hours: form.operating_hours.trim() || null,
-      bio: form.description.trim() || null,
+      business_type: "shop",
       latitude: location.lat,
       longitude: location.lng,
       address_label: location.address_label ?? null,
@@ -124,9 +86,6 @@ export default function MerchantOnboarding() {
       location_source: location.location_source,
       location_accuracy_m: location.location_accuracy_m ?? null,
       location_confirmed_at: new Date().toISOString(),
-      id_photo_path: idPath,
-      selfie_photo_path: selfiePath,
-      storefront_photo_path: storefrontPath,
       status: "pending",
       onboarding_status: "submitted",
       submitted_at: new Date().toISOString(),
@@ -146,8 +105,8 @@ export default function MerchantOnboarding() {
         .upsert({ user_id: user.id, app_mode: "merchant" }, { onConflict: "user_id" });
     } catch { /* noop */ }
     toast({
-      title: "Boutique envoyée",
-      description: "Votre boutique est en vérification. Vous pouvez préparer votre catalogue.",
+      title: "Boutique créée",
+      description: "Vérification en cours. Préparez votre catalogue dès maintenant.",
     });
     navigate("/merchant/hub", { replace: true });
   };
@@ -167,89 +126,51 @@ export default function MerchantOnboarding() {
         description="Créez votre boutique CHOPCHOP Marché. Vos informations sont vérifiées par l'équipe avant publication."
         canonical="/merchant/onboarding"
       />
-      <SecondaryPageHeader title="Créer ma boutique" subtitle="Présentez votre activité pour rejoindre CHOPCHOP Marché." />
+      <SecondaryPageHeader title="Créer ma boutique" subtitle="60 secondes pour ouvrir votre boutique CHOPCHOP." />
       <main className="max-w-md mx-auto px-4 -mt-5">
         <div className="bg-card border border-border/60 rounded-3xl shadow-card p-5">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Store className="w-5 h-5 text-primary" />
+              <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <p className="text-xs text-muted-foreground">
-              Votre boutique sera vérifiée par l'équipe CHOPCHOP avant d'être pleinement visible sur Marché.
+              Créez votre boutique en quelques secondes. La vérification (pièce d'identité, selfie, photos) se fait ensuite depuis votre tableau de bord.
             </p>
           </div>
-          <form onSubmit={submit} className="space-y-3">
-            <div>
-              <Label htmlFor="business_name">Nom de la boutique *</Label>
-              <Input id="business_name" value={form.business_name} onChange={(e) => setField("business_name")(e.target.value)} required />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="owner_name">Propriétaire *</Label>
-                <Input id="owner_name" value={form.owner_name} onChange={(e) => setField("owner_name")(e.target.value)} required />
-              </div>
-              <div>
-                <Label htmlFor="phone">Téléphone *</Label>
-                <Input id="phone" inputMode="tel" value={form.phone} onChange={(e) => setField("phone")(e.target.value)} required />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="business_type">Type d'activité</Label>
-              <select
-                id="business_type"
-                value={form.business_type}
-                onChange={(e) => setField("business_type")(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                {BUSINESS_TYPES.map((t) => (
-                  <option key={t.id} value={t.id}>{t.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="district">Quartier / marché</Label>
-                <Input id="district" value={form.district} onChange={(e) => setField("district")(e.target.value)} placeholder="Ex. Madina" />
-              </div>
-              <div>
-                <Label htmlFor="stall_number">Étal / repère</Label>
-                <Input id="stall_number" value={form.stall_number} onChange={(e) => setField("stall_number")(e.target.value)} placeholder="Étal 12B" />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="category">Catégorie principale</Label>
-              <Input id="category" value={form.category} onChange={(e) => setField("category")(e.target.value)} placeholder="Ex. Alimentation, Mode, Électronique" />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="whatsapp">WhatsApp</Label>
-                <Input id="whatsapp" inputMode="tel" value={form.whatsapp} onChange={(e) => setField("whatsapp")(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="operating_hours">Horaires</Label>
-                <Input id="operating_hours" value={form.operating_hours} onChange={(e) => setField("operating_hours")(e.target.value)} placeholder="Lun-Sam 8h-18h" />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="description">Description (optionnel)</Label>
-              <Textarea id="description" value={form.description} onChange={(e) => setField("description")(e.target.value)} rows={3} />
-            </div>
-            <StoreLocationPicker value={location} onChange={setLocation} />
+          <form onSubmit={submit} className="space-y-4">
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Vérification</p>
-              <MerchantDocUpload kind="id-card" currentPath={idPath} onUploaded={setIdPath} />
-              <MerchantDocUpload kind="selfie" currentPath={selfiePath} onUploaded={setSelfiePath} />
-              <MerchantDocUpload kind="storefront" currentPath={storefrontPath} onUploaded={setStorefrontPath} />
-              <p className="text-[11px] text-muted-foreground">
-                Vos documents sont stockés de manière privée et ne sont visibles que par l'équipe de vérification CHOPCHOP.
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">1. Votre boutique</p>
+              <div>
+                <Label htmlFor="business_name">Nom de la boutique *</Label>
+                <Input id="business_name" value={form.business_name} onChange={(e) => setField("business_name")(e.target.value)} placeholder="Ex. Chez Mariama" required />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="category">Catégorie</Label>
+                  <Input id="category" value={form.category} onChange={(e) => setField("category")(e.target.value)} placeholder="Ex. Alimentation" />
+                </div>
+                <div>
+                  <Label htmlFor="whatsapp">WhatsApp *</Label>
+                  <Input id="whatsapp" inputMode="tel" value={form.whatsapp} onChange={(e) => setField("whatsapp")(e.target.value)} placeholder="+224..." required />
+                </div>
+              </div>
             </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">2. Où se trouve votre boutique ?</p>
+              <div>
+                <Label htmlFor="district">Marché / quartier</Label>
+                <Input id="district" value={form.district} onChange={(e) => setField("district")(e.target.value)} placeholder="Ex. Madina, Ratoma" />
+              </div>
+              <StoreLocationPicker value={location} onChange={setLocation} />
+            </div>
+
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Envoyer pour vérification
+              <Store className="w-4 h-4 mr-2" /> Créer ma boutique
             </Button>
             <p className="text-[11px] text-muted-foreground text-center">
-              Vous pourrez préparer votre catalogue immédiatement. Vos produits resteront privés jusqu'à l'approbation.
+              Votre boutique sera en vérification. Vous pourrez préparer votre catalogue immédiatement — vos produits resteront privés jusqu'à l'approbation.
             </p>
           </form>
         </div>

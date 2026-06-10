@@ -52,7 +52,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
   const { profile, user, roles, isAdmin, signOut } = useAuth();
   const { lowDataMode, setLowDataMode } = useAppEnv();
   const navigate = useNavigate();
-  const { hasAny: isMerchant } = useMerchantIdentity();
+  const { hasAny: isMerchant, store: merchantStore } = useMerchantIdentity();
   const isAuthed = !!user;
   const [deletionOpen, setDeletionOpen] = useState(false);
 
@@ -199,20 +199,35 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
       {/* Menu */}
       <div className="px-4 pb-44">
         <div className="bg-card rounded-2xl shadow-card border border-border/60 overflow-hidden">
-          {isAuthed && (
-            <button
-              onClick={() => navigate("/merchant/hub")}
-              className="w-full flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors border-b border-border"
-            >
-              <div className="p-2 rounded-xl bg-primary/10">
-                <Store className="w-5 h-5 text-primary" />
-              </div>
-              <span className="flex-1 text-left font-medium text-foreground">
-                {isMerchant ? "Espace marchand" : "Commencer à vendre"}
-              </span>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </button>
-          )}
+          {isAuthed && (() => {
+            const pending = isMerchant && merchantStore?.onboarding_status && merchantStore.onboarding_status !== "approved";
+            const approved = isMerchant && merchantStore?.onboarding_status === "approved";
+            const label = !isMerchant
+              ? "Devenir marchand"
+              : pending
+              ? "Mode marchand — en vérification"
+              : approved
+              ? "Passer en mode marchand"
+              : "Espace marchand";
+            const target = isMerchant ? "/merchant/hub" : "/merchant/onboarding-slides";
+            return (
+              <button
+                onClick={() => navigate(target)}
+                className="w-full flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors border-b border-border"
+              >
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <Store className="w-5 h-5 text-primary" />
+                </div>
+                <span className="flex-1 text-left font-medium text-foreground">{label}</span>
+                {pending && (
+                  <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    En vérification
+                  </span>
+                )}
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </button>
+            );
+          })()}
           {menuItems.map((item, index) => (
             <motion.button
               key={item.action}
