@@ -195,7 +195,7 @@ export default function MerchantQR() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6 text-center">
         <Store className="w-10 h-10 text-primary mb-3" />
         <p className="text-base font-semibold">Connectez-vous pour devenir marchand CHOPCHOP.</p>
-        <Link to="/auth?mode=signup&intent=merchant&next=/merchant/onboarding-slides" className="mt-4">
+        <Link to="/merchant/apply" className="mt-4">
           <Button className="gradient-primary">Créer mon compte marchand</Button>
         </Link>
       </div>
