@@ -154,6 +154,24 @@ const Index = () => {
     navigate("/admin", { replace: true });
   }, [adminUser, navigate]);
 
+  const merchantRedirectedRef = useRef(false);
+  useEffect(() => {
+    if (!ready || !user || adminUser || driverResolving || merchantResolving) return;
+    if (merchantRedirectedRef.current) return;
+    if (signupIntent === "driver") return;
+    const wantsMerchant = signupIntent === "merchant" || appMode === "merchant" || hasStoredMerchantIntent();
+    if (!wantsMerchant) return;
+    merchantRedirectedRef.current = true;
+    (async () => {
+      try { await persistMerchantAppMode(user.id); } catch { /* noop */ }
+      const route = hasMerchantIdentity
+        ? MERCHANT_HUB_PATH
+        : await resolveMerchantPostAuthRoute(user.id, { preferSlides: true });
+      clearMerchantIntent();
+      navigate(route, { replace: true });
+    })();
+  }, [ready, user, adminUser, driverResolving, merchantResolving, signupIntent, appMode, hasMerchantIdentity, navigate]);
+
   // Driver applicants who confirmed their email arrive at "/" with a session
   // but no driver_profile yet (the application has not been submitted). Route
   // them straight to /driver/apply so they never see the client home flash.
@@ -175,7 +193,7 @@ const Index = () => {
   }, [driverResolving, user, signupIntent, driverProfile, navigate]);
 
   // Public onboarding always shows on launch; live users see it once.
-  const onboardingBlocksApp = driverResolving || showOnboarding || showDriverOnboarding;
+  const onboardingBlocksApp = driverResolving || merchantResolving || showOnboarding || showDriverOnboarding;
 
   // Onboarding rules:
   //   - admin               → never auto-show.
