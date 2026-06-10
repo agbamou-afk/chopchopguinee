@@ -22,7 +22,6 @@ import {
 } from "@/lib/phone/guinea";
 import { EmailConfirmationPendingCard } from "@/components/auth/EmailConfirmationPendingCard";
 import {
-  MERCHANT_INTENT_STORAGE_KEY,
   clearMerchantIntent,
   hasStoredMerchantIntent,
   persistMerchantAppMode,
