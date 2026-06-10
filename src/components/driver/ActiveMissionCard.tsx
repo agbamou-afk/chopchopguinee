@@ -290,7 +290,7 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         </Button>
       )}
 
-      {!terminal && proof && (
+      {!terminal && proof && !isMarketplace && (
         <button
           type="button"
           onClick={() => {
