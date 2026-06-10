@@ -3046,6 +3046,9 @@ export type Database = {
         Row: {
           courier_id: string | null
           created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
           customer_id: string
           delivery_photo_url: string | null
           dropoff_address: string | null
@@ -3080,6 +3083,9 @@ export type Database = {
         Insert: {
           courier_id?: string | null
           created_at?: string
+          customer_confirmed_at?: string | null
+          customer_confirmed_by?: string | null
+          customer_handoff_code?: string | null
           customer_id: string
           delivery_photo_url?: string | null
           dropoff_address?: string | null
@@ -3114,6 +3120,9 @@ export type Database = {
         Update: {
           courier_id?: string | null
           created_at?: string
+          customer_confirmed_at?: string | null
+          customer_confirmed_by?: string | null
+          customer_handoff_code?: string | null
           customer_id?: string
           delivery_photo_url?: string | null
           dropoff_address?: string | null
@@ -5736,6 +5745,9 @@ export type Database = {
         Returns: {
           courier_id: string | null
           created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
           customer_id: string
           delivery_photo_url: string | null
           dropoff_address: string | null
@@ -5792,6 +5804,9 @@ export type Database = {
         Returns: {
           courier_id: string | null
           created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
           customer_id: string
           delivery_photo_url: string | null
           dropoff_address: string | null
@@ -5835,6 +5850,59 @@ export type Database = {
         Returns: {
           courier_id: string | null
           created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
+          customer_id: string
+          delivery_photo_url: string | null
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_district: string | null
+          issue_hub_id: string | null
+          issue_reason: string | null
+          merchant_handoff_code: string | null
+          merchant_id: string | null
+          merchant_store_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          pickup_photo_url: string | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mission_confirm_dropoff_with_proof: {
+        Args: {
+          _customer_code: string
+          _mission_id: string
+          _photo_url: string
+        }
+        Returns: {
+          courier_id: string | null
+          created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
           customer_id: string
           delivery_photo_url: string | null
           dropoff_address: string | null
@@ -5878,6 +5946,105 @@ export type Database = {
         Returns: {
           courier_id: string | null
           created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
+          customer_id: string
+          delivery_photo_url: string | null
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_district: string | null
+          issue_hub_id: string | null
+          issue_reason: string | null
+          merchant_handoff_code: string | null
+          merchant_id: string | null
+          merchant_store_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          pickup_photo_url: string | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mission_confirm_pickup_with_proof: {
+        Args: {
+          _merchant_code: string
+          _mission_id: string
+          _photo_url: string
+        }
+        Returns: {
+          courier_id: string | null
+          created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
+          customer_id: string
+          delivery_photo_url: string | null
+          dropoff_address: string | null
+          dropoff_confirmed_at: string | null
+          dropoff_confirmed_by: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_distance_m: number | null
+          estimated_duration_s: number | null
+          estimated_earning_gnf: number
+          id: string
+          issue_district: string | null
+          issue_hub_id: string | null
+          issue_reason: string | null
+          merchant_handoff_code: string | null
+          merchant_id: string | null
+          merchant_store_id: string | null
+          payload_summary: string | null
+          pickup_address: string | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          pickup_photo_url: string | null
+          ref_food_order_id: string | null
+          ref_market_order_id: string | null
+          ref_ride_id: string | null
+          state: Database["public"]["Enums"]["mission_state"]
+          type: Database["public"]["Enums"]["mission_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mission_customer_confirm_delivery: {
+        Args: { _mission_id: string }
+        Returns: {
+          courier_id: string | null
+          created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
           customer_id: string
           delivery_photo_url: string | null
           dropoff_address: string | null
@@ -5926,6 +6093,9 @@ export type Database = {
         Returns: {
           courier_id: string | null
           created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
           customer_id: string
           delivery_photo_url: string | null
           dropoff_address: string | null
@@ -5976,6 +6146,9 @@ export type Database = {
         Returns: {
           courier_id: string | null
           created_at: string
+          customer_confirmed_at: string | null
+          customer_confirmed_by: string | null
+          customer_handoff_code: string | null
           customer_id: string
           delivery_photo_url: string | null
           dropoff_address: string | null
