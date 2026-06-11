@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Home, ShoppingBag, Package, Wallet as WalletIcon, Store as StoreIcon } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import { useAuth } from "@/contexts/AuthContext";
 import { MerchantIdentityStrip } from "./MerchantIdentityStrip";
@@ -178,6 +179,21 @@ export function MerchantHub() {
                   isOpen={isOpen}
                   onToggleOpen={handleOpenToggle}
                 />
+                {store && (
+                  <button
+                    onClick={() => {
+                      if (store.onboarding_status === "approved" && store.status === "active") {
+                        navigate(`/marche/boutique/${store.slug}`);
+                      } else {
+                        toast({ title: "Boutique en vérification", description: "Votre boutique publique sera accessible après validation." });
+                      }
+                    }}
+                    className="w-full rounded-xl border border-border/60 bg-card px-4 py-3 flex items-center justify-between gap-2 hover:bg-muted/40 transition"
+                  >
+                    <span className="text-sm font-semibold text-foreground">Voir ma boutique publique</span>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                )}
                 <AvailabilitySection store={store} restaurant={restaurant} onChanged={refresh} />
                 <DeliverySection merchantUserId={user.id} />
                 <ChopPayActivitySection
