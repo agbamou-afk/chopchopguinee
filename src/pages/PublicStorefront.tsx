@@ -17,7 +17,9 @@ export default function PublicStorefront() {
       if (!slug) { setLoading(false); return; }
       const s = await getStoreBySlug(slug);
       if (!alive) return;
-      setStore(s);
+      // Only expose publicly approved + active stores
+      const isPublic = !!s && (s as any).status === "active" && (s as any).onboarding_status === "approved";
+      setStore(isPublic ? s : null);
       setLoading(false);
     })();
     return () => { alive = false; };
