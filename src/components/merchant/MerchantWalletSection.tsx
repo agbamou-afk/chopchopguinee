@@ -1,13 +1,14 @@
 import { useWallet } from "@/hooks/useWallet";
-import { Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, Clock } from "lucide-react";
+import { Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 
 const fmt = (n: number) => `${(n ?? 0).toLocaleString("fr-FR")} GNF`;
 
 export function MerchantWalletSection() {
-  const { wallet, balance, held, available, transactions, loading } = useWallet("client");
-  const navigate = useNavigate();
+  // Bound to the MERCHANT wallet (party_type='merchant'), never the
+  // owner's personal client wallet. Until merchant sale settlement is
+  // wired (Phase 2+), this stays at 0 with an honest empty state.
+  const { wallet, balance, held, available, transactions, loading } = useWallet("merchant");
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const todayRevenue = transactions
@@ -22,7 +23,7 @@ export function MerchantWalletSection() {
             <WalletIcon className="w-5 h-5 text-primary-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground">Solde CHOP Wallet</p>
+            <p className="text-xs text-muted-foreground">CHOP Wallet Marchand · Solde disponible</p>
             <p className="text-xl font-extrabold text-foreground">{loading ? "…" : fmt(balance)}</p>
           </div>
         </div>
@@ -32,20 +33,17 @@ export function MerchantWalletSection() {
             <p className="text-xs font-bold text-foreground">{fmt(available)}</p>
           </div>
           <div className="rounded-lg bg-muted/40 p-2 text-center">
-            <p className="text-[10px] text-muted-foreground">En attente</p>
+            <p className="text-[10px] text-muted-foreground">En attente règlement</p>
             <p className="text-xs font-bold text-foreground">{fmt(held)}</p>
           </div>
           <div className="rounded-lg bg-muted/40 p-2 text-center">
-            <p className="text-[10px] text-muted-foreground">Aujourd'hui</p>
+            <p className="text-[10px] text-muted-foreground">Ventes aujourd'hui</p>
             <p className="text-xs font-bold text-foreground">{fmt(todayRevenue)}</p>
           </div>
         </div>
         <div className="flex gap-2 mt-3">
-          <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate("/?tab=wallet")}>
-            Voir CHOP Wallet
-          </Button>
-          <Button size="sm" variant="outline" className="flex-1" disabled title="Bientôt disponible">
-            <Clock className="w-3 h-3 mr-1" /> Retrait bientôt
+          <Button size="sm" variant="outline" className="flex-1" disabled title="Disponible après la mise en place du règlement marchand">
+            <Clock className="w-3 h-3 mr-1" /> Retrait bientôt disponible
           </Button>
         </div>
       </div>
@@ -53,7 +51,13 @@ export function MerchantWalletSection() {
       <div className="bg-card rounded-2xl border border-border/60 p-4">
         <h3 className="font-bold text-foreground mb-2">Dernières transactions</h3>
         {transactions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aucune transaction pour l'instant.</p>
+          <div className="rounded-xl bg-muted/40 border border-border/60 p-3 flex items-start gap-2">
+            <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="text-xs text-muted-foreground">
+              <p className="font-semibold text-foreground">Aucun paiement CHOP reçu pour l'instant.</p>
+              <p className="mt-0.5">Les ventes payées via CHOP seront affichées ici après validation.</p>
+            </div>
+          </div>
         ) : (
           <div className="space-y-2">
             {transactions.slice(0, 8).map((t) => {
