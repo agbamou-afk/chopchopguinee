@@ -4,6 +4,7 @@ import { ArrowLeft, Home, ShoppingBag, Package, Wallet as WalletIcon, Store as S
 import { ExternalLink } from "lucide-react";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { MerchantIdentityStrip } from "./MerchantIdentityStrip";
 import { OrdersSection } from "./OrdersSection";
 import { AvailabilitySection } from "./AvailabilitySection";
@@ -41,6 +42,18 @@ export function MerchantHub() {
   useEffect(() => {
     setIsOpen(restaurant ? !!restaurant.is_open : store ? store.status === "active" : false);
   }, [restaurant, store]);
+
+  // Phase 1a — bootstrap the merchant wallet (party_type='merchant',
+  // owner_user_id=auth.uid()) once the user has an actual merchant
+  // store or restaurant. Idempotent via wallet_ensure RPC; never
+  // creates a duplicate wallet and never credits funds.
+  useEffect(() => {
+    if (!user || !hasAny) return;
+    (supabase.rpc as any)("wallet_ensure", { _party_type: "merchant" }).then(() => {
+      // intentional: silent best-effort bootstrap. Wallet is read
+      // separately by MerchantWalletSection/MerchantSnapshot.
+    });
+  }, [user?.id, hasAny]);
 
   if (loading) {
     return <div className="p-6 text-center text-sm text-muted-foreground">Chargement…</div>;

@@ -28,7 +28,7 @@ export type WalletProfile = {
   phone: string | null;
 };
 
-export function useWallet(partyType: "client" | "driver" = "client") {
+export function useWallet(partyType: "client" | "driver" | "merchant" = "client") {
   const [userId, setUserId] = useState<string | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);

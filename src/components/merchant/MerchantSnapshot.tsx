@@ -15,7 +15,10 @@ const fmt = (n: number) => `${(n ?? 0).toLocaleString("fr-FR")} GNF`;
 
 export function MerchantSnapshot({ userId, store, onGo }: Props) {
   const navigate = useNavigate();
-  const { balance, loading: walletLoading } = useWallet("client");
+  // Merchant Dashboard MUST read the merchant wallet, never the user's
+  // personal client wallet. Stays at 0 until merchant sale settlement
+  // (Phase 2) credits real revenue.
+  const { balance, loading: walletLoading } = useWallet("merchant");
   const [counts, setCounts] = useState({
     activeProducts: 0,
     oos: 0,
@@ -96,7 +99,7 @@ export function MerchantSnapshot({ userId, store, onGo }: Props) {
             <WalletIcon className="w-4 h-4 text-primary-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Solde CHOP Wallet</p>
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">CHOP Wallet Marchand</p>
             <p className="text-base font-extrabold text-foreground">{walletLoading ? "…" : fmt(balance)}</p>
           </div>
           <button onClick={() => onGo("wallet")} className="text-xs font-semibold text-primary">Ouvrir</button>
