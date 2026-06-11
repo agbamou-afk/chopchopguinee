@@ -78,6 +78,7 @@ const Merchant = lazy(() => import("./pages/Merchant"));
 const MerchantOnboarding = lazy(() => import("./pages/MerchantOnboarding"));
 const MerchantOnboardingSlides = lazy(() => import("./pages/MerchantOnboardingSlides"));
 const MerchantApply = lazy(() => import("./pages/MerchantApply"));
+const PublicStorefront = lazy(() => import("./pages/PublicStorefront"));
 import PrivacySettings from "./pages/PrivacySettings";
 import OfflinePage from "./pages/Offline";
 import Terms from "./pages/Terms";
@@ -199,6 +200,7 @@ const App = () => {
           <Route path="/merchant/onboarding-slides" element={<Suspense fallback={null}><MerchantOnboardingSlides /></Suspense>} />
           <Route path="/merchant/apply" element={<Suspense fallback={null}><MerchantApply /></Suspense>} />
           <Route path="/devenir-marchand" element={<Suspense fallback={null}><MerchantApply /></Suspense>} />
+          <Route path="/marche/boutique/:slug" element={<Suspense fallback={null}><PublicStorefront /></Suspense>} />
           <Route path="/leader" element={<Suspense fallback={null}><LeaderPortal /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
