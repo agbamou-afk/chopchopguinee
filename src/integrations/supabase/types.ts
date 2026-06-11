@@ -4614,6 +4614,10 @@ export type Database = {
         Returns: undefined
       }
       admin_auth_user_exists: { Args: { _target: string }; Returns: boolean }
+      admin_backfill_missing_driver_earnings: {
+        Args: { p_dry_run?: boolean; p_limit?: number; p_reason?: string }
+        Returns: Json
+      }
       admin_ban_user: {
         Args: { _expires_at?: string; _reason: string; _target: string }
         Returns: Json
@@ -4923,6 +4927,24 @@ export type Database = {
         }
       }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
+      admin_preview_missing_driver_earnings: {
+        Args: never
+        Returns: {
+          calculated_driver_earn_gnf: number
+          client_id: string
+          completed_at: string
+          driver_earning_gnf: number
+          driver_id: string
+          eligible: boolean
+          existing_wallet_tx_count: number
+          fare_gnf: number
+          hold_tx_id: string
+          platform_fee_gnf: number
+          reason: string
+          ride_id: string
+          ride_status: string
+        }[]
+      }
       admin_record_om_receipt: {
         Args: {
           p_amount_gnf: number
