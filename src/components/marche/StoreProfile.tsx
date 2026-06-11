@@ -34,6 +34,7 @@ export function StoreProfile({
         .from("marketplace_listings")
         .select("id, title, price_gnf, is_negotiable, is_urgent, delivery_available, neighborhood, commune, created_at, kind, listing_images(url, position)")
         .eq("status", "active")
+        .eq("visibility", "public")
         // store_id may not be in generated types; cast through
         .eq("store_id" as never, storeId as never)
         .order("created_at", { ascending: false })
