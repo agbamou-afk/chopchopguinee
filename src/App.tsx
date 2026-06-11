@@ -200,6 +200,7 @@ const App = () => {
           <Route path="/merchant/onboarding-slides" element={<Suspense fallback={null}><MerchantOnboardingSlides /></Suspense>} />
           <Route path="/merchant/apply" element={<Suspense fallback={null}><MerchantApply /></Suspense>} />
           <Route path="/devenir-marchand" element={<Suspense fallback={null}><MerchantApply /></Suspense>} />
+          <Route path="/marche/boutique/:slug" element={<Suspense fallback={null}><PublicStorefront /></Suspense>} />
           <Route path="/leader" element={<Suspense fallback={null}><LeaderPortal /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
