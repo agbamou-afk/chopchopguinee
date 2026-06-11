@@ -59,6 +59,17 @@ export function ProductCatalogSection({ userId, storeId, approved }: Props) {
     return out;
   }, [items, filter, q]);
 
+  const counts = useMemo(() => {
+    const c = { all: items.length, active: 0, draft: 0, oos: 0, archived: 0 };
+    for (const p of items) {
+      if (p.status === "removed") c.archived += 1;
+      else if ((p.quantity_in_stock ?? 0) <= 0) c.oos += 1;
+      else if (p.status === "active" && p.visibility === "public") c.active += 1;
+      else c.draft += 1;
+    }
+    return c;
+  }, [items]);
+
   const onStock = async (id: string, delta: number) => {
     try {
       const next = await adjustStock(id, delta);
@@ -103,16 +114,45 @@ export function ProductCatalogSection({ userId, storeId, approved }: Props) {
   };
 
   const pendingNote = !approved
-    ? "Votre boutique est en vérification. Vous pouvez préparer votre catalogue, mais vos produits ne seront pas visibles publiquement avant validation."
+    ? "Votre catalogue est privé pendant la vérification. Vous pouvez préparer vos produits maintenant."
+    : null;
+  const approvedNote = approved
+    ? "Vos produits publiés sont visibles dans CHOP Marché."
     : null;
 
   return (
-    <SectionCard title="Catalogue / Produits" hint="Gérez votre stock et vos prix">
+    <SectionCard title="Mon inventaire" hint="Gérez votre stock, prix et visibilité">
       {pendingNote && (
         <div className="mb-3 rounded-xl bg-amber-500/10 border border-amber-500/40 p-3 text-xs text-amber-900 dark:text-amber-200">
           {pendingNote}
         </div>
       )}
+      {approvedNote && (
+        <div className="mb-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-900 dark:text-emerald-200">
+          {approvedNote}
+        </div>
+      )}
+
+      {/* Inventory summary chips */}
+      <div className="grid grid-cols-4 gap-2 mb-3">
+        {([
+          ["active", "Actifs", counts.active, "text-emerald-700"],
+          ["draft", "Privés", counts.draft, "text-muted-foreground"],
+          ["oos", "Rupture", counts.oos, "text-amber-700"],
+          ["archived", "Archivés", counts.archived, "text-muted-foreground"],
+        ] as [FilterKey, string, number, string][]).map(([k, label, n, tone]) => (
+          <button
+            key={k}
+            onClick={() => setFilter(k)}
+            className={`rounded-xl border p-2 text-left transition ${
+              filter === k ? "border-primary bg-primary/5" : "border-border/60 bg-card"
+            }`}
+          >
+            <div className={`text-base font-extrabold ${tone}`}>{n}</div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+          </button>
+        ))}
+      </div>
 
       <div className="flex gap-2 mb-3">
         <Button size="sm" className="flex-1" onClick={() => { setEditing(null); setOpen(true); }}>
@@ -178,6 +218,17 @@ export function ProductCatalogSection({ userId, storeId, approved }: Props) {
                         Stock: {p.quantity_in_stock ?? 0}
                       </span>
                     </div>
+                    {p.status !== "removed" && (
+                      <p className={`mt-1 text-[10px] font-medium ${
+                        p.status === "active" && p.visibility === "public" && (p.quantity_in_stock ?? 0) > 0
+                          ? "text-emerald-700"
+                          : "text-muted-foreground"
+                      }`}>
+                        {p.status === "active" && p.visibility === "public" && (p.quantity_in_stock ?? 0) > 0
+                          ? "Visible sur CHOP Marché"
+                          : "Privé — non visible aux clients"}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-3">
