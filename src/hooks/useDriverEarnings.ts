@@ -80,11 +80,6 @@ export function useDriverEarnings(): DriverEarningsState {
       .maybeSingle();
     const driverWalletId = (walletRow as { id: string } | null)?.id ?? null;
 
-    // Earning transaction types accepted into dashboard aggregates.
-    // mission_earning is included defensively; if the enum value does not
-    // exist yet the filter simply returns zero rows for that type.
-    const earningTypes = ["ride_earning", "mission_earning"] as const;
-
     const [txRes, ledgerRes, profileRes] = await Promise.all([
       driverWalletId
         ? supabase
@@ -92,7 +87,7 @@ export function useDriverEarnings(): DriverEarningsState {
             .select("id,reference,type,amount_gnf,related_entity,description,created_at,status,to_wallet_id")
             .eq("to_wallet_id", driverWalletId)
             .eq("status", "completed")
-            .in("type", earningTypes as unknown as string[])
+            .eq("type", "ride_earning")
             .gt("amount_gnf", 0)
             .gte("created_at", weekStart.toISOString())
             .order("created_at", { ascending: false })
