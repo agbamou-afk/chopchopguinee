@@ -7182,6 +7182,7 @@ export type Database = {
         | "release"
         | "transfer"
         | "adjustment"
+        | "ride_earning"
       wallet_status: "active" | "frozen" | "closed"
     }
     CompositeTypes: {
@@ -7545,6 +7546,7 @@ export const Constants = {
         "release",
         "transfer",
         "adjustment",
+        "ride_earning",
       ],
       wallet_status: ["active", "frozen", "closed"],
     },
