@@ -78,6 +78,7 @@ const Merchant = lazy(() => import("./pages/Merchant"));
 const MerchantOnboarding = lazy(() => import("./pages/MerchantOnboarding"));
 const MerchantOnboardingSlides = lazy(() => import("./pages/MerchantOnboardingSlides"));
 const MerchantApply = lazy(() => import("./pages/MerchantApply"));
+const PublicStorefront = lazy(() => import("./pages/PublicStorefront"));
 import PrivacySettings from "./pages/PrivacySettings";
 import OfflinePage from "./pages/Offline";
 import Terms from "./pages/Terms";
