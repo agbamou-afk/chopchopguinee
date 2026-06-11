@@ -2,12 +2,13 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export interface CompletedRide {
+export interface EarningTxn {
   id: string;
-  mode: string;
-  fare_gnf: number;
-  driver_earning_gnf: number;
-  completed_at: string | null;
+  reference: string;
+  type: string;
+  amount_gnf: number;
+  related_entity: string | null;
+  description: string | null;
   created_at: string;
 }
 
@@ -29,7 +30,8 @@ export interface DriverEarningsState {
   commissionDueWeek: number;
   cashDebtGnf: number;
   debtLimitGnf: number;
-  recent: CompletedRide[];
+  recent: EarningTxn[];
+  missionEarningsAvailable: boolean;
   refetch: () => Promise<void>;
 }
 
@@ -58,6 +60,7 @@ export function useDriverEarnings(): DriverEarningsState {
     cashDebtGnf: 0,
     debtLimitGnf: 0,
     recent: [],
+    missionEarningsAvailable: false,
   });
 
   const refetch = useCallback(async () => {
@@ -66,15 +69,34 @@ export function useDriverEarnings(): DriverEarningsState {
     const weekStart = startOfWeek(new Date());
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
 
-    const [ridesRes, ledgerRes, profileRes] = await Promise.all([
-      supabase
-        .from("rides")
-        .select("id,mode,fare_gnf,driver_earning_gnf,completed_at,created_at,status")
-        .eq("driver_id", user.id)
-        .eq("status", "completed")
-        .gte("completed_at", weekStart.toISOString())
-        .order("completed_at", { ascending: false })
-        .limit(200),
+    // Source of truth: driver wallet + wallet_transactions ledger.
+    // rides.driver_earning_gnf is intentionally NOT queried as a primary
+    // dashboard metric — it drifts from the credited ledger.
+    const { data: walletRow } = await supabase
+      .from("wallets")
+      .select("id")
+      .eq("owner_user_id", user.id)
+      .eq("party_type", "driver")
+      .maybeSingle();
+    const driverWalletId = (walletRow as { id: string } | null)?.id ?? null;
+
+    const [txRes, ledgerRes, profileRes] = await Promise.all([
+      driverWalletId
+        ? supabase
+            .from("wallet_transactions")
+            .select("id,reference,type,amount_gnf,related_entity,description,created_at,status,to_wallet_id")
+            .eq("to_wallet_id", driverWalletId)
+            .eq("status", "completed")
+            .eq("type", "ride_earning")
+            .gt("amount_gnf", 0)
+            .gte("created_at", weekStart.toISOString())
+            .order("created_at", { ascending: false })
+            .limit(500)
+        : Promise.resolve({ data: [] as Array<{
+            id: string; reference: string; type: string; amount_gnf: number;
+            related_entity: string | null; description: string | null;
+            created_at: string;
+          }> }),
       supabase
         .from("driver_cash_ledger")
         .select("cash_collected_gnf,commission_owed_gnf,settled_amount_gnf,created_at")
@@ -87,7 +109,7 @@ export function useDriverEarnings(): DriverEarningsState {
         .maybeSingle(),
     ]);
 
-    const rides = (ridesRes.data || []) as CompletedRide[];
+    const txns = ((txRes as { data: EarningTxn[] | null }).data || []) as EarningTxn[];
     const ledger = (ledgerRes.data || []) as Array<{ cash_collected_gnf: number; commission_owed_gnf: number; settled_amount_gnf: number; created_at: string }>;
     const profile = profileRes.data as { cash_debt_gnf: number; debt_limit_gnf: number } | null;
 
@@ -101,17 +123,19 @@ export function useDriverEarnings(): DriverEarningsState {
     let weekGnf = 0;
     let todayGnf = 0;
     let completedToday = 0;
-    for (const r of rides) {
-      const completed = r.completed_at ? new Date(r.completed_at) : null;
-      if (!completed) continue;
-      const idx = Math.floor((completed.getTime() - weekStart.getTime()) / 86_400_000);
+    let missionEarningsAvailable = false;
+    for (const t of txns) {
+      const when = new Date(t.created_at);
+      const amt = t.amount_gnf || 0;
+      if (t.type === "mission_earning" && amt > 0) missionEarningsAvailable = true;
+      const idx = Math.floor((when.getTime() - weekStart.getTime()) / 86_400_000);
       if (idx >= 0 && idx < 7) {
-        buckets[idx].amount += r.driver_earning_gnf || 0;
+        buckets[idx].amount += amt;
         buckets[idx].rides += 1;
       }
-      weekGnf += r.driver_earning_gnf || 0;
-      if (completed >= todayStart) {
-        todayGnf += r.driver_earning_gnf || 0;
+      weekGnf += amt;
+      if (when >= todayStart) {
+        todayGnf += amt;
         completedToday += 1;
       }
     }
@@ -125,12 +149,13 @@ export function useDriverEarnings(): DriverEarningsState {
       weekGnf,
       weeklyBuckets: buckets,
       completedToday,
-      completedWeek: rides.length,
+      completedWeek: txns.filter((t) => t.type === "ride_earning").length,
       cashCollectedWeek,
       commissionDueWeek,
       cashDebtGnf: profile?.cash_debt_gnf ?? 0,
       debtLimitGnf: profile?.debt_limit_gnf ?? 0,
-      recent: rides.slice(0, 8),
+      recent: txns.slice(0, 10),
+      missionEarningsAvailable,
     });
   }, [user?.id]);
 
