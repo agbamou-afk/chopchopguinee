@@ -116,7 +116,7 @@ export function txContext(tx: WalletTransaction): TxContext {
   const isMarche = /march[ée]|marketplace|listing|article|vente/.test(lower) || ref.startsWith("listing:") || ref.startsWith("marketplace") || ref.includes(":marche:");
   const isCourier = /coursier|livraison|gain|mission|course/.test(lower) || ref.startsWith("mission:");
   const isChopPay = /choppay|merchant|marchand/.test(lower);
-  const isPeer = ref.startsWith("transfer:peer") || /ami|peer|p2p/.test(lower);
+  const isPeer = ref.startsWith("transfer:peer") || ref.startsWith("p2p:") || /ami|peer|p2p/.test(lower);
 
   let missionKind: MissionKind = null;
   if (ref.startsWith("mission:")) {

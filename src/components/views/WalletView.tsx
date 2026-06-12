@@ -40,8 +40,10 @@ import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { ChopPayLauncher } from "@/components/pay/ChopPayLauncher";
 import { TransactionReceiptSheet } from "@/components/wallet/TransactionReceiptSheet";
 import { groupTransactions, txLabel, txStatusCopy } from "@/lib/wallet/labels";
+import { SendMoneySheet } from "@/components/wallet/SendMoneySheet";
+import { Send } from "lucide-react";
 
-type ActionId = "pay" | "receive" | "scan" | "add";
+type ActionId = "pay" | "receive" | "scan" | "add" | "send";
 
 const quickActions: {
   id: ActionId;
@@ -50,7 +52,7 @@ const quickActions: {
   color: string;
 }[] = [
   { id: "pay", icon: ScanLine, label: "Payer", color: "gradient-primary" },
-  { id: "receive", icon: ArrowDownLeft, label: "Recevoir", color: "gradient-secondary" },
+  { id: "send", icon: Send, label: "Envoyer", color: "gradient-secondary" },
   { id: "scan", icon: QrCode, label: "Mon QR", color: "bg-foreground" },
   { id: "add", icon: Plus, label: "Recharger", color: "bg-primary" },
 ];
@@ -84,10 +86,11 @@ function txDirection(tx: WalletTransaction, walletId: string): "in" | "out" {
 }
 
 export function WalletView() {
-  const { userId, wallet, transactions, profile, loading } = useWallet();
+  const { userId, wallet, transactions, profile, loading, refresh } = useWallet();
   const [qrOpen, setQrOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterRange, setFilterRange] = useState<"all" | "7d" | "30d">("all");
   const [receiptTx, setReceiptTx] = useState<WalletTransaction | null>(null);
@@ -191,6 +194,7 @@ export function WalletView() {
     if (id === "add") setTopUpOpen(true);
     else if (id === "scan" || id === "receive") setQrOpen(true);
     else if (id === "pay") setPayOpen(true);
+    else if (id === "send") setSendOpen(true);
     else toast("Bientôt disponible");
   };
 
@@ -497,6 +501,13 @@ export function WalletView() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <SendMoneySheet
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+        available={wallet ? wallet.balance_gnf - wallet.held_gnf : 0}
+        onSent={() => refresh()}
+      />
     </div>
   );
 }
