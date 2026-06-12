@@ -32,6 +32,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
       { title: "Marchands", url: "/admin/merchants", icon: Store, module: "merchants" },
       { title: "Courses & livraisons", url: "/admin/orders", icon: ClipboardList, module: "orders" },
       { title: "Repas", url: "/admin/repas", icon: UtensilsCrossed, module: "repas" },
+      { title: "Paiements Repas", url: "/admin/repas/payments", icon: Wallet, module: "repas" },
       { title: "Marché", url: "/admin/marche", icon: ShoppingBag, module: "marche" },
       { title: "Support", url: "/admin/support", icon: LifeBuoy, module: "support" },
       { title: "Fraude / Risque", url: "/admin/risk", icon: ShieldAlert, module: "risk" },

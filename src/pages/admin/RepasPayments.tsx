@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Navigate } from "react-router-dom";
@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatGNF } from "@/lib/format";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, Link2, PlayCircle } from "lucide-react";
+import { Loader2, RefreshCw, Link2, PlayCircle, Info, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 type QueueRow = {
   food_order_id: string;
@@ -36,6 +36,7 @@ type QueueRow = {
 };
 
 type Store = { id: string; name: string; onboarding_status: string | null };
+type FilterKey = "all" | "ready" | "missing_link" | "settled" | "failed" | "review";
 
 const REASON_LABELS: Record<string, { label: string; tone: "default" | "secondary" | "destructive" | "outline" }> = {
   ready_to_capture: { label: "Prêt à capturer", tone: "default" },
@@ -47,12 +48,25 @@ const REASON_LABELS: Record<string, { label: string; tone: "default" | "secondar
   ok: { label: "OK", tone: "secondary" },
 };
 
+const FILTERS: { key: FilterKey; label: string }[] = [
+  { key: "all", label: "Tous" },
+  { key: "ready", label: "Prêt à capturer" },
+  { key: "missing_link", label: "Marchand non lié" },
+  { key: "settled", label: "Déjà réglé" },
+  { key: "failed", label: "Paiement échoué" },
+  { key: "review", label: "À revoir" },
+];
+
 export default function RepasPayments() {
   const { ready, isAdmin } = useAdminAuth();
   const [rows, setRows] = useState<QueueRow[]>([]);
   const [restoNames, setRestoNames] = useState<Record<string, string>>({});
+  const [storeIndex, setStoreIndex] = useState<Record<string, Store>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [detailRow, setDetailRow] = useState<QueueRow | null>(null);
 
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkRestaurantId, setLinkRestaurantId] = useState<string | null>(null);
@@ -61,9 +75,11 @@ export default function RepasPayments() {
 
   const loadQueue = async () => {
     setLoading(true);
+    setLoadError(null);
     const { data, error } = await (supabase as any).rpc("admin_preview_repas_payment_settlement", { p_limit: 200 });
     if (error) {
-      toast.error("Chargement impossible", { description: error.message });
+      setLoadError(error.message ?? "Erreur inconnue");
+      toast.error("Impossible de charger les paiements Repas.", { description: error.message });
       setRows([]);
     } else {
       const list = (data ?? []) as QueueRow[];
@@ -74,6 +90,18 @@ export default function RepasPayments() {
         const map: Record<string, string> = {};
         (r ?? []).forEach((x: any) => { map[x.id] = x.name; });
         setRestoNames(map);
+      }
+      const storeIds = Array.from(new Set(list.map((r) => r.merchant_store_id).filter(Boolean) as string[]));
+      if (storeIds.length) {
+        const { data: s } = await (supabase as any)
+          .from("merchant_stores")
+          .select("id,name,onboarding_status")
+          .in("id", storeIds);
+        const map: Record<string, Store> = {};
+        (s ?? []).forEach((x: any) => { map[x.id] = x as Store; });
+        setStoreIndex(map);
+      } else {
+        setStoreIndex({});
       }
     }
     setLoading(false);
@@ -134,6 +162,17 @@ export default function RepasPayments() {
     return stores.filter((s) => s.name?.toLowerCase().includes(q));
   }, [stores, storeSearch]);
 
+  const filteredRows = useMemo(() => {
+    switch (filter) {
+      case "ready": return rows.filter((r) => r.eligible_for_capture);
+      case "missing_link": return rows.filter((r) => r.reason === "missing_merchant_store_id");
+      case "settled": return rows.filter((r) => r.settlement_state === "settled" || r.reason === "already_settled");
+      case "failed": return rows.filter((r) => r.reason === "auth_failed" || r.payment_status === "failed");
+      case "review": return rows.filter((r) => r.settlement_state === "needs_review");
+      default: return rows;
+    }
+  }, [rows, filter]);
+
   if (!ready) return null;
   if (!isAdmin) return <Navigate to="/no-access" replace />;
 
@@ -141,11 +180,24 @@ export default function RepasPayments() {
     <ModulePage module="repas" title="Repas · Paiements & Règlements" subtitle="File de capture CHOPPay et liaison marchand">
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
-          {loading ? "Chargement…" : `${rows.length} commande${rows.length > 1 ? "s" : ""} CHOP Wallet`}
+          {loading ? "Chargement…" : `${filteredRows.length} / ${rows.length} commande${rows.length > 1 ? "s" : ""} CHOP Wallet`}
         </p>
         <Button variant="outline" size="sm" onClick={loadQueue} disabled={loading}>
-          <RefreshCw className="w-4 h-4 mr-2" /> Rafraîchir
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Rafraîchir
         </Button>
+      </div>
+
+      <div className="flex gap-2 flex-wrap mb-3">
+        {FILTERS.map((f) => (
+          <Button
+            key={f.key}
+            size="sm"
+            variant={filter === f.key ? "default" : "outline"}
+            onClick={() => setFilter(f.key)}
+          >
+            {f.label}
+          </Button>
+        ))}
       </div>
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -154,6 +206,7 @@ export default function RepasPayments() {
             <thead className="bg-muted/40 text-xs text-muted-foreground">
               <tr>
                 <th className="text-left p-3">Restaurant</th>
+                <th className="text-left p-3">Marchand lié</th>
                 <th className="text-left p-3">Montant</th>
                 <th className="text-left p-3">Paiement</th>
                 <th className="text-left p-3">Intention</th>
@@ -163,25 +216,50 @@ export default function RepasPayments() {
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && !loading && (
-                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Aucune commande CHOP Wallet.</td></tr>
+              {!loading && loadError && (
+                <tr><td colSpan={8} className="p-6 text-center text-destructive">Impossible de charger les paiements Repas.</td></tr>
               )}
-              {rows.map((r) => {
+              {!loading && !loadError && filteredRows.length === 0 && (
+                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Aucun paiement Repas à traiter.</td></tr>
+              )}
+              {filteredRows.map((r) => {
                 const reason = REASON_LABELS[r.reason] ?? { label: r.reason, tone: "outline" as const };
                 const canCapture = r.eligible_for_capture;
                 const needsLink = r.reason === "missing_merchant_store_id";
+                const store = r.merchant_store_id ? storeIndex[r.merchant_store_id] : null;
+                const storeApproved = (store?.onboarding_status ?? "").toLowerCase() === "approved";
                 return (
-                  <tr key={r.food_order_id} className="border-t border-border">
-                    <td className="p-3">
+                  <tr
+                    key={r.food_order_id}
+                    className="border-t border-border hover:bg-muted/30 cursor-pointer"
+                    onClick={() => setDetailRow(r)}
+                  >
+                    <td className="p-3" onClick={(e) => e.stopPropagation()}>
                       <div className="font-medium">{restoNames[r.restaurant_id] ?? "—"}</div>
                       <div className="text-xs text-muted-foreground font-mono">{r.food_order_id.slice(0, 8)}</div>
+                    </td>
+                    <td className="p-3">
+                      {!r.merchant_store_id ? (
+                        <Badge variant="destructive">Non lié</Badge>
+                      ) : store ? (
+                        <div>
+                          <div className="font-medium text-xs">{store.name}</div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {storeApproved
+                              ? <span className="text-emerald-600">Approuvé</span>
+                              : <span className="text-amber-600">⚠ {store.onboarding_status ?? "non approuvé"}</span>}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground font-mono">{r.merchant_store_id.slice(0, 8)}</span>
+                      )}
                     </td>
                     <td className="p-3">{formatGNF(r.subtotal_gnf)}</td>
                     <td className="p-3">{r.payment_status}</td>
                     <td className="p-3">{r.payment_intent_state ?? "—"}</td>
                     <td className="p-3">{r.settlement_state}</td>
                     <td className="p-3"><Badge variant={reason.tone}>{reason.label}</Badge></td>
-                    <td className="p-3 text-right space-x-2 whitespace-nowrap">
+                    <td className="p-3 text-right space-x-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       {needsLink && (
                         <Button size="sm" variant="outline" onClick={() => openLink(r.restaurant_id)}>
                           <Link2 className="w-4 h-4 mr-1" /> Lier marchand
@@ -199,6 +277,83 @@ export default function RepasPayments() {
           </table>
         </div>
       </div>
+
+      {/* Detail drawer */}
+      <Dialog open={!!detailRow} onOpenChange={(o) => !o && setDetailRow(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Détail commande</DialogTitle>
+            <DialogDescription>Inspection paiement / règlement Repas</DialogDescription>
+          </DialogHeader>
+          {detailRow && (() => {
+            const r = detailRow;
+            const store = r.merchant_store_id ? storeIndex[r.merchant_store_id] : null;
+            const reason = REASON_LABELS[r.reason] ?? { label: r.reason, tone: "outline" as const };
+            const Row = ({ k, v }: { k: string; v: ReactNode }) => (
+              <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/50 last:border-b-0">
+                <span className="text-xs text-muted-foreground">{k}</span>
+                <span className="text-xs font-mono text-right break-all">{v ?? "—"}</span>
+              </div>
+            );
+            return (
+              <div className="text-sm space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant={reason.tone}>{reason.label}</Badge>
+                  {r.eligible_for_capture && <Badge variant="default"><CheckCircle2 className="w-3 h-3 mr-1" />Capturable</Badge>}
+                  {r.settlement_state === "needs_review" && <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />À revoir</Badge>}
+                </div>
+                <div className="rounded-md border border-border p-3 mt-2">
+                  <Row k="Commande" v={r.food_order_id} />
+                  <Row k="Restaurant" v={restoNames[r.restaurant_id] ?? r.restaurant_id} />
+                  <Row k="Client" v={r.user_id ?? "—"} />
+                  <Row k="Sous-total" v={formatGNF(r.subtotal_gnf)} />
+                  <Row k="Méthode" v={r.payment_method} />
+                  <Row k="Statut paiement" v={r.payment_status} />
+                  <Row k="État commande" v={r.payment_intent_state ?? "—"} />
+                  <Row k="Intention paiement" v={r.payment_intent_id ?? "—"} />
+                  <Row k="Règlement" v={r.settlement_state} />
+                  <Row k="Créée" v={new Date(r.created_at).toLocaleString("fr-FR")} />
+                </div>
+                <div className="rounded-md border border-border p-3">
+                  <div className="text-xs font-semibold mb-1">Marchand lié</div>
+                  {!r.merchant_store_id ? (
+                    <div className="text-xs text-muted-foreground">
+                      Aucun marchand lié. Liez ce restaurant à un compte marchand avant règlement automatique.
+                    </div>
+                  ) : store ? (
+                    <div className="text-xs">
+                      <div className="font-medium">{store.name}</div>
+                      <div className="text-muted-foreground">{store.onboarding_status ?? "—"}</div>
+                      <div className="font-mono mt-1">{store.id}</div>
+                    </div>
+                  ) : (
+                    <div className="text-xs font-mono">{r.merchant_store_id}</div>
+                  )}
+                </div>
+                <div className="flex gap-2 pt-2 flex-wrap">
+                  {!r.merchant_store_id && (
+                    <Button size="sm" variant="outline" onClick={() => { setDetailRow(null); openLink(r.restaurant_id); }}>
+                      <Link2 className="w-4 h-4 mr-1" /> Lier marchand
+                    </Button>
+                  )}
+                  {r.eligible_for_capture && (
+                    <Button size="sm" onClick={() => { setDetailRow(null); capture(r); }}>
+                      <PlayCircle className="w-4 h-4 mr-1" /> Capturer & régler
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={loadQueue}>
+                    <RefreshCw className="w-4 h-4 mr-1" /> Rafraîchir
+                  </Button>
+                </div>
+                <div className="text-[11px] text-muted-foreground flex items-start gap-1 pt-2">
+                  <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                  <span>Capture et règlement passent par la RPC SECURITY DEFINER (admin/service_role uniquement).</span>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
         <DialogContent>
