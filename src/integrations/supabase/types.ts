@@ -2674,9 +2674,12 @@ export type Database = {
           buyer_message: string | null
           buyer_user_id: string
           captured_tx_id: string | null
+          completed_at: string | null
           counter_amount_gnf: number | null
           created_at: string
           expires_at: string | null
+          fulfilled_at: string | null
+          fulfillment_status: string
           id: string
           listing_id: string
           merchant_message: string | null
@@ -2688,6 +2691,7 @@ export type Database = {
           payment_intent_id: string | null
           payment_status: string
           responded_at: string | null
+          settlement_state: string
           settlement_tx_id: string | null
           status: string
           updated_at: string
@@ -2697,9 +2701,12 @@ export type Database = {
           buyer_message?: string | null
           buyer_user_id: string
           captured_tx_id?: string | null
+          completed_at?: string | null
           counter_amount_gnf?: number | null
           created_at?: string
           expires_at?: string | null
+          fulfilled_at?: string | null
+          fulfillment_status?: string
           id?: string
           listing_id: string
           merchant_message?: string | null
@@ -2711,6 +2718,7 @@ export type Database = {
           payment_intent_id?: string | null
           payment_status?: string
           responded_at?: string | null
+          settlement_state?: string
           settlement_tx_id?: string | null
           status?: string
           updated_at?: string
@@ -2720,9 +2728,12 @@ export type Database = {
           buyer_message?: string | null
           buyer_user_id?: string
           captured_tx_id?: string | null
+          completed_at?: string | null
           counter_amount_gnf?: number | null
           created_at?: string
           expires_at?: string | null
+          fulfilled_at?: string | null
+          fulfillment_status?: string
           id?: string
           listing_id?: string
           merchant_message?: string | null
@@ -2734,6 +2745,7 @@ export type Database = {
           payment_intent_id?: string | null
           payment_status?: string
           responded_at?: string | null
+          settlement_state?: string
           settlement_tx_id?: string | null
           status?: string
           updated_at?: string
@@ -4882,6 +4894,10 @@ export type Database = {
         Args: { _caller: string; _reason: string; _target: string }
         Returns: undefined
       }
+      admin_marche_capture_and_settle_offer: {
+        Args: { p_offer_id: string; p_reason?: string }
+        Returns: Json
+      }
       admin_mark_om_conflict: {
         Args: { p_event_id: string; p_reason: string }
         Returns: undefined
@@ -5046,6 +5062,28 @@ export type Database = {
           payment_status: string
           settlement_tx_id: string
           wallet_hold_tx_id: string
+        }[]
+      }
+      admin_preview_marche_payment_settlement: {
+        Args: { p_limit?: number }
+        Returns: {
+          amount_gnf: number
+          buyer_user_id: string
+          created_at: string
+          eligible_for_capture: boolean
+          eligible_for_settlement: boolean
+          fulfillment_status: string
+          listing_id: string
+          listing_title: string
+          merchant_store_id: string
+          offer_id: string
+          offer_status: string
+          payment_intent_id: string
+          payment_intent_state: string
+          payment_status: string
+          reason: string
+          seller_user_id: string
+          settlement_state: string
         }[]
       }
       admin_preview_missing_driver_earnings: {
@@ -6091,6 +6129,10 @@ export type Database = {
           _target_type?: string
         }
         Returns: string
+      }
+      marche_complete_offer: {
+        Args: { p_offer_id: string; p_reason?: string }
+        Returns: Json
       }
       marche_create_offer_payment_intent: {
         Args: { p_offer_id: string }
