@@ -116,6 +116,26 @@ export function MerchantOffersSection({ merchantId }: { merchantId: string }) {
                     </div>
                   </>
                 )}
+                {o.status === "accepted" && (
+                  <div className="mt-2 rounded-lg bg-background/60 border border-border/60 p-2 text-[11px] space-y-0.5">
+                    {o.payment_status === "authorized" ? (
+                      <p className="text-success">
+                        Paiement autorisé — en attente de remise/livraison.
+                      </p>
+                    ) : o.payment_status === "paid" ? (
+                      <p className="text-success">Paiement réglé.</p>
+                    ) : o.payment_status === "failed" ? (
+                      <p className="text-destructive">Paiement échoué côté acheteur.</p>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        En attente du paiement de l'acheteur.
+                      </p>
+                    )}
+                    <p className="text-muted-foreground/80 text-[10px]">
+                      Le paiement sera réglé après confirmation.
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}
