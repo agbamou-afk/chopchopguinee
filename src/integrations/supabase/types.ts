@@ -4667,6 +4667,7 @@ export type Database = {
       _is_god_admin: { Args: { _user: string }; Returns: boolean }
       _is_ops_or_god_admin: { Args: { _user: string }; Returns: boolean }
       _leader_group_id: { Args: { _uid: string }; Returns: string }
+      _normalize_guinea_phone: { Args: { p_raw: string }; Returns: string }
       _notify_account_event: {
         Args: {
           _body: string
@@ -5129,6 +5130,18 @@ export type Database = {
           mission_id: string
           mission_type: string
           reason: string
+        }[]
+      }
+      admin_preview_p2p_transfers: {
+        Args: { p_limit?: number }
+        Returns: {
+          amount_gnf: number
+          created_at: string
+          note: string
+          recipient_user_id: string
+          reference: string
+          sender_user_id: string
+          status: string
         }[]
       }
       admin_preview_payment_intents: {
@@ -7140,6 +7153,43 @@ export type Database = {
           p_source_module?: string
           p_to_wallet_id: string
           p_transfer_type?: string
+        }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wallet_p2p_lookup_recipient: {
+        Args: { p_phone: string }
+        Returns: {
+          display_name: string
+          masked_phone: string
+          user_id: string
+        }[]
+      }
+      wallet_p2p_transfer: {
+        Args: {
+          p_amount_gnf: number
+          p_idempotency_key?: string
+          p_note?: string
+          p_recipient_user_id: string
         }
         Returns: {
           amount_gnf: number
