@@ -9,6 +9,25 @@ export type FoodOrderState =
   | "cancelled";
 export type FoodPaymentMethod = "wallet" | "choppay" | "cash";
 
+export type FoodPaymentStatus =
+  | "unpaid"
+  | "pending"
+  | "authorized"
+  | "paid"
+  | "failed"
+  | "refunded"
+  | "cancelled";
+
+export const FOOD_PAYMENT_STATUS_LABEL: Record<FoodPaymentStatus, string> = {
+  unpaid: "Non payé",
+  pending: "En attente",
+  authorized: "Autorisé",
+  paid: "Payé",
+  failed: "Échoué",
+  refunded: "Remboursé",
+  cancelled: "Annulé",
+};
+
 export interface FoodRestaurant {
   id: string;
   owner_user_id: string | null;
@@ -47,6 +66,7 @@ export interface FoodOrder {
   fulfillment: FoodFulfillment;
   state: FoodOrderState;
   payment_method: FoodPaymentMethod;
+  payment_status?: FoodPaymentStatus;
   subtotal_gnf: number;
   notes: string | null;
   delivery_address: string | null;
