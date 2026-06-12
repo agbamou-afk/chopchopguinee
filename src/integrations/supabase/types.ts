@@ -4664,6 +4664,10 @@ export type Database = {
           signup_bonus_paid_gnf: number
         }[]
       }
+      _is_approved_service_agent: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       _is_god_admin: { Args: { _user: string }; Returns: boolean }
       _is_ops_or_god_admin: { Args: { _user: string }; Returns: boolean }
       _leader_group_id: { Args: { _uid: string }; Returns: string }
@@ -5185,6 +5189,20 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_preview_service_agent_cashins: {
+        Args: { p_limit?: number }
+        Returns: {
+          agent_user_id: string
+          amount_gnf: number
+          created_at: string
+          customer_user_id: string
+          merchant_store_id: string
+          note: string
+          reference: string
+          status: Database["public"]["Enums"]["txn_status"]
+          transaction_id: string
+        }[]
+      }
       admin_record_om_receipt: {
         Args: {
           p_amount_gnf: number
@@ -5258,6 +5276,44 @@ export type Database = {
           groups_count: number
           zone_id: string
           zone_label: string
+        }[]
+      }
+      agent_cash_in_customer_wallet: {
+        Args: {
+          p_amount_gnf: number
+          p_customer_user_id: string
+          p_idempotency_key?: string
+          p_reference_note?: string
+        }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      agent_lookup_customer_wallet: {
+        Args: { p_phone: string }
+        Returns: {
+          customer_user_id: string
+          display_name: string
+          masked_phone: string
+          wallet_exists: boolean
         }[]
       }
       analytics_summary: { Args: { p_days?: number }; Returns: Json }
