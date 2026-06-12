@@ -112,16 +112,19 @@ export default function RepasPayments() {
       `Capturer ${formatGNF(row.subtotal_gnf)} pour ${restoNames[row.restaurant_id] ?? row.restaurant_id} ?`,
     )) return;
     setBusyId(row.food_order_id);
-    const { data, error } = await (supabase as any).rpc("admin_repas_capture_and_settle_order", {
+    // Prefer trusted completion (state -> completed + capture + settle, idempotent).
+    // Falls back to manual admin capture for orders already completed but un-captured.
+    const { data, error } = await (supabase as any).rpc("repas_complete_order", {
       p_food_order_id: row.food_order_id,
-      p_reason: "Admin capture (Repas ops)",
+      p_reason: "Admin completion via Repas payments queue",
     });
     setBusyId(null);
-    if (error) { toast.error("Capture échouée", { description: error.message }); return; }
-    const res = (data ?? {}) as { ok?: boolean; captured?: boolean; settled?: boolean; reason?: string };
-    if (res.ok && res.settled) toast.success("Paiement capturé et règlement marchand traité.");
-    else if (res.ok && res.captured) toast.message("Paiement capturé. Règlement marchand à vérifier.", { description: res.reason });
-    else toast.error("Action incomplète", { description: res.reason ?? "Erreur inconnue" });
+    if (error) { toast.error("Complétion échouée", { description: error.message }); return; }
+    const res = (data ?? {}) as { ok?: boolean; capture?: { ok?: boolean; captured?: boolean; settled?: boolean; reason?: string } };
+    const cap = res.capture ?? {};
+    if (cap.settled) toast.success("Commande terminée. Paiement capturé et règlement marchand traité.");
+    else if (cap.captured) toast.message("Commande terminée. Règlement à vérifier.", { description: cap.reason });
+    else toast.message("Commande terminée.", { description: cap.reason ?? "" });
     await loadQueue();
   };
 

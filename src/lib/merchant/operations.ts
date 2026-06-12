@@ -55,6 +55,17 @@ export const RESTAURANT_NEXT_LABEL: Partial<Record<FoodOrderState, string>> = {
 export async function advanceRestaurantOrder(orderId: string, current: FoodOrderState): Promise<FoodOrderState> {
   const next = RESTAURANT_NEXT_STATE[current];
   if (!next) throw new Error("Aucune étape suivante");
+  // Trusted completion goes through the RPC so wallet capture + merchant settlement
+  // run atomically. The completion trigger blocks direct UPDATE to 'completed' for
+  // wallet-paid orders.
+  if (next === "completed") {
+    const { error } = await (supabase as any).rpc("repas_complete_order", {
+      p_food_order_id: orderId,
+      p_reason: "Restaurant marked order as completed",
+    });
+    if (error) throw error;
+    return next;
+  }
   const { error } = await (supabase as any)
     .from("food_orders")
     .update({ state: next })
