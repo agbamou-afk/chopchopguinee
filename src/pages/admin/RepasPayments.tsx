@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Navigate } from "react-router-dom";
@@ -289,7 +289,7 @@ export default function RepasPayments() {
             const r = detailRow;
             const store = r.merchant_store_id ? storeIndex[r.merchant_store_id] : null;
             const reason = REASON_LABELS[r.reason] ?? { label: r.reason, tone: "outline" as const };
-            const Row = ({ k, v }: { k: string; v: React.ReactNode }) => (
+            const Row = ({ k, v }: { k: string; v: ReactNode }) => (
               <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/50 last:border-b-0">
                 <span className="text-xs text-muted-foreground">{k}</span>
                 <span className="text-xs font-mono text-right break-all">{v ?? "—"}</span>
