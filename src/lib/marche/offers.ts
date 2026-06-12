@@ -23,6 +23,10 @@ export interface MarketplaceOffer {
   responded_at: string | null;
   created_at: string;
   updated_at: string;
+  payment_status?: string | null;
+  payment_intent_id?: string | null;
+  authorized_at?: string | null;
+  paid_at?: string | null;
 }
 
 export async function createOffer(input: {
