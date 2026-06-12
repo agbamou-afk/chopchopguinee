@@ -27,6 +27,12 @@ export interface MarketplaceOffer {
   payment_intent_id?: string | null;
   authorized_at?: string | null;
   paid_at?: string | null;
+  fulfillment_status?: string | null;
+  fulfilled_at?: string | null;
+  completed_at?: string | null;
+  settlement_state?: string | null;
+  captured_tx_id?: string | null;
+  settlement_tx_id?: string | null;
 }
 
 export async function createOffer(input: {

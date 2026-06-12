@@ -57,6 +57,34 @@ export function marchePaymentStatusLabel(s: MarchePaymentStatus | string | null 
   }
 }
 
+/**
+ * Trusted Marché completion: capture CHOPPay intent + settle merchant revenue.
+ * Callable by seller, buyer, admin, or service_role. Idempotent.
+ * Returns the RPC's JSON result so callers can react to needs_review etc.
+ */
+export async function completeMarcheOffer(
+  offerId: string,
+  reason?: string,
+): Promise<any> {
+  const { data, error } = await (supabase as any).rpc("marche_complete_offer", {
+    p_offer_id: offerId,
+    p_reason: reason ?? "Marché offer fulfilled",
+  });
+  if (error) throw new Error(translateCompletionError(error.message));
+  return data;
+}
+
+function translateCompletionError(msg: string): string {
+  const m = (msg || "").toLowerCase();
+  if (m.includes("forbidden_completion")) return "Action non autorisée.";
+  if (m.includes("offer_not_found")) return "Offre introuvable.";
+  if (m.includes("offer_not_accepted")) return "L'offre n'est pas acceptée.";
+  if (m.includes("listing_unavailable")) return "Annonce indisponible.";
+  if (m.includes("payment_not_authorized")) return "Paiement non autorisé.";
+  if (m.includes("no_payment_intent")) return "Aucun paiement à capturer.";
+  return "Action impossible.";
+}
+
 function translatePaymentError(msg: string): string {
   const m = (msg || "").toLowerCase();
   if (m.includes("not_authenticated")) return "Connectez-vous pour payer.";

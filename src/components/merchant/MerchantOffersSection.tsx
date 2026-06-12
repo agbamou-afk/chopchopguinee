@@ -12,6 +12,7 @@ import {
   type MarketplaceOffer,
 } from "@/lib/marche/offers";
 import { formatGNF } from "@/lib/marche";
+import { completeMarcheOffer } from "@/lib/marche/payments";
 
 export function MerchantOffersSection({ merchantId }: { merchantId: string }) {
   const [items, setItems] = useState<MarketplaceOffer[]>([]);
@@ -44,6 +45,28 @@ export function MerchantOffersSection({ merchantId }: { merchantId: string }) {
       });
       toast({ title: "Offre mise à jour" });
       setCounterFor(null);
+      await refresh();
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message ?? "Action impossible" });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const markFulfilled = async (o: MarketplaceOffer) => {
+    setBusy(o.id);
+    try {
+      const res = await completeMarcheOffer(o.id, "Seller marked delivered");
+      if (res?.ok && res?.settled) {
+        toast({ title: "Paiement reçu dans CHOP Wallet" });
+      } else if (res?.ok && !res?.settled) {
+        toast({
+          title: "Capturé — à revoir",
+          description: res?.reason ?? "Vérifiez le lien marchand.",
+        });
+      } else if (res && !res.ok) {
+        toast({ title: "Impossible", description: res?.reason ?? "Action impossible" });
+      }
       await refresh();
     } catch (e: any) {
       toast({ title: "Erreur", description: e?.message ?? "Action impossible" });
@@ -119,11 +142,20 @@ export function MerchantOffersSection({ merchantId }: { merchantId: string }) {
                 {o.status === "accepted" && (
                   <div className="mt-2 rounded-lg bg-background/60 border border-border/60 p-2 text-[11px] space-y-0.5">
                     {o.payment_status === "authorized" ? (
-                      <p className="text-success">
-                        Paiement autorisé — en attente de remise/livraison.
-                      </p>
+                      <>
+                        <p className="text-success">
+                          Paiement autorisé — remettre l'article.
+                        </p>
+                        <Button
+                          size="sm" className="w-full mt-1.5"
+                          disabled={busy === o.id}
+                          onClick={() => markFulfilled(o)}
+                        >
+                          {busy === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Marquer comme remis"}
+                        </Button>
+                      </>
                     ) : o.payment_status === "paid" ? (
-                      <p className="text-success">Paiement réglé.</p>
+                      <p className="text-success">Paiement reçu dans CHOP Wallet.</p>
                     ) : o.payment_status === "failed" ? (
                       <p className="text-destructive">Paiement échoué côté acheteur.</p>
                     ) : (
