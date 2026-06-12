@@ -6681,6 +6681,40 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      wallet_internal_transfer_v2: {
+        Args: {
+          p_amount_gnf: number
+          p_description?: string
+          p_from_wallet_id: string
+          p_metadata?: Json
+          p_reference: string
+          p_source_id?: string
+          p_source_module?: string
+          p_to_wallet_id: string
+          p_transfer_type?: string
+        }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       wallet_pay_driver_commission: {
         Args: { p_commission_id: string }
         Returns: string
