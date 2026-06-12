@@ -1838,6 +1838,7 @@ export type Database = {
           id: string
           notes: string | null
           payment_method: Database["public"]["Enums"]["food_payment_method"]
+          payment_status: string
           restaurant_id: string
           state: Database["public"]["Enums"]["food_order_state"]
           subtotal_gnf: number
@@ -1853,6 +1854,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["food_payment_method"]
+          payment_status?: string
           restaurant_id: string
           state?: Database["public"]["Enums"]["food_order_state"]
           subtotal_gnf?: number
@@ -1868,6 +1870,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["food_payment_method"]
+          payment_status?: string
           restaurant_id?: string
           state?: Database["public"]["Enums"]["food_order_state"]
           subtotal_gnf?: number
@@ -3295,11 +3298,16 @@ export type Database = {
       payment_intents: {
         Row: {
           amount_gnf: number
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
           created_at: string
           currency: string
+          description: string | null
           id: string
           internal_reference: string
           metadata: Json
+          payee_user_id: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
@@ -3307,17 +3315,26 @@ export type Database = {
           related_mission_id: string | null
           related_order_id: string | null
           related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
           updated_at: string
           user_id: string
+          wallet_hold_tx_id: string | null
         }
         Insert: {
           amount_gnf: number
+          cancelled_at?: string | null
+          captured_at?: string | null
+          captured_tx_id?: string | null
           created_at?: string
           currency?: string
+          description?: string | null
           id?: string
           internal_reference: string
           metadata?: Json
+          payee_user_id?: string | null
           provider?: Database["public"]["Enums"]["payment_provider"]
           provider_reference?: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
@@ -3325,17 +3342,26 @@ export type Database = {
           related_mission_id?: string | null
           related_order_id?: string | null
           related_store_id?: string | null
+          settlement_tx_id?: string | null
+          source_id?: string | null
+          source_module?: string | null
           state?: Database["public"]["Enums"]["payment_state"]
           updated_at?: string
           user_id: string
+          wallet_hold_tx_id?: string | null
         }
         Update: {
           amount_gnf?: number
+          cancelled_at?: string | null
+          captured_at?: string | null
+          captured_tx_id?: string | null
           created_at?: string
           currency?: string
+          description?: string | null
           id?: string
           internal_reference?: string
           metadata?: Json
+          payee_user_id?: string | null
           provider?: Database["public"]["Enums"]["payment_provider"]
           provider_reference?: string | null
           purpose?: Database["public"]["Enums"]["payment_purpose"]
@@ -3343,11 +3369,37 @@ export type Database = {
           related_mission_id?: string | null
           related_order_id?: string | null
           related_store_id?: string | null
+          settlement_tx_id?: string | null
+          source_id?: string | null
+          source_module?: string | null
           state?: Database["public"]["Enums"]["payment_state"]
           updated_at?: string
           user_id?: string
+          wallet_hold_tx_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_intents_captured_tx_id_fkey"
+            columns: ["captured_tx_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_intents_settlement_tx_id_fkey"
+            columns: ["settlement_tx_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_intents_wallet_hold_tx_id_fkey"
+            columns: ["wallet_hold_tx_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_provider_events: {
         Row: {
@@ -4972,6 +5024,28 @@ export type Database = {
           reason: string
         }[]
       }
+      admin_preview_payment_intents: {
+        Args: { p_limit?: number; p_source_module?: string; p_state?: string }
+        Returns: {
+          amount_gnf: number
+          cancelled_at: string
+          captured_at: string
+          captured_tx_id: string
+          created_at: string
+          id: string
+          internal_reference: string
+          merchant_store_id: string
+          metadata: Json
+          payee_user_id: string
+          payer_user_id: string
+          provider: Database["public"]["Enums"]["payment_provider"]
+          settlement_tx_id: string
+          source_id: string
+          source_module: string
+          state: Database["public"]["Enums"]["payment_state"]
+          wallet_hold_tx_id: string
+        }[]
+      }
       admin_record_om_receipt: {
         Args: {
           p_amount_gnf: number
@@ -5058,11 +5132,16 @@ export type Database = {
         Args: { p_intent_id: string; p_reason?: string }
         Returns: {
           amount_gnf: number
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
           created_at: string
           currency: string
+          description: string | null
           id: string
           internal_reference: string
           metadata: Json
+          payee_user_id: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
@@ -5070,9 +5149,13 @@ export type Database = {
           related_mission_id: string | null
           related_order_id: string | null
           related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
           updated_at: string
           user_id: string
+          wallet_hold_tx_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -5085,6 +5168,124 @@ export type Database = {
         Args: { _email: string; _phone: string }
         Returns: Json
       }
+      choppay_cancel_payment_intent: {
+        Args: { p_payment_intent_id: string; p_reason?: string }
+        Returns: {
+          amount_gnf: number
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          internal_reference: string
+          metadata: Json
+          payee_user_id: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
+          user_id: string
+          wallet_hold_tx_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      choppay_capture_payment_intent: {
+        Args: { p_payment_intent_id: string; p_reason?: string }
+        Returns: {
+          amount_gnf: number
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          internal_reference: string
+          metadata: Json
+          payee_user_id: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
+          user_id: string
+          wallet_hold_tx_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      choppay_create_payment_intent: {
+        Args: {
+          p_amount_gnf: number
+          p_description?: string
+          p_merchant_store_id?: string
+          p_metadata?: Json
+          p_payee_user_id?: string
+          p_purpose: Database["public"]["Enums"]["payment_purpose"]
+          p_source_id: string
+          p_source_module: string
+          p_use_wallet?: boolean
+        }
+        Returns: {
+          amount_gnf: number
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          internal_reference: string
+          metadata: Json
+          payee_user_id: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
+          user_id: string
+          wallet_hold_tx_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       claim_first_admin: { Args: never; Returns: boolean }
       confirm_payment_intent: {
         Args: {
@@ -5094,11 +5295,16 @@ export type Database = {
         }
         Returns: {
           amount_gnf: number
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
           created_at: string
           currency: string
+          description: string | null
           id: string
           internal_reference: string
           metadata: Json
+          payee_user_id: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
@@ -5106,9 +5312,13 @@ export type Database = {
           related_mission_id: string | null
           related_order_id: string | null
           related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
           updated_at: string
           user_id: string
+          wallet_hold_tx_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -5352,11 +5562,16 @@ export type Database = {
         Args: { p_intent_id: string; p_reason?: string }
         Returns: {
           amount_gnf: number
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
           created_at: string
           currency: string
+          description: string | null
           id: string
           internal_reference: string
           metadata: Json
+          payee_user_id: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
@@ -5364,9 +5579,13 @@ export type Database = {
           related_mission_id: string | null
           related_order_id: string | null
           related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
           updated_at: string
           user_id: string
+          wallet_hold_tx_id: string | null
         }
         SetofOptions: {
           from: "*"
