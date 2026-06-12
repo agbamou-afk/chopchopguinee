@@ -30,6 +30,10 @@ import {
   offerStatusLabel,
   type MarketplaceOffer,
 } from "@/lib/marche/offers";
+import {
+  authorizeMarcheOfferPayment,
+  marchePaymentStatusLabel,
+} from "@/lib/marche/payments";
 
 // Module-level guard so a single listing view counts once per session,
 // even under StrictMode double-mount or quick back/forward navigation.
@@ -479,9 +483,15 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
                   </Button>
                 )}
                 {myOffer.status === "accepted" && (
-                  <p className="text-xs text-success">
-                    Offre acceptée — finalisation de la commande à connecter.
-                  </p>
+                  <AcceptedOfferPaymentBlock
+                    offer={myOffer}
+                    onPaid={async () => {
+                      if (selfId) {
+                        const refreshed = await getMyOfferForListing(listing.id, selfId);
+                        setMyOffer(refreshed);
+                      }
+                    }}
+                  />
                 )}
               </div>
             ) : (
