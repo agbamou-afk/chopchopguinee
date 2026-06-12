@@ -30,6 +30,10 @@ import {
   offerStatusLabel,
   type MarketplaceOffer,
 } from "@/lib/marche/offers";
+import {
+  authorizeMarcheOfferPayment,
+  marchePaymentStatusLabel,
+} from "@/lib/marche/payments";
 
 // Module-level guard so a single listing view counts once per session,
 // even under StrictMode double-mount or quick back/forward navigation.
@@ -479,9 +483,15 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
                   </Button>
                 )}
                 {myOffer.status === "accepted" && (
-                  <p className="text-xs text-success">
-                    Offre acceptée — finalisation de la commande à connecter.
-                  </p>
+                  <AcceptedOfferPaymentBlock
+                    offer={myOffer}
+                    onPaid={async () => {
+                      if (selfId) {
+                        const refreshed = await getMyOfferForListing(listing.id, selfId);
+                        setMyOffer(refreshed);
+                      }
+                    }}
+                  />
                 )}
               </div>
             ) : (
@@ -530,6 +540,70 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           }
           onBack={() => setOpenConv(null)}
         />
+      )}
+    </div>
+  );
+}
+
+function AcceptedOfferPaymentBlock({
+  offer,
+  onPaid,
+}: {
+  offer: MarketplaceOffer;
+  onPaid: () => Promise<void> | void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const amount = offer.counter_amount_gnf ?? offer.offer_amount_gnf;
+  const status = (offer.payment_status ?? "unpaid") as string;
+
+  const canPay = status === "unpaid" || status === "failed" || status === "cancelled";
+
+  const pay = async () => {
+    setBusy(true);
+    try {
+      const r = await authorizeMarcheOfferPayment(offer.id);
+      if (r.paymentStatus === "authorized") {
+        toast({ title: "Paiement autorisé", description: "Le vendeur peut préparer l'article." });
+      } else if (r.paymentStatus === "failed") {
+        toast({
+          title: "Solde CHOP insuffisant",
+          description: "Rechargez votre wallet ou choisissez un autre mode.",
+          variant: "destructive" as any,
+        });
+      } else {
+        toast({ title: "Paiement en cours", description: marchePaymentStatusLabel(r.paymentStatus) });
+      }
+      await onPaid();
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message ?? "Action impossible" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2 rounded-xl bg-background/60 p-2 border border-primary/20">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium">Paiement Marché</span>
+        <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+          {marchePaymentStatusLabel(status)}
+        </span>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Montant convenu : <b className="text-foreground">{formatGNF(amount)}</b>
+      </p>
+      {canPay && (
+        <Button size="sm" className="w-full" disabled={busy} onClick={pay}>
+          {busy ? "Autorisation…" : "Payer avec CHOP Wallet"}
+        </Button>
+      )}
+      {status === "authorized" && (
+        <p className="text-[11px] text-success">
+          Paiement autorisé. Le règlement au vendeur se fera après remise/livraison.
+        </p>
+      )}
+      {status === "paid" && (
+        <p className="text-[11px] text-success">Paiement réglé.</p>
       )}
     </div>
   );

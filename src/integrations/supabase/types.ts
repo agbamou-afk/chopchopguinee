@@ -2670,8 +2670,10 @@ export type Database = {
       }
       marketplace_offers: {
         Row: {
+          authorized_at: string | null
           buyer_message: string | null
           buyer_user_id: string
+          captured_tx_id: string | null
           counter_amount_gnf: number | null
           created_at: string
           expires_at: string | null
@@ -2682,13 +2684,19 @@ export type Database = {
           merchant_user_id: string
           metadata: Json
           offer_amount_gnf: number
+          paid_at: string | null
+          payment_intent_id: string | null
+          payment_status: string
           responded_at: string | null
+          settlement_tx_id: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          authorized_at?: string | null
           buyer_message?: string | null
           buyer_user_id: string
+          captured_tx_id?: string | null
           counter_amount_gnf?: number | null
           created_at?: string
           expires_at?: string | null
@@ -2699,13 +2707,19 @@ export type Database = {
           merchant_user_id: string
           metadata?: Json
           offer_amount_gnf: number
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          payment_status?: string
           responded_at?: string | null
+          settlement_tx_id?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          authorized_at?: string | null
           buyer_message?: string | null
           buyer_user_id?: string
+          captured_tx_id?: string | null
           counter_amount_gnf?: number | null
           created_at?: string
           expires_at?: string | null
@@ -2716,7 +2730,11 @@ export type Database = {
           merchant_user_id?: string
           metadata?: Json
           offer_amount_gnf?: number
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          payment_status?: string
           responded_at?: string | null
+          settlement_tx_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -5009,6 +5027,27 @@ export type Database = {
         }
       }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
+      admin_preview_marche_payment_intents: {
+        Args: { p_limit?: number }
+        Returns: {
+          amount_gnf: number
+          authorized_at: string
+          buyer_user_id: string
+          captured_tx_id: string
+          created_at: string
+          listing_id: string
+          listing_title: string
+          merchant_store_id: string
+          merchant_user_id: string
+          offer_id: string
+          offer_status: string
+          payment_intent_id: string
+          payment_intent_state: Database["public"]["Enums"]["payment_state"]
+          payment_status: string
+          settlement_tx_id: string
+          wallet_hold_tx_id: string
+        }[]
+      }
       admin_preview_missing_driver_earnings: {
         Args: never
         Returns: {
@@ -6052,6 +6091,42 @@ export type Database = {
           _target_type?: string
         }
         Returns: string
+      }
+      marche_create_offer_payment_intent: {
+        Args: { p_offer_id: string }
+        Returns: {
+          amount_gnf: number
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          internal_reference: string
+          metadata: Json
+          payee_user_id: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          updated_at: string
+          user_id: string
+          wallet_hold_tx_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       marche_increment_listing_metric: {
         Args: { _kind: string; _listing_id: string }
