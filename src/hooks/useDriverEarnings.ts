@@ -87,7 +87,7 @@ export function useDriverEarnings(): DriverEarningsState {
             .select("id,reference,type,amount_gnf,related_entity,description,created_at,status,to_wallet_id")
             .eq("to_wallet_id", driverWalletId)
             .eq("status", "completed")
-            .eq("type", "ride_earning")
+            .in("type", ["ride_earning", "mission_earning"])
             .gt("amount_gnf", 0)
             .gte("created_at", weekStart.toISOString())
             .order("created_at", { ascending: false })
