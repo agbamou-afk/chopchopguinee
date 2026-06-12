@@ -4945,6 +4945,21 @@ export type Database = {
           ride_status: string
         }[]
       }
+      admin_preview_missing_merchant_revenue: {
+        Args: { p_source_module?: string }
+        Returns: {
+          amount_gnf: number
+          created_at: string
+          merchant_owner_user_id: string
+          merchant_store_id: string
+          metadata: Json
+          reference: string
+          source_id: string
+          source_module: string
+          status: string
+          tx_id: string
+        }[]
+      }
       admin_preview_missing_mission_earnings: {
         Args: never
         Returns: {
@@ -6847,6 +6862,38 @@ export type Database = {
         Args: { p_commission_id: string; p_reason: string }
         Returns: string
       }
+      wallet_settle_merchant_revenue: {
+        Args: {
+          p_amount_gnf: number
+          p_description?: string
+          p_merchant_store_id: string
+          p_metadata?: Json
+          p_reference: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       wallet_topup_admin_cancel: {
         Args: { p_reason?: string; p_topup_id: string }
         Returns: {
@@ -7276,6 +7323,7 @@ export type Database = {
         | "adjustment"
         | "ride_earning"
         | "mission_earning"
+        | "merchant_revenue"
       wallet_status: "active" | "frozen" | "closed"
     }
     CompositeTypes: {
@@ -7641,6 +7689,7 @@ export const Constants = {
         "adjustment",
         "ride_earning",
         "mission_earning",
+        "merchant_revenue",
       ],
       wallet_status: ["active", "frozen", "closed"],
     },
