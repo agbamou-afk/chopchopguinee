@@ -4803,6 +4803,10 @@ export type Database = {
           target_zone: string
         }[]
       }
+      admin_link_restaurant_to_merchant_store: {
+        Args: { p_merchant_store_id: string; p_restaurant_id: string }
+        Returns: Json
+      }
       admin_list_driver_applications: {
         Args: { p_status?: string }
         Returns: {
@@ -5105,6 +5109,10 @@ export type Database = {
       admin_remove_driver_from_group: {
         Args: { p_membership: string; p_reason?: string }
         Returns: undefined
+      }
+      admin_repas_capture_and_settle_order: {
+        Args: { p_food_order_id: string; p_reason?: string }
+        Returns: Json
       }
       admin_request_driver_info: {
         Args: { p_missing: string[]; p_note: string; p_user_id: string }
