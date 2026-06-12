@@ -128,6 +128,15 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       setDeliveryPending(fulfillment === "delivery" && result.deliveryPending);
       setLastOrderId(result.order?.id ?? null);
       setLastMissionId(result.missionId ?? null);
+      if (paymentMethod === "wallet") {
+        if (result.paymentStatus === "authorized") {
+          toast.success("Paiement autorisé. Votre commande est en préparation.");
+        } else if (result.paymentStatus === "failed") {
+          toast.error(
+            "Solde CHOP insuffisant. Rechargez votre wallet ou choisissez un autre mode de paiement.",
+          );
+        }
+      }
       cart.clear();
       setStage("confirmed");
     } catch (e: unknown) {
