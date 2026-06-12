@@ -4945,6 +4945,18 @@ export type Database = {
           ride_status: string
         }[]
       }
+      admin_preview_missing_mission_earnings: {
+        Args: never
+        Returns: {
+          courier_id: string
+          delivered_at: string
+          earning_amount_gnf: number
+          eligible: boolean
+          mission_id: string
+          mission_type: string
+          reason: string
+        }[]
+      }
       admin_record_om_receipt: {
         Args: {
           p_amount_gnf: number
@@ -6621,6 +6633,30 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      wallet_credit_mission_earning: {
+        Args: { p_mission_id: string; p_reason?: string }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       wallet_ensure: { Args: { _party_type?: string }; Returns: string }
       wallet_hold: {
         Args: {
@@ -7239,6 +7275,7 @@ export type Database = {
         | "transfer"
         | "adjustment"
         | "ride_earning"
+        | "mission_earning"
       wallet_status: "active" | "frozen" | "closed"
     }
     CompositeTypes: {
@@ -7603,6 +7640,7 @@ export const Constants = {
         "transfer",
         "adjustment",
         "ride_earning",
+        "mission_earning",
       ],
       wallet_status: ["active", "frozen", "closed"],
     },
