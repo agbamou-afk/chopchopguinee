@@ -501,6 +501,13 @@ export function WalletView() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <SendMoneySheet
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+        available={wallet ? wallet.balance_gnf - wallet.held_gnf : 0}
+        onSent={() => refresh()}
+      />
     </div>
   );
 }
