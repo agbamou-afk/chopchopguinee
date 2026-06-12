@@ -14,6 +14,7 @@ export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
 
   switch (tx.type) {
     case "topup":
+      if ((tx.reference ?? "").startsWith("agent_cash_in:")) return "Recharge Agent CHOP";
       return "Recharge reçue";
     case "payout":
       return "Versement reçu";
