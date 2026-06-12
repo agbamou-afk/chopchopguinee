@@ -56,6 +56,7 @@ const WalletReconciliation = lazy(() => import("./pages/admin/WalletReconciliati
 const PricingAdmin = lazy(() => import("./pages/admin/PricingAdmin"));
 const OrdersAdmin = lazy(() => import("./pages/admin/OrdersAdmin"));
 const RepasAdmin = lazy(() => import("./pages/admin/RepasAdmin"));
+const RepasPayments = lazy(() => import("./pages/admin/RepasPayments"));
 const MarcheAdmin = lazy(() => import("./pages/admin/MarcheAdmin"));
 const SupportAdmin = lazy(() => import("./pages/admin/SupportAdmin"));
 const RiskAdmin = lazy(() => import("./pages/admin/RiskAdmin"));
@@ -164,6 +165,7 @@ const App = () => {
             <Route path="pricing" element={<PricingAdmin />} />
             <Route path="orders" element={<OrdersAdmin />} />
             <Route path="repas" element={<RepasAdmin />} />
+            <Route path="repas/payments" element={<RepasPayments />} />
             <Route path="marche" element={<MarcheAdmin />} />
             <Route path="support" element={<SupportAdmin />} />
             <Route path="risk" element={<RiskAdmin />} />
