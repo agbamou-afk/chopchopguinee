@@ -1831,6 +1831,7 @@ export type Database = {
       food_orders: {
         Row: {
           captured_intent_id: string | null
+          completed_at: string | null
           created_at: string
           delivery_address: string | null
           delivery_lat: number | null
@@ -1851,6 +1852,7 @@ export type Database = {
         }
         Insert: {
           captured_intent_id?: string | null
+          completed_at?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_lat?: number | null
@@ -1871,6 +1873,7 @@ export type Database = {
         }
         Update: {
           captured_intent_id?: string | null
+          completed_at?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_lat?: number | null
@@ -6580,6 +6583,10 @@ export type Database = {
         Returns: number
       }
       repas_capture_and_settle_order: {
+        Args: { p_food_order_id: string; p_reason?: string }
+        Returns: Json
+      }
+      repas_complete_order: {
         Args: { p_food_order_id: string; p_reason?: string }
         Returns: Json
       }
