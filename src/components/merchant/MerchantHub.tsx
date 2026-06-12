@@ -21,6 +21,7 @@ import { MerchantVerificationChecklist } from "./MerchantVerificationChecklist";
 import { MerchantWalletSection } from "./MerchantWalletSection";
 import { MerchantSnapshot } from "./MerchantSnapshot";
 import { MerchantCommandesView } from "./MerchantCommandesView";
+import { ServiceAgentCashInPanel } from "./ServiceAgentCashInPanel";
 
 type Tab = "home" | "orders" | "catalog" | "wallet" | "store";
 
@@ -182,7 +183,28 @@ export function MerchantHub() {
               </>
             )}
 
-            {tab === "wallet" && <MerchantWalletSection />}
+            {tab === "wallet" && (
+              <>
+                <MerchantWalletSection />
+                {store?.service_agent_status === "approved" && <ServiceAgentCashInPanel />}
+                {store?.service_agent_status === "pending" && (
+                  <div className="bg-card rounded-2xl border border-border/60 p-4 text-sm">
+                    <p className="font-bold text-foreground">Demande Agent CHOP Wallet en vérification</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vous pourrez recharger des clients dès l'approbation.
+                    </p>
+                  </div>
+                )}
+                {store?.service_agent_status === "rejected" && (
+                  <div className="bg-card rounded-2xl border border-destructive/40 p-4 text-sm">
+                    <p className="font-bold text-destructive">Demande Agent CHOP Wallet refusée</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {store?.service_agent_notes ?? "Contactez le support pour plus d'informations."}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
 
             {tab === "store" && (
               <>
