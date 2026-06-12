@@ -1830,6 +1830,7 @@ export type Database = {
       }
       food_orders: {
         Row: {
+          captured_intent_id: string | null
           created_at: string
           delivery_address: string | null
           delivery_lat: number | null
@@ -1837,15 +1838,19 @@ export type Database = {
           fulfillment: Database["public"]["Enums"]["food_fulfillment"]
           id: string
           notes: string | null
+          paid_at: string | null
           payment_method: Database["public"]["Enums"]["food_payment_method"]
           payment_status: string
           restaurant_id: string
+          settlement_state: string
+          settlement_tx_id: string | null
           state: Database["public"]["Enums"]["food_order_state"]
           subtotal_gnf: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          captured_intent_id?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_lat?: number | null
@@ -1853,15 +1858,19 @@ export type Database = {
           fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
           id?: string
           notes?: string | null
+          paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["food_payment_method"]
           payment_status?: string
           restaurant_id: string
+          settlement_state?: string
+          settlement_tx_id?: string | null
           state?: Database["public"]["Enums"]["food_order_state"]
           subtotal_gnf?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          captured_intent_id?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_lat?: number | null
@@ -1869,9 +1878,12 @@ export type Database = {
           fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
           id?: string
           notes?: string | null
+          paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["food_payment_method"]
           payment_status?: string
           restaurant_id?: string
+          settlement_state?: string
+          settlement_tx_id?: string | null
           state?: Database["public"]["Enums"]["food_order_state"]
           subtotal_gnf?: number
           updated_at?: string
@@ -1900,6 +1912,7 @@ export type Database = {
           is_open: boolean
           latitude: number | null
           longitude: number | null
+          merchant_store_id: string | null
           name: string
           owner_user_id: string | null
           pickup_available: boolean
@@ -1921,6 +1934,7 @@ export type Database = {
           is_open?: boolean
           latitude?: number | null
           longitude?: number | null
+          merchant_store_id?: string | null
           name: string
           owner_user_id?: string | null
           pickup_available?: boolean
@@ -1942,6 +1956,7 @@ export type Database = {
           is_open?: boolean
           latitude?: number | null
           longitude?: number | null
+          merchant_store_id?: string | null
           name?: string
           owner_user_id?: string | null
           pickup_available?: boolean
@@ -1951,7 +1966,15 @@ export type Database = {
           updated_at?: string
           verification_state?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "food_restaurants_merchant_store_id_fkey"
+            columns: ["merchant_store_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       landmarks: {
         Row: {
@@ -5046,6 +5069,25 @@ export type Database = {
           wallet_hold_tx_id: string
         }[]
       }
+      admin_preview_repas_payment_settlement: {
+        Args: { p_limit?: number }
+        Returns: {
+          created_at: string
+          eligible_for_capture: boolean
+          eligible_for_settlement: boolean
+          food_order_id: string
+          merchant_store_id: string
+          payment_intent_id: string
+          payment_intent_state: string
+          payment_method: string
+          payment_status: string
+          reason: string
+          restaurant_id: string
+          settlement_state: string
+          subtotal_gnf: number
+          user_id: string
+        }[]
+      }
       admin_record_om_receipt: {
         Args: {
           p_amount_gnf: number
@@ -6528,6 +6570,10 @@ export type Database = {
       refresh_driver_referral_milestones: {
         Args: { p_driver?: string }
         Returns: number
+      }
+      repas_capture_and_settle_order: {
+        Args: { p_food_order_id: string; p_reason?: string }
+        Returns: Json
       }
       request_account_deletion: { Args: { _reason?: string }; Returns: Json }
       review_learned_route_segment: {
