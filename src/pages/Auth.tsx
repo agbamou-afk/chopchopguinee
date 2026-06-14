@@ -89,7 +89,7 @@ export default function Auth() {
     intentParam === "driver" || intentParam === "merchant" || intentParam === "client"
       ? (intentParam as SignupIntent)
       : "client";
-  const { ready, isLoggedIn, isAdmin, isProfileComplete, signupIntent, requestedDriverVehicle, user } = useAuth();
+  const { ready, isLoggedIn, isAdmin, isProfileComplete, profileLoading, signupIntent, requestedDriverVehicle, user } = useAuth();
 
   const [mode, setMode] = useState<Mode>(initialMode);
   const [first, setFirst] = useState("");
@@ -107,7 +107,7 @@ export default function Auth() {
 
   // After session is established, route by role + profile completeness.
   useEffect(() => {
-    if (!ready || !isLoggedIn) return;
+    if (!ready || !isLoggedIn || profileLoading) return;
     if (!isProfileComplete) {
       navigate("/complete-profile", { replace: true });
       return;
@@ -165,7 +165,7 @@ export default function Auth() {
       return;
     }
     navigate(isAdmin ? "/admin" : "/", { replace: true });
-  }, [ready, isLoggedIn, isAdmin, isProfileComplete, signupIntent, requestedDriverVehicle, intentParam, safeNext, user?.id, navigate]);
+  }, [ready, isLoggedIn, isAdmin, isProfileComplete, profileLoading, signupIntent, requestedDriverVehicle, intentParam, safeNext, user?.id, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
