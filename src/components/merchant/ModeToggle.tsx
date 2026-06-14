@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Store, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAppMode } from "@/hooks/useAppMode";
+import { useAppMode, useSwitchAppMode } from "@/hooks/useAppMode";
 import { Button } from "@/components/ui/button";
-import { clearMerchantIntent } from "@/lib/merchantRouting";
 
 /** Toggle visible only to users that own a merchant_store. Switching does not delete
  * the store or change approval status; it just routes the user between the
  * merchant dashboard and the client home. */
 export function MerchantModeToggle({ compact = false }: { compact?: boolean }) {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { mode, setMode } = useAppMode();
+  const { mode } = useAppMode();
+  const switchAppMode = useSwitchAppMode();
   const [hasStore, setHasStore] = useState(false);
 
   useEffect(() => {
@@ -30,16 +28,7 @@ export function MerchantModeToggle({ compact = false }: { compact?: boolean }) {
 
   if (!hasStore) return null;
 
-  const switchTo = async (next: "merchant" | "client") => {
-    // Switching to client must also clear any lingering merchant signup
-    // intent in sessionStorage so the merchant-redirect effect in Index
-    // doesn't pull the user back to /merchant/hub.
-    if (next === "client") {
-      try { clearMerchantIntent(); } catch { /* noop */ }
-    }
-    await setMode(next);
-    navigate(next === "merchant" ? "/merchant/hub" : "/", { replace: true });
-  };
+  const switchTo = (next: "merchant" | "client") => switchAppMode(next);
 
   if (mode === "merchant") {
     return (

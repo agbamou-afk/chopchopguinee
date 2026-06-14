@@ -70,6 +70,34 @@ export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "or
 const PUBLIC_ONBOARDING_DONE_KEY = "cc_public_client_onboarding_done";
 
 /**
+ * If the current URL carries `?mode=client` (or driver), treat that as an
+ * authoritative client-mode request: write the session override, clear any
+ * stored merchant signup intent, and prevent the merchant-redirect effect
+ * from ever bouncing the user back to /merchant/hub. Read synchronously
+ * at module init AND inside the effect, so the very first render already
+ * sees the override.
+ */
+function readModeQuery(): "client" | "merchant" | "driver" | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = new URLSearchParams(window.location.search).get("mode");
+    return v === "client" || v === "merchant" || v === "driver" ? v : null;
+  } catch {
+    return null;
+  }
+}
+if (typeof window !== "undefined") {
+  const q = readModeQuery();
+  if (q === "client") {
+    try { window.sessionStorage.setItem("cc_app_mode_override", "client"); } catch { /* noop */ }
+    try { window.sessionStorage.setItem("cc_driver_mode_choice", "client"); } catch { /* noop */ }
+    try {
+      window.sessionStorage.removeItem("cc_signup_merchant_intent");
+    } catch { /* noop */ }
+  }
+}
+
+/**
  * Renders the global driver ride-alert banner. Lives inside the provider so it
  * can read the current offer and surface it from any tab.
  */
@@ -151,6 +179,7 @@ const Index = () => {
     signupIntent !== "driver" &&
     effectiveMode !== "client" &&
     effectiveMode !== "driver" &&
+    readModeQuery() !== "client" &&
     (
       effectiveMode === "merchant" ||
       (effectiveMode === null && signupIntent === "merchant") ||
@@ -180,6 +209,14 @@ const Index = () => {
     if (!ready || !user || adminUser || driverResolving || merchantResolving) return;
     if (merchantRedirectedRef.current) return;
     if (signupIntent === "driver") return;
+    // Defensive: ?mode=client always wins. Never bounce to merchant.
+    if (readModeQuery() === "client") {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.debug("[merchant-redirect-check] skipped: ?mode=client override");
+      }
+      return;
+    }
     // Explicit client/driver effective mode must NOT be overridden by an old
     // signupIntent on the auth user or a stale merchant intent in storage.
     if (effectiveMode === "client" || effectiveMode === "driver") return;
@@ -187,6 +224,19 @@ const Index = () => {
       effectiveMode === "merchant" ||
       (effectiveMode === null && signupIntent === "merchant") ||
       (effectiveMode === null && hasStoredMerchantIntent());
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.debug("[merchant-redirect-check]", {
+        effectiveMode,
+        persistedMode,
+        override: typeof window !== "undefined" ? window.sessionStorage.getItem("cc_app_mode_override") : null,
+        signupIntent,
+        hasStoredMerchantIntent: hasStoredMerchantIntent(),
+        wantsMerchant,
+        currentPath: typeof window !== "undefined" ? window.location.pathname : "",
+        search: typeof window !== "undefined" ? window.location.search : "",
+      });
+    }
     if (!wantsMerchant) return;
     merchantRedirectedRef.current = true;
     (async () => {

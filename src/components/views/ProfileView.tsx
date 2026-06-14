@@ -27,7 +27,7 @@ import { ONBOARDING_DONE_KEY, ONBOARDING_REPLAY_EVENT } from "@/components/onboa
 import { DRIVER_ONBOARDING_DONE_KEY, DRIVER_ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/DriverOnboarding";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import { SelfDeleteAccountSheet } from "@/components/account/SelfDeleteAccountSheet";
-import { useAppMode } from "@/hooks/useAppMode";
+import { useSwitchAppMode } from "@/hooks/useAppMode";
 
 interface ProfileViewProps {
   isDriverMode: boolean;
@@ -54,7 +54,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
   const { lowDataMode, setLowDataMode } = useAppEnv();
   const navigate = useNavigate();
   const { hasAny: isMerchant, store: merchantStore } = useMerchantIdentity();
-  const { setMode: setAppMode } = useAppMode();
+  const switchAppMode = useSwitchAppMode();
   const isAuthed = !!user;
   const [deletionOpen, setDeletionOpen] = useState(false);
 
@@ -211,18 +211,14 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
               : approved
               ? "Passer en mode marchand"
               : "Espace marchand";
-            const target = isMerchant ? "/merchant/hub" : "/merchant/apply";
             return (
               <button
                 onClick={async () => {
-                  // When jumping into the merchant dashboard from the
-                  // client profile, persist the explicit app_mode so a
-                  // refresh keeps the user in merchant mode (mirrors the
-                  // MerchantModeToggle behavior in MerchantHub).
                   if (isMerchant) {
-                    try { await setAppMode("merchant"); } catch { /* noop */ }
+                    switchAppMode("merchant");
+                  } else {
+                    navigate("/merchant/apply");
                   }
-                  navigate(target);
                 }}
                 className="w-full flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors border-b border-border"
               >
