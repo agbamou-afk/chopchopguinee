@@ -25,7 +25,7 @@ const schema = z.object({
 });
 
 export default function CompleteProfile() {
-  const { ready, isLoggedIn, user, profile, refresh, signupIntent, requestedDriverVehicle } = useAuth();
+  const { ready, isLoggedIn, isProfileComplete, user, profile, refresh, signupIntent, requestedDriverVehicle } = useAuth();
   const navigate = useNavigate();
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -36,13 +36,17 @@ export default function CompleteProfile() {
   useEffect(() => {
     if (!ready) return;
     if (!isLoggedIn) navigate("/auth", { replace: true });
+    if (isLoggedIn && isProfileComplete) {
+      navigate("/", { replace: true });
+      return;
+    }
     if (profile) {
       setFirst(profile.first_name ?? "");
       setLast(profile.last_name ?? "");
       setPhone(extractGuineaLocal(profile.phone ?? user?.phone ?? ""));
       setEmail(profile.email ?? user?.email ?? "");
     }
-  }, [ready, isLoggedIn, profile, user, navigate]);
+  }, [ready, isLoggedIn, isProfileComplete, profile, user, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
