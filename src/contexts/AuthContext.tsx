@@ -243,6 +243,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    // Clear the in-session app-mode override so a new login starts clean.
+    try {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("cc_app_mode_override");
+      }
+    } catch { /* noop */ }
     setSession(null);
     setProfile(null);
     setRoles([]);
