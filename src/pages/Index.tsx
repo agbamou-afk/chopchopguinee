@@ -132,9 +132,27 @@ const Index = () => {
   // Routing is "resolving" until we have both roles and (if logged in) the
   // driver profile lookup. Prevents the client-home flash for drivers.
   const appModeResolving = !!user && appModeLoading;
-  const merchantTargetRequested = !!user && !adminUser && signupIntent !== "driver" && (
-    signupIntent === "merchant" || persistedMode === "merchant" || hasStoredMerchantIntent()
-  );
+  // Merchant auto-redirect runs only when:
+  //   - the user explicitly persisted app_mode = "merchant", OR
+  //   - they signed up as a merchant AND have not since persisted a mode
+  //     (persistedMode === null), OR
+  //   - a fresh merchant signup intent is still in sessionStorage.
+  //
+  // CRITICAL: an explicit persistedMode === "client" must win over
+  // signupIntent === "merchant" — otherwise a user who signed up as a
+  // merchant is permanently bounced back to /merchant/hub and can never
+  // browse as a client (this was the reported lock-in bug).
+  const merchantTargetRequested =
+    !!user &&
+    !adminUser &&
+    signupIntent !== "driver" &&
+    persistedMode !== "client" &&
+    persistedMode !== "driver" &&
+    (
+      persistedMode === "merchant" ||
+      (persistedMode === null && signupIntent === "merchant") ||
+      hasStoredMerchantIntent()
+    );
   const merchantResolving = appModeResolving || (merchantTargetRequested && merchantLoading);
   const driverResolving = !ready || (!!user && driverProfileLoading);
   const isDriver = isDriverDesignated;
@@ -159,7 +177,14 @@ const Index = () => {
     if (!ready || !user || adminUser || driverResolving || merchantResolving) return;
     if (merchantRedirectedRef.current) return;
     if (signupIntent === "driver") return;
-    const wantsMerchant = signupIntent === "merchant" || persistedMode === "merchant" || hasStoredMerchantIntent();
+    // Same gating rules as merchantTargetRequested above: an explicit
+    // client/driver app_mode preference must NOT be overridden by an old
+    // signupIntent on the auth user.
+    if (persistedMode === "client" || persistedMode === "driver") return;
+    const wantsMerchant =
+      persistedMode === "merchant" ||
+      (persistedMode === null && signupIntent === "merchant") ||
+      hasStoredMerchantIntent();
     if (!wantsMerchant) return;
     merchantRedirectedRef.current = true;
     (async () => {
