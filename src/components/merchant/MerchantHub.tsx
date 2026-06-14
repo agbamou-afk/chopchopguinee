@@ -110,7 +110,7 @@ export function MerchantHub() {
             </span>
           )}
         </div>
-        <MerchantModeToggle compact />
+        <MerchantModeToggle compact forceVisible />
       </header>
 
       {/* Always-visible mode switch banner so merchants can return to client mode at a glance */}
@@ -120,7 +120,7 @@ export function MerchantHub() {
             <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Mode actuel</p>
             <p className="text-sm font-bold text-foreground truncate">Tableau de bord marchand</p>
           </div>
-          <MerchantModeToggle compact />
+          <MerchantModeToggle compact forceVisible />
         </div>
       </div>
 
