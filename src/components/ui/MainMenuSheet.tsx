@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, UserCircle2, BellRing, HelpCircle, FileText, LogIn, User, LogOut, Car } from "lucide-react";
+import { Menu, UserCircle2, BellRing, HelpCircle, FileText, LogIn, User, LogOut, Car, Store } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { BRAND } from "@/lib/brand";
+import { useAppMode, useSwitchAppMode } from "@/hooks/useAppMode";
 
 interface MenuButtonProps {
   isDriverMode?: boolean;
@@ -37,6 +38,9 @@ export function MenuButton({
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [hasMerchantStore, setHasMerchantStore] = useState(false);
+  const { mode: appMode } = useAppMode();
+  const switchAppMode = useSwitchAppMode();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session));
@@ -45,6 +49,26 @@ export function MenuButton({
     );
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadMerchantAccess = async () => {
+      const { data } = await supabase.auth.getSession();
+      const uid = data.session?.user?.id;
+      if (!uid) {
+        if (!cancelled) setHasMerchantStore(false);
+        return;
+      }
+      const [{ data: store }, { data: restaurant }, { data: merchant }] = await Promise.all([
+        supabase.from("merchant_stores").select("id").eq("owner_user_id", uid).maybeSingle(),
+        supabase.from("food_restaurants").select("id").eq("owner_user_id", uid).maybeSingle(),
+        supabase.from("merchants").select("id").eq("owner_user_id", uid).maybeSingle(),
+      ]);
+      if (!cancelled) setHasMerchantStore(!!(store?.id || restaurant?.id || merchant?.id));
+    };
+    loadMerchantAccess();
+    return () => { cancelled = true; };
+  }, [isLoggedIn]);
 
   const go = (path: string) => {
     setOpen(false);
@@ -121,6 +145,40 @@ export function MenuButton({
                   onToggleDriverMode();
                   setOpen(false);
                 }}
+              />
+            </div>
+          )}
+
+          {hasMerchantStore && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`p-2 rounded-lg ${
+                    appMode === "merchant" ? "bg-secondary/20" : "bg-primary/10"
+                  }`}
+                >
+                  <Store
+                    className={`w-5 h-5 ${
+                      appMode === "merchant" ? "text-secondary" : "text-primary"
+                    }`}
+                  />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground text-sm">
+                    Mode Marchand
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {appMode === "merchant" ? "Activé" : "Désactivé"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={appMode === "merchant"}
+                onCheckedChange={(checked) => {
+                  switchAppMode(checked ? "merchant" : "client");
+                  setOpen(false);
+                }}
+                aria-label="Basculer le mode marchand"
               />
             </div>
           )}
