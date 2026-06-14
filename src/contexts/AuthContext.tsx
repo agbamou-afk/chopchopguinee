@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import { clearAppModeSessionOverride } from "@/hooks/useAppMode";
 
 export type AppRole =
   | "client"
@@ -243,6 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    try { clearAppModeSessionOverride(); } catch { /* noop */ }
     setSession(null);
     setProfile(null);
     setRoles([]);
