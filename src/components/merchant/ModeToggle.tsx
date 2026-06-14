@@ -22,17 +22,17 @@ export function MerchantModeToggle({ compact = false, forceVisible = false }: { 
     if (!user) return;
     (async () => {
       const [{ data: s }, { data: r }, { data: m }] = await Promise.all([
-        (supabase as any)
+        supabase
           .from("merchant_stores")
           .select("id")
           .eq("owner_user_id", user.id)
           .maybeSingle(),
-        (supabase as any)
+        supabase
           .from("food_restaurants")
           .select("id")
           .eq("owner_user_id", user.id)
           .maybeSingle(),
-        (supabase as any)
+        supabase
           .from("merchants")
           .select("id")
           .eq("owner_user_id", user.id)

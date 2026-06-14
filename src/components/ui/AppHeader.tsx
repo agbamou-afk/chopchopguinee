@@ -78,7 +78,7 @@ export function AppHeader({
     supabase.auth.getSession().then(({ data }) => {
       setIsLoggedIn(!!data.session);
       if (data.session?.user) {
-        const meta = data.session.user.user_metadata as any;
+        const meta = data.session.user.user_metadata as Record<string, string | undefined>;
         const fallback =
           meta?.first_name ||
           meta?.full_name?.split(" ")[0] ||
@@ -106,17 +106,17 @@ export function AppHeader({
         return;
       }
       const [{ data: s }, { data: r }, { data: m }] = await Promise.all([
-        (supabase as any)
+        supabase
           .from("merchant_stores")
           .select("id")
           .eq("owner_user_id", uid)
           .maybeSingle(),
-        (supabase as any)
+        supabase
           .from("food_restaurants")
           .select("id")
           .eq("owner_user_id", uid)
           .maybeSingle(),
-        (supabase as any)
+        supabase
           .from("merchants")
           .select("id")
           .eq("owner_user_id", uid)
