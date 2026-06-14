@@ -27,7 +27,7 @@ import { ONBOARDING_DONE_KEY, ONBOARDING_REPLAY_EVENT } from "@/components/onboa
 import { DRIVER_ONBOARDING_DONE_KEY, DRIVER_ONBOARDING_REPLAY_EVENT } from "@/components/onboarding/DriverOnboarding";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import { SelfDeleteAccountSheet } from "@/components/account/SelfDeleteAccountSheet";
-import { useAppMode, useSwitchAppMode } from "@/hooks/useAppMode";
+import { useSwitchAppMode } from "@/hooks/useAppMode";
 
 interface ProfileViewProps {
   isDriverMode: boolean;
@@ -54,7 +54,6 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
   const { lowDataMode, setLowDataMode } = useAppEnv();
   const navigate = useNavigate();
   const { hasAny: isMerchant, store: merchantStore } = useMerchantIdentity();
-  const { setMode: setAppMode } = useAppMode();
   const switchAppMode = useSwitchAppMode();
   const isAuthed = !!user;
   const [deletionOpen, setDeletionOpen] = useState(false);
