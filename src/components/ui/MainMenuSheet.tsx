@@ -149,6 +149,40 @@ export function MenuButton({
             </div>
           )}
 
+          {hasMerchantStore && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`p-2 rounded-lg ${
+                    appMode === "merchant" ? "bg-secondary/20" : "bg-primary/10"
+                  }`}
+                >
+                  <Store
+                    className={`w-5 h-5 ${
+                      appMode === "merchant" ? "text-secondary" : "text-primary"
+                    }`}
+                  />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground text-sm">
+                    Mode Marchand
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {appMode === "merchant" ? "Activé" : "Désactivé"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={appMode === "merchant"}
+                onCheckedChange={(checked) => {
+                  switchAppMode(checked ? "merchant" : "client");
+                  setOpen(false);
+                }}
+                aria-label="Basculer le mode marchand"
+              />
+            </div>
+          )}
+
           {items.map((item) => (
             <button
               key={item.label}
