@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
-import { Bell, Menu, Wallet, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing, MapPin, Plus, Moon, Sun } from "lucide-react";
+import { Bell, Menu, Wallet, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing, MapPin, Plus, Moon, Sun, Store } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { notifications } from "@/lib/notifications";
 import { useTheme } from "@/hooks/useTheme";
+import { useAppMode, useSwitchAppMode } from "@/hooks/useAppMode";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { BRAND } from "@/lib/brand";
 
@@ -55,6 +56,9 @@ export function AppHeader({
   const [profileName, setProfileName] = useState<string | null>(null);
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
+  const { mode: appMode } = useAppMode();
+  const switchAppMode = useSwitchAppMode();
+  const [hasMerchantStore, setHasMerchantStore] = useState(false);
 
   useEffect(() => {
     const loadProfile = async (userId: string) => {
@@ -91,6 +95,25 @@ export function AppHeader({
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user?.id;
+      if (!uid) {
+        if (!cancelled) setHasMerchantStore(false);
+        return;
+      }
+      const { data } = await (supabase as any)
+        .from("merchant_stores")
+        .select("id")
+        .eq("owner_user_id", uid)
+        .maybeSingle();
+      if (!cancelled) setHasMerchantStore(!!data?.id);
+    })();
+    return () => { cancelled = true; };
+  }, [isLoggedIn]);
 
   useEffect(() => {
     const refresh = () => setUnread(notifications.unreadCount());
@@ -209,6 +232,31 @@ export function AppHeader({
                   </div>
                   <Switch checked={isDark} onCheckedChange={toggleTheme} aria-label="Basculer le mode sombre" />
                 </div>
+
+                {/* Merchant mode toggle — only for users with a merchant store */}
+                {hasMerchantStore && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${appMode === "merchant" ? "bg-secondary/20" : "bg-primary/10"}`}>
+                        <Store className={`w-5 h-5 ${appMode === "merchant" ? "text-secondary" : "text-primary"}`} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground text-sm">Mode Marchand</p>
+                        <p className="text-xs text-muted-foreground">
+                          {appMode === "merchant" ? "Activé" : "Désactivé"}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={appMode === "merchant"}
+                      onCheckedChange={(checked) => {
+                        switchAppMode(checked ? "merchant" : "client");
+                        setMenuOpen(false);
+                      }}
+                      aria-label="Basculer le mode marchand"
+                    />
+                  </div>
+                )}
 
                 {menuItems.map((item) => (
                   <button
