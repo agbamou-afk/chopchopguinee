@@ -113,6 +113,17 @@ export function MerchantHub() {
         <MerchantModeToggle compact />
       </header>
 
+      {/* Always-visible mode switch banner so merchants can return to client mode at a glance */}
+      <div className="px-4 mt-3">
+        <div className="max-w-md mx-auto rounded-2xl border border-primary/30 bg-primary/5 px-3 py-2 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Mode actuel</p>
+            <p className="text-sm font-bold text-foreground truncate">Tableau de bord marchand</p>
+          </div>
+          <MerchantModeToggle compact />
+        </div>
+      </div>
+
       {!hasAny ? (
         <MerchantActivationPanel onActivated={refresh} />
       ) : (

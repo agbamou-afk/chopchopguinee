@@ -17,12 +17,19 @@ export function MerchantModeToggle({ compact = false }: { compact?: boolean }) {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await (supabase as any)
-        .from("merchant_stores")
-        .select("id")
-        .eq("owner_user_id", user.id)
-        .maybeSingle();
-      setHasStore(!!data?.id);
+      const [{ data: s }, { data: r }] = await Promise.all([
+        (supabase as any)
+          .from("merchant_stores")
+          .select("id")
+          .eq("owner_user_id", user.id)
+          .maybeSingle(),
+        (supabase as any)
+          .from("food_restaurants")
+          .select("id")
+          .eq("owner_user_id", user.id)
+          .maybeSingle(),
+      ]);
+      setHasStore(!!(s?.id || r?.id));
     })();
   }, [user]);
 
