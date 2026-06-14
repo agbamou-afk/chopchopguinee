@@ -105,12 +105,24 @@ export function AppHeader({
         if (!cancelled) setHasMerchantStore(false);
         return;
       }
-      const { data } = await (supabase as any)
-        .from("merchant_stores")
-        .select("id")
-        .eq("owner_user_id", uid)
-        .maybeSingle();
-      if (!cancelled) setHasMerchantStore(!!data?.id);
+      const [{ data: s }, { data: r }, { data: m }] = await Promise.all([
+        (supabase as any)
+          .from("merchant_stores")
+          .select("id")
+          .eq("owner_user_id", uid)
+          .maybeSingle(),
+        (supabase as any)
+          .from("food_restaurants")
+          .select("id")
+          .eq("owner_user_id", uid)
+          .maybeSingle(),
+        (supabase as any)
+          .from("merchants")
+          .select("id")
+          .eq("owner_user_id", uid)
+          .maybeSingle(),
+      ]);
+      if (!cancelled) setHasMerchantStore(!!(s?.id || r?.id || m?.id));
     })();
     return () => { cancelled = true; };
   }, [isLoggedIn]);
