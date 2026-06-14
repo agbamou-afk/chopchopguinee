@@ -49,8 +49,8 @@ export function MerchantHub() {
   // store or restaurant. Idempotent via wallet_ensure RPC; never
   // creates a duplicate wallet and never credits funds.
   useEffect(() => {
-    if (!user || !hasAny) return;
-    (supabase.rpc as any)("wallet_ensure", { _party_type: "merchant" }).then(() => {
+    if (!user?.id || !hasAny) return;
+    supabase.rpc("wallet_ensure", { _party_type: "merchant" }).then(() => {
       // intentional: silent best-effort bootstrap. Wallet is read
       // separately by MerchantWalletSection/MerchantSnapshot.
     });
@@ -70,9 +70,9 @@ export function MerchantHub() {
       if (restaurant) await setRestaurantOpen(restaurant.id, next);
       if (store) await setStoreOpen(store.id, next);
       await refresh();
-    } catch (e: any) {
+    } catch (e: unknown) {
       setIsOpen(!next);
-      toast({ title: "Erreur", description: e?.message ?? "Action impossible" });
+      toast({ title: "Erreur", description: e instanceof Error ? e.message : "Action impossible" });
     }
   };
 
@@ -110,7 +110,7 @@ export function MerchantHub() {
             </span>
           )}
         </div>
-        <MerchantModeToggle compact />
+        <MerchantModeToggle compact forceVisible />
       </header>
 
       {/* Always-visible mode switch banner so merchants can return to client mode at a glance */}
@@ -120,7 +120,7 @@ export function MerchantHub() {
             <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Mode actuel</p>
             <p className="text-sm font-bold text-foreground truncate">Tableau de bord marchand</p>
           </div>
-          <MerchantModeToggle compact />
+          <MerchantModeToggle compact forceVisible />
         </div>
       </div>
 
@@ -246,7 +246,7 @@ export function MerchantHub() {
                   enabled={!!(restaurant?.choppay_enabled || store?.choppay_enabled)}
                 />
                 {store && (
-                  <MerchantVerificationChecklist store={store as any} onChanged={refresh} />
+                  <MerchantVerificationChecklist store={store as Parameters<typeof MerchantVerificationChecklist>[0]["store"]} onChanged={refresh} />
                 )}
               </>
             )}

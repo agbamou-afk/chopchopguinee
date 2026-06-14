@@ -145,6 +145,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoles([]);
         return;
       }
+      // Repair older active profile rows that are missing name/phone but still
+      // have those values in auth metadata from signup. This prevents active
+      // returning users from being sent back to CompleteProfile on every login.
+      if (resolved && !profileComplete(resolved) && authUser) {
+        const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
+        const first = resolved.first_name || (meta.first_name as string) || "";
+        const last = resolved.last_name || (meta.last_name as string) || "";
+        const fullMeta = (meta.full_name as string) || `${first} ${last}`.trim();
+        const display = resolved.full_name || resolved.display_name || fullMeta || null;
+        const phone = resolved.phone || (authUser.phone as string) || (meta.phone as string) || "";
+        const candidate: ProfileRecord = {
+          ...resolved,
+          first_name: first || display?.split(" ")[0] || null,
+          last_name: last || display?.split(" ").slice(1).join(" ") || null,
+          full_name: display,
+          display_name: resolved.display_name || display,
+          phone: phone ? (phone.startsWith("+") ? phone : `+${phone}`) : resolved.phone,
+          email: resolved.email ?? authUser.email ?? null,
+        };
+        if (profileComplete(candidate)) {
+          const { data: repaired } = await supabase
+            .from("profiles")
+            .upsert(candidate, { onConflict: "user_id" })
+            .select("user_id,first_name,last_name,display_name,full_name,phone,email,avatar_url,account_status,created_at,last_profile_confirmed_at")
+            .maybeSingle();
+          if (repaired) resolved = repaired as ProfileRecord;
+        }
+      }
       // If the profile row is missing but auth metadata has name/phone,
       // auto-upsert once so returning users never see CompleteProfile again.
       if (!resolved && authUser) {
