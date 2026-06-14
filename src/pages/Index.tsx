@@ -113,7 +113,7 @@ const Index = () => {
   const { requireAuth } = useAuthGuard();
   const { ready, roles, user, signupIntent } = useAuth();
   const { profile: driverProfile, loading: driverProfileLoading } = useDriverProfile();
-  const { persistedMode, loading: appModeLoading } = useAppMode();
+  const { persistedMode, effectiveMode, loading: appModeLoading } = useAppMode();
   const { loading: merchantLoading, hasAny: hasMerchantIdentity } = useMerchantIdentity();
   const navigate = useNavigate();
   const adminUser = isAdminUser(user, roles);
@@ -142,16 +142,19 @@ const Index = () => {
   // signupIntent === "merchant" — otherwise a user who signed up as a
   // merchant is permanently bounced back to /merchant/hub and can never
   // browse as a client (this was the reported lock-in bug).
+  // Effective mode beats stale persisted mode + stale signupIntent in the
+  // same session — the moment the user switches to client we must stop
+  // redirecting to /merchant/hub, even before the backend write completes.
   const merchantTargetRequested =
     !!user &&
     !adminUser &&
     signupIntent !== "driver" &&
-    persistedMode !== "client" &&
-    persistedMode !== "driver" &&
+    effectiveMode !== "client" &&
+    effectiveMode !== "driver" &&
     (
-      persistedMode === "merchant" ||
-      (persistedMode === null && signupIntent === "merchant") ||
-      hasStoredMerchantIntent()
+      effectiveMode === "merchant" ||
+      (effectiveMode === null && signupIntent === "merchant") ||
+      (effectiveMode === null && hasStoredMerchantIntent())
     );
   const merchantResolving = appModeResolving || (merchantTargetRequested && merchantLoading);
   const driverResolving = !ready || (!!user && driverProfileLoading);
@@ -177,14 +180,13 @@ const Index = () => {
     if (!ready || !user || adminUser || driverResolving || merchantResolving) return;
     if (merchantRedirectedRef.current) return;
     if (signupIntent === "driver") return;
-    // Same gating rules as merchantTargetRequested above: an explicit
-    // client/driver app_mode preference must NOT be overridden by an old
-    // signupIntent on the auth user.
-    if (persistedMode === "client" || persistedMode === "driver") return;
+    // Explicit client/driver effective mode must NOT be overridden by an old
+    // signupIntent on the auth user or a stale merchant intent in storage.
+    if (effectiveMode === "client" || effectiveMode === "driver") return;
     const wantsMerchant =
-      persistedMode === "merchant" ||
-      (persistedMode === null && signupIntent === "merchant") ||
-      hasStoredMerchantIntent();
+      effectiveMode === "merchant" ||
+      (effectiveMode === null && signupIntent === "merchant") ||
+      (effectiveMode === null && hasStoredMerchantIntent());
     if (!wantsMerchant) return;
     merchantRedirectedRef.current = true;
     (async () => {
@@ -195,7 +197,7 @@ const Index = () => {
       clearMerchantIntent();
       navigate(route, { replace: true });
     })();
-  }, [ready, user, adminUser, driverResolving, merchantResolving, signupIntent, persistedMode, hasMerchantIdentity, navigate]);
+  }, [ready, user, adminUser, driverResolving, merchantResolving, signupIntent, effectiveMode, hasMerchantIdentity, navigate]);
 
   // Driver applicants who confirmed their email arrive at "/" with a session
   // but no driver_profile yet (the application has not been submitted). Route
