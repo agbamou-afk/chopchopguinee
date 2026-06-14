@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
-import { clearAppModeSessionOverride } from "@/hooks/useAppMode";
 
 export type AppRole =
   | "client"
@@ -244,7 +243,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-    try { clearAppModeSessionOverride(); } catch { /* noop */ }
+    // Clear the in-session app-mode override so a new login starts clean.
+    try {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("cc_app_mode_override");
+      }
+    } catch { /* noop */ }
     setSession(null);
     setProfile(null);
     setRoles([]);
