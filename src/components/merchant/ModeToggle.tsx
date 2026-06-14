@@ -5,19 +5,23 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAppMode, useSwitchAppMode } from "@/hooks/useAppMode";
 import { Button } from "@/components/ui/button";
 
-/** Toggle visible only to users that own a merchant_store. Switching does not delete
- * the store or change approval status; it just routes the user between the
- * merchant dashboard and the client home. */
-export function MerchantModeToggle({ compact = false }: { compact?: boolean }) {
+/** Toggle visible to merchant-capable users. Switching does not delete the
+ * store/restaurant/merchant account or change approval status; it only routes
+ * between the merchant dashboard and the client home. */
+export function MerchantModeToggle({ compact = false, forceVisible = false }: { compact?: boolean; forceVisible?: boolean }) {
   const { user } = useAuth();
   const { mode } = useAppMode();
   const switchAppMode = useSwitchAppMode();
   const [hasStore, setHasStore] = useState(false);
 
   useEffect(() => {
+    if (forceVisible) {
+      setHasStore(true);
+      return;
+    }
     if (!user) return;
     (async () => {
-      const [{ data: s }, { data: r }] = await Promise.all([
+      const [{ data: s }, { data: r }, { data: m }] = await Promise.all([
         (supabase as any)
           .from("merchant_stores")
           .select("id")
@@ -28,10 +32,15 @@ export function MerchantModeToggle({ compact = false }: { compact?: boolean }) {
           .select("id")
           .eq("owner_user_id", user.id)
           .maybeSingle(),
+        (supabase as any)
+          .from("merchants")
+          .select("id")
+          .eq("owner_user_id", user.id)
+          .maybeSingle(),
       ]);
-      setHasStore(!!(s?.id || r?.id));
+      setHasStore(!!(s?.id || r?.id || m?.id));
     })();
-  }, [user]);
+  }, [forceVisible, user]);
 
   if (!hasStore) return null;
 
