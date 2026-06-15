@@ -110,7 +110,6 @@ export function MerchantHub() {
             </span>
           )}
         </div>
-        <MerchantModeToggle compact forceVisible />
       </header>
 
       {/* Always-visible mode switch banner so merchants can return to client mode at a glance */}
