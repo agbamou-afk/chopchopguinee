@@ -55,11 +55,11 @@ export function AppHeader({
   const [unread, setUnread] = useState(0);
   const [profileName, setProfileName] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
+  const routerLocation = useLocation();
   const { isDark, toggleTheme } = useTheme();
   const switchAppMode = useSwitchAppMode();
   const [hasMerchantStore, setHasMerchantStore] = useState(false);
-  const isMerchantView = location.pathname.startsWith("/merchant");
+  const isMerchantView = routerLocation.pathname.startsWith("/merchant");
 
   useEffect(() => {
     const loadProfile = async (userId: string) => {
