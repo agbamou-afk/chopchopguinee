@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { formatGNF } from "@/lib/format";
 import { Bell, Menu, Wallet, User, HelpCircle, FileText, LogIn, Car, UserCircle2, LogOut, BellRing, MapPin, Plus, Moon, Sun, Store } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -15,7 +15,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { notifications } from "@/lib/notifications";
 import { useTheme } from "@/hooks/useTheme";
-import { useAppMode, useSwitchAppMode } from "@/hooks/useAppMode";
+import { useSwitchAppMode } from "@/hooks/useAppMode";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { BRAND } from "@/lib/brand";
 
@@ -55,10 +55,11 @@ export function AppHeader({
   const [unread, setUnread] = useState(0);
   const [profileName, setProfileName] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
-  const { mode: appMode } = useAppMode();
   const switchAppMode = useSwitchAppMode();
   const [hasMerchantStore, setHasMerchantStore] = useState(false);
+  const isMerchantView = location.pathname.startsWith("/merchant");
 
   useEffect(() => {
     const loadProfile = async (userId: string) => {
@@ -249,18 +250,18 @@ export function AppHeader({
                 {hasMerchantStore && (
                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${appMode === "merchant" ? "bg-secondary/20" : "bg-primary/10"}`}>
-                        <Store className={`w-5 h-5 ${appMode === "merchant" ? "text-secondary" : "text-primary"}`} />
+                      <div className={`p-2 rounded-lg ${isMerchantView ? "bg-secondary/20" : "bg-primary/10"}`}>
+                        <Store className={`w-5 h-5 ${isMerchantView ? "text-secondary" : "text-primary"}`} />
                       </div>
                       <div>
                         <p className="font-semibold text-foreground text-sm">Mode Marchand</p>
                         <p className="text-xs text-muted-foreground">
-                          {appMode === "merchant" ? "Activé" : "Désactivé"}
+                          {isMerchantView ? "Activé" : "Désactivé"}
                         </p>
                       </div>
                     </div>
                     <Switch
-                      checked={appMode === "merchant"}
+                      checked={isMerchantView}
                       onCheckedChange={(checked) => {
                         switchAppMode(checked ? "merchant" : "client");
                         setMenuOpen(false);
