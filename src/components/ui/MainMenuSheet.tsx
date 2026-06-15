@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Menu, UserCircle2, BellRing, HelpCircle, FileText, LogIn, User, LogOut, Car, Store } from "lucide-react";
 import {
   Sheet,
@@ -36,10 +36,15 @@ export function MenuButton({
   className,
 }: MenuButtonProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasMerchantStore, setHasMerchantStore] = useState(false);
   const { mode: appMode } = useAppMode();
+  // Reflect the *current view*, not the stored preference. A merchant
+  // browsing the client home is in client mode regardless of what their
+  // saved app_mode says.
+  const isMerchantView = location.pathname.startsWith("/merchant");
   const switchAppMode = useSwitchAppMode();
 
   useEffect(() => {
@@ -154,12 +159,12 @@ export function MenuButton({
               <div className="flex items-center gap-3">
                 <div
                   className={`p-2 rounded-lg ${
-                    appMode === "merchant" ? "bg-secondary/20" : "bg-primary/10"
+                    isMerchantView ? "bg-secondary/20" : "bg-primary/10"
                   }`}
                 >
                   <Store
                     className={`w-5 h-5 ${
-                      appMode === "merchant" ? "text-secondary" : "text-primary"
+                      isMerchantView ? "text-secondary" : "text-primary"
                     }`}
                   />
                 </div>
@@ -168,12 +173,12 @@ export function MenuButton({
                     Mode Marchand
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {appMode === "merchant" ? "Activé" : "Désactivé"}
+                    {isMerchantView ? "Activé" : "Désactivé"}
                   </p>
                 </div>
               </div>
               <Switch
-                checked={appMode === "merchant"}
+                checked={isMerchantView}
                 onCheckedChange={(checked) => {
                   switchAppMode(checked ? "merchant" : "client");
                   setOpen(false);
