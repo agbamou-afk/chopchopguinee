@@ -66,7 +66,7 @@ export default function MapZonesAdmin() {
   async function save() {
     if (!editing) return;
     const geo = parseBoundaryGeoJSON(editing.boundary_geojson);
-    if (!geo.ok) { toast({ title: "GeoJSON invalide", description: geo.error, variant: "destructive" }); return; }
+    if (!geo.ok) { toast({ title: "GeoJSON invalide", description: (geo as { ok: false; error: string }).error, variant: "destructive" }); return; }
     try {
       await upsertServiceZone({
         ...(editing.id ? { id: editing.id } : {}),
