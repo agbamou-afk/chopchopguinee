@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
 import { useDriverPresence } from "@/hooks/useDriverPresence";
+import { useDriverLocationSignal } from "@/hooks/useDriverLocationSignal";
 import { useIncomingOffers, type RideOffer } from "@/hooks/useIncomingOffers";
 import type { IncomingRequest } from "@/components/driver/IncomingRequestPopup";
 import { DriverActiveTrip } from "@/components/driver/DriverActiveTrip";
@@ -94,6 +95,11 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     : offers[0]?.expires_at ?? null;
 
   useDriverPresence({ enabled: isOnline, onTrip: !!activeTrip });
+  useDriverLocationSignal({
+    enabled: isOnline,
+    activeRideId: activeRideId,
+    activeMissionId: null,
+  });
 
   useEffect(() => {
     if (profile) setIsOnline(profile.presence !== "offline");

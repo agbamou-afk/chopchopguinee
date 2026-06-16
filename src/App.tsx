@@ -69,6 +69,7 @@ const MapPlacesAdmin = lazy(() => import("./pages/admin/MapPlacesAdmin"));
 const MapTariffsAdmin = lazy(() => import("./pages/admin/MapTariffsAdmin"));
 const MapDuplicatesAdmin = lazy(() => import("./pages/admin/MapDuplicatesAdmin"));
 const MapRoutingAdmin = lazy(() => import("./pages/admin/MapRoutingAdmin"));
+const DriverSignalsAdmin = lazy(() => import("./pages/admin/DriverSignalsAdmin"));
 const FieldPilotsAdmin = lazy(() => import("./pages/admin/FieldPilotsAdmin"));
 const FieldCaptain = lazy(() => import("./pages/field/FieldCaptain"));
 const FieldVisit = lazy(() => import("./pages/field/FieldVisit"));
@@ -186,6 +187,7 @@ const App = () => {
             <Route path="map/tarifs" element={<MapTariffsAdmin />} />
             <Route path="map/duplicates" element={<MapDuplicatesAdmin />} />
             <Route path="map/routing" element={<MapRoutingAdmin />} />
+            <Route path="map/driver-signals" element={<DriverSignalsAdmin />} />
             <Route path="field/pilots" element={<FieldPilotsAdmin />} />
             <Route path="flags" element={<FlagsAdmin />} />
             <Route path="settings" element={<SettingsAdmin />} />
