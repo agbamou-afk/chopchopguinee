@@ -2368,6 +2368,230 @@ export type Database = {
         }
         Relationships: []
       }
+      map_driver_reports: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          place_id: string | null
+          report_type: string
+          reporter_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          place_id?: string | null
+          report_type: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          place_id?: string | null
+          report_type?: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "map_driver_reports_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "map_places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "map_driver_reports_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "map_service_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      map_fare_troncons: {
+        Row: {
+          collected_at: string
+          collected_by: string | null
+          confidence_score: number
+          created_at: string
+          day_price_gnf: number | null
+          departure_name: string
+          departure_place_id: string | null
+          destination_name: string
+          destination_place_id: string | null
+          id: string
+          is_active: boolean
+          is_bidirectional: boolean
+          night_price_gnf: number | null
+          notes: string | null
+          raw_departure_name: string
+          raw_destination_name: string
+          source: string | null
+          source_type: string
+          updated_at: string
+          verification_status: Database["public"]["Enums"]["map_verification_status"]
+        }
+        Insert: {
+          collected_at?: string
+          collected_by?: string | null
+          confidence_score?: number
+          created_at?: string
+          day_price_gnf?: number | null
+          departure_name: string
+          departure_place_id?: string | null
+          destination_name: string
+          destination_place_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_bidirectional?: boolean
+          night_price_gnf?: number | null
+          notes?: string | null
+          raw_departure_name: string
+          raw_destination_name: string
+          source?: string | null
+          source_type?: string
+          updated_at?: string
+          verification_status?: Database["public"]["Enums"]["map_verification_status"]
+        }
+        Update: {
+          collected_at?: string
+          collected_by?: string | null
+          confidence_score?: number
+          created_at?: string
+          day_price_gnf?: number | null
+          departure_name?: string
+          departure_place_id?: string | null
+          destination_name?: string
+          destination_place_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_bidirectional?: boolean
+          night_price_gnf?: number | null
+          notes?: string | null
+          raw_departure_name?: string
+          raw_destination_name?: string
+          source?: string | null
+          source_type?: string
+          updated_at?: string
+          verification_status?: Database["public"]["Enums"]["map_verification_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "map_fare_troncons_departure_place_id_fkey"
+            columns: ["departure_place_id"]
+            isOneToOne: false
+            referencedRelation: "map_places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "map_fare_troncons_destination_place_id_fkey"
+            columns: ["destination_place_id"]
+            isOneToOne: false
+            referencedRelation: "map_places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      map_places: {
+        Row: {
+          active: boolean
+          aliases: string[]
+          category: string | null
+          commune: string | null
+          confidence_score: number
+          created_at: string
+          created_by: string | null
+          duplicate_of: string | null
+          entrance_note: string | null
+          id: string
+          landmark_note: string | null
+          last_reported_at: string | null
+          lat: number | null
+          lng: number | null
+          name: string
+          neighborhood: string | null
+          operational_note: string | null
+          pickup_note: string | null
+          source: string | null
+          updated_at: string
+          verification_status: Database["public"]["Enums"]["map_verification_status"]
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          aliases?: string[]
+          category?: string | null
+          commune?: string | null
+          confidence_score?: number
+          created_at?: string
+          created_by?: string | null
+          duplicate_of?: string | null
+          entrance_note?: string | null
+          id?: string
+          landmark_note?: string | null
+          last_reported_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          name: string
+          neighborhood?: string | null
+          operational_note?: string | null
+          pickup_note?: string | null
+          source?: string | null
+          updated_at?: string
+          verification_status?: Database["public"]["Enums"]["map_verification_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          aliases?: string[]
+          category?: string | null
+          commune?: string | null
+          confidence_score?: number
+          created_at?: string
+          created_by?: string | null
+          duplicate_of?: string | null
+          entrance_note?: string | null
+          id?: string
+          landmark_note?: string | null
+          last_reported_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          neighborhood?: string | null
+          operational_note?: string | null
+          pickup_note?: string | null
+          source?: string | null
+          updated_at?: string
+          verification_status?: Database["public"]["Enums"]["map_verification_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "map_places_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "map_places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       map_provider_settings: {
         Row: {
           default_lat: number
@@ -2398,6 +2622,81 @@ export type Database = {
           routing_provider?: string
           style_url?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      map_service_zones: {
+        Row: {
+          boundary_geojson: Json | null
+          center_lat: number | null
+          center_lng: number | null
+          commune: string | null
+          confidence_score: number
+          coverage_notes: string | null
+          created_at: string
+          created_by: string | null
+          district: string | null
+          driver_notes: string | null
+          id: string
+          merchant_notes: string | null
+          name: string
+          ops_notes: string | null
+          priority: string
+          radius_meters: number | null
+          services_enabled: Json
+          status: string
+          updated_at: string
+          verification_status: Database["public"]["Enums"]["map_verification_status"]
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          boundary_geojson?: Json | null
+          center_lat?: number | null
+          center_lng?: number | null
+          commune?: string | null
+          confidence_score?: number
+          coverage_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          district?: string | null
+          driver_notes?: string | null
+          id?: string
+          merchant_notes?: string | null
+          name: string
+          ops_notes?: string | null
+          priority?: string
+          radius_meters?: number | null
+          services_enabled?: Json
+          status?: string
+          updated_at?: string
+          verification_status?: Database["public"]["Enums"]["map_verification_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          boundary_geojson?: Json | null
+          center_lat?: number | null
+          center_lng?: number | null
+          commune?: string | null
+          confidence_score?: number
+          coverage_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          district?: string | null
+          driver_notes?: string | null
+          id?: string
+          merchant_notes?: string | null
+          name?: string
+          ops_notes?: string | null
+          priority?: string
+          radius_meters?: number | null
+          services_enabled?: Json
+          status?: string
+          updated_at?: string
+          verification_status?: Database["public"]["Enums"]["map_verification_status"]
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
@@ -6199,6 +6498,12 @@ export type Database = {
         }
         Returns: string
       }
+      map_default_confidence: {
+        Args: {
+          _status: Database["public"]["Enums"]["map_verification_status"]
+        }
+        Returns: number
+      }
       marche_complete_offer: {
         Args: { p_offer_id: string; p_reason?: string }
         Returns: Json
@@ -7684,6 +7989,15 @@ export type Database = {
         | "declined"
       listing_kind: "merchant" | "community" | "service"
       listing_status: "active" | "sold" | "paused" | "removed"
+      map_verification_status:
+        | "unverified"
+        | "submitted"
+        | "field_checked"
+        | "admin_verified"
+        | "trusted"
+        | "needs_review"
+        | "duplicate"
+        | "closed"
       message_channel: "whatsapp" | "sms" | "inapp" | "in_app"
       message_kind: "text" | "image" | "location" | "quick_reply"
       message_status:
@@ -8036,6 +8350,16 @@ export const Constants = {
       ],
       listing_kind: ["merchant", "community", "service"],
       listing_status: ["active", "sold", "paused", "removed"],
+      map_verification_status: [
+        "unverified",
+        "submitted",
+        "field_checked",
+        "admin_verified",
+        "trusted",
+        "needs_review",
+        "duplicate",
+        "closed",
+      ],
       message_channel: ["whatsapp", "sms", "inapp", "in_app"],
       message_kind: ["text", "image", "location", "quick_reply"],
       message_status: [
