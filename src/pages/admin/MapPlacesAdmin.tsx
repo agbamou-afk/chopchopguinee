@@ -6,8 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { listPlaces, updatePlaceVerification, VERIFICATION_LABEL, type MapVerificationStatus } from "@/lib/maps/canonical";
-import { Loader2, ShieldCheck, AlertTriangle } from "lucide-react";
+import {
+  listPlaces, updatePlaceVerification, VERIFICATION_LABEL,
+  listMerchantLocationSubmissions, adminSetMerchantLocationStatus,
+  MERCHANT_LOC_LABEL,
+  type MapVerificationStatus, type MerchantLocationStatus,
+} from "@/lib/maps/canonical";
+import { Loader2, ShieldCheck, AlertTriangle, Store as StoreIcon } from "lucide-react";
 
 const VERIFICATIONS: MapVerificationStatus[] = [
   "unverified","submitted","field_checked","admin_verified","trusted","needs_review","duplicate","closed",
@@ -26,6 +31,9 @@ export default function MapPlacesAdmin() {
   const [q, setQ] = useState("");
   const [filterVerif, setFilterVerif] = useState<string>("all");
   const [trustedOnly, setTrustedOnly] = useState(false);
+  const [tab, setTab] = useState<"all" | "merchants">("all");
+  const [subs, setSubs] = useState<any[]>([]);
+  const [subsLoading, setSubsLoading] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -33,7 +41,13 @@ export default function MapPlacesAdmin() {
     catch (e: any) { toast({ title: "Erreur", description: e.message, variant: "destructive" }); }
     finally { setLoading(false); }
   }
-  useEffect(() => { refresh(); }, []);
+  async function refreshSubs() {
+    setSubsLoading(true);
+    try { setSubs(await listMerchantLocationSubmissions()); }
+    catch (e: any) { toast({ title: "Erreur", description: e.message, variant: "destructive" }); }
+    finally { setSubsLoading(false); }
+  }
+  useEffect(() => { refresh(); refreshSubs(); }, []);
 
   const filtered = useMemo(() => places.filter((p) => {
     if (filterVerif !== "all" && p.verification_status !== filterVerif) return false;
@@ -51,8 +65,81 @@ export default function MapPlacesAdmin() {
     catch (e: any) { toast({ title: "Erreur", description: e.message, variant: "destructive" }); }
   }
 
+  async function setMerchantStatus(storeId: string, status: Exclude<MerchantLocationStatus, "none">) {
+    try {
+      await adminSetMerchantLocationStatus(storeId, status);
+      toast({ title: "Soumission mise à jour" });
+      refreshSubs(); refresh();
+    } catch (e: any) { toast({ title: "Erreur", description: e.message, variant: "destructive" }); }
+  }
+
   return (
     <ModulePage module="zones" title="Carte — Lieux" subtitle="map_places · intelligence des lieux & vérification">
+      <div className="flex gap-2">
+        <Button size="sm" variant={tab === "all" ? "default" : "outline"} onClick={() => setTab("all")}>Tous les lieux</Button>
+        <Button size="sm" variant={tab === "merchants" ? "default" : "outline"} onClick={() => setTab("merchants")}>
+          <StoreIcon className="w-3.5 h-3.5 mr-1" /> Soumissions marchands
+        </Button>
+      </div>
+
+      {tab === "merchants" ? (
+        subsLoading ? (
+          <Card className="p-6 text-center text-sm text-muted-foreground"><Loader2 className="w-4 h-4 inline animate-spin mr-2" /> Chargement…</Card>
+        ) : subs.length === 0 ? (
+          <Card className="p-6 text-center text-sm text-muted-foreground border-dashed">Aucune soumission marchand.</Card>
+        ) : (
+          <div className="grid gap-2 md:grid-cols-2">
+            {subs.map((s) => {
+              const st = (s.location_submission_status ?? "submitted") as MerchantLocationStatus;
+              return (
+                <Card key={s.id} className="p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{s.name}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {[s.commune, s.district].filter(Boolean).join(" · ") || "—"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {Number.isFinite(s.latitude) && Number.isFinite(s.longitude)
+                          ? `${(s.latitude as number).toFixed(5)}, ${(s.longitude as number).toFixed(5)}`
+                          : "—"}
+                      </p>
+                      {s.landmark_note && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Repère : {s.landmark_note}</p>
+                      )}
+                      {s.location_submitted_at && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Soumis le {new Date(s.location_submitted_at).toLocaleString("fr-FR")}
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant="outline" className={`text-[10px] ${tone(
+                      st === "trusted" || st === "admin_verified" ? "trusted"
+                      : st === "needs_review" ? "needs_review"
+                      : st === "rejected" ? "closed" : "submitted",
+                    )}`}>
+                      <ShieldCheck className="w-3 h-3 mr-1" />{MERCHANT_LOC_LABEL[st]}
+                    </Badge>
+                  </div>
+                  {!s.map_place_id && (
+                    <Badge variant="outline" className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                      <AlertTriangle className="w-3 h-3 mr-1" /> Lieu non lié
+                    </Badge>
+                  )}
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {(["admin_verified","trusted","needs_review","rejected"] as Exclude<MerchantLocationStatus,"none">[]).map((v) => (
+                      <Button key={v} size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setMerchantStatus(s.id, v)}>
+                        {MERCHANT_LOC_LABEL[v]}
+                      </Button>
+                    ))}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )
+      ) : (
+      <>
       <div className="flex flex-wrap gap-2 items-center">
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Recherche…" className="w-56 h-8 text-xs" />
         <Select value={filterVerif} onValueChange={setFilterVerif}>
@@ -102,6 +189,8 @@ export default function MapPlacesAdmin() {
             </Card>
           ))}
         </div>
+      )}
+      </>
       )}
     </ModulePage>
   );
