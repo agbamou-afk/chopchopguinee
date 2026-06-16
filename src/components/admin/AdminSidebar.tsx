@@ -74,6 +74,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
       { title: "Zones de service", url: "/admin/map/zones", icon: Map, module: "zones" },
       { title: "Lieux", url: "/admin/map/places", icon: Compass, module: "zones" },
       { title: "Tarifs moto", url: "/admin/map/tarifs", icon: Route, module: "zones" },
+      { title: "Doublons lieux", url: "/admin/map/duplicates", icon: Compass, module: "zones" },
     ],
   },
 ];
