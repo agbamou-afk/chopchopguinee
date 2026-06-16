@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Activity, Users, Bike, Store, Wallet, Coins, Tag,
   ClipboardList, UtensilsCrossed, ShoppingBag, LifeBuoy, ShieldAlert, Smartphone,
   MessageSquare, Megaphone, BarChart3, MapPin, ToggleLeft, Settings,
-  UserCog, ScrollText, Sparkles, Scale, Radar, Users2,
+  UserCog, ScrollText, Sparkles, Scale, Radar, Users2, Map, Compass, Route,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -66,6 +66,14 @@ const GROUPS: { label: string; items: Item[] }[] = [
       { title: "Paramètres", url: "/admin/settings", icon: Settings, module: "settings" },
       { title: "Admins", url: "/admin/admins", icon: UserCog, module: "admins" },
       { title: "Audit logs", url: "/admin/audit", icon: ScrollText, module: "audit" },
+    ],
+  },
+  {
+    label: "Carte",
+    items: [
+      { title: "Zones de service", url: "/admin/map/zones", icon: Map, module: "zones" },
+      { title: "Lieux", url: "/admin/map/places", icon: Compass, module: "zones" },
+      { title: "Tarifs moto", url: "/admin/map/tarifs", icon: Route, module: "zones" },
     ],
   },
 ];
