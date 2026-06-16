@@ -102,6 +102,72 @@ export async function updatePlaceVerification(
   if (error) throw error;
 }
 
+/* --------------------------- merchant submissions --------------------------- */
+
+export type MerchantLocationStatus =
+  | "none" | "submitted" | "needs_review" | "admin_verified" | "trusted" | "rejected";
+
+export const MERCHANT_LOC_LABEL: Record<MerchantLocationStatus, string> = {
+  none: "Aucune position",
+  submitted: "En attente de validation",
+  needs_review: "À corriger",
+  admin_verified: "Vérifiée",
+  trusted: "Validée (confiance)",
+  rejected: "Refusée",
+};
+
+export async function merchantSubmitLocation(args: {
+  storeId: string;
+  lat: number;
+  lng: number;
+  addressText?: string | null;
+  landmarkNote?: string | null;
+  entranceNote?: string | null;
+  pickupNote?: string | null;
+  operationalNote?: string | null;
+}): Promise<string> {
+  const { data, error } = await (supabase as any).rpc("merchant_submit_location", {
+    p_store_id: args.storeId,
+    p_lat: args.lat,
+    p_lng: args.lng,
+    p_address_text: args.addressText ?? null,
+    p_landmark_note: args.landmarkNote ?? null,
+    p_entrance_note: args.entranceNote ?? null,
+    p_pickup_note: args.pickupNote ?? null,
+    p_operational_note: args.operationalNote ?? null,
+  });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function adminSetMerchantLocationStatus(
+  storeId: string,
+  status: Exclude<MerchantLocationStatus, "none">,
+  note?: string | null,
+): Promise<void> {
+  const { error } = await (supabase as any).rpc("admin_set_merchant_location_status", {
+    p_store_id: storeId,
+    p_status: status,
+    p_note: note ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function listMerchantLocationSubmissions() {
+  const { data, error } = await (supabase as any)
+    .from("merchant_stores")
+    .select(
+      "id, name, slug, owner_user_id, district, commune, latitude, longitude, " +
+      "map_place_id, location_submission_status, location_submitted_at, " +
+      "location_verified_at, location_notes, landmark_note",
+    )
+    .neq("location_submission_status", "none")
+    .order("location_submitted_at", { ascending: false })
+    .limit(300);
+  if (error) throw error;
+  return (data ?? []) as any[];
+}
+
 /* ------------------------------ tarif tronçons ----------------------------- */
 
 export async function listFareTroncons() {
