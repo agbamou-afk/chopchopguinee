@@ -1,4 +1,4 @@
-import { haversineMeters, type LatLng } from "./geo";
+import { haversineMeters, decodePolyline, type LatLng } from "./geo";
 import { RoutingService } from "./RoutingService";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -83,9 +83,6 @@ export function fallbackEstimate(
 function polylineToGeoJSON(encoded: string): GeoJSON.LineString | null {
   if (!encoded) return null;
   try {
-    // Lazy import to keep tree-shaking happy.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { decodePolyline } = require("./geo") as typeof import("./geo");
     const pts = decodePolyline(encoded);
     if (pts.length < 2) return null;
     return { type: "LineString", coordinates: pts.map(p => [p.lng, p.lat]) };
