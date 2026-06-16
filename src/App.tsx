@@ -68,6 +68,9 @@ const MapZonesAdmin = lazy(() => import("./pages/admin/MapZonesAdmin"));
 const MapPlacesAdmin = lazy(() => import("./pages/admin/MapPlacesAdmin"));
 const MapTariffsAdmin = lazy(() => import("./pages/admin/MapTariffsAdmin"));
 const MapDuplicatesAdmin = lazy(() => import("./pages/admin/MapDuplicatesAdmin"));
+const FieldPilotsAdmin = lazy(() => import("./pages/admin/FieldPilotsAdmin"));
+const FieldCaptain = lazy(() => import("./pages/field/FieldCaptain"));
+const FieldVisit = lazy(() => import("./pages/field/FieldVisit"));
 const FlagsAdmin = lazy(() => import("./pages/admin/FlagsAdmin"));
 const SettingsAdmin = lazy(() => import("./pages/admin/SettingsAdmin"));
 const AdminsAdmin = lazy(() => import("./pages/admin/AdminsAdmin"));
@@ -181,6 +184,7 @@ const App = () => {
             <Route path="map/places" element={<MapPlacesAdmin />} />
             <Route path="map/tarifs" element={<MapTariffsAdmin />} />
             <Route path="map/duplicates" element={<MapDuplicatesAdmin />} />
+            <Route path="field/pilots" element={<FieldPilotsAdmin />} />
             <Route path="flags" element={<FlagsAdmin />} />
             <Route path="settings" element={<SettingsAdmin />} />
             <Route path="admins" element={<AdminsAdmin />} />
@@ -212,6 +216,8 @@ const App = () => {
           <Route path="/devenir-marchand" element={<Suspense fallback={null}><MerchantApply /></Suspense>} />
           <Route path="/marche/boutique/:slug" element={<Suspense fallback={null}><PublicStorefront /></Suspense>} />
           <Route path="/leader" element={<Suspense fallback={null}><LeaderPortal /></Suspense>} />
+          <Route path="/field/captain" element={<Suspense fallback={null}><FieldCaptain /></Suspense>} />
+          <Route path="/field/visit" element={<Suspense fallback={null}><FieldVisit /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
