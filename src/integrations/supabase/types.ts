@@ -1186,6 +1186,60 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_location_signals: {
+        Row: {
+          accuracy_meters: number | null
+          active_mission_id: string | null
+          active_ride_id: string | null
+          capabilities: Json | null
+          created_at: string
+          driver_user_id: string
+          heading: number | null
+          last_ping_at: string
+          lat: number
+          lng: number
+          service_zone_id: string | null
+          source: string
+          speed_mps: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accuracy_meters?: number | null
+          active_mission_id?: string | null
+          active_ride_id?: string | null
+          capabilities?: Json | null
+          created_at?: string
+          driver_user_id: string
+          heading?: number | null
+          last_ping_at?: string
+          lat: number
+          lng: number
+          service_zone_id?: string | null
+          source?: string
+          speed_mps?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accuracy_meters?: number | null
+          active_mission_id?: string | null
+          active_ride_id?: string | null
+          capabilities?: Json | null
+          created_at?: string
+          driver_user_id?: string
+          heading?: number | null
+          last_ping_at?: string
+          lat?: number
+          lng?: number
+          service_zone_id?: string | null
+          source?: string
+          speed_mps?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       driver_locations: {
         Row: {
           heading: number | null
@@ -6396,6 +6450,7 @@ export type Database = {
         Args: { _capability: string; _user_id: string }
         Returns: boolean
       }
+      driver_mark_offline_signal: { Args: never; Returns: undefined }
       driver_offer_accept: {
         Args: { p_offer_id: string }
         Returns: {
@@ -6510,6 +6565,41 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "driver_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      driver_update_location_signal: {
+        Args: {
+          p_accuracy_meters?: number
+          p_active_mission_id?: string
+          p_active_ride_id?: string
+          p_heading?: number
+          p_lat: number
+          p_lng: number
+          p_source?: string
+          p_speed_mps?: number
+        }
+        Returns: {
+          accuracy_meters: number | null
+          active_mission_id: string | null
+          active_ride_id: string | null
+          capabilities: Json | null
+          created_at: string
+          driver_user_id: string
+          heading: number | null
+          last_ping_at: string
+          lat: number
+          lng: number
+          service_zone_id: string | null
+          source: string
+          speed_mps: number | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_location_signals"
           isOneToOne: true
           isSetofReturn: false
         }
