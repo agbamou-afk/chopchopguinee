@@ -187,6 +187,7 @@ const App = () => {
             <Route path="map/tarifs" element={<MapTariffsAdmin />} />
             <Route path="map/duplicates" element={<MapDuplicatesAdmin />} />
             <Route path="map/routing" element={<MapRoutingAdmin />} />
+            <Route path="map/driver-signals" element={<DriverSignalsAdmin />} />
             <Route path="field/pilots" element={<FieldPilotsAdmin />} />
             <Route path="flags" element={<FlagsAdmin />} />
             <Route path="settings" element={<SettingsAdmin />} />
