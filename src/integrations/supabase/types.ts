@@ -3084,8 +3084,14 @@ export type Database = {
           location_accuracy_m: number | null
           location_capture_method: string | null
           location_confirmed_at: string | null
+          location_notes: string | null
           location_source: string | null
+          location_submission_status: string
+          location_submitted_at: string | null
+          location_verified_at: string | null
+          location_verified_by: string | null
           longitude: number | null
+          map_place_id: string | null
           market_id: string | null
           market_name: string | null
           member_since: string
@@ -3143,8 +3149,14 @@ export type Database = {
           location_accuracy_m?: number | null
           location_capture_method?: string | null
           location_confirmed_at?: string | null
+          location_notes?: string | null
           location_source?: string | null
+          location_submission_status?: string
+          location_submitted_at?: string | null
+          location_verified_at?: string | null
+          location_verified_by?: string | null
           longitude?: number | null
+          map_place_id?: string | null
           market_id?: string | null
           market_name?: string | null
           member_since?: string
@@ -3202,8 +3214,14 @@ export type Database = {
           location_accuracy_m?: number | null
           location_capture_method?: string | null
           location_confirmed_at?: string | null
+          location_notes?: string | null
           location_source?: string | null
+          location_submission_status?: string
+          location_submitted_at?: string | null
+          location_verified_at?: string | null
+          location_verified_by?: string | null
           longitude?: number | null
+          map_place_id?: string | null
           market_id?: string | null
           market_name?: string | null
           member_since?: string
@@ -3237,7 +3255,15 @@ export type Database = {
           wants_wallet_agent?: boolean
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "merchant_stores_map_place_id_fkey"
+            columns: ["map_place_id"]
+            isOneToOne: false
+            referencedRelation: "map_places"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       merchants: {
         Row: {
@@ -5236,8 +5262,14 @@ export type Database = {
           location_accuracy_m: number | null
           location_capture_method: string | null
           location_confirmed_at: string | null
+          location_notes: string | null
           location_source: string | null
+          location_submission_status: string
+          location_submitted_at: string | null
+          location_verified_at: string | null
+          location_verified_by: string | null
           longitude: number | null
+          map_place_id: string | null
           market_id: string | null
           market_name: string | null
           member_since: string
@@ -5304,8 +5336,14 @@ export type Database = {
           location_accuracy_m: number | null
           location_capture_method: string | null
           location_confirmed_at: string | null
+          location_notes: string | null
           location_source: string | null
+          location_submission_status: string
+          location_submitted_at: string | null
+          location_verified_at: string | null
+          location_verified_by: string | null
           longitude: number | null
+          map_place_id: string | null
           market_id: string | null
           market_name: string | null
           member_since: string
@@ -5539,6 +5577,10 @@ export type Database = {
       }
       admin_review_referral_risk: {
         Args: { p_action: string; p_reason?: string; p_referral: string }
+        Returns: undefined
+      }
+      admin_set_merchant_location_status: {
+        Args: { p_note?: string; p_status: string; p_store_id: string }
         Returns: undefined
       }
       admin_set_statement_status: {
@@ -6618,6 +6660,19 @@ export type Database = {
           p_offer_id: string
         }
         Returns: undefined
+      }
+      merchant_submit_location: {
+        Args: {
+          p_address_text?: string
+          p_entrance_note?: string
+          p_landmark_note?: string
+          p_lat: number
+          p_lng: number
+          p_operational_note?: string
+          p_pickup_note?: string
+          p_store_id: string
+        }
+        Returns: string
       }
       mission_claim: {
         Args: { _mission_id: string }

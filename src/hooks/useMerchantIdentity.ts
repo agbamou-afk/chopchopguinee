@@ -34,6 +34,15 @@ export interface MerchantStore {
   service_agent_requested?: boolean;
   service_agent_status?: "not_requested" | "pending" | "approved" | "rejected" | "disabled";
   service_agent_notes?: string | null;
+  // Phase 2B — Merchant location submission
+  latitude?: number | null;
+  longitude?: number | null;
+  map_place_id?: string | null;
+  location_submission_status?:
+    | "none" | "submitted" | "needs_review" | "admin_verified" | "trusted" | "rejected" | null;
+  location_submitted_at?: string | null;
+  location_verified_at?: string | null;
+  location_notes?: string | null;
 }
 
 export interface MerchantIdentity {
