@@ -37,7 +37,6 @@ export interface MerchantStore {
   // Phase 2B — Merchant location submission
   latitude?: number | null;
   longitude?: number | null;
-  landmark_note?: string | null;
   map_place_id?: string | null;
   location_submission_status?:
     | "none" | "submitted" | "needs_review" | "admin_verified" | "trusted" | "rejected" | null;
