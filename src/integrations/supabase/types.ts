@@ -1730,6 +1730,271 @@ export type Database = {
         }
         Relationships: []
       }
+      field_assignments: {
+        Row: {
+          assigned_zone_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          pilot_id: string
+          role: Database["public"]["Enums"]["field_assignment_role"]
+          status: Database["public"]["Enums"]["field_assignment_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_zone_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pilot_id: string
+          role?: Database["public"]["Enums"]["field_assignment_role"]
+          status?: Database["public"]["Enums"]["field_assignment_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_zone_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pilot_id?: string
+          role?: Database["public"]["Enums"]["field_assignment_role"]
+          status?: Database["public"]["Enums"]["field_assignment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_assignments_assigned_zone_id_fkey"
+            columns: ["assigned_zone_id"]
+            isOneToOne: false
+            referencedRelation: "map_service_zones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_assignments_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "field_pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_daily_reports: {
+        Row: {
+          created_at: string
+          id: string
+          merchants_converted_count: number
+          merchants_interested_count: number
+          merchants_submitted_count: number
+          merchants_visited_count: number
+          notes: string | null
+          pilot_id: string
+          report_date: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["field_report_status"]
+          submitted_at: string
+          transport_morning_paid: boolean
+          transport_return_paid: boolean
+          updated_at: string
+          user_id: string
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchants_converted_count?: number
+          merchants_interested_count?: number
+          merchants_submitted_count?: number
+          merchants_visited_count?: number
+          notes?: string | null
+          pilot_id: string
+          report_date?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["field_report_status"]
+          submitted_at?: string
+          transport_morning_paid?: boolean
+          transport_return_paid?: boolean
+          updated_at?: string
+          user_id: string
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchants_converted_count?: number
+          merchants_interested_count?: number
+          merchants_submitted_count?: number
+          merchants_visited_count?: number
+          notes?: string | null
+          pilot_id?: string
+          report_date?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["field_report_status"]
+          submitted_at?: string
+          transport_morning_paid?: boolean
+          transport_return_paid?: boolean
+          updated_at?: string
+          user_id?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_daily_reports_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "field_pilots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_daily_reports_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "map_service_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_merchant_visits: {
+        Row: {
+          address_text: string | null
+          assigned_user_id: string
+          created_at: string
+          entrance_note: string | null
+          field_captain_id: string | null
+          id: string
+          interest_level: Database["public"]["Enums"]["field_visit_interest"]
+          landmark_note: string | null
+          lat: number | null
+          linked_map_place_id: string | null
+          linked_merchant_store_id: string | null
+          lng: number | null
+          map_service_zone_id: string | null
+          merchant_category: string | null
+          merchant_name: string
+          merchant_phone: string | null
+          notes: string | null
+          photo_url: string | null
+          pickup_note: string | null
+          pilot_id: string
+          updated_at: string
+          visit_status: Database["public"]["Enums"]["field_visit_status"]
+        }
+        Insert: {
+          address_text?: string | null
+          assigned_user_id: string
+          created_at?: string
+          entrance_note?: string | null
+          field_captain_id?: string | null
+          id?: string
+          interest_level?: Database["public"]["Enums"]["field_visit_interest"]
+          landmark_note?: string | null
+          lat?: number | null
+          linked_map_place_id?: string | null
+          linked_merchant_store_id?: string | null
+          lng?: number | null
+          map_service_zone_id?: string | null
+          merchant_category?: string | null
+          merchant_name: string
+          merchant_phone?: string | null
+          notes?: string | null
+          photo_url?: string | null
+          pickup_note?: string | null
+          pilot_id: string
+          updated_at?: string
+          visit_status?: Database["public"]["Enums"]["field_visit_status"]
+        }
+        Update: {
+          address_text?: string | null
+          assigned_user_id?: string
+          created_at?: string
+          entrance_note?: string | null
+          field_captain_id?: string | null
+          id?: string
+          interest_level?: Database["public"]["Enums"]["field_visit_interest"]
+          landmark_note?: string | null
+          lat?: number | null
+          linked_map_place_id?: string | null
+          linked_merchant_store_id?: string | null
+          lng?: number | null
+          map_service_zone_id?: string | null
+          merchant_category?: string | null
+          merchant_name?: string
+          merchant_phone?: string | null
+          notes?: string | null
+          photo_url?: string | null
+          pickup_note?: string | null
+          pilot_id?: string
+          updated_at?: string
+          visit_status?: Database["public"]["Enums"]["field_visit_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_merchant_visits_linked_map_place_id_fkey"
+            columns: ["linked_map_place_id"]
+            isOneToOne: false
+            referencedRelation: "map_places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_merchant_visits_map_service_zone_id_fkey"
+            columns: ["map_service_zone_id"]
+            isOneToOne: false
+            referencedRelation: "map_service_zones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_merchant_visits_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "field_pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_pilots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["field_pilot_status"]
+          target_merchant_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["field_pilot_status"]
+          target_merchant_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["field_pilot_status"]
+          target_merchant_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       food_menu_items: {
         Row: {
           category: string | null
@@ -6220,6 +6485,24 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      field_submit_visit: {
+        Args: {
+          p_address_text?: string
+          p_entrance_note?: string
+          p_interest_level?: Database["public"]["Enums"]["field_visit_interest"]
+          p_landmark_note?: string
+          p_lat?: number
+          p_lng?: number
+          p_merchant_category?: string
+          p_merchant_name: string
+          p_merchant_phone?: string
+          p_notes?: string
+          p_pickup_note?: string
+          p_pilot_id: string
+          p_zone_id?: string
+        }
+        Returns: string
+      }
       find_user_by_phone: {
         Args: { p_phone: string }
         Returns: {
@@ -6363,6 +6646,14 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_assigned_to_pilot: {
+        Args: { _pilot: string; _user: string }
+        Returns: boolean
+      }
+      is_field_captain_of_pilot: {
+        Args: { _pilot: string; _user: string }
+        Returns: boolean
+      }
       is_god_admin: { Args: { _user_id: string }; Returns: boolean }
       is_user_banned: { Args: { _user: string }; Returns: boolean }
       is_user_frozen: { Args: { _user: string }; Returns: boolean }
@@ -8101,6 +8392,8 @@ export type Database = {
         | "finance_admin"
         | "god_admin"
         | "onboarding_specialist"
+        | "field_captain"
+        | "field_agent"
       approval_status: "pending" | "approved" | "rejected" | "cancelled"
       driver_application_decision:
         | "pending"
@@ -8110,6 +8403,32 @@ export type Database = {
       driver_presence: "offline" | "online" | "on_trip"
       driver_status: "pending" | "approved" | "rejected" | "suspended"
       driver_vehicle_type: "moto" | "toktok" | "livraison" | "auto"
+      field_assignment_role: "field_captain" | "field_agent" | "verifier"
+      field_assignment_status: "active" | "paused" | "completed" | "removed"
+      field_pilot_status:
+        | "planned"
+        | "active"
+        | "paused"
+        | "completed"
+        | "cancelled"
+      field_report_status:
+        | "submitted"
+        | "reviewed"
+        | "needs_correction"
+        | "approved"
+      field_visit_interest:
+        | "cold"
+        | "interested"
+        | "signed_up"
+        | "needs_follow_up"
+        | "rejected"
+      field_visit_status:
+        | "visited"
+        | "submitted"
+        | "duplicate_possible"
+        | "needs_review"
+        | "converted"
+        | "rejected"
       food_fulfillment: "pickup" | "delivery"
       food_order_state:
         | "placed"
@@ -8455,6 +8774,8 @@ export const Constants = {
         "finance_admin",
         "god_admin",
         "onboarding_specialist",
+        "field_captain",
+        "field_agent",
       ],
       approval_status: ["pending", "approved", "rejected", "cancelled"],
       driver_application_decision: [
@@ -8466,6 +8787,36 @@ export const Constants = {
       driver_presence: ["offline", "online", "on_trip"],
       driver_status: ["pending", "approved", "rejected", "suspended"],
       driver_vehicle_type: ["moto", "toktok", "livraison", "auto"],
+      field_assignment_role: ["field_captain", "field_agent", "verifier"],
+      field_assignment_status: ["active", "paused", "completed", "removed"],
+      field_pilot_status: [
+        "planned",
+        "active",
+        "paused",
+        "completed",
+        "cancelled",
+      ],
+      field_report_status: [
+        "submitted",
+        "reviewed",
+        "needs_correction",
+        "approved",
+      ],
+      field_visit_interest: [
+        "cold",
+        "interested",
+        "signed_up",
+        "needs_follow_up",
+        "rejected",
+      ],
+      field_visit_status: [
+        "visited",
+        "submitted",
+        "duplicate_possible",
+        "needs_review",
+        "converted",
+        "rejected",
+      ],
       food_fulfillment: ["pickup", "delivery"],
       food_order_state: [
         "placed",
