@@ -57,14 +57,17 @@ export async function updateServiceZoneVerification(
   id: string,
   status: MapVerificationStatus,
 ) {
-  const patch: Record<string, any> = {
-    verification_status: status,
-    confidence_score: DEFAULT_CONFIDENCE[status],
-  };
-  if (["admin_verified","trusted","field_checked"].includes(status)) {
-    patch.verified_at = new Date().toISOString();
-  }
-  const { error } = await supabase.from("map_service_zones").update(patch).eq("id", id);
+  const verifiedAt = ["admin_verified","trusted","field_checked"].includes(status)
+    ? new Date().toISOString()
+    : null;
+  const { error } = await supabase
+    .from("map_service_zones")
+    .update({
+      verification_status: status,
+      confidence_score: DEFAULT_CONFIDENCE[status],
+      verified_at: verifiedAt,
+    })
+    .eq("id", id);
   if (error) throw error;
 }
 
@@ -84,15 +87,18 @@ export async function updatePlaceVerification(
   id: string,
   status: MapVerificationStatus,
 ) {
-  const patch: Record<string, any> = {
-    verification_status: status,
-    confidence_score: DEFAULT_CONFIDENCE[status],
-  };
-  if (["admin_verified", "trusted", "field_checked"].includes(status)) {
-    patch.verified_at = new Date().toISOString();
-  }
-  if (status === "closed") patch.active = false;
-  const { error } = await supabase.from("map_places").update(patch).eq("id", id);
+  const verifiedAt = ["admin_verified", "trusted", "field_checked"].includes(status)
+    ? new Date().toISOString()
+    : null;
+  const { error } = await supabase
+    .from("map_places")
+    .update({
+      verification_status: status,
+      confidence_score: DEFAULT_CONFIDENCE[status],
+      verified_at: verifiedAt,
+      active: status === "closed" ? false : undefined as any,
+    })
+    .eq("id", id);
   if (error) throw error;
 }
 
@@ -108,7 +114,20 @@ export async function listFareTroncons() {
   return data ?? [];
 }
 
-export async function updateFareTroncon(id: string, patch: Record<string, any>) {
+export type FareTronconPatch = Partial<{
+  departure_name: string;
+  destination_name: string;
+  departure_place_id: string | null;
+  destination_place_id: string | null;
+  day_price_gnf: number | null;
+  night_price_gnf: number | null;
+  verification_status: MapVerificationStatus;
+  confidence_score: number;
+  is_active: boolean;
+  is_bidirectional: boolean;
+  notes: string | null;
+}>;
+export async function updateFareTroncon(id: string, patch: FareTronconPatch) {
   const { error } = await supabase.from("map_fare_troncons").update(patch).eq("id", id);
   if (error) throw error;
 }
