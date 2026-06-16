@@ -76,6 +76,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
       { title: "Tarifs moto", url: "/admin/map/tarifs", icon: Route, module: "zones" },
       { title: "Doublons lieux", url: "/admin/map/duplicates", icon: Compass, module: "zones" },
       { title: "Routage & ETA", url: "/admin/map/routing", icon: Route, module: "zones" },
+      { title: "Signaux chauffeurs", url: "/admin/map/driver-signals", icon: Radar, module: "zones" },
       { title: "Pilot terrain", url: "/admin/field/pilots", icon: Radar, module: "zones" },
     ],
   },
