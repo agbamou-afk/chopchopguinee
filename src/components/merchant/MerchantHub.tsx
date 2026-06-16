@@ -22,6 +22,7 @@ import { MerchantWalletSection } from "./MerchantWalletSection";
 import { MerchantSnapshot } from "./MerchantSnapshot";
 import { MerchantCommandesView } from "./MerchantCommandesView";
 import { ServiceAgentCashInPanel } from "./ServiceAgentCashInPanel";
+import { MerchantLocationCard } from "./MerchantLocationCard";
 
 type Tab = "home" | "orders" | "catalog" | "wallet" | "store";
 
@@ -241,6 +242,9 @@ export function MerchantHub() {
                 )}
                 <AvailabilitySection store={store} restaurant={restaurant} onChanged={refresh} />
                 <DeliverySection merchantUserId={user.id} />
+                {store && (
+                  <MerchantLocationCard store={store as any} onChanged={refresh} />
+                )}
                 <ChopPayActivitySection
                   enabled={!!(restaurant?.choppay_enabled || store?.choppay_enabled)}
                 />
