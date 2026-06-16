@@ -236,3 +236,87 @@ export function parseBoundaryGeoJSON(raw: string | null | undefined):
     return { ok: false, error: "JSON invalide" };
   }
 }
+
+/* ----------------------- duplicate detection / merge ---------------------- */
+
+export type DuplicateCandidateStatus =
+  | "open" | "confirmed_duplicate" | "dismissed" | "merged" | "needs_field_check";
+
+export const DUP_STATUS_LABEL: Record<DuplicateCandidateStatus, string> = {
+  open: "À examiner",
+  confirmed_duplicate: "Marqué doublon",
+  dismissed: "Rejeté",
+  merged: "Fusionné",
+  needs_field_check: "Vérif terrain",
+};
+
+export async function listDuplicateCandidates(status: DuplicateCandidateStatus | "all" = "open") {
+  let q: any = (supabase as any)
+    .from("map_place_duplicate_candidates")
+    .select("*")
+    .order("score", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (status !== "all") q = q.eq("status", status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as any[];
+}
+
+export async function getPlacesByIds(ids: string[]) {
+  if (!ids.length) return [] as any[];
+  const { data, error } = await supabase
+    .from("map_places")
+    .select("*")
+    .in("id", ids);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function detectPlaceDuplicates(placeId?: string, radiusMeters = 150): Promise<number> {
+  const { data, error } = await (supabase as any).rpc("map_detect_place_duplicates", {
+    p_place_id: placeId ?? null,
+    p_radius_meters: radiusMeters,
+  });
+  if (error) throw error;
+  return (data as number) ?? 0;
+}
+
+export async function mergeMapPlaces(args: {
+  sourcePlaceId: string; targetPlaceId: string; candidateId?: string | null; reason?: string | null;
+}) {
+  const { data, error } = await (supabase as any).rpc("map_merge_places", {
+    p_source_place_id: args.sourcePlaceId,
+    p_target_place_id: args.targetPlaceId,
+    p_candidate_id: args.candidateId ?? null,
+    p_reason: args.reason ?? null,
+  });
+  if (error) throw error;
+  return data as { moved_stores: number; moved_reports: number };
+}
+
+export async function markPlaceDuplicate(args: {
+  sourcePlaceId: string; targetPlaceId: string; candidateId?: string | null; reason?: string | null;
+}) {
+  const { error } = await (supabase as any).rpc("map_mark_place_duplicate", {
+    p_source_place_id: args.sourcePlaceId,
+    p_target_place_id: args.targetPlaceId,
+    p_candidate_id: args.candidateId ?? null,
+    p_reason: args.reason ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function updateDuplicateCandidateStatus(
+  id: string,
+  status: DuplicateCandidateStatus,
+  notes?: string | null,
+) {
+  const patch: any = { status, reviewed_at: new Date().toISOString() };
+  if (notes !== undefined) patch.notes = notes;
+  const { error } = await (supabase as any)
+    .from("map_place_duplicate_candidates")
+    .update(patch)
+    .eq("id", id);
+  if (error) throw error;
+}
