@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
 import { useDriverPresence } from "@/hooks/useDriverPresence";
+import { useDriverLocationSignal } from "@/hooks/useDriverLocationSignal";
 import { useIncomingOffers, type RideOffer } from "@/hooks/useIncomingOffers";
 import type { IncomingRequest } from "@/components/driver/IncomingRequestPopup";
 import { DriverActiveTrip } from "@/components/driver/DriverActiveTrip";
