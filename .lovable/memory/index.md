@@ -1,0 +1,1 @@
+- [Map Phase 2F — Driver Signals (provisional)](mem://milestones/chopmap-driver-location-signals-stable) — driver_location_signals table + RPC + admin signal layer + route observation hooks
