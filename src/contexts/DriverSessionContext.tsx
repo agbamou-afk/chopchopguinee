@@ -95,6 +95,11 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     : offers[0]?.expires_at ?? null;
 
   useDriverPresence({ enabled: isOnline, onTrip: !!activeTrip });
+  useDriverLocationSignal({
+    enabled: isOnline,
+    activeRideId: activeRideId,
+    activeMissionId: null,
+  });
 
   useEffect(() => {
     if (profile) setIsOnline(profile.presence !== "offline");
