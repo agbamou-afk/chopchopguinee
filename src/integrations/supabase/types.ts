@@ -2506,6 +2506,88 @@ export type Database = {
           },
         ]
       }
+      map_place_duplicate_candidates: {
+        Row: {
+          category_match: boolean
+          commune_match: boolean
+          created_at: string
+          distance_meters: number | null
+          id: string
+          merge_target_place_id: string | null
+          name_similarity: number | null
+          notes: string | null
+          phone_match: boolean
+          place_a_id: string
+          place_b_id: string
+          reason_codes: string[]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          score: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category_match?: boolean
+          commune_match?: boolean
+          created_at?: string
+          distance_meters?: number | null
+          id?: string
+          merge_target_place_id?: string | null
+          name_similarity?: number | null
+          notes?: string | null
+          phone_match?: boolean
+          place_a_id: string
+          place_b_id: string
+          reason_codes?: string[]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category_match?: boolean
+          commune_match?: boolean
+          created_at?: string
+          distance_meters?: number | null
+          id?: string
+          merge_target_place_id?: string | null
+          name_similarity?: number | null
+          notes?: string | null
+          phone_match?: boolean
+          place_a_id?: string
+          place_b_id?: string
+          reason_codes?: string[]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "map_place_duplicate_candidates_merge_target_place_id_fkey"
+            columns: ["merge_target_place_id"]
+            isOneToOne: false
+            referencedRelation: "map_places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "map_place_duplicate_candidates_place_a_id_fkey"
+            columns: ["place_a_id"]
+            isOneToOne: false
+            referencedRelation: "map_places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "map_place_duplicate_candidates_place_b_id_fkey"
+            columns: ["place_b_id"]
+            isOneToOne: false
+            referencedRelation: "map_places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       map_places: {
         Row: {
           active: boolean
@@ -4996,6 +5078,10 @@ export type Database = {
       _is_god_admin: { Args: { _user: string }; Returns: boolean }
       _is_ops_or_god_admin: { Args: { _user: string }; Returns: boolean }
       _leader_group_id: { Args: { _uid: string }; Returns: string }
+      _map_distance_meters: {
+        Args: { a_lat: number; a_lng: number; b_lat: number; b_lng: number }
+        Returns: number
+      }
       _normalize_guinea_phone: { Args: { p_raw: string }; Returns: string }
       _notify_account_event: {
         Args: {
@@ -6545,6 +6631,28 @@ export type Database = {
           _status: Database["public"]["Enums"]["map_verification_status"]
         }
         Returns: number
+      }
+      map_detect_place_duplicates: {
+        Args: { p_place_id?: string; p_radius_meters?: number }
+        Returns: number
+      }
+      map_mark_place_duplicate: {
+        Args: {
+          p_candidate_id?: string
+          p_reason?: string
+          p_source_place_id: string
+          p_target_place_id: string
+        }
+        Returns: undefined
+      }
+      map_merge_places: {
+        Args: {
+          p_candidate_id?: string
+          p_reason?: string
+          p_source_place_id: string
+          p_target_place_id: string
+        }
+        Returns: Json
       }
       marche_complete_offer: {
         Args: { p_offer_id: string; p_reason?: string }
