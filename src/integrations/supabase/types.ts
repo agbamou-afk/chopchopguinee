@@ -2972,6 +2972,75 @@ export type Database = {
         }
         Relationships: []
       }
+      map_route_observations: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          destination_lat: number
+          destination_lng: number
+          driver_user_id: string | null
+          fallback_used: boolean
+          id: string
+          notes: string | null
+          observed_distance_meters: number | null
+          observed_duration_seconds: number | null
+          observed_polyline_geojson: Json | null
+          origin_lat: number
+          origin_lng: number
+          provider_used: string | null
+          simplified_polyline_geojson: Json | null
+          source_id: string | null
+          source_module: string
+          status: string
+          updated_at: string
+          verification_status: string
+        }
+        Insert: {
+          confidence_score?: number
+          created_at?: string
+          destination_lat: number
+          destination_lng: number
+          driver_user_id?: string | null
+          fallback_used?: boolean
+          id?: string
+          notes?: string | null
+          observed_distance_meters?: number | null
+          observed_duration_seconds?: number | null
+          observed_polyline_geojson?: Json | null
+          origin_lat: number
+          origin_lng: number
+          provider_used?: string | null
+          simplified_polyline_geojson?: Json | null
+          source_id?: string | null
+          source_module: string
+          status?: string
+          updated_at?: string
+          verification_status?: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          destination_lat?: number
+          destination_lng?: number
+          driver_user_id?: string | null
+          fallback_used?: boolean
+          id?: string
+          notes?: string | null
+          observed_distance_meters?: number | null
+          observed_duration_seconds?: number | null
+          observed_polyline_geojson?: Json | null
+          origin_lat?: number
+          origin_lng?: number
+          provider_used?: string | null
+          simplified_polyline_geojson?: Json | null
+          source_id?: string | null
+          source_module?: string
+          status?: string
+          updated_at?: string
+          verification_status?: string
+        }
+        Relationships: []
+      }
       map_service_zones: {
         Row: {
           boundary_geojson: Json | null
