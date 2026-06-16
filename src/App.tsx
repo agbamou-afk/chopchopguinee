@@ -69,6 +69,7 @@ const MapPlacesAdmin = lazy(() => import("./pages/admin/MapPlacesAdmin"));
 const MapTariffsAdmin = lazy(() => import("./pages/admin/MapTariffsAdmin"));
 const MapDuplicatesAdmin = lazy(() => import("./pages/admin/MapDuplicatesAdmin"));
 const MapRoutingAdmin = lazy(() => import("./pages/admin/MapRoutingAdmin"));
+const DriverSignalsAdmin = lazy(() => import("./pages/admin/DriverSignalsAdmin"));
 const FieldPilotsAdmin = lazy(() => import("./pages/admin/FieldPilotsAdmin"));
 const FieldCaptain = lazy(() => import("./pages/field/FieldCaptain"));
 const FieldVisit = lazy(() => import("./pages/field/FieldVisit"));
