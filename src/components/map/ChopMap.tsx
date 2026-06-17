@@ -19,9 +19,16 @@ interface Props {
   interactive?: boolean;
   onLoad?: () => void;
   onClick?: (lngLat: { lng: number; lat: number }) => void;
+  /**
+   * Optional render prop used when tiles/config fail or low-data mode is
+   * active. Receives a retry callback. Callers should return a
+   * context-rich surface (e.g. DegradedMapPanel) so the user keeps
+   * pickup/dropoff/ETA info instead of a blank fallback.
+   */
+  degradedFallback?: (ctx: { retry: () => void; reason: 'error' | 'low-data' }) => React.ReactNode;
 }
 export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
-  { initialView, className, children, interactive = true, onLoad, onClick }, ref,
+  { initialView, className, children, interactive = true, onLoad, onClick, degradedFallback }, ref,
 ) {
   const { config, error } = useMapConfig();
   const mapRef = useRef<MapRef>(null);
@@ -43,16 +50,23 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
     fitBounds: (b, padding = 60) => mapRef.current?.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding, duration: 600 }),
   }));
   if (error || runtimeError) {
+    const retry = () => { try { window.location.reload(); } catch {} };
+    if (degradedFallback) {
+      return <div className={className}>{degradedFallback({ retry, reason: 'error' })}</div>;
+    }
     return (
       <MapFallbackCard
         className={className}
         message={runtimeError ?? "Mode hors-ligne — vérifiez votre connexion."}
-        onRetry={() => { try { window.location.reload(); } catch {} }}
+        onRetry={retry}
       />
     );
   }
   if (!config) return <Skeleton className={`rounded-2xl ${className ?? ''}`} />;
   if (low) {
+    if (degradedFallback) {
+      return <div className={className}>{degradedFallback({ retry: () => {}, reason: 'low-data' })}</div>;
+    }
     return (
       <div className={`relative chop-map-fallback rounded-2xl ${className ?? ''}`}>
         <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" />

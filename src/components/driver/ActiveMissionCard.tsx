@@ -25,6 +25,7 @@ import {
 import { MissionIssueSheet } from "./MissionIssueSheet";
 import { MarketplaceTrustSheet } from "@/components/missions/MarketplaceTrustSheet";
 import { ChopMap, RoutePolyline, ChopPin, StraightLineFallback } from "@/components/map";
+import { DegradedMapPanel } from "@/components/map/DegradedMapPanel";
 import { bbox as bboxOf, type LatLng } from "@/lib/maps/geo";
 import { openExternalNavigation } from "@/lib/maps/external";
 import { useEffect, useRef } from "react";
@@ -203,6 +204,14 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
             className="absolute inset-0"
             interactive={false}
             initialView={{ latitude: initialView.lat, longitude: initialView.lng, zoom: 13 }}
+            degradedFallback={() => (
+              <DegradedMapPanel
+                pickupLabel={mission.pickup_address ?? "Récupération"}
+                dropoffLabel={mission.dropoff_address ?? "Livraison"}
+                message="Carte indisponible — vous pouvez continuer la mission."
+                className="absolute inset-0 m-1"
+              />
+            )}
           >
             {route && (
               <RoutePolyline

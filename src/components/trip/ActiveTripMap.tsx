@@ -20,6 +20,7 @@ import {
   RoutePolyline,
   StraightLineFallback,
 } from "@/components/map";
+import { DegradedMapPanel } from "@/components/map/DegradedMapPanel";
 import {
   RoutingService,
   bbox as bboxOf,
@@ -209,6 +210,16 @@ export function ActiveTripMap({
               ? { latitude: pickup.lat, longitude: pickup.lng, zoom: 14 }
               : undefined
           }
+          degradedFallback={({ retry }) => (
+            <DegradedMapPanel
+              pickupLabel="Lieu de départ"
+              dropoffLabel="Destination"
+              etaLabel={route?.durationS ? formatDuration(route.durationS) : null}
+              message="Carte indisponible — le trajet continue normalement."
+              onRetry={retry}
+              className="absolute inset-0 m-3"
+            />
+          )}
         >
           {pickup && (
             <PinSet
