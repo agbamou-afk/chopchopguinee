@@ -152,6 +152,11 @@ export async function confirmDropoff(
   const { data, error } = await (supabase as any).rpc("mission_confirm_dropoff", { _mission_id: missionId });
   if (error) throw error;
   await logEvent(missionId, "delivered", `method:${method}`);
+  // Map Phase 2G — fire-and-forget route observation finalize.
+  try {
+    const { finalizeObservationForSource } = await import("@/lib/maps/observationLifecycle");
+    void finalizeObservationForSource("mission", missionId);
+  } catch { /* never block delivery */ }
   return (Array.isArray(data) ? data[0] : data) as Mission;
 }
 
