@@ -117,9 +117,20 @@ export function useRideLifecycleNotifications(
     }
     if (status === "completed" && last.status !== "completed" && last.status !== "cancelled") {
       fire("ride_completed", role, ride.id);
+      // Map Phase 2G — fire-and-forget route observation finalize (driver only).
+      if (role === "driver") {
+        import("@/lib/maps/observationLifecycle")
+          .then(({ finalizeObservationForSource }) => finalizeObservationForSource("ride", ride.id))
+          .catch(() => { /* never block ride */ });
+      }
     }
     if (status === "cancelled" && last.status !== "cancelled" && last.status !== "completed") {
       fire("ride_cancelled", role, ride.id);
+      if (role === "driver") {
+        import("@/lib/maps/observationLifecycle")
+          .then(({ finalizeObservationForSource }) => finalizeObservationForSource("ride", ride.id, { needsReview: true }))
+          .catch(() => {});
+      }
     }
 
     prev.current = { status, driverId, arriving, initialized: true };

@@ -1,1 +1,2 @@
 - [Map Phase 2F — Driver Signals (provisional)](mem://milestones/chopmap-driver-location-signals-stable) — driver_location_signals table + RPC + admin signal layer + route observation hooks
+- [Map Phase 2G — Service Integration + Route Observation](mem://milestones/chopmap-service-integration-route-observation-stable) — trusted merchant location resolver, service-flow route estimate wrapper, idempotent observation start/finalize wired into ride completion + mission delivery
