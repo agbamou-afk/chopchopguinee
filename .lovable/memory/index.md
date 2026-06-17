@@ -1,3 +1,4 @@
 - [Map Phase 2F — Driver Signals (provisional)](mem://milestones/chopmap-driver-location-signals-stable) — driver_location_signals table + RPC + admin signal layer + route observation hooks
 - [Map Phase 2G — Service Integration + Route Observation](mem://milestones/chopmap-service-integration-route-observation-stable) — trusted merchant location resolver, service-flow route estimate wrapper, idempotent observation start/finalize wired into ride completion + mission delivery
 - [Map Phase 2H — Offline / Low-data Hardening](mem://milestones/chopmap-offline-lowdata-map-hardening-stable) — connectivity bus, degraded map panel, TTL client cache, field visit offline drafts, routing defensive guards
+- [Map Phase 2L — Pilot Launch Readiness](mem://milestones/chopmap-pilot-launch-readiness-stable) — pilot checklist, role matrix, smoke script, field/admin guides, known limitations, recovery notes
