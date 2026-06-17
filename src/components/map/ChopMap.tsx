@@ -34,6 +34,9 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
       reportTileStatus('failed');
     }
   }, [error]);
+  React.useEffect(() => {
+    if (low) reportTileStatus('degraded');
+  }, [low]);
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
     flyTo: (lng, lat, zoom = 14) => mapRef.current?.flyTo({ center: [lng, lat], zoom, essential: true }),
@@ -50,8 +53,6 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
   }
   if (!config) return <Skeleton className={`rounded-2xl ${className ?? ''}`} />;
   if (low) {
-    // Signal degraded (low-data) tile state once when rendering simplified surface.
-    reportTileStatus('degraded');
     return (
       <div className={`relative chop-map-fallback rounded-2xl ${className ?? ''}`}>
         <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" />
