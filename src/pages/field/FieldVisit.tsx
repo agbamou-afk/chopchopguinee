@@ -9,6 +9,10 @@ import {
   listMyAssignments, submitVisit, submitDailyReport,
   type FieldVisitInterest,
 } from "@/lib/maps/field";
+import {
+  listPendingDrafts, saveDraft, markSubmitted, markFailed, removeDraft,
+  type FieldVisitDraft,
+} from "@/lib/maps/fieldDrafts";
 
 const INTERESTS: { value: FieldVisitInterest; label: string }[] = [
   { value: "cold", label: "Froid" },
@@ -29,6 +33,9 @@ export default function FieldVisit() {
     addressText: "", landmark: "", entrance: "", pickup: "", notes: "",
   });
   const [busy, setBusy] = useState(false);
+  const [drafts, setDrafts] = useState<FieldVisitDraft[]>([]);
+
+  function refreshDrafts() { setDrafts(listPendingDrafts()); }
 
   const [report, setReport] = useState({
     visited: 0, submitted: 0, interested: 0, converted: 0,
@@ -43,6 +50,7 @@ export default function FieldVisit() {
         if (a[0].assigned_zone_id) setZoneId(a[0].assigned_zone_id);
       }
     }).catch(e => toast.error(e.message));
+    refreshDrafts();
   }, []);
 
   function useCurrentLocation() {
@@ -58,30 +66,61 @@ export default function FieldVisit() {
     if (!pilotId) return toast.error("Pilote requis");
     if (!form.merchantName.trim()) return toast.error("Nom marchand requis");
     setBusy(true);
+    const lat = form.lat ? Number(form.lat) : null;
+    const lng = form.lng ? Number(form.lng) : null;
+    const visitPayload = {
+      pilotId,
+      merchantName: form.merchantName.trim(),
+      phone: form.phone || undefined,
+      category: form.category || undefined,
+      interest: form.interest,
+      lat, lng,
+      addressText: form.addressText || undefined,
+      landmark: form.landmark || undefined,
+      entrance: form.entrance || undefined,
+      pickup: form.pickup || undefined,
+      notes: form.notes || undefined,
+      zoneId: zoneId || null,
+    };
+    // Offline guard — save locally instead of attempting submission.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      saveDraft({ pilotId, payload: visitPayload as any, status: "draft" });
+      toast.message("Brouillon sauvegardé sur cet appareil");
+      refreshDrafts();
+      setBusy(false);
+      return;
+    }
     try {
-      const lat = form.lat ? Number(form.lat) : null;
-      const lng = form.lng ? Number(form.lng) : null;
-      await submitVisit({
-        pilotId,
-        merchantName: form.merchantName.trim(),
-        phone: form.phone || undefined,
-        category: form.category || undefined,
-        interest: form.interest,
-        lat, lng,
-        addressText: form.addressText || undefined,
-        landmark: form.landmark || undefined,
-        entrance: form.entrance || undefined,
-        pickup: form.pickup || undefined,
-        notes: form.notes || undefined,
-        zoneId: zoneId || null,
-      });
+      await submitVisit(visitPayload as any);
       toast.success("Visite enregistrée");
       setForm({
         merchantName: "", phone: "", category: "", interest: "cold",
         lat: "", lng: "", addressText: "", landmark: "", entrance: "", pickup: "", notes: "",
       });
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      // Network/transient — save as pending retry instead of losing the work.
+      const draft = saveDraft({ pilotId, payload: visitPayload as any, status: "pending_retry", lastError: e?.message ?? "Erreur réseau" });
+      toast.message("Brouillon sauvegardé — réessayez quand vous serez connecté");
+      refreshDrafts();
+      void draft;
+    }
     finally { setBusy(false); }
+  }
+
+  async function retryDraft(draft: FieldVisitDraft) {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      return toast.error("Toujours hors-ligne");
+    }
+    try {
+      await submitVisit(draft.payload as any);
+      markSubmitted(draft.id);
+      toast.success("Visite envoyée");
+      refreshDrafts();
+    } catch (e: any) {
+      markFailed(draft.id, e?.message ?? "Échec");
+      refreshDrafts();
+      toast.error(e?.message ?? "Échec de l'envoi");
+    }
   }
 
   async function onSubmitReport() {
@@ -109,6 +148,30 @@ export default function FieldVisit() {
         <p className="text-sm text-muted-foreground">Aucune affectation active. Contactez votre captain.</p>
       ) : (
         <>
+          {drafts.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle>Brouillons hors-ligne</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Sauvegardés sur cet appareil. Médias non pris en charge hors-ligne pour l'instant.
+                </p>
+                {drafts.map((d) => (
+                  <div key={d.id} className="flex items-center justify-between gap-2 rounded border border-border/60 p-2 text-sm">
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{(d.payload as any)?.merchantName ?? "Visite"}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {d.status === "pending_retry" ? "À renvoyer" : d.status === "failed" ? `Échec — ${d.lastError ?? ""}` : "Brouillon"}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="outline" onClick={() => retryDraft(d)}>Renvoyer</Button>
+                      <Button size="sm" variant="ghost" onClick={() => { removeDraft(d.id); refreshDrafts(); }}>Supprimer</Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader><CardTitle>Visite</CardTitle></CardHeader>
             <CardContent className="space-y-3">
