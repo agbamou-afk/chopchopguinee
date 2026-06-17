@@ -30,6 +30,7 @@ import { openExternalNavigation } from "@/lib/maps/external";
 import { useEffect, useRef } from "react";
 import type { ChopMapHandle } from "@/components/map/ChopMap";
 import { RoutingService } from "@/lib/maps/RoutingService";
+import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
 
 /** Extract a phone number from payload_summary (we embed ☎ +224... in Repas). */
 function extractPhone(s: string | null): string | null {
@@ -182,6 +183,18 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
           {MISSION_STATE_LABEL[mission.state]}
         </span>
       </div>
+
+      {pickup && dropoff && !terminal && (
+        <div className="mb-2">
+          <RouteEstimateChip
+            origin={pickup}
+            destination={dropoff}
+            mode="moto"
+            activeJob={mission.courier_id ? { sourceModule: "mission", sourceId: mission.id, driverUserId: mission.courier_id } : null}
+            compact
+          />
+        </div>
+      )}
 
       {showMap && initialView && (
         <div className="relative h-32 rounded-xl overflow-hidden border border-border/60 mb-3">

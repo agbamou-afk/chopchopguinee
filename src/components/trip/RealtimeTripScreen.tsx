@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState } from "react";
 import { RidePhaseChip, deriveRidePhase } from "@/components/ride/RidePhaseChip";
 import { TrustCues } from "@/components/trust/TrustCues";
+import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { rideQaDebug } from "@/lib/rides/debug";
 
@@ -154,6 +155,17 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
       </div>
       <div className="px-4 py-2 bg-card/60 border-b border-border/60">
         <TrustCues cues={["live", "choppay", "support"]} compact className="justify-center" />
+        {ride?.pickup_lat != null && ride?.pickup_lng != null && ride?.dest_lat != null && ride?.dest_lng != null && (
+          <div className="mt-1.5 flex justify-center">
+            <RouteEstimateChip
+              origin={{ lat: ride.pickup_lat, lng: ride.pickup_lng }}
+              destination={{ lat: ride.dest_lat, lng: ride.dest_lng }}
+              mode={mode === "moto" ? "moto" : "car"}
+              activeJob={ride.driver_id ? { sourceModule: "ride", sourceId: ride.id, driverUserId: ride.driver_id } : null}
+              compact
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0">
