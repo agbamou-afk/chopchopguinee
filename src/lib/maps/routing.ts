@@ -1,6 +1,7 @@
 import { haversineMeters, decodePolyline, type LatLng } from "./geo";
 import { RoutingService } from "./RoutingService";
 import { supabase } from "@/integrations/supabase/client";
+import { reportRoutingStatus } from "./connectivity";
 
 /**
  * Map Phase 2E — Routing + ETA Foundation
@@ -98,6 +99,19 @@ export async function getRouteEstimate(args: {
   bypassCache?: boolean;
 }): Promise<RouteEstimate> {
   const mode: RouteMode = args.mode ?? "moto";
+  // Defensive coordinate validation — never crash on bad input.
+  const okLat = (n: unknown) => typeof n === "number" && Number.isFinite(n) && n >= -90 && n <= 90;
+  const okLng = (n: unknown) => typeof n === "number" && Number.isFinite(n) && n >= -180 && n <= 180;
+  if (!args.origin || !args.destination
+    || !okLat(args.origin.lat) || !okLng(args.origin.lng)
+    || !okLat(args.destination.lat) || !okLng(args.destination.lng)) {
+    reportRoutingStatus("failed");
+    return {
+      distance_meters: 0, duration_seconds: 0, polyline_geojson: null,
+      provider: "chop_fallback", confidence: "fallback", fallback_used: true,
+      warning: "Coordonnées invalides — estimation indisponible", mode,
+    };
+  }
   const k = cacheKey(args.origin, args.destination, mode);
   if (!args.bypassCache) {
     const hit = cache.get(k);
@@ -109,6 +123,16 @@ export async function getRouteEstimate(args: {
   if (straight < 50) {
     const v = fallbackEstimate(args.origin, args.destination, mode, args.timeOfDay);
     cache.set(k, { at: Date.now(), value: v });
+    reportRoutingStatus("fallback");
+    return v;
+  }
+
+  // Skip provider call when browser is offline — go straight to fallback.
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    const v = fallbackEstimate(args.origin, args.destination, mode, args.timeOfDay);
+    v.warning = "Hors-ligne — estimation approximative";
+    cache.set(k, { at: Date.now(), value: v });
+    reportRoutingStatus("fallback");
     return v;
   }
 
@@ -126,11 +150,13 @@ export async function getRouteEstimate(args: {
       mode,
     };
     cache.set(k, { at: Date.now(), value });
+    reportRoutingStatus("ready");
     return value;
   } catch (e) {
     const value = fallbackEstimate(args.origin, args.destination, mode, args.timeOfDay);
     value.warning = `Fournisseur indisponible — estimation approximative (${(e as Error)?.message ?? "erreur"})`;
     cache.set(k, { at: Date.now(), value });
+    reportRoutingStatus("fallback");
     return value;
   }
 }
