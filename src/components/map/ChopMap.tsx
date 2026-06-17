@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Analytics } from '@/lib/analytics/AnalyticsService';
 import { useLowDataMode } from '@/hooks/useLowDataMode';
 import { MapFallbackCard } from './MapFallbackCard';
+import { reportTileStatus } from '@/lib/maps/connectivity';
 export interface ChopMapHandle {
   getMap: () => MapRef | null;
   flyTo: (lng: number, lat: number, zoom?: number) => void;
@@ -30,6 +31,7 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
   React.useEffect(() => {
     if (error) {
       try { Analytics.track('map.load.failed' as any, { metadata: { reason: String(error?.message ?? error) } }); } catch {}
+      reportTileStatus('failed');
     }
   }, [error]);
   useImperativeHandle(ref, () => ({
@@ -48,6 +50,8 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
   }
   if (!config) return <Skeleton className={`rounded-2xl ${className ?? ''}`} />;
   if (low) {
+    // Signal degraded (low-data) tile state once when rendering simplified surface.
+    reportTileStatus('degraded');
     return (
       <div className={`relative chop-map-fallback rounded-2xl ${className ?? ''}`}>
         <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent" />
@@ -89,12 +93,14 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
             loadedRef.current = true;
             try { Analytics.track('map.loaded' as any, { metadata: { provider: config.provider, style: config.styleUrl } }); } catch {}
           }
+          reportTileStatus('ready');
           onLoad?.();
         }}
         onError={(e) => {
           const reason = String((e as any)?.error?.message ?? 'unknown');
           setRuntimeError('Carte indisponible — nous affichons le suivi dès que les tuiles répondent.');
           try { Analytics.track('map.load.failed' as any, { metadata: { reason } }); } catch {}
+          reportTileStatus('failed');
         }}
         reuseMaps>
         {children}
