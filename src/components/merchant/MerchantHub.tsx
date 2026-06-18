@@ -60,7 +60,11 @@ export function MerchantHub() {
   // Repas-only operator: dashboard surfaces are restaurant-native, not
   // product-marketplace. Mixed (store + restaurant) keeps the Marché tab
   // labels and surfaces Repas sections alongside product ones.
-  const isRepasOnly = !!restaurant && !store;
+  // Legacy signups created a `merchant_stores` shell even for Repas-only
+  // intent (wants_food && !wants_marketplace); treat those as Repas-only
+  // so they see the restaurant dashboard like fresh signups.
+  const storeIsRepasShell = !!store && !!store.wants_food && !store.wants_marketplace;
+  const isRepasOnly = !!restaurant && (!store || storeIsRepasShell);
   const tabs = isRepasOnly ? REPAS_TABS : MARCHE_TABS;
 
   // Backfill for legacy Repas-only signups: when the user opted into Repas
