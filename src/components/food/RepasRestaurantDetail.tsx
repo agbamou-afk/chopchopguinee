@@ -14,6 +14,8 @@ import { ConversionGateSheet } from "@/components/onboarding/ConversionGateSheet
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportIssueButton } from "@/components/support/ReportIssueButton";
+import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   restaurant: FoodRestaurant;
