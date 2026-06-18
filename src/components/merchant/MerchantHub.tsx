@@ -26,6 +26,8 @@ import { MerchantSnapshot } from "./MerchantSnapshot";
 import { MerchantCommandesView } from "./MerchantCommandesView";
 import { ServiceAgentCashInPanel } from "./ServiceAgentCashInPanel";
 import { MerchantLocationCard } from "./MerchantLocationCard";
+import { RestaurantOnboardingSheet } from "@/components/food/RestaurantOnboardingSheet";
+import { ChefHat } from "lucide-react";
 
 type Tab = "home" | "orders" | "catalog" | "wallet" | "store";
 
@@ -43,6 +45,7 @@ export function MerchantHub() {
   const { loading, store, restaurant, hasAny, refresh } = useMerchantIdentity();
   const [isOpen, setIsOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("home");
+  const [createRepasOpen, setCreateRepasOpen] = useState(false);
 
   useEffect(() => {
     setIsOpen(restaurant ? !!restaurant.is_open : store ? store.status === "active" : false);
@@ -240,6 +243,27 @@ export function MerchantHub() {
                     onChanged={refresh}
                   />
                 )}
+                {!restaurant && (
+                  <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                        <ChefHat className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-foreground">Vous proposez des repas ?</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Créez votre restaurant Repas pour activer le menu, recevoir des commandes et discuter avec vos clients.
+                        </p>
+                        <button
+                          onClick={() => setCreateRepasOpen(true)}
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold px-3 py-2"
+                        >
+                          Créer mon restaurant
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {store && (
                   <button
                     onClick={() => {
@@ -271,6 +295,14 @@ export function MerchantHub() {
           </main>
         </>
       )}
+      <RestaurantOnboardingSheet
+        open={createRepasOpen}
+        onOpenChange={setCreateRepasOpen}
+        onCreated={() => {
+          refresh();
+          setTab("store");
+        }}
+      />
     </div>
   );
 }
