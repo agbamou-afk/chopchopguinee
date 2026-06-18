@@ -366,6 +366,17 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                   <PrimaryButton fullWidth onClick={onClose}>
                     Terminer
                   </PrimaryButton>
+                  {lastOrderId && (
+                    <div className="mt-4 text-left">
+                      <OrderMessagingPanel
+                        foodOrderId={lastOrderId}
+                        threadType="restaurant_client_order"
+                        senderRole="client"
+                        selfUserId={user?.id ?? null}
+                        title="Contacter le restaurant"
+                      />
+                    </div>
+                  )}
                   <div className="mt-3">
                     <ReportIssueButton
                       className="w-full"
