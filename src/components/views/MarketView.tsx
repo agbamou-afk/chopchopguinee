@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown, ShoppingBag, Timer, Store, ClipboardList } from "lucide-react";
+import { Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown, ShoppingBag, Timer, Store, ClipboardList, Navigation } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryGrid } from "@/components/marche/CategoryGrid";
 import { FeaturedBanners } from "@/components/marche/FeaturedBanners";
@@ -17,6 +17,8 @@ import { MarcheEmpty } from "@/components/marche/MarcheEmpty";
 import { listStoresWithSummary, type StoreSummary } from "@/lib/marche/stores";
 import { categoryLabel, MARCHE_CATEGORIES } from "@/lib/marche";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { haversineMeters } from "@/lib/maps/geo";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -30,6 +32,7 @@ interface MarketViewProps {
 type Screen = "home" | "detail" | "sell" | "inbox" | "store" | "mine";
 type SortKey = "recent" | "price_asc" | "price_desc";
 type Tab = "all" | "saved" | "stores";
+type StoreSortKey = "nearby" | "recent";
 
 interface RawListing extends Omit<ListingCardData, "cover_url"> {
   listing_images?: { url: string; position: number }[];
@@ -50,7 +53,9 @@ export function MarketView({ onBack }: MarketViewProps) {
   const [stores, setStores] = useState<StoreSummary[]>([]);
   const [storesLoading, setStoresLoading] = useState(false);
   const [storeCategory, setStoreCategory] = useState<string | null>(null);
+  const [storeSort, setStoreSort] = useState<StoreSortKey>("nearby");
   const { requireAuth } = useAuthGuard();
+  const geo = useGeolocation();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -114,6 +119,38 @@ export function MarketView({ onBack }: MarketViewProps) {
       alive = false;
     };
   }, [tab, search, storeCategory]);
+
+  // Compute distance-augmented + sorted store list.
+  const userPos = geo.isReady && geo.position ? { lat: geo.position.lat, lng: geo.position.lng } : null;
+  const decoratedStores = stores.map((s) => {
+    const hasCoords = s.latitude != null && s.longitude != null;
+    const distance = hasCoords && userPos
+      ? haversineMeters(userPos, { lat: s.latitude as number, lng: s.longitude as number })
+      : null;
+    const trust: "verified" | "unverified" | "missing" = !hasCoords
+      ? "missing"
+      : s.verification_state === "verified"
+        ? "verified"
+        : "unverified";
+    return { store: s, distance, trust };
+  });
+  const sortedStores = [...decoratedStores].sort((a, b) => {
+    if (storeSort === "nearby" && userPos) {
+      // Verified first within unknown-distance buckets, then by distance ascending.
+      const ad = a.distance, bd = b.distance;
+      if (ad != null && bd != null) return ad - bd;
+      if (ad != null) return -1;
+      if (bd != null) return 1;
+      const av = a.trust === "verified" ? 0 : 1;
+      const bv = b.trust === "verified" ? 0 : 1;
+      if (av !== bv) return av - bv;
+      return 0;
+    }
+    // Recent fallback: verified first, then preserve API order (already member_since desc).
+    const av = a.trust === "verified" ? 0 : 1;
+    const bv = b.trust === "verified" ? 0 : 1;
+    return av - bv;
+  });
 
   // Load saved listings for the current user (if signed in)
   useEffect(() => {
@@ -322,6 +359,41 @@ export function MarketView({ onBack }: MarketViewProps) {
                 </button>
               ))}
             </div>
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                onClick={() => setStoreSort("nearby")}
+                className={`shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-semibold ${
+                  storeSort === "nearby"
+                    ? "gradient-wallet text-primary-foreground"
+                    : "bg-card border border-border text-muted-foreground"
+                }`}
+              >
+                <Navigation className="w-3 h-3" /> À proximité
+              </button>
+              <button
+                onClick={() => setStoreSort("recent")}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold ${
+                  storeSort === "recent"
+                    ? "gradient-wallet text-primary-foreground"
+                    : "bg-card border border-border text-muted-foreground"
+                }`}
+              >
+                Récents
+              </button>
+              {storeSort === "nearby" && !userPos && geo.status !== "loading" && (
+                <button
+                  onClick={() => geo.request()}
+                  className="ml-auto shrink-0 text-[11px] text-primary font-semibold"
+                >
+                  Activer ma position
+                </button>
+              )}
+              {storeSort === "nearby" && !userPos && (
+                <span className="ml-auto text-[10px] text-muted-foreground italic">
+                  Position non disponible — tri par défaut
+                </span>
+              )}
+            </div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-foreground">Boutiques</h2>
               <button onClick={() => requireAuth(() => setStoreSheetOpen(true))} className="text-xs text-primary font-medium">
@@ -334,12 +406,14 @@ export function MarketView({ onBack }: MarketViewProps) {
               <MarcheEmpty variant="stores" />
             ) : (
               <div className="space-y-2">
-                {stores.map((s) => (
+                {sortedStores.map(({ store: s, distance, trust }) => (
                   <StoreCard
                     key={s.id}
                     store={s}
                     listingCount={s.listing_count}
                     samplePhotos={s.sample_photos}
+                    distanceMeters={distance}
+                    locationTrust={trust}
                     onClick={() => {
                       setActiveStoreId(s.id);
                       setScreen("store");

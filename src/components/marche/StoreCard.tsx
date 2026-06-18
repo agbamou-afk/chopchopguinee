@@ -1,19 +1,33 @@
 import { motion } from "framer-motion";
-import { Store, MapPin, BadgeCheck } from "lucide-react";
+import { Store, MapPin, BadgeCheck, Navigation } from "lucide-react";
 import type { MerchantStore } from "@/lib/marche/stores";
 import { categoryLabel } from "@/lib/marche";
+import { formatDistance } from "@/lib/maps/geo";
 
 export function StoreCard({
   store,
   listingCount,
   samplePhotos,
+  distanceMeters,
+  locationTrust,
   onClick,
 }: {
   store: MerchantStore;
   listingCount?: number;
   samplePhotos?: string[];
+  /** Computed haversine distance in meters, or null if unknown. */
+  distanceMeters?: number | null;
+  /** "verified" if coordinates come from a trusted/verified source; otherwise treat as à confirmer. */
+  locationTrust?: "verified" | "unverified" | "missing";
   onClick: () => void;
 }) {
+  const trust = locationTrust ?? (store.latitude != null && store.longitude != null ? "unverified" : "missing");
+  const distanceLabel =
+    typeof distanceMeters === "number" && Number.isFinite(distanceMeters)
+      ? formatDistance(distanceMeters)
+      : trust === "missing"
+        ? "Distance à confirmer"
+        : null;
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
@@ -48,6 +62,14 @@ export function StoreCard({
           )}
           {typeof listingCount === "number" && (
             <span>{listingCount} annonce{listingCount > 1 ? "s" : ""}</span>
+          )}
+          {distanceLabel && (
+            <span className="inline-flex items-center gap-0.5">
+              <Navigation className="w-3 h-3" /> {distanceLabel}
+            </span>
+          )}
+          {trust === "unverified" && distanceLabel && distanceLabel !== "Distance à confirmer" && (
+            <span className="text-[10px] italic text-muted-foreground/80">à confirmer</span>
           )}
         </div>
       </div>

@@ -19,6 +19,9 @@ export type MerchantStore = {
   verification_state: "none" | "pending" | "verified";
   member_since: string;
   status: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  location_source?: string | null;
 };
 
 export async function getStoreBySlug(slug: string) {
