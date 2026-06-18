@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Home, ShoppingBag, Package, Wallet as WalletIcon, Store as StoreIcon } from "lucide-react";
+import { ArrowLeft, Home, ShoppingBag, Package, Wallet as WalletIcon, Store as StoreIcon, UtensilsCrossed } from "lucide-react";
 import { ExternalLink } from "lucide-react";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,13 +30,22 @@ import { RestaurantOnboardingSheet } from "@/components/food/RestaurantOnboardin
 import { ChefHat } from "lucide-react";
 
 type Tab = "home" | "orders" | "catalog" | "wallet" | "store";
+type TabSpec = { key: Tab; label: string; icon: typeof Home };
 
-const TABS: { key: Tab; label: string; icon: typeof Home }[] = [
+const MARCHE_TABS: TabSpec[] = [
   { key: "home", label: "Accueil", icon: Home },
   { key: "orders", label: "Commandes", icon: ShoppingBag },
   { key: "catalog", label: "Catalogue", icon: Package },
   { key: "wallet", label: "Wallet", icon: WalletIcon },
   { key: "store", label: "Boutique", icon: StoreIcon },
+];
+
+const REPAS_TABS: TabSpec[] = [
+  { key: "home", label: "Accueil", icon: Home },
+  { key: "orders", label: "Commandes", icon: ShoppingBag },
+  { key: "catalog", label: "Menu", icon: UtensilsCrossed },
+  { key: "wallet", label: "Wallet", icon: WalletIcon },
+  { key: "store", label: "Restaurant", icon: ChefHat },
 ];
 
 export function MerchantHub() {
@@ -46,6 +55,12 @@ export function MerchantHub() {
   const [isOpen, setIsOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("home");
   const [createRepasOpen, setCreateRepasOpen] = useState(false);
+
+  // Repas-only operator: dashboard surfaces are restaurant-native, not
+  // product-marketplace. Mixed (store + restaurant) keeps the Marché tab
+  // labels and surfaces Repas sections alongside product ones.
+  const isRepasOnly = !!restaurant && !store;
+  const tabs = isRepasOnly ? REPAS_TABS : MARCHE_TABS;
 
   useEffect(() => {
     setIsOpen(restaurant ? !!restaurant.is_open : store ? store.status === "active" : false);
@@ -109,11 +124,16 @@ export function MerchantHub() {
         </button>
         <div className="flex-1 min-w-0">
           <h1 className="text-lg font-extrabold text-foreground truncate">
-            {store?.name ?? restaurant?.name ?? "Espace marchand"}
+            {restaurant?.name ?? store?.name ?? "Espace marchand"}
           </h1>
           {statusBadge && (
             <span className={`inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusBadge.tone}`}>
               {statusBadge.label}
+            </span>
+          )}
+          {isRepasOnly && !statusBadge && (
+            <span className="inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800">
+              Restaurant Repas
             </span>
           )}
         </div>
@@ -124,7 +144,9 @@ export function MerchantHub() {
         <div className="max-w-md mx-auto rounded-2xl border border-primary/30 bg-primary/5 px-3 py-2 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Mode actuel</p>
-            <p className="text-sm font-bold text-foreground truncate">Tableau de bord marchand</p>
+            <p className="text-sm font-bold text-foreground truncate">
+              {isRepasOnly ? "Tableau de bord restaurant" : "Tableau de bord marchand"}
+            </p>
           </div>
           <MerchantModeToggle compact forceVisible />
         </div>
@@ -137,7 +159,7 @@ export function MerchantHub() {
           {/* Sub-tab nav */}
           <nav className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/40 px-2 py-2 mt-2">
             <div className="max-w-md mx-auto flex gap-1 overflow-x-auto no-scrollbar">
-              {TABS.map((t) => {
+              {tabs.map((t) => {
                 const Icon = t.icon;
                 const active = tab === t.key;
                 return (
@@ -165,7 +187,7 @@ export function MerchantHub() {
               />
             )}
 
-            {tab === "home" && (
+            {tab === "home" && !isRepasOnly && (
               <>
                 <MerchantSnapshot
                   userId={user.id}
@@ -173,6 +195,39 @@ export function MerchantHub() {
                   onGo={(t) => setTab(t)}
                 />
               </>
+            )}
+
+            {tab === "home" && isRepasOnly && restaurant && (
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-border/60 bg-card p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Statut</p>
+                  <p className="text-sm font-bold text-foreground mt-1">
+                    {isOpen ? "Restaurant ouvert" : "Restaurant fermé"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {restaurant.district ? `${restaurant.district} · ` : ""}
+                    {restaurant.cuisine ?? "Cuisine non précisée"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setTab("orders")}
+                    className="rounded-2xl border border-border/60 bg-card p-4 text-left hover:bg-muted/40"
+                  >
+                    <ShoppingBag className="w-5 h-5 text-primary mb-2" />
+                    <p className="text-sm font-bold text-foreground">Commandes</p>
+                    <p className="text-[11px] text-muted-foreground">Voir et préparer</p>
+                  </button>
+                  <button
+                    onClick={() => setTab("catalog")}
+                    className="rounded-2xl border border-border/60 bg-card p-4 text-left hover:bg-muted/40"
+                  >
+                    <UtensilsCrossed className="w-5 h-5 text-primary mb-2" />
+                    <p className="text-sm font-bold text-foreground">Menu</p>
+                    <p className="text-[11px] text-muted-foreground">Plats et boissons</p>
+                  </button>
+                </div>
+              </div>
             )}
 
             {tab === "orders" && (
