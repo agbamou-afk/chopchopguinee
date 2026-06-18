@@ -28,6 +28,7 @@ import { ServiceAgentCashInPanel } from "./ServiceAgentCashInPanel";
 import { MerchantLocationCard } from "./MerchantLocationCard";
 import { RestaurantOnboardingSheet } from "@/components/food/RestaurantOnboardingSheet";
 import { ChefHat } from "lucide-react";
+import { createOrUpdateRestaurant } from "@/lib/repas/restaurants";
 
 type Tab = "home" | "orders" | "catalog" | "wallet" | "store";
 type TabSpec = { key: Tab; label: string; icon: typeof Home };
@@ -59,8 +60,41 @@ export function MerchantHub() {
   // Repas-only operator: dashboard surfaces are restaurant-native, not
   // product-marketplace. Mixed (store + restaurant) keeps the Marché tab
   // labels and surfaces Repas sections alongside product ones.
-  const isRepasOnly = !!restaurant && !store;
+  // Legacy signups created a `merchant_stores` shell even for Repas-only
+  // intent (wants_food && !wants_marketplace); treat those as Repas-only
+  // so they see the restaurant dashboard like fresh signups.
+  const storeIsRepasShell = !!store && !!store.wants_food && !store.wants_marketplace;
+  const isRepasOnly = !!restaurant && (!store || storeIsRepasShell);
   const tabs = isRepasOnly ? REPAS_TABS : MARCHE_TABS;
+
+  // Backfill for legacy Repas-only signups: when the user opted into Repas
+  // (`wants_food`) but no `food_restaurants` row exists yet — typically
+  // because they signed up before the Repas dashboard split — provision one
+  // from the store's name/district so they immediately land on the Repas
+  // tabs. Idempotent; runs once after identity loads.
+  useEffect(() => {
+    if (!user?.id || loading) return;
+    if (restaurant) return;
+    if (!store?.wants_food) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await createOrUpdateRestaurant({
+          ownerUserId: user.id,
+          name: store.name,
+          district: store.district ?? null,
+          delivery_available: !!store.delivery_available,
+          pickup_available: true,
+        });
+        if (!cancelled) await refresh();
+      } catch (e) {
+        if (import.meta.env.DEV) console.warn("[merchant-hub] repas backfill failed", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, loading, restaurant, store?.id, store?.wants_food]);
 
   useEffect(() => {
     setIsOpen(restaurant ? !!restaurant.is_open : store ? store.status === "active" : false);
