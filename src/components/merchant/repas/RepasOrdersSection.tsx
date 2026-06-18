@@ -52,6 +52,7 @@ const STATE_TONE: Record<FoodOrderState, string> = {
 };
 
 export function RepasOrdersSection({ restaurantId }: Props) {
+  const { user } = useAuth();
   const [orders, setOrders] = useState<FoodOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
