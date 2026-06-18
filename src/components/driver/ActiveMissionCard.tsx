@@ -48,6 +48,7 @@ interface ActiveMissionCardProps {
 }
 
 export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps) {
+  const { user } = useAuth();
   const [busy, setBusy] = useState(false);
   const [issueOpen, setIssueOpen] = useState(false);
   const [proofTaken, setProofTaken] = useState(false);
