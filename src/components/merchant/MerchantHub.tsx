@@ -12,6 +12,9 @@ import { CatalogSection } from "./CatalogSection";
 import { ProductCatalogSection } from "./ProductCatalogSection";
 import { DeliverySection } from "./DeliverySection";
 import { ChopPayActivitySection } from "./ChopPayActivitySection";
+import { RepasMenuSection } from "./repas/RepasMenuSection";
+import { RepasOrdersSection } from "./repas/RepasOrdersSection";
+import { RepasProfileSection } from "./repas/RepasProfileSection";
 import { setRestaurantOpen, setStoreOpen } from "@/lib/merchant/operations";
 import { toast } from "@/hooks/use-toast";
 import { MerchantActivationPanel } from "./MerchantActivationPanel";
@@ -173,17 +176,22 @@ export function MerchantHub() {
               <>
                 {store && <MerchantCommandesView merchantUserId={user.id} />}
                 {restaurant && (
-                  <OrdersSection restaurantId={restaurant.id} sellerId={undefined} />
+                  <RepasOrdersSection restaurantId={restaurant.id} />
                 )}
               </>
             )}
 
             {tab === "catalog" && (
               <>
-                <CatalogSection
-                  restaurantId={restaurant?.id}
-                  sellerId={store ? user.id : undefined}
-                />
+                {restaurant && (
+                  <RepasMenuSection
+                    restaurantId={restaurant.id}
+                    ownerUserId={user.id}
+                  />
+                )}
+                {store && !restaurant && (
+                  <CatalogSection sellerId={user.id} />
+                )}
                 {store && (
                   <ProductCatalogSection
                     userId={user.id}
@@ -225,6 +233,13 @@ export function MerchantHub() {
                   isOpen={isOpen}
                   onToggleOpen={handleOpenToggle}
                 />
+                {restaurant && (
+                  <RepasProfileSection
+                    restaurant={restaurant}
+                    ownerUserId={user.id}
+                    onChanged={refresh}
+                  />
+                )}
                 {store && (
                   <button
                     onClick={() => {
