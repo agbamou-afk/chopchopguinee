@@ -65,6 +65,103 @@ export async function listStores(opts: { q?: string; district?: string; limit?: 
   return (data as MerchantStore[] | null) ?? [];
 }
 
+/**
+ * Phase 1 launch readiness: fetch lightweight store summaries enriched with
+ * the active listing count and up to three sample listing photos for
+ * client-side shop discovery. Public read uses existing approved+active
+ * RLS scope; private/draft listings are not exposed because the underlying
+ * marketplace listing policy enforces status=active + visibility=public.
+ */
+export type StoreSummary = MerchantStore & {
+  listing_count: number;
+  sample_photos: string[];
+};
+
+export async function listStoresWithSummary(opts: {
+  q?: string;
+  district?: string;
+  category?: string | null;
+  limit?: number;
+} = {}): Promise<StoreSummary[]> {
+  type Builder = {
+    eq: (c: string, v: unknown) => Builder;
+    ilike: (c: string, v: string) => Builder;
+    order: (c: string, o: { ascending: boolean }) => Builder;
+    limit: (n: number) => Builder;
+    then: <T>(r: (v: { data: unknown }) => T) => Promise<T>;
+  };
+  let q = (supabase as unknown as {
+    from: (t: string) => { select: (s: string) => Builder };
+  })
+    .from("merchant_stores")
+    .select("*")
+    .eq("status", "active")
+    .eq("onboarding_status", "approved")
+    .order("member_since", { ascending: false })
+    .limit(opts.limit ?? 40);
+  if (opts.q?.trim()) q = q.ilike("name", `%${opts.q.trim()}%`);
+  if (opts.district) q = q.eq("district", opts.district);
+  if (opts.category) q = q.eq("category", opts.category);
+  const { data } = await q;
+  const stores = (data as MerchantStore[] | null) ?? [];
+  if (stores.length === 0) return [];
+  const ids = stores.map((s) => s.id);
+  // Fetch a small batch of public+active listings with their cover image,
+  // then aggregate per store. RLS prevents leaking draft/private rows.
+  const { data: listings } = await (supabase as unknown as {
+    from: (t: string) => {
+      select: (s: string) => {
+        in: (
+          c: string,
+          v: unknown[],
+        ) => {
+          eq: (c: string, v: unknown) => {
+            eq: (c: string, v: unknown) => {
+              order: (c: string, o: { ascending: boolean }) => {
+                limit: (n: number) => Promise<{ data: unknown }>;
+              };
+            };
+          };
+        };
+      };
+    };
+  })
+    .from("marketplace_listings")
+    .select("id, store_id, listing_images(url, position, is_primary)")
+    .in("store_id", ids)
+    .eq("status", "active")
+    .eq("visibility", "public")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  type R = {
+    id: string;
+    store_id: string;
+    listing_images?: { url: string; position: number; is_primary: boolean }[];
+  };
+  const buckets = new Map<string, { count: number; photos: string[] }>();
+  for (const row of ((listings as R[] | null) ?? [])) {
+    const b = buckets.get(row.store_id) ?? { count: 0, photos: [] };
+    b.count += 1;
+    if (b.photos.length < 3) {
+      const cover =
+        row.listing_images
+          ?.slice()
+          .sort(
+            (a, c) =>
+              (c.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) ||
+              a.position - c.position,
+          )[0]?.url;
+      if (cover) b.photos.push(cover);
+    }
+    buckets.set(row.store_id, b);
+  }
+  return stores.map((s) => ({
+    ...s,
+    listing_count: buckets.get(s.id)?.count ?? 0,
+    sample_photos: buckets.get(s.id)?.photos ?? [],
+  }));
+}
+
 export async function createOrUpdateStore(input: {
   ownerUserId: string;
   name: string;
