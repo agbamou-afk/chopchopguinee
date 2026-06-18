@@ -26,6 +26,8 @@ import {
   type FoodOrder,
   type FoodOrderState,
 } from "@/lib/repas/types";
+import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   restaurantId: string;
