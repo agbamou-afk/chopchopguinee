@@ -32,6 +32,8 @@ import { useEffect, useRef } from "react";
 import type { ChopMapHandle } from "@/components/map/ChopMap";
 import { RoutingService } from "@/lib/maps/RoutingService";
 import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
+import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { useAuth } from "@/contexts/AuthContext";
 
 /** Extract a phone number from payload_summary (we embed ☎ +224... in Repas). */
 function extractPhone(s: string | null): string | null {
@@ -46,6 +48,7 @@ interface ActiveMissionCardProps {
 }
 
 export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps) {
+  const { user } = useAuth();
   const [busy, setBusy] = useState(false);
   const [issueOpen, setIssueOpen] = useState(false);
   const [proofTaken, setProofTaken] = useState(false);
@@ -369,6 +372,19 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         <p className="mt-2 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
           <ShieldCheck className="w-3 h-3 text-primary" /> Mission suivie par CHOPCHOP
         </p>
+      )}
+
+      {mission.type === "food_delivery" && mission.ref_food_order_id && !terminal && (
+        <div className="mt-3">
+          <OrderMessagingPanel
+            foodOrderId={mission.ref_food_order_id}
+            threadType="restaurant_courier_order"
+            senderRole="courier"
+            selfUserId={user?.id ?? null}
+            title="Contacter restaurant"
+            manualOpen
+          />
+        </div>
       )}
 
       <MissionIssueSheet

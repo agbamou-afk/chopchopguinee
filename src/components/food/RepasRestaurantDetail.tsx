@@ -14,6 +14,8 @@ import { ConversionGateSheet } from "@/components/onboarding/ConversionGateSheet
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportIssueButton } from "@/components/support/ReportIssueButton";
+import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   restaurant: FoodRestaurant;
@@ -56,6 +58,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const cart = useRepasCart();
   const { isLoggedIn, requireAuth } = useAuthGuard();
   const { wallet, available } = useWallet("client");
+  const { user } = useAuth();
 
   useEffect(() => {
     let alive = true;
@@ -363,6 +366,17 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                   <PrimaryButton fullWidth onClick={onClose}>
                     Terminer
                   </PrimaryButton>
+                  {lastOrderId && (
+                    <div className="mt-4 text-left">
+                      <OrderMessagingPanel
+                        foodOrderId={lastOrderId}
+                        threadType="restaurant_client_order"
+                        senderRole="client"
+                        selfUserId={user?.id ?? null}
+                        title="Contacter le restaurant"
+                      />
+                    </div>
+                  )}
                   <div className="mt-3">
                     <ReportIssueButton
                       className="w-full"

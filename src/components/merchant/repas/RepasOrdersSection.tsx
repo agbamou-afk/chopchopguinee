@@ -26,6 +26,8 @@ import {
   type FoodOrder,
   type FoodOrderState,
 } from "@/lib/repas/types";
+import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   restaurantId: string;
@@ -50,6 +52,7 @@ const STATE_TONE: Record<FoodOrderState, string> = {
 };
 
 export function RepasOrdersSection({ restaurantId }: Props) {
+  const { user } = useAuth();
   const [orders, setOrders] = useState<FoodOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -273,6 +276,31 @@ export function RepasOrdersSection({ restaurantId }: Props) {
                   <p className="text-xs font-semibold text-muted-foreground uppercase">Note</p>
                   <p className="text-sm text-foreground mt-1">{detail.notes}</p>
                 </div>
+              )}
+
+              <OrderMessagingPanel
+                foodOrderId={detail.id}
+                threadType="restaurant_client_order"
+                senderRole="restaurant"
+                selfUserId={user?.id ?? null}
+                title="Conversation client"
+              />
+
+              {detail.fulfillment === "delivery" && (
+                detail.mission?.courier_id ? (
+                  <OrderMessagingPanel
+                    foodOrderId={detail.id}
+                    threadType="restaurant_courier_order"
+                    senderRole="restaurant"
+                    selfUserId={user?.id ?? null}
+                    title="Conversation coursier"
+                    manualOpen
+                  />
+                ) : (
+                  <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+                    Coursier non assigné — la conversation s'ouvrira dès l'assignation.
+                  </div>
+                )
               )}
 
               {RESTAURANT_NEXT_STATE[detail.state] && (
