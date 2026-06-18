@@ -3,3 +3,4 @@
 - [Map Phase 2H — Offline / Low-data Hardening](mem://milestones/chopmap-offline-lowdata-map-hardening-stable) — connectivity bus, degraded map panel, TTL client cache, field visit offline drafts, routing defensive guards
 - [Map Phase 2L — Pilot Launch Readiness](mem://milestones/chopmap-pilot-launch-readiness-stable) — pilot checklist, role matrix, smoke script, field/admin guides, known limitations, recovery notes
 - [Commerce Phase 1 — Marché Merchant Branch Launch Readiness](mem://milestones/marche-merchant-branch-launch-readiness-stable) — listing image pipeline verified, shop discovery (category chips, listing counts, sample photos) shipped, messaging/interest/distance audited intact
+- [Commerce Phase 2 — Repas Merchant Dashboard MVP](mem://milestones/repas-merchant-dashboard-mvp-stable) — restaurant menu CRUD + photos, profile editor (logo/cover/prep/delivery), itemized order detail with mission context; reuses marche-listings bucket; messaging deferred
