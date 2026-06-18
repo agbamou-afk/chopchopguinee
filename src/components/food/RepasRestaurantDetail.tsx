@@ -58,6 +58,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const cart = useRepasCart();
   const { isLoggedIn, requireAuth } = useAuthGuard();
   const { wallet, available } = useWallet("client");
+  const { user } = useAuth();
 
   useEffect(() => {
     let alive = true;
