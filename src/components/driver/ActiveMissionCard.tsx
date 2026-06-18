@@ -32,6 +32,8 @@ import { useEffect, useRef } from "react";
 import type { ChopMapHandle } from "@/components/map/ChopMap";
 import { RoutingService } from "@/lib/maps/RoutingService";
 import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
+import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { useAuth } from "@/contexts/AuthContext";
 
 /** Extract a phone number from payload_summary (we embed ☎ +224... in Repas). */
 function extractPhone(s: string | null): string | null {
