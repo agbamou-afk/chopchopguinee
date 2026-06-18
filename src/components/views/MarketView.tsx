@@ -297,6 +297,31 @@ export function MarketView({ onBack }: MarketViewProps) {
 
         {tab === "stores" && (
           <section>
+            <div className="flex items-center gap-2 mb-3 overflow-x-auto scrollbar-none -mx-1 px-1">
+              <button
+                onClick={() => setStoreCategory(null)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold ${
+                  storeCategory === null
+                    ? "gradient-wallet text-primary-foreground"
+                    : "bg-card border border-border text-muted-foreground"
+                }`}
+              >
+                Toutes
+              </button>
+              {MARCHE_CATEGORIES.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setStoreCategory(storeCategory === c.id ? null : c.id)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold ${
+                    storeCategory === c.id
+                      ? "gradient-wallet text-primary-foreground"
+                      : "bg-card border border-border text-muted-foreground"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-foreground">Boutiques</h2>
               <button onClick={() => requireAuth(() => setStoreSheetOpen(true))} className="text-xs text-primary font-medium">
