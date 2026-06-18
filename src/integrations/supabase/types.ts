@@ -2147,6 +2147,98 @@ export type Database = {
           },
         ]
       }
+      food_order_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_role: Database["public"]["Enums"]["food_order_sender_role"]
+          sender_user_id: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_role: Database["public"]["Enums"]["food_order_sender_role"]
+          sender_user_id: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_role?: Database["public"]["Enums"]["food_order_sender_role"]
+          sender_user_id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_order_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "food_order_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_order_threads: {
+        Row: {
+          client_user_id: string
+          courier_user_id: string | null
+          created_at: string
+          food_order_id: string
+          id: string
+          last_message_at: string
+          restaurant_id: string
+          restaurant_owner_user_id: string
+          thread_type: Database["public"]["Enums"]["food_order_thread_type"]
+          updated_at: string
+        }
+        Insert: {
+          client_user_id: string
+          courier_user_id?: string | null
+          created_at?: string
+          food_order_id: string
+          id?: string
+          last_message_at?: string
+          restaurant_id: string
+          restaurant_owner_user_id: string
+          thread_type: Database["public"]["Enums"]["food_order_thread_type"]
+          updated_at?: string
+        }
+        Update: {
+          client_user_id?: string
+          courier_user_id?: string | null
+          created_at?: string
+          food_order_id?: string
+          id?: string
+          last_message_at?: string
+          restaurant_id?: string
+          restaurant_owner_user_id?: string
+          thread_type?: Database["public"]["Enums"]["food_order_thread_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_order_threads_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_order_threads_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "food_restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       food_orders: {
         Row: {
           captured_intent_id: string | null
@@ -7648,6 +7740,13 @@ export type Database = {
           topup_id: string
         }[]
       }
+      open_food_order_thread: {
+        Args: {
+          _food_order_id: string
+          _thread_type: Database["public"]["Enums"]["food_order_thread_type"]
+        }
+        Returns: string
+      }
       process_driver_referral_milestone_jobs: {
         Args: { p_limit?: number }
         Returns: {
@@ -8589,6 +8688,7 @@ export type Database = {
         | "converted"
         | "rejected"
       food_fulfillment: "pickup" | "delivery"
+      food_order_sender_role: "client" | "restaurant" | "courier" | "admin"
       food_order_state:
         | "placed"
         | "confirmed"
@@ -8597,6 +8697,9 @@ export type Database = {
         | "out_for_delivery"
         | "completed"
         | "cancelled"
+      food_order_thread_type:
+        | "restaurant_client_order"
+        | "restaurant_courier_order"
       food_payment_method: "wallet" | "choppay" | "cash"
       insight_confidence: "low" | "medium" | "high"
       insight_section:
@@ -8977,6 +9080,7 @@ export const Constants = {
         "rejected",
       ],
       food_fulfillment: ["pickup", "delivery"],
+      food_order_sender_role: ["client", "restaurant", "courier", "admin"],
       food_order_state: [
         "placed",
         "confirmed",
@@ -8985,6 +9089,10 @@ export const Constants = {
         "out_for_delivery",
         "completed",
         "cancelled",
+      ],
+      food_order_thread_type: [
+        "restaurant_client_order",
+        "restaurant_courier_order",
       ],
       food_payment_method: ["wallet", "choppay", "cash"],
       insight_confidence: ["low", "medium", "high"],
