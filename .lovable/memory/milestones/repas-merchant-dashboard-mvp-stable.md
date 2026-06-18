@@ -55,13 +55,20 @@ type: feature
 - Completion goes through existing `repas_complete_order` RPC unchanged.
 
 ## Deferred (explicitly not in MVP)
-- Order-bound messaging (restaurant ↔ client ↔ courier). Existing
-  `conversations` table is listing-scoped (`listing_id`, `buyer_id`,
-  `seller_id`) and adding food_order_id is a bigger refactor. Marked
-  for a follow-up phase: "Repas messaging — bientôt." No fake UI shipped.
+- Order-bound messaging (restaurant ↔ client ↔ courier) is now LIVE
+  via `food_order_threads` / `food_order_messages` and surfaced through
+  `src/components/repas/OrderMessagingPanel.tsx` in three places:
+  RepasOrdersSection detail (restaurant), RepasRestaurantDetail
+  confirmation (client), and ActiveMissionCard (assigned courier).
 - Restaurant announcements / "plat du jour" social posts. Out of MVP.
 - Live realtime push for new orders (currently 30s polling, no
   realtime spam).
+
+## Owner bootstrap
+- If user owns a Marché store but no restaurant, the Store tab now
+  shows a "Créer mon restaurant" CTA opening the existing
+  `RestaurantOnboardingSheet`. The no-merchant case already exposes
+  Repas creation through `MerchantActivationPanel`. No silent seeding.
 
 ## Hard exit checklist
 - [x] Restaurant owner sees Repas dashboard via existing MerchantHub
