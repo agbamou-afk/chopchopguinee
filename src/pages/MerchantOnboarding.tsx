@@ -14,6 +14,7 @@ import { slugify } from "@/lib/marche";
 import { normalizeGuineaPhone } from "@/lib/phone/guinea";
 import { StoreLocationPicker, type StoreLocation } from "@/components/merchant/StoreLocationPicker";
 import { MERCHANT_PRODUCT_CATEGORIES } from "@/lib/merchant/categories";
+import { createOrUpdateRestaurant } from "@/lib/repas/restaurants";
 
 export default function MerchantOnboarding() {
   const navigate = useNavigate();
@@ -45,12 +46,19 @@ export default function MerchantOnboarding() {
       return;
     }
     (async () => {
-      const { data } = await (supabase as any)
-        .from("merchant_stores")
-        .select("id")
-        .eq("owner_user_id", user!.id)
-        .maybeSingle();
-      if (data) {
+      const [{ data: storeRow }, { data: restoRow }] = await Promise.all([
+        (supabase as any)
+          .from("merchant_stores")
+          .select("id")
+          .eq("owner_user_id", user!.id)
+          .maybeSingle(),
+        (supabase as any)
+          .from("food_restaurants")
+          .select("id")
+          .eq("owner_user_id", user!.id)
+          .maybeSingle(),
+      ]);
+      if (storeRow || restoRow) {
         navigate("/merchant/hub", { replace: true });
         return;
       }
@@ -83,7 +91,8 @@ export default function MerchantOnboarding() {
       toast({ title: "Position requise", description: "Indiquez où se trouve votre boutique." });
       return;
     }
-    if (categories.length === 0) {
+    const isRepasOnly = biz.wants_food && !biz.wants_marketplace && !biz.wants_wallet_agent;
+    if (!isRepasOnly && categories.length === 0) {
       toast({ title: "Catégories requises", description: "Sélectionnez au moins une catégorie de produits." });
       return;
     }
@@ -94,7 +103,12 @@ export default function MerchantOnboarding() {
     setSubmitting(true);
     const normalizedPhone = normalizeGuineaPhone(form.whatsapp) || form.whatsapp.trim();
     const slug = `${slugify(form.business_name)}-${user.id.slice(0, 6)}`;
-    const { error } = await (supabase as any).from("merchant_stores").insert({
+
+    // Repas-only signups skip the merchant_stores row entirely so the
+    // dashboard renders the dedicated restaurant layout, not the product
+    // marketplace shell. Mixed and Marché-only signups still create a store.
+    if (!isRepasOnly) {
+      const { error } = await (supabase as any).from("merchant_stores").insert({
       owner_user_id: user.id,
       created_by: user.id,
       name: form.business_name.trim(),
@@ -131,12 +145,33 @@ export default function MerchantOnboarding() {
       service_agent_status: serviceAgentOptIn ? "pending" : "not_requested",
       onboarding_branch: "merchant",
       merchant_status: "pending",
-    });
-    setSubmitting(false);
-    if (error) {
-      toast({ title: "Erreur", description: error.message });
-      return;
+      });
+      if (error) {
+        setSubmitting(false);
+        toast({ title: "Erreur", description: error.message });
+        return;
+      }
     }
+
+    // Provision the Repas restaurant when the user opted into "Vendre des
+    // repas" — both for Repas-only and mixed signups. Without this the user
+    // lands on the product-merchant dashboard with no menu/orders surface.
+    if (biz.wants_food) {
+      try {
+        await createOrUpdateRestaurant({
+          ownerUserId: user.id,
+          name: form.business_name.trim(),
+          district: location.district || form.district.trim() || null,
+          delivery_available: false,
+          pickup_available: true,
+        });
+      } catch (e) {
+        // Non-fatal: store/onboarding still succeeded. User can finish
+        // setup from the Repas profile section.
+        if (import.meta.env.DEV) console.warn("[onboarding] repas restaurant create failed", e);
+      }
+    }
+    setSubmitting(false);
     // Default mode to merchant after successful submission.
     try {
       await (supabase as any)
@@ -144,8 +179,10 @@ export default function MerchantOnboarding() {
         .upsert({ user_id: user.id, app_mode: "merchant" }, { onConflict: "user_id" });
     } catch { /* noop */ }
     toast({
-      title: "Boutique créée",
-      description: "Vérification en cours. Préparez votre catalogue dès maintenant.",
+      title: isRepasOnly ? "Restaurant créé" : "Boutique créée",
+      description: isRepasOnly
+        ? "Préparez votre menu et activez les commandes dès maintenant."
+        : "Vérification en cours. Préparez votre catalogue dès maintenant.",
     });
     navigate("/merchant/hub", { replace: true });
   };
@@ -253,7 +290,7 @@ export default function MerchantOnboarding() {
                   <Checkbox checked={biz.wants_food} onCheckedChange={(v) => setBiz((b) => ({ ...b, wants_food: !!v }))} />
                   <div className="text-sm">
                     <p className="font-semibold">Vendre des repas</p>
-                    <p className="text-[11px] text-muted-foreground">Restaurant / cuisine. Activation du module Repas (à venir).</p>
+                    <p className="text-[11px] text-muted-foreground">Restaurant / cuisine. Tableau de bord Repas avec menu et commandes.</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/60 bg-card cursor-pointer">
