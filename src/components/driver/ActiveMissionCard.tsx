@@ -374,6 +374,19 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         </p>
       )}
 
+      {mission.type === "food_delivery" && mission.ref_food_order_id && !terminal && (
+        <div className="mt-3">
+          <OrderMessagingPanel
+            foodOrderId={mission.ref_food_order_id}
+            threadType="restaurant_courier_order"
+            senderRole="courier"
+            selfUserId={user?.id ?? null}
+            title="Contacter restaurant"
+            manualOpen
+          />
+        </div>
+      )}
+
       <MissionIssueSheet
         missionId={mission.id}
         open={issueOpen}
