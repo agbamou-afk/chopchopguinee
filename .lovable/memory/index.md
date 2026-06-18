@@ -4,3 +4,4 @@
 - [Map Phase 2L — Pilot Launch Readiness](mem://milestones/chopmap-pilot-launch-readiness-stable) — pilot checklist, role matrix, smoke script, field/admin guides, known limitations, recovery notes
 - [Commerce Phase 1 — Marché Merchant Branch Launch Readiness](mem://milestones/marche-merchant-branch-launch-readiness-stable) — listing image pipeline verified, shop discovery (category chips, listing counts, sample photos) shipped, messaging/interest/distance audited intact
 - [Commerce Phase 2 — Repas Merchant Dashboard MVP](mem://milestones/repas-merchant-dashboard-mvp-stable) — restaurant menu CRUD + photos, profile editor (logo/cover/prep/delivery), itemized order detail with mission context; reuses marche-listings bucket; messaging deferred
+- [Commerce Closing Patch](mem://milestones/commerce-closing-patch-stable) — Marché Boutiques distance sorting + Repas order-bound messaging tables/RPC/helpers (UI surfaces deferred)
