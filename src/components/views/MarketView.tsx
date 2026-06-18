@@ -14,8 +14,8 @@ import { StoreOnboardingSheet } from "@/components/marche/StoreOnboardingSheet";
 import { MyListingsView } from "@/components/marche/MyListingsView";
 import { PromotedSlot } from "@/components/marche/PromotedSlot";
 import { MarcheEmpty } from "@/components/marche/MarcheEmpty";
-import { listStores, type MerchantStore } from "@/lib/marche/stores";
-import { categoryLabel } from "@/lib/marche";
+import { listStoresWithSummary, type StoreSummary } from "@/lib/marche/stores";
+import { categoryLabel, MARCHE_CATEGORIES } from "@/lib/marche";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
@@ -47,8 +47,9 @@ export function MarketView({ onBack }: MarketViewProps) {
   const [sort, setSort] = useState<SortKey>("recent");
   const [tab, setTab] = useState<Tab>("all");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [stores, setStores] = useState<MerchantStore[]>([]);
+  const [stores, setStores] = useState<StoreSummary[]>([]);
   const [storesLoading, setStoresLoading] = useState(false);
+  const [storeCategory, setStoreCategory] = useState<string | null>(null);
   const { requireAuth } = useAuthGuard();
 
   const load = useCallback(async () => {
@@ -94,13 +95,17 @@ export function MarketView({ onBack }: MarketViewProps) {
     load();
   }, [load]);
 
-  // Load stores when Boutiques tab becomes active or search changes.
+  // Load stores when Boutiques tab becomes active or filters change.
   useEffect(() => {
     if (tab !== "stores") return;
     let alive = true;
     (async () => {
       setStoresLoading(true);
-      const data = await listStores({ q: search || undefined, limit: 40 });
+      const data = await listStoresWithSummary({
+        q: search || undefined,
+        category: storeCategory,
+        limit: 40,
+      });
       if (!alive) return;
       setStores(data);
       setStoresLoading(false);
@@ -108,7 +113,7 @@ export function MarketView({ onBack }: MarketViewProps) {
     return () => {
       alive = false;
     };
-  }, [tab, search]);
+  }, [tab, search, storeCategory]);
 
   // Load saved listings for the current user (if signed in)
   useEffect(() => {
@@ -308,6 +313,8 @@ export function MarketView({ onBack }: MarketViewProps) {
                   <StoreCard
                     key={s.id}
                     store={s}
+                    listingCount={s.listing_count}
+                    samplePhotos={s.sample_photos}
                     onClick={() => {
                       setActiveStoreId(s.id);
                       setScreen("store");
