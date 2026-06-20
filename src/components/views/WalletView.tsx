@@ -283,7 +283,7 @@ export function WalletView() {
         <LiveStrip
           stats={[
             { icon: ShieldCheck, label: "Paiements sécurisés", bg: "bg-primary/10", tone: "text-primary" },
-            { icon: Timer, label: "Recharge instantanée", bg: "bg-secondary/20", tone: "text-foreground" },
+            { icon: Timer, label: "Recharge vérifiée par opérateur", bg: "bg-secondary/20", tone: "text-foreground" },
             { icon: Users, label: "Réseau d'agents CHOPCHOP", bg: "bg-success/10", tone: "text-success" },
           ]}
         />
@@ -493,7 +493,7 @@ export function WalletView() {
           <SheetHeader className="text-left">
             <SheetTitle>Recharger via Orange Money</SheetTitle>
             <SheetDescription>
-              Payez le compte marchand CHOPCHOP — votre portefeuille est crédité automatiquement.
+              Payez le compte marchand CHOPCHOP. Un opérateur vérifie le paiement, puis votre portefeuille est crédité.
             </SheetDescription>
           </SheetHeader>
           <div className="mt-4">
