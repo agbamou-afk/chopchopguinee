@@ -296,9 +296,12 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
                 </li>
                 <li>4. Indiquez la référence dans le motif si possible.</li>
                 <li>
-                  5. Votre portefeuille sera{" "}
-                  <span className="font-semibold text-foreground">crédité automatiquement</span>{" "}
-                  après vérification.
+                  5. Gardez votre preuve de paiement (SMS / code OM).
+                </li>
+                <li>
+                  6. Un opérateur CHOPCHOP vérifie votre paiement, puis votre portefeuille est{" "}
+                  <span className="font-semibold text-foreground">crédité après vérification</span>.
+                  Temps de traitement estimé : quelques minutes à quelques heures.
                 </li>
               </ol>
             </div>
