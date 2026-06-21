@@ -11,6 +11,7 @@ import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { useActivityFeed } from "@/lib/activity/useActivityFeed";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { DriverCashoutSheet } from "@/components/wallet/DriverCashoutSheet";
+import { ReportIssueButton } from "@/components/support/ReportIssueButton";
 
 export function DriverEarningsView() {
   const e = useDriverEarnings();
@@ -164,6 +165,16 @@ export function DriverEarningsView() {
                 <ChevronRight className="w-4 h-4" />
               </motion.button>
             }
+          />
+        </div>
+        <div className="mt-3">
+          <ReportIssueButton
+            issueTypes={["payment_pending", "payment_failed", "account_issue", "app_bug", "other"]}
+            context={{ assignedRole: "payment", metadata: { surface: "driver_earnings" } }}
+            label="Signaler un problème de paiement / versement"
+            className="w-full"
+            variant="ghost"
+            size="sm"
           />
         </div>
       </div>
