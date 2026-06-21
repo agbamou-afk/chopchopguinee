@@ -49,10 +49,10 @@ function startOfTodayISO() {
 
 async function safeCount(
   table: string,
-  build?: (q: ReturnType<typeof supabase.from>) => any,
+  build?: (q: any) => any,
 ): Promise<number | null> {
   try {
-    let q: any = supabase.from(table as any).select("*", { count: "exact", head: true });
+    let q: any = (supabase.from as any)(table).select("*", { count: "exact", head: true });
     if (build) q = build(q);
     const { count, error } = await q;
     if (error) return null;
