@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MasterWalletCard } from "@/components/admin/wallet/MasterWalletCard";
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -87,7 +89,14 @@ export default function WalletAdmin() {
       title="Wallet / Ledger"
       subtitle="Journal de toutes les transactions wallet (100 dernières)"
       actions={
-        canCredit ? (
+        <div className="flex items-center gap-2">
+          <Link
+            to="/admin/wallet/driver-cashouts"
+            className="text-sm px-3 py-1.5 rounded-md border border-border hover:bg-muted"
+          >
+            Retraits chauffeurs
+          </Link>
+          {canCredit ? (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Créditer un wallet</Button>
@@ -126,9 +135,11 @@ export default function WalletAdmin() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        ) : null
+          ) : null}
+        </div>
       }
     >
+      <MasterWalletCard />
       <Card className="p-0 overflow-hidden">
         {loading ? (
           <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
