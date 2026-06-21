@@ -35,6 +35,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { TopUpOrangeMoney } from "@/components/wallet/TopUpOrangeMoney";
+import { ReportIssueButton } from "@/components/support/ReportIssueButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { ChopPayLauncher } from "@/components/pay/ChopPayLauncher";
@@ -286,6 +287,17 @@ export function WalletView() {
             { icon: Timer, label: "Recharge vérifiée par opérateur", bg: "bg-secondary/20", tone: "text-foreground" },
             { icon: Users, label: "Réseau d'agents CHOPCHOP", bg: "bg-success/10", tone: "text-success" },
           ]}
+        />
+      </div>
+
+      <div className="px-4 mt-3">
+        <ReportIssueButton
+          issueTypes={["payment_pending", "payment_failed", "account_issue", "app_bug", "other"]}
+          context={{ assignedRole: "payment", metadata: { surface: "wallet" } }}
+          label="Signaler un problème de recharge ou paiement"
+          className="w-full"
+          variant="ghost"
+          size="sm"
         />
       </div>
 

@@ -40,6 +40,7 @@ import AgentTopup from "./pages/AgentTopup";
 import AgentDashboard from "./pages/AgentDashboard";
 import ProfileInfo from "./pages/ProfileInfo";
 import Help from "./pages/Help";
+import MyIssues from "./pages/MyIssues";
 import Legal from "./pages/Legal";
 import Notifications from "./pages/Notifications";
 import NotificationSettings from "./pages/NotificationSettings";
@@ -211,6 +212,7 @@ const App = () => {
           <Route path="/agent/topup" element={<AgentTopup />} />
           <Route path="/profile" element={<ProfileInfo />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/help/issues" element={<MyIssues />} />
           <Route path="/legal" element={<Legal />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings/notifications" element={<NotificationSettings />} />

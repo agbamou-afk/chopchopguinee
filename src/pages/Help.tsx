@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, LifeBuoy } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -168,6 +168,21 @@ export default function Help() {
               Revoir l'introduction chauffeur
             </Button>
           )}
+        </div>
+
+        <div className="bg-card rounded-2xl shadow-card p-4 space-y-3">
+          <h2 className="font-semibold text-foreground">Mes signalements</h2>
+          <p className="text-xs text-muted-foreground">
+            Suivez le statut de vos demandes envoyées au support.
+          </p>
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => navigate("/help/issues")}
+          >
+            <LifeBuoy className="w-4 h-4 mr-2" />
+            Voir mes signalements
+          </Button>
         </div>
 
         <div className="bg-card rounded-2xl shadow-card p-5 space-y-3">
