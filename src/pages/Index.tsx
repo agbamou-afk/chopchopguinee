@@ -529,8 +529,10 @@ const Index = () => {
           const meta = (cancelled as { metadata?: { cancellation_fee_gnf?: number } } | null)?.metadata;
           const fee = Number(meta?.cancellation_fee_gnf ?? 0);
           if (fee > 0) {
-            toast.error("Frais d'annulation : 10% car un chauffeur était déjà en route.", {
+            toast({
+              title: "Frais d'annulation : 10% car un chauffeur était déjà en route.",
               description: "Le reste de votre réservation a été libéré.",
+              variant: "destructive",
             });
           }
         } catch { /* noop */ }
