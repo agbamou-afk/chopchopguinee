@@ -83,6 +83,7 @@ const PaymentsAdmin = lazy(() => import("./pages/admin/PaymentsAdmin"));
 const PilotCommandCenter = lazy(() => import("./pages/admin/PilotCommandCenter"));
 const OpsCommandCenter = lazy(() => import("./pages/admin/OpsCommandCenter"));
 const DriverGroupsAdmin = lazy(() => import("./pages/admin/DriverGroupsAdmin"));
+const AdminChangePassword = lazy(() => import("./pages/admin/AdminChangePassword"));
 const LeaderPortal = lazy(() => import("./pages/LeaderPortal"));
 const DriverApply = lazy(() => import("./pages/DriverApply"));
 const MerchantQR = lazy(() => import("./pages/MerchantQR"));
@@ -164,6 +165,10 @@ const App = () => {
           <Route path="/complete-profile" element={<CompleteProfile />} />
           <Route path="/confirm-profile" element={<ConfirmProfile />} />
           <Route path="/no-access" element={<NoAccess />} />
+          <Route
+            path="/admin/change-password"
+            element={<Suspense fallback={null}><AdminChangePassword /></Suspense>}
+          />
           <Route path="/admin" element={<Suspense fallback={null}><AdminLayout /></Suspense>}>
             <Route index element={<AdminDashboard />} />
             <Route path="live" element={<LiveOps />} />
