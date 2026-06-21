@@ -166,7 +166,9 @@ export type Database = {
           admin_role: Database["public"]["Enums"]["admin_role"]
           created_at: string
           created_by: string | null
+          created_via: string | null
           id: string
+          must_change_password: boolean
           notes: string | null
           status: Database["public"]["Enums"]["admin_user_status"]
           updated_at: string
@@ -176,7 +178,9 @@ export type Database = {
           admin_role: Database["public"]["Enums"]["admin_role"]
           created_at?: string
           created_by?: string | null
+          created_via?: string | null
           id?: string
+          must_change_password?: boolean
           notes?: string | null
           status?: Database["public"]["Enums"]["admin_user_status"]
           updated_at?: string
@@ -186,7 +190,9 @@ export type Database = {
           admin_role?: Database["public"]["Enums"]["admin_role"]
           created_at?: string
           created_by?: string | null
+          created_via?: string | null
           id?: string
+          must_change_password?: boolean
           notes?: string | null
           status?: Database["public"]["Enums"]["admin_user_status"]
           updated_at?: string

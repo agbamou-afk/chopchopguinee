@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, Plus, UserCog } from "lucide-react";
+import { Copy, Loader2, Plus, UserCog, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ModulePage } from "@/components/admin/ModulePage";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { logAction } from "@/lib/admin/approvals";
@@ -64,7 +65,12 @@ function AdminsList({ canManage }: { canManage: boolean }) {
 
   return (
     <div className="space-y-3">
-      {canManage && <CreateAdminDialog onCreated={load} />}
+      {canManage && (
+        <div className="flex flex-wrap gap-2">
+          <CreateAdminDialog onCreated={load} />
+          <CreateStaffAccountDialog onCreated={load} />
+        </div>
+      )}
       {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : rows.map((r) => (
         <Card key={r.id} className="p-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -86,7 +92,8 @@ function AdminsList({ canManage }: { canManage: boolean }) {
 
 function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
-  const [phone, setPhone] = useState(""); const [role, setRole] = useState<LegacyAdminRole>("ops_admin");
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState<Exclude<LegacyAdminRole, "super_admin">>("ops_admin");
   const [notes, setNotes] = useState(""); const [busy, setBusy] = useState(false);
   const create = async () => {
     setBusy(true);
@@ -102,17 +109,16 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button className="gradient-primary"><Plus className="w-4 h-4 mr-1" />Nouvel admin</Button></DialogTrigger>
+      <DialogTrigger asChild><Button variant="outline"><Plus className="w-4 h-4 mr-1" />Promouvoir un utilisateur</Button></DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Créer un administrateur</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Promouvoir un utilisateur existant</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label className="text-xs">Téléphone du compte</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+224..." /></div>
           <div>
             <Label className="text-xs">Rôle</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as LegacyAdminRole)}>
+            <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="super_admin">Super Admin</SelectItem>
                 <SelectItem value="ops_admin">Operations Admin</SelectItem>
                 <SelectItem value="finance_admin">Finance Admin</SelectItem>
               </SelectContent>
@@ -127,6 +133,163 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+const DEFAULT_TEMP_PASSWORD = "Welcome%2026";
+
+function CreateStaffAccountDialog({ onCreated }: { onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState<"ops_admin" | "finance_admin">("ops_admin");
+  const [tempPassword, setTempPassword] = useState(DEFAULT_TEMP_PASSWORD);
+  const [requireChange, setRequireChange] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<null | {
+    username: string; email: string; admin_role: string; temporary_password: string;
+  }>(null);
+
+  const reset = () => {
+    setUsername(""); setDisplayName(""); setEmail(""); setPhone("");
+    setRole("ops_admin"); setTempPassword(DEFAULT_TEMP_PASSWORD);
+    setRequireChange(true); setResult(null);
+  };
+
+  const create = async () => {
+    setBusy(true);
+    const { data, error } = await supabase.functions.invoke("admin-create-staff-user", {
+      body: {
+        username: username.trim(),
+        display_name: displayName.trim() || username.trim(),
+        email: email.trim(),
+        phone: phone.trim() || null,
+        role,
+        temporary_password: tempPassword || DEFAULT_TEMP_PASSWORD,
+        require_password_change: requireChange,
+      },
+    });
+    setBusy(false);
+    const payload = data as { ok?: boolean; message?: string; error?: string;
+      username?: string; email?: string; admin_role?: string; temporary_password?: string } | null;
+    if (error || !payload?.ok) {
+      toast({
+        title: "Création impossible",
+        description: payload?.message ?? error?.message ?? "Erreur inconnue",
+      });
+      return;
+    }
+    setResult({
+      username: payload.username!,
+      email: payload.email!,
+      admin_role: payload.admin_role!,
+      temporary_password: payload.temporary_password!,
+    });
+    onCreated();
+  };
+
+  const copy = (v: string) => navigator.clipboard.writeText(v).then(
+    () => toast({ title: "Copié" }),
+    () => toast({ title: "Copie impossible" }),
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
+        <Button className="gradient-primary"><UserPlus className="w-4 h-4 mr-1" />Créer un compte staff</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Créer un compte staff CHOPCHOP</DialogTitle></DialogHeader>
+        {result ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Compte créé. Copiez ces identifiants maintenant — le mot de passe ne sera plus jamais affiché.
+            </p>
+            <div className="rounded-lg border p-3 space-y-2 text-sm">
+              <Row label="Identifiant" value={result.username} onCopy={copy} />
+              <Row label="Email de connexion" value={result.email} onCopy={copy} />
+              <Row label="Rôle" value={LEGACY_ROLE_LABELS[result.admin_role as LegacyAdminRole] ?? result.admin_role} />
+              <Row label="Mot de passe temporaire" value={result.temporary_password} onCopy={copy} mono />
+            </div>
+            <p className="text-xs text-amber-700 dark:text-amber-400">
+              L'utilisateur doit changer son mot de passe à la première connexion.
+            </p>
+            <DialogFooter>
+              <Button className="w-full" onClick={() => { setOpen(false); reset(); }}>Terminé</Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Identifiant (username)</Label>
+                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="ex. ops.salimatou" />
+              </div>
+              <div>
+                <Label className="text-xs">Nom affiché</Label>
+                <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Prénom Nom" />
+              </div>
+              <div>
+                <Label className="text-xs">Email de connexion</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="staff@chopchopguinee.com" />
+              </div>
+              <div>
+                <Label className="text-xs">Téléphone (optionnel)</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+224..." />
+              </div>
+              <div>
+                <Label className="text-xs">Rôle</Label>
+                <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ops_admin">Operations Admin</SelectItem>
+                    <SelectItem value="finance_admin">Finance Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  La création de comptes God Admin est désactivée ici.
+                </p>
+              </div>
+              <div>
+                <Label className="text-xs">Mot de passe temporaire</Label>
+                <Input value={tempPassword} onChange={(e) => setTempPassword(e.target.value)} />
+              </div>
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox checked={requireChange} onCheckedChange={(v) => setRequireChange(v === true)} />
+                Forcer le changement de mot de passe à la première connexion
+              </label>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={create}
+                disabled={busy || !username || !email}
+                className="gradient-primary w-full"
+              >
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Créer le compte"}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Row({ label, value, onCopy, mono }: { label: string; value: string; onCopy?: (v: string) => void; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className={`truncate ${mono ? "font-mono" : ""}`}>{value}</p>
+      </div>
+      {onCopy && (
+        <Button size="sm" variant="ghost" onClick={() => onCopy(value)}>
+          <Copy className="w-3.5 h-3.5" />
+        </Button>
+      )}
+    </div>
   );
 }
 
