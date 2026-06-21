@@ -81,6 +81,7 @@ const AuditAdmin = lazy(() => import("./pages/admin/AuditAdmin"));
 const AnalyticsAdmin = lazy(() => import("./pages/admin/AnalyticsAdmin"));
 const PaymentsAdmin = lazy(() => import("./pages/admin/PaymentsAdmin"));
 const PilotCommandCenter = lazy(() => import("./pages/admin/PilotCommandCenter"));
+const OpsCommandCenter = lazy(() => import("./pages/admin/OpsCommandCenter"));
 const DriverGroupsAdmin = lazy(() => import("./pages/admin/DriverGroupsAdmin"));
 const LeaderPortal = lazy(() => import("./pages/LeaderPortal"));
 const DriverApply = lazy(() => import("./pages/DriverApply"));
@@ -198,6 +199,7 @@ const App = () => {
             <Route path="analytics" element={<AnalyticsAdmin />} />
             <Route path="payments" element={<PaymentsAdmin />} />
             <Route path="pilot-command" element={<PilotCommandCenter />} />
+            <Route path="ops" element={<OpsCommandCenter />} />
             <Route path="driver-groups" element={<DriverGroupsAdmin />} />
           </Route>
           <Route path="/agent" element={<AgentDashboard />} />

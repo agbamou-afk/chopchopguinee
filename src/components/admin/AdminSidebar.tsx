@@ -19,6 +19,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
     label: "Vue d'ensemble",
     items: [
       { title: "Tableau de bord", url: "/admin", icon: LayoutDashboard, module: "dashboard" },
+      { title: "Centre opérations", url: "/admin/ops", icon: Radar, module: "dashboard" },
       { title: "Live Operations", url: "/admin/live", icon: Activity, module: "live_ops" },
       { title: "Pilot Command", url: "/admin/pilot-command", icon: Radar, module: "dashboard" },
     ],
