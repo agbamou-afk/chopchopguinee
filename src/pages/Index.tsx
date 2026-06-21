@@ -521,7 +521,19 @@ const Index = () => {
       // If the user closes a still-pending (un-matched) ride, cancel it
       // server-side so it does not stay around as an orphan.
       if (alsoCancel) {
-        try { await supabase.rpc("ride_cancel", { p_ride_id: trip.rideId, p_reason: "client_dismissed" } as never); } catch { /* noop */ }
+        try {
+          const { data: cancelled } = await supabase.rpc(
+            "ride_cancel",
+            { p_ride_id: trip.rideId, p_reason: "client_dismissed" } as never,
+          );
+          const meta = (cancelled as { metadata?: { cancellation_fee_gnf?: number } } | null)?.metadata;
+          const fee = Number(meta?.cancellation_fee_gnf ?? 0);
+          if (fee > 0) {
+            toast.error("Frais d'annulation : 10% car un chauffeur était déjà en route.", {
+              description: "Le reste de votre réservation a été libéré.",
+            });
+          }
+        } catch { /* noop */ }
       }
     }
     setActiveTrip(null);
