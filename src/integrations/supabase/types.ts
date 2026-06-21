@@ -691,6 +691,77 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_cashout_requests: {
+        Row: {
+          admin_note: string | null
+          amount_gnf: number
+          created_at: string
+          driver_note: string | null
+          driver_user_id: string
+          id: string
+          paid_at: string | null
+          paid_by: string | null
+          payout_method: string
+          payout_phone: string
+          provider_reference: string | null
+          rejected_reason: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          wallet_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_gnf: number
+          created_at?: string
+          driver_note?: string | null
+          driver_user_id: string
+          id?: string
+          paid_at?: string | null
+          paid_by?: string | null
+          payout_method?: string
+          payout_phone: string
+          provider_reference?: string | null
+          rejected_reason?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          wallet_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount_gnf?: number
+          created_at?: string
+          driver_note?: string | null
+          driver_user_id?: string
+          id?: string
+          paid_at?: string | null
+          paid_by?: string | null
+          payout_method?: string
+          payout_phone?: string
+          provider_reference?: string | null
+          rejected_reason?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_cashout_requests_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_group_commissions: {
         Row: {
           approved_at: string | null
@@ -6538,6 +6609,105 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      driver_cashout_cancel_request: {
+        Args: { p_id: string }
+        Returns: {
+          admin_note: string | null
+          amount_gnf: number
+          created_at: string
+          driver_note: string | null
+          driver_user_id: string
+          id: string
+          paid_at: string | null
+          paid_by: string | null
+          payout_method: string
+          payout_phone: string
+          provider_reference: string | null
+          rejected_reason: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_cashout_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      driver_cashout_create_request: {
+        Args: {
+          p_amount_gnf: number
+          p_driver_note?: string
+          p_payout_phone: string
+        }
+        Returns: string
+      }
+      driver_cashout_mark_paid: {
+        Args: {
+          p_admin_note?: string
+          p_id: string
+          p_provider_reference: string
+        }
+        Returns: {
+          admin_note: string | null
+          amount_gnf: number
+          created_at: string
+          driver_note: string | null
+          driver_user_id: string
+          id: string
+          paid_at: string | null
+          paid_by: string | null
+          payout_method: string
+          payout_phone: string
+          provider_reference: string | null
+          rejected_reason: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_cashout_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      driver_cashout_reject_request: {
+        Args: { p_id: string; p_reason: string }
+        Returns: {
+          admin_note: string | null
+          amount_gnf: number
+          created_at: string
+          driver_note: string | null
+          driver_user_id: string
+          id: string
+          paid_at: string | null
+          paid_by: string | null
+          payout_method: string
+          payout_phone: string
+          provider_reference: string | null
+          rejected_reason: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_cashout_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       driver_has_capability: {
         Args: { _capability: string; _user_id: string }
         Returns: boolean
@@ -8156,6 +8326,8 @@ export type Database = {
         }
       }
       wallet_ensure: { Args: { _party_type?: string }; Returns: string }
+      wallet_ensure_master: { Args: never; Returns: string }
+      wallet_get_master_balance: { Args: never; Returns: number }
       wallet_hold: {
         Args: {
           p_amount_gnf: number
