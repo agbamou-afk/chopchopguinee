@@ -10,10 +10,11 @@ import { toast } from "sonner";
 import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { useActivityFeed } from "@/lib/activity/useActivityFeed";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
+import { DriverCashoutSheet } from "@/components/wallet/DriverCashoutSheet";
 
 export function DriverEarningsView() {
   const e = useDriverEarnings();
-  const { available: walletBalance } = useWallet("driver");
+  const { available: walletBalance, refresh: refreshWallet } = useWallet("driver");
   // Driver-perspective activity: completed rides (with earning amounts),
   // ChopWallet credits, payouts, refunds. Replaces the legacy "Courses
   // récentes" list with the unified ecosystem timeline.
@@ -149,15 +150,21 @@ export function DriverEarningsView() {
             <Wallet className="w-5 h-5" />
             {e.cashDebtGnf > 0 ? "Régler" : "Aucune dette"}
           </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-2 py-4 bg-card border border-border text-foreground rounded-2xl font-semibold text-sm"
-          >
-            <Download className="w-4 h-4" />
-            Versement
-            <ChevronRight className="w-4 h-4" />
-          </motion.button>
+          <DriverCashoutSheet
+            available={walletBalance ?? 0}
+            onChanged={refreshWallet}
+            trigger={
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center justify-center gap-2 py-4 bg-card border border-border text-foreground rounded-2xl font-semibold text-sm"
+              >
+                <Download className="w-4 h-4" />
+                Versement
+                <ChevronRight className="w-4 h-4" />
+              </motion.button>
+            }
+          />
         </div>
       </div>
 
