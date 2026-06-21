@@ -184,7 +184,8 @@ Deno.serve(async (req) => {
 
     // Audit log — never log the password.
     await admin.from("audit_logs").insert({
-      actor_id: callerId,
+      actor_user_id: callerId,
+      actor_role: "super_admin",
       module: "admins",
       action: "staff.create",
       target_type: "user",
