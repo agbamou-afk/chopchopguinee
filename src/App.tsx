@@ -199,6 +199,7 @@ const App = () => {
             <Route path="analytics" element={<AnalyticsAdmin />} />
             <Route path="payments" element={<PaymentsAdmin />} />
             <Route path="pilot-command" element={<PilotCommandCenter />} />
+            <Route path="ops" element={<OpsCommandCenter />} />
             <Route path="driver-groups" element={<DriverGroupsAdmin />} />
           </Route>
           <Route path="/agent" element={<AgentDashboard />} />
