@@ -164,6 +164,7 @@ export type Database = {
       admin_users: {
         Row: {
           admin_role: Database["public"]["Enums"]["admin_role"]
+          changed_password_at: string | null
           created_at: string
           created_by: string | null
           created_via: string | null
@@ -176,6 +177,7 @@ export type Database = {
         }
         Insert: {
           admin_role: Database["public"]["Enums"]["admin_role"]
+          changed_password_at?: string | null
           created_at?: string
           created_by?: string | null
           created_via?: string | null
@@ -188,6 +190,7 @@ export type Database = {
         }
         Update: {
           admin_role?: Database["public"]["Enums"]["admin_role"]
+          changed_password_at?: string | null
           created_at?: string
           created_by?: string | null
           created_via?: string | null
@@ -5707,6 +5710,7 @@ export type Database = {
         Args: { p_email: string }
         Returns: Json
       }
+      admin_clear_must_change_password: { Args: never; Returns: Json }
       admin_create_agent: {
         Args: {
           p_business_name: string
