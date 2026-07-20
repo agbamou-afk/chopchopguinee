@@ -1,7 +1,10 @@
 # SMTP / Auth Email — Production Launch Readiness
 
-**Status:** RED — CODE READY / NEEDS OPS.
-Default / dev auth email delivery is **not** acceptable for mission launch.
+**Status:** YELLOW — CODE + DOMAIN READY / NEEDS LIVE INBOX TESTS.
+Sender domain `notify.chopchopguinee.com` is verified and delegated to Lovable
+nameservers (`ns3.lovable.cloud`, `ns4.lovable.cloud`). Auth email pipeline
+(`auth-email-hook` + queue) is deployed. Remaining work is live-inbox
+verification and monitoring.
 
 CHOPCHOP auth emails (signup confirmation, password reset, magic links) route through the
 Lovable-managed auth email pipeline (`auth-email-hook`). No SMTP credentials are stored in
@@ -9,17 +12,36 @@ Lovable-managed auth email pipeline (`auth-email-hook`). No SMTP credentials are
 
 ## Ops checklist — must be GREEN before launch
 
-- [ ] Sender domain configured (e.g. `notify.chopchopguinee.com`)
-- [ ] DNS records verified (NS delegation green in Cloud → Emails)
+- [x] Sender domain configured (`notify.chopchopguinee.com`)
+- [x] DNS records verified (NS delegation green in Cloud → Emails)
+- [x] Branded auth templates deployed (signup, recovery, magic-link, invite, email-change, reauthentication)
+- [x] `auth-email-hook` deployed on latest queue-based pattern
+- [x] Ops Command Center "Emails auth" chip wired to real health probe (`email_get_health` RPC)
 - [ ] Sender name set to **CHOPCHOP**
 - [ ] Sender email set (e.g. `no-reply@notify.chopchopguinee.com`)
 - [ ] Reply-to address set (e.g. `support@chopchopguinee.com`)
-- [ ] Branded auth templates deployed (signup, recovery, magic-link, invite, email-change)
 - [ ] Live test: signup with a real Gmail address → confirmation email arrives in inbox (not spam)
 - [ ] Live test: signup with a real Orange / Yahoo / iCloud address → confirmation email arrives in inbox
 - [ ] Live test: password reset → recovery email arrives, link works
 - [ ] Live test: link click confirms account and redirects into the app
 - [ ] Bounce / complaint monitoring location documented for ops
+
+## How to run the live inbox test (ops walkthrough)
+
+1. From an incognito browser, open the published app and sign up with a real
+   Gmail address you control.
+2. Watch the inbox (and spam folder) for the CHOPCHOP confirmation email.
+   It should arrive within 60 seconds.
+3. Click the confirmation link. It must land back in the app authenticated.
+4. From the sign-in screen, use "Mot de passe oublié" with the same address.
+   Confirm the recovery email arrives and the reset link works.
+5. Repeat steps 1–4 with a real Orange, Yahoo, and iCloud address.
+6. Open **Admin → Centre opérations**. The "Emails auth" chip should show
+   `Prêt` with a non-zero 7-day send count.
+7. Open **Cloud → Emails** and confirm each test send is logged with status
+   `sent` and no DLQ rows.
+
+If any inbox test fails, follow the recovery steps below before retrying.
 
 ## What the agent must never do
 
