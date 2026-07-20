@@ -72,6 +72,10 @@ export default function OpsCommandCenter() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const [readiness, setReadiness] = useState<ReadinessItem[]>([]);
+  const [emailHealth, setEmailHealth] = useState<{
+    sent_7d: number; failed_7d: number; dlq_7d: number;
+    queue_backlog: number; dlq_backlog: number; last_sent_at: string | null;
+  } | null>(null);
   const [today, setToday] = useState<CountCard[]>([]);
   const [urgent, setUrgent] = useState<{ support: number | null; pendingDrivers: number | null;
     pendingTopups: number | null; pendingCashouts: number | null; mapDups: number | null;
@@ -126,14 +130,32 @@ export default function OpsCommandCenter() {
     }
     setMasterBalance(master);
 
+    // Email pipeline health probe
+    let email: typeof emailHealth = null;
+    try {
+      const { data } = await supabase.rpc("email_get_health");
+      if (data && typeof data === "object") email = data as any;
+    } catch { email = null; }
+    setEmailHealth(email);
+
     // Readiness strip
     const driversTested = driversOnlineRecent ?? 0;
+    const smtp: { status: Status; detail: string } = (() => {
+      if (!email) return { status: "unknown", detail: "Sonde indisponible. Vérifier configuration." };
+      if ((email.dlq_backlog ?? 0) > 0 || (email.dlq_7d ?? 0) > 0)
+        return { status: "degraded", detail: `${email.dlq_7d} en DLQ / 7j. Backlog ${email.queue_backlog}.` };
+      if ((email.failed_7d ?? 0) > 0)
+        return { status: "action", detail: `${email.failed_7d} échec(s) / 7j. Vérifier logs.` };
+      if ((email.sent_7d ?? 0) === 0)
+        return { status: "action", detail: "Aucun envoi 7j. Faire un test signup/reset." };
+      return { status: "ready", detail: `${email.sent_7d} envoyés / 7j. Backlog ${email.queue_backlog}.` };
+    })();
     const r: ReadinessItem[] = [
       {
         key: "smtp",
-        label: "SMTP",
-        status: "unknown",
-        detail: "Vérifier la configuration production. Voir checklist.",
+        label: "Emails auth",
+        status: smtp.status,
+        detail: smtp.detail,
         href: "/admin/settings",
       },
       {
