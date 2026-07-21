@@ -3,6 +3,7 @@ import walletIcon from "@/assets/icons/wallet.png";
 import motoIcon from "@/assets/icons/moto.png";
 import repasIcon from "@/assets/icons/repas.png";
 import marcheIcon from "@/assets/icons/marche.png";
+import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
 
 export type PrimaryAction = "topup" | "ride" | "order" | "market";
 
@@ -15,22 +16,34 @@ interface Props {
  * the canonical CHOPCHOP service icon family (raster PNGs) so the grid reads as
  * one authored set instead of mixed Lucide/PNG glyphs.
  */
-const ACTIONS: Array<{
+type ActionDef = {
   id: PrimaryAction;
   label: string;
   subtitle: string;
   img: string;
   alt: string;
   halo: string;
-}> = [
-  {
-    id: "topup",
-    label: "ChopWallet",
-    subtitle: "Recharger en quelques secondes",
-    img: walletIcon,
-    alt: "Recharger ChopWallet",
-    halo: "bg-primary/12 ring-1 ring-primary/15",
-  },
+};
+
+const WALLET_TILE: ActionDef = {
+  id: "topup",
+  label: "ChopWallet",
+  subtitle: "Recharger en quelques secondes",
+  img: walletIcon,
+  alt: "Recharger ChopWallet",
+  halo: "bg-primary/12 ring-1 ring-primary/15",
+};
+
+const OM_TILE: ActionDef = {
+  id: "topup",
+  label: "Orange Money",
+  subtitle: "Payer par Orange Money",
+  img: walletIcon,
+  alt: "Payer avec Orange Money",
+  halo: "bg-primary/12 ring-1 ring-primary/15",
+};
+
+const RIDE_TILES: ActionDef[] = [
   {
     id: "ride",
     label: "Course",
@@ -58,9 +71,14 @@ const ACTIONS: Array<{
 ];
 
 export function PrimaryActionGrid({ onAction }: Props) {
+  const publicWalletEnabled = usePublicWalletEnabled();
+  const actions: ActionDef[] = [
+    publicWalletEnabled ? WALLET_TILE : OM_TILE,
+    ...RIDE_TILES,
+  ];
   return (
     <div className="grid grid-cols-2 gap-3">
-      {ACTIONS.map(({ id, label, subtitle, img, alt, halo }) => (
+      {actions.map(({ id, label, subtitle, img, alt, halo }) => (
         <motion.button
           key={id}
           whileTap={{ scale: 0.985 }}
