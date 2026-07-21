@@ -364,7 +364,7 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
         </div>
       )}
       <div>
-        <p className="text-sm text-muted-foreground">Montant de la recharge</p>
+        <p className="text-sm text-muted-foreground">Montant du paiement Orange Money</p>
         <div className="mt-2 flex items-baseline gap-2">
           <Input
             type="number"
@@ -400,11 +400,12 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
         disabled={creating || amount < 1000 || !activeAccount || accountsLoading}
         className="w-full h-12"
       >
-        {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Créer la demande de recharge"}
+        {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Continuer avec Orange Money"}
       </Button>
 
       <p className="text-[11px] text-muted-foreground text-center">
-        Vous recevrez les instructions de paiement Orange Money à l'étape suivante.
+        Vous recevrez les instructions Orange Money à l'étape suivante.<br />
+        Aucun crédit automatique sans validation opérateur.
       </p>
     </div>
   );

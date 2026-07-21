@@ -14,6 +14,7 @@ import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
 import { isSandboxMode } from "@/lib/runtimeMode";
 import { useLocation } from "react-router-dom";
+import { loadFeatureFlags } from "@/lib/flags/featureFlags";
 
 const FREEZE_ALLOWED_PATHS = ["/auth", "/legal", "/privacy", "/terms", "/help", "/unsubscribe", "/offline"];
 
@@ -129,6 +130,8 @@ const App = () => {
 
   useEffect(() => {
     Analytics.init();
+    // Feature flags — fire-and-forget; UI reads DEFAULTS until this resolves.
+    void loadFeatureFlags();
   }, []);
 
   return (

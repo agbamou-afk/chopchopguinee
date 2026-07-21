@@ -2,6 +2,7 @@ import { Home, Receipt, Wallet, User, ScanLine, type LucideIcon } from "lucide-r
 import { motion } from "framer-motion";
 import { SteeringWheel } from "@/components/icons/SteeringWheel";
 import type { ComponentType, SVGProps } from "react";
+import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
 
 type IconType = LucideIcon | ComponentType<SVGProps<SVGSVGElement> & { size?: number | string }>;
 type Tab = { id: string; icon: IconType; label: string };
@@ -13,10 +14,19 @@ interface BottomNavProps {
   onScanClick?: () => void;
 }
 
-const userTabs: Tab[] = [
+const userTabsFull: Tab[] = [
   { id: "home", icon: Home, label: "Accueil" },
   { id: "orders", icon: Receipt, label: "Activité" },
   { id: "wallet", icon: Wallet, label: "ChopWallet" },
+  { id: "profile", icon: User, label: "Compte" },
+];
+
+// Orange Money First pivot: when the public wallet is archived we drop
+// the ChopWallet tab entirely rather than renaming it to something the
+// user can't act on. Activity (orders) already covers payment history.
+const userTabsOmFirst: Tab[] = [
+  { id: "home", icon: Home, label: "Accueil" },
+  { id: "orders", icon: Receipt, label: "Activité" },
   { id: "profile", icon: User, label: "Compte" },
 ];
 
@@ -27,10 +37,15 @@ const driverTabs: Tab[] = [
 ];
 
 export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScanClick }: BottomNavProps) {
-  const tabs = isDriverMode ? driverTabs : userTabs;
+  const publicWallet = usePublicWalletEnabled();
+  const clientTabs = publicWallet ? userTabsFull : userTabsOmFirst;
+  const tabs = isDriverMode ? driverTabs : clientTabs;
   // Insert center Scanner button only in client mode
   const left = tabs.slice(0, 2);
   const right = tabs.slice(2);
+  // Grid columns adapt so the layout stays balanced when the wallet
+  // tab is hidden (2 left + scanner + 1 right = 4 cols).
+  const clientCols = right.length === 2 ? "grid-cols-5" : "grid-cols-4";
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card/92 backdrop-blur-md border-t border-border/70 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-50 shadow-soft">
@@ -45,7 +60,7 @@ export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScan
           ))}
         </div>
       ) : (
-        <div className="max-w-md mx-auto grid grid-cols-5 items-center relative">
+        <div className={`max-w-md mx-auto grid ${clientCols} items-center relative`}>
           {left.map((tab) => (
             <div key={tab.id} className="flex justify-center">
               <NavButton tab={tab} active={activeTab === tab.id} onClick={() => onTabChange(tab.id)} />
