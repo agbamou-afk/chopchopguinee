@@ -4321,19 +4321,27 @@ export type Database = {
       payment_intents: {
         Row: {
           amount_gnf: number
+          authorized_at: string | null
           cancelled_at: string | null
           captured_at: string | null
           captured_tx_id: string | null
+          checkout_session_id: string | null
           created_at: string
           currency: string
           description: string | null
+          expires_at: string | null
           id: string
           internal_reference: string
+          ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
+          payer_phone: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
           related_listing_id: string | null
           related_mission_id: string | null
           related_order_id: string | null
@@ -4348,19 +4356,27 @@ export type Database = {
         }
         Insert: {
           amount_gnf: number
+          authorized_at?: string | null
           cancelled_at?: string | null
           captured_at?: string | null
           captured_tx_id?: string | null
+          checkout_session_id?: string | null
           created_at?: string
           currency?: string
           description?: string | null
+          expires_at?: string | null
           id?: string
           internal_reference: string
+          ledger_release_tx_id?: string | null
           metadata?: Json
           payee_user_id?: string | null
+          payer_phone?: string | null
           provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id?: string | null
           provider_reference?: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at?: string | null
+          rejection_reason?: string | null
           related_listing_id?: string | null
           related_mission_id?: string | null
           related_order_id?: string | null
@@ -4375,19 +4391,27 @@ export type Database = {
         }
         Update: {
           amount_gnf?: number
+          authorized_at?: string | null
           cancelled_at?: string | null
           captured_at?: string | null
           captured_tx_id?: string | null
+          checkout_session_id?: string | null
           created_at?: string
           currency?: string
           description?: string | null
+          expires_at?: string | null
           id?: string
           internal_reference?: string
+          ledger_release_tx_id?: string | null
           metadata?: Json
           payee_user_id?: string | null
+          payer_phone?: string | null
           provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id?: string | null
           provider_reference?: string | null
           purpose?: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at?: string | null
+          rejection_reason?: string | null
           related_listing_id?: string | null
           related_mission_id?: string | null
           related_order_id?: string | null
@@ -4406,6 +4430,20 @@ export type Database = {
             columns: ["captured_tx_id"]
             isOneToOne: false
             referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_intents_ledger_release_tx_id_fkey"
+            columns: ["ledger_release_tx_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_intents_provider_event_id_fkey"
+            columns: ["provider_event_id"]
+            isOneToOne: false
+            referencedRelation: "payment_provider_events"
             referencedColumns: ["id"]
           },
           {
@@ -6319,19 +6357,27 @@ export type Database = {
         Args: { p_intent_id: string; p_reason?: string }
         Returns: {
           amount_gnf: number
+          authorized_at: string | null
           cancelled_at: string | null
           captured_at: string | null
           captured_tx_id: string | null
+          checkout_session_id: string | null
           created_at: string
           currency: string
           description: string | null
+          expires_at: string | null
           id: string
           internal_reference: string
+          ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
+          payer_phone: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
           related_listing_id: string | null
           related_mission_id: string | null
           related_order_id: string | null
@@ -6359,19 +6405,27 @@ export type Database = {
         Args: { p_payment_intent_id: string; p_reason?: string }
         Returns: {
           amount_gnf: number
+          authorized_at: string | null
           cancelled_at: string | null
           captured_at: string | null
           captured_tx_id: string | null
+          checkout_session_id: string | null
           created_at: string
           currency: string
           description: string | null
+          expires_at: string | null
           id: string
           internal_reference: string
+          ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
+          payer_phone: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
           related_listing_id: string | null
           related_mission_id: string | null
           related_order_id: string | null
@@ -6395,19 +6449,27 @@ export type Database = {
         Args: { p_payment_intent_id: string; p_reason?: string }
         Returns: {
           amount_gnf: number
+          authorized_at: string | null
           cancelled_at: string | null
           captured_at: string | null
           captured_tx_id: string | null
+          checkout_session_id: string | null
           created_at: string
           currency: string
           description: string | null
+          expires_at: string | null
           id: string
           internal_reference: string
+          ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
+          payer_phone: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
           related_listing_id: string | null
           related_mission_id: string | null
           related_order_id: string | null
@@ -6441,19 +6503,27 @@ export type Database = {
         }
         Returns: {
           amount_gnf: number
+          authorized_at: string | null
           cancelled_at: string | null
           captured_at: string | null
           captured_tx_id: string | null
+          checkout_session_id: string | null
           created_at: string
           currency: string
           description: string | null
+          expires_at: string | null
           id: string
           internal_reference: string
+          ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
+          payer_phone: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
           related_listing_id: string | null
           related_mission_id: string | null
           related_order_id: string | null
@@ -6482,19 +6552,27 @@ export type Database = {
         }
         Returns: {
           amount_gnf: number
+          authorized_at: string | null
           cancelled_at: string | null
           captured_at: string | null
           captured_tx_id: string | null
+          checkout_session_id: string | null
           created_at: string
           currency: string
           description: string | null
+          expires_at: string | null
           id: string
           internal_reference: string
+          ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
+          payer_phone: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
           related_listing_id: string | null
           related_mission_id: string | null
           related_order_id: string | null
@@ -6886,19 +6964,27 @@ export type Database = {
         Args: { p_intent_id: string; p_reason?: string }
         Returns: {
           amount_gnf: number
+          authorized_at: string | null
           cancelled_at: string | null
           captured_at: string | null
           captured_tx_id: string | null
+          checkout_session_id: string | null
           created_at: string
           currency: string
           description: string | null
+          expires_at: string | null
           id: string
           internal_reference: string
+          ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
+          payer_phone: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
           related_listing_id: string | null
           related_mission_id: string | null
           related_order_id: string | null
@@ -7386,19 +7472,27 @@ export type Database = {
         Args: { p_offer_id: string }
         Returns: {
           amount_gnf: number
+          authorized_at: string | null
           cancelled_at: string | null
           captured_at: string | null
           captured_tx_id: string | null
+          checkout_session_id: string | null
           created_at: string
           currency: string
           description: string | null
+          expires_at: string | null
           id: string
           internal_reference: string
+          ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
+          payer_phone: string | null
           provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
           provider_reference: string | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
           related_listing_id: string | null
           related_mission_id: string | null
           related_order_id: string | null
@@ -9002,6 +9096,10 @@ export type Database = {
         | "refunded"
         | "reversed"
         | "expired"
+        | "proof_submitted"
+        | "in_review"
+        | "authorized"
+        | "needs_review"
       rating_direction: "client_to_driver" | "driver_to_client"
       report_status: "open" | "reviewed" | "actioned" | "dismissed"
       ride_mode: "moto" | "toktok" | "food"
@@ -9409,6 +9507,10 @@ export const Constants = {
         "refunded",
         "reversed",
         "expired",
+        "proof_submitted",
+        "in_review",
+        "authorized",
+        "needs_review",
       ],
       rating_direction: ["client_to_driver", "driver_to_client"],
       report_status: ["open", "reviewed", "actioned", "dismissed"],
