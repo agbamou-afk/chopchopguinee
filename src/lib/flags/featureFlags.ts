@@ -11,15 +11,36 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export type FlagKey = "wallet_public_enabled";
+export type FlagKey =
+  | "wallet_public_enabled"
+  | "om_checkout_enabled"
+  | "om_provider_mode"
+  | "om_ride_checkout_enabled"
+  | "om_repas_checkout_enabled"
+  | "om_marche_checkout_enabled";
 
 const DEFAULTS: Record<FlagKey, boolean> = {
   // Orange Money First pivot: public CHOP Wallet UI is archived until
   // explicitly re-enabled by a Super Admin from /admin/flags.
   wallet_public_enabled: false,
+  // Orange Money Checkout Orchestration — all off by default. Each slice
+  // is landable behind its own flag; downstream code stays on legacy paths
+  // until the flag is flipped in /admin/flags.
+  om_checkout_enabled: false,
+  om_provider_mode: false, // false = manual operator verification (launch default)
+  om_ride_checkout_enabled: false,
+  om_repas_checkout_enabled: false,
+  om_marche_checkout_enabled: false,
 };
 
-const KNOWN_FLAGS: FlagKey[] = ["wallet_public_enabled"];
+const KNOWN_FLAGS: FlagKey[] = [
+  "wallet_public_enabled",
+  "om_checkout_enabled",
+  "om_provider_mode",
+  "om_ride_checkout_enabled",
+  "om_repas_checkout_enabled",
+  "om_marche_checkout_enabled",
+];
 
 let cache: Record<FlagKey, boolean> = { ...DEFAULTS };
 let loaded = false;
