@@ -14,6 +14,7 @@ import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "@/components/SplashScreen";
 import { isSandboxMode } from "@/lib/runtimeMode";
 import { useLocation } from "react-router-dom";
+import { loadFeatureFlags } from "@/lib/flags/featureFlags";
 
 const FREEZE_ALLOWED_PATHS = ["/auth", "/legal", "/privacy", "/terms", "/help", "/unsubscribe", "/offline"];
 
