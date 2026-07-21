@@ -29,4 +29,14 @@ export function usePublicWalletEnabled(): boolean {
   return useFlag("wallet_public_enabled");
 }
 
+/** OM checkout master gate. */
+export function useOmCheckoutEnabled(): boolean {
+  return useFlag("om_checkout_enabled");
+}
+
+/** true = provider webhooks trusted; false = manual verification (launch default). */
+export function useOmProviderAutomated(): boolean {
+  return useFlag("om_provider_mode");
+}
+
 export { isPublicWalletEnabled, loadFeatureFlags };
