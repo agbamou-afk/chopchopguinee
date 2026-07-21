@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Plus, History, Wallet, AlertTriangle, Lock, QrCode } from "lucide-react";
+import { Eye, EyeOff, Plus, History, Wallet, AlertTriangle, Lock, QrCode, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
 
 interface Props {
   balance: number;
@@ -15,8 +16,66 @@ interface Props {
 
 export function WalletHero({ balance, loading, error, status = "active", onTopUp, onHistory }: Props) {
   const [shown, setShown] = useState(true);
+  const publicWalletEnabled = usePublicWalletEnabled();
   const frozen = status !== "active";
   const zero = !loading && !error && balance === 0;
+
+  // Orange Money First pivot: swap the "trust anchor" hero for a
+  // payment-first card. Same visual language, but we no longer promise
+  // a public wallet balance the customer can top up automatically.
+  if (!publicWalletEnabled) {
+    return (
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className="gradient-wallet-premium rounded-[24px] p-4 text-primary-foreground relative overflow-hidden shadow-wallet"
+        aria-label="Paiement Orange Money"
+      >
+        <div className="pointer-events-none absolute -top-20 -right-12 w-56 h-56 rounded-full bg-white/10 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -bottom-20 -left-14 w-48 h-48 rounded-full bg-secondary/20 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 rounded-[24px] ring-1 ring-inset ring-white/10" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-6 top-0 h-px saffron-seam" aria-hidden />
+
+        <div className="flex items-center gap-2.5 opacity-95 mb-3">
+          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white/12 ring-1 ring-white/15">
+            <Smartphone className="w-4 h-4" strokeWidth={2} />
+          </span>
+          <div className="leading-tight">
+            <p className="text-[10.5px] uppercase tracking-[0.22em] font-semibold">Paiement Orange Money</p>
+            <p className="text-[10px] opacity-75 tracking-wide">Vérification opérateur · GNF</p>
+          </div>
+        </div>
+
+        <h2 className="text-[20px] font-extrabold leading-tight tracking-tight">
+          Payez vos courses, repas et achats avec Orange Money.
+        </h2>
+        <p className="text-[12px] opacity-85 mt-1.5">
+          Envoyez à CHOPCHOP, un opérateur vérifie, votre paiement est confirmé.
+        </p>
+
+        <div className="flex gap-2 mt-4">
+          <motion.button
+            whileTap={{ scale: 0.985 }}
+            onClick={onTopUp}
+            disabled={frozen}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white text-primary rounded-xl font-semibold text-sm shadow-card hover:shadow-soft transition-shadow disabled:opacity-50"
+          >
+            <Smartphone className="w-4 h-4" />
+            Payer avec Orange Money
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.985 }}
+            onClick={onHistory}
+            className="w-11 flex items-center justify-center py-2.5 glass-surface rounded-xl ring-1 ring-white/15"
+            aria-label="Historique des paiements"
+          >
+            <History className="w-4 h-4" />
+          </motion.button>
+        </div>
+      </motion.section>
+    );
+  }
 
   return (
     <motion.section
