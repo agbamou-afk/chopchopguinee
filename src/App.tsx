@@ -130,6 +130,8 @@ const App = () => {
 
   useEffect(() => {
     Analytics.init();
+    // Feature flags — fire-and-forget; UI reads DEFAULTS until this resolves.
+    void loadFeatureFlags();
   }, []);
 
   return (
