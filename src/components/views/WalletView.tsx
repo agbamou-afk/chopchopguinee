@@ -43,6 +43,8 @@ import { TransactionReceiptSheet } from "@/components/wallet/TransactionReceiptS
 import { groupTransactions, txLabel, txStatusCopy } from "@/lib/wallet/labels";
 import { SendMoneySheet } from "@/components/wallet/SendMoneySheet";
 import { Send } from "lucide-react";
+import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
+import { WalletArchivedPanel } from "@/components/wallet/WalletArchivedPanel";
 
 type ActionId = "pay" | "receive" | "scan" | "add" | "send";
 
@@ -87,6 +89,7 @@ function txDirection(tx: WalletTransaction, walletId: string): "in" | "out" {
 }
 
 export function WalletView() {
+  const publicWalletEnabled = usePublicWalletEnabled();
   const { userId, wallet, transactions, profile, loading, refresh } = useWallet();
   const [qrOpen, setQrOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
@@ -111,6 +114,37 @@ export function WalletView() {
       }
     } catch {}
   }, []);
+
+  // Orange Money First pivot: when the public wallet UI is archived we
+  // render a focused OM-first surface. The internal ledger, top-up
+  // sheet, receipts and support entrypoints all stay reachable — we
+  // just stop framing them as a public "wallet balance" product.
+  if (!publicWalletEnabled) {
+    return (
+      <>
+        <WalletArchivedPanel
+          onOpenOm={() => setTopUpOpen(true)}
+          onOpenActivity={() => {
+            try { window.location.assign("/?view=orders"); } catch { /* ignore */ }
+          }}
+        />
+        <Sheet open={topUpOpen} onOpenChange={setTopUpOpen}>
+          <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
+            <SheetHeader className="text-left">
+              <SheetTitle>Paiement Orange Money</SheetTitle>
+              <SheetDescription>
+                Envoyez votre paiement OM à CHOPCHOP, puis collez le code.
+                Aucun crédit automatique sans validation opérateur.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-4">
+              <TopUpOrangeMoney onClose={() => { setTopUpOpen(false); refresh(); }} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
 
   const filteredTransactions = useMemo(() => {
     const now = Date.now();
