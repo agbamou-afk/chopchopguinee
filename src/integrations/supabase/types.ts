@@ -4329,9 +4329,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          environment: string
           expires_at: string | null
           id: string
           internal_reference: string
+          is_sandbox: boolean
           ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
@@ -4350,6 +4352,7 @@ export type Database = {
           source_id: string | null
           source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
           updated_at: string
           user_id: string
           wallet_hold_tx_id: string | null
@@ -4364,9 +4367,11 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          environment?: string
           expires_at?: string | null
           id?: string
           internal_reference: string
+          is_sandbox?: boolean
           ledger_release_tx_id?: string | null
           metadata?: Json
           payee_user_id?: string | null
@@ -4385,6 +4390,7 @@ export type Database = {
           source_id?: string | null
           source_module?: string | null
           state?: Database["public"]["Enums"]["payment_state"]
+          test_run_id?: string | null
           updated_at?: string
           user_id: string
           wallet_hold_tx_id?: string | null
@@ -4399,9 +4405,11 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          environment?: string
           expires_at?: string | null
           id?: string
           internal_reference?: string
+          is_sandbox?: boolean
           ledger_release_tx_id?: string | null
           metadata?: Json
           payee_user_id?: string | null
@@ -4420,6 +4428,7 @@ export type Database = {
           source_id?: string | null
           source_module?: string | null
           state?: Database["public"]["Enums"]["payment_state"]
+          test_run_id?: string | null
           updated_at?: string
           user_id?: string
           wallet_hold_tx_id?: string | null
@@ -4467,8 +4476,10 @@ export type Database = {
           amount_gnf: number
           created_at: string
           currency: string
+          environment: string
           event_type: string
           id: string
+          is_sandbox: boolean
           match_confidence: number | null
           matched_topup_request_id: string | null
           matched_user_id: string | null
@@ -4482,13 +4493,16 @@ export type Database = {
           raw_payload: Json
           receiving_account_id: string | null
           status: string
+          test_run_id: string | null
         }
         Insert: {
           amount_gnf: number
           created_at?: string
           currency?: string
+          environment?: string
           event_type?: string
           id?: string
+          is_sandbox?: boolean
           match_confidence?: number | null
           matched_topup_request_id?: string | null
           matched_user_id?: string | null
@@ -4502,13 +4516,16 @@ export type Database = {
           raw_payload?: Json
           receiving_account_id?: string | null
           status?: string
+          test_run_id?: string | null
         }
         Update: {
           amount_gnf?: number
           created_at?: string
           currency?: string
+          environment?: string
           event_type?: string
           id?: string
+          is_sandbox?: boolean
           match_confidence?: number | null
           matched_topup_request_id?: string | null
           matched_user_id?: string | null
@@ -4522,6 +4539,7 @@ export type Database = {
           raw_payload?: Json
           receiving_account_id?: string | null
           status?: string
+          test_run_id?: string | null
         }
         Relationships: [
           {
@@ -4579,32 +4597,41 @@ export type Database = {
         Row: {
           actor_user_id: string | null
           created_at: string
+          environment: string
           event_type: Database["public"]["Enums"]["payment_recon_event"]
           id: string
           intent_id: string
+          is_sandbox: boolean
           payload: Json
           provider: Database["public"]["Enums"]["payment_provider"] | null
           provider_reference: string | null
+          test_run_id: string | null
         }
         Insert: {
           actor_user_id?: string | null
           created_at?: string
+          environment?: string
           event_type: Database["public"]["Enums"]["payment_recon_event"]
           id?: string
           intent_id: string
+          is_sandbox?: boolean
           payload?: Json
           provider?: Database["public"]["Enums"]["payment_provider"] | null
           provider_reference?: string | null
+          test_run_id?: string | null
         }
         Update: {
           actor_user_id?: string | null
           created_at?: string
+          environment?: string
           event_type?: Database["public"]["Enums"]["payment_recon_event"]
           id?: string
           intent_id?: string
+          is_sandbox?: boolean
           payload?: Json
           provider?: Database["public"]["Enums"]["payment_provider"] | null
           provider_reference?: string | null
+          test_run_id?: string | null
         }
         Relationships: [
           {
@@ -6365,9 +6392,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          environment: string
           expires_at: string | null
           id: string
           internal_reference: string
+          is_sandbox: boolean
           ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
@@ -6386,6 +6415,7 @@ export type Database = {
           source_id: string | null
           source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
           updated_at: string
           user_id: string
           wallet_hold_tx_id: string | null
@@ -6413,9 +6443,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          environment: string
           expires_at: string | null
           id: string
           internal_reference: string
+          is_sandbox: boolean
           ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
@@ -6434,6 +6466,7 @@ export type Database = {
           source_id: string | null
           source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
           updated_at: string
           user_id: string
           wallet_hold_tx_id: string | null
@@ -6457,9 +6490,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          environment: string
           expires_at: string | null
           id: string
           internal_reference: string
+          is_sandbox: boolean
           ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
@@ -6478,6 +6513,7 @@ export type Database = {
           source_id: string | null
           source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
           updated_at: string
           user_id: string
           wallet_hold_tx_id: string | null
@@ -6511,9 +6547,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          environment: string
           expires_at: string | null
           id: string
           internal_reference: string
+          is_sandbox: boolean
           ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
@@ -6532,6 +6570,7 @@ export type Database = {
           source_id: string | null
           source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
           updated_at: string
           user_id: string
           wallet_hold_tx_id: string | null
@@ -6560,9 +6599,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          environment: string
           expires_at: string | null
           id: string
           internal_reference: string
+          is_sandbox: boolean
           ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
@@ -6581,6 +6622,7 @@ export type Database = {
           source_id: string | null
           source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
           updated_at: string
           user_id: string
           wallet_hold_tx_id: string | null
@@ -6972,9 +7014,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          environment: string
           expires_at: string | null
           id: string
           internal_reference: string
+          is_sandbox: boolean
           ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
@@ -6993,6 +7037,7 @@ export type Database = {
           source_id: string | null
           source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
           updated_at: string
           user_id: string
           wallet_hold_tx_id: string | null
@@ -7480,9 +7525,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          environment: string
           expires_at: string | null
           id: string
           internal_reference: string
+          is_sandbox: boolean
           ledger_release_tx_id: string | null
           metadata: Json
           payee_user_id: string | null
@@ -7501,6 +7548,7 @@ export type Database = {
           source_id: string | null
           source_module: string | null
           state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
           updated_at: string
           user_id: string
           wallet_hold_tx_id: string | null

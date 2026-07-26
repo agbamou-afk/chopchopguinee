@@ -1,108 +1,111 @@
+# Orange Money Wallet Surface + Sandbox Ecosystem Readiness
 
-# Orange Money Checkout Orchestration
+Extends the OM Checkout Orchestration phase. Two locks in play:
+- Primary (still open): `orange-money-checkout-orchestration-production-stable`
+- New sub-lock: `orange-money-sandbox-ecosystem-ready-stable`
 
-Scope is very large — this plan stages the work into landable slices. Each slice ends in a working, non-regressing build. I stop between slices for your go/no-go.
+## Scope discipline
 
-**Non-negotiables (unchanged across all slices):** no public wallet restore; no ledger deletion; no fake OM success; no service_role in frontend; no client-trusted prices; no dispatch before authorization; RLS never weakened; existing capture/settlement/cashout logic untouched.
+Surgical patch. No reopening of ride/repas/marché business logic beyond what is needed to route them through the OM checkout state machine in sandbox. Public wallet stays archived. Internal ledger stays untouched as an accounting substrate.
 
----
+## Assumptions (flag if wrong)
 
-## Phase 0 — Architecture audit (deliverable = markdown, no code)
+1. `/payments` and `/payments/:id` do NOT yet exist as customer-facing routes — Slice 1 audit will confirm; if they do, we reuse.
+2. `om_provider_mode` today is a boolean flag row (`enabled` = manual vs automated). We will extend it to a 4-value string via `feature_flags.description` or add `om_sandbox_enabled` as a separate boolean flag rather than mutating the enum column (safer, non-breaking).
+3. Sandbox isolation is done via `is_sandbox boolean` + `environment text` metadata on payment intents, checkout sessions, provider events, refunds, audit logs. No parallel tables.
+4. Sandbox ledger entries reuse existing ledger tables but are tagged `is_sandbox=true` and excluded from every finance aggregate. Master wallet card, driver earnings, cashout eligibility, Ops Command Center totals all get sandbox-exclusion filters.
+5. Manual/live intents and sandbox intents are strictly non-convertible.
 
-Read and document the current state into `docs/finance/orange-money-checkout-architecture.md`:
+## Deliverables
 
-- `payment_intents` schema, current status enum, existing RPCs (`confirm_payment_intent`, `fail_payment_intent`, `cancel_payment_intent`)
-- `payment_provider_events` schema (already exists — reuse, don't duplicate)
-- `wallet_hold` / `wallet_capture` / `wallet_release` / `wallet_pay_merchant` behavior
-- Current `ride_create` funding dependency
-- Repas intent path (`src/lib/repas/orders.ts`)
-- Marché offer intent path (`src/lib/marche/payments.ts`)
-- Top-up OM path (`wallet_topup_om_create`, `submit_customer_om_code`, `get_my_topup_om_status`) — this is our template
-- Existing admin reconciliation surfaces
-- `feature_flags` runtime cache
+### Slice A — Public naming: "OM Wallet"
 
-Output = the audit doc + a chosen accounting invariant: **provider inflow → source-scoped ledger authorization → source finalization, all in one transaction; no spendable customer balance surfaced.**
+- Add `getPublicWalletLabel()` in `src/lib/flags/useFeatureFlag.ts` returning `"OM Wallet"` when `wallet_public_enabled=false`, else `"ChopWallet"`.
+- Sweep home service grid (`PrimaryActionGrid`, `MoreServicesGrid`), `BottomNav` (already 4-col), any "Portefeuille"/"Wallet"/"ChopWallet" public label. Route the tile to `/payments` (payment center) when archived, `/wallet` when public wallet re-enabled.
+- Icon: keep `Smartphone`/`Wallet` per Orange Money hero visual language.
 
----
+### Slice B — Neutral OM Payment Center (`/payments`)
 
-## Slice 1 — Flags + payment-intent status alignment (migration)
+- Audit first. If missing, create `src/pages/Payments.tsx` + optional `src/pages/PaymentDetail.tsx`.
+- Lists the authenticated user's OM payment intents grouped by status: awaiting proof, submitted, in_review, authorized, captured, rejected, expired, refund pending/paid. Deep-links to related ride/order/offer. Support escalation button per row.
+- Explicitly no balance, no master wallet, no raw provider payload, no admin notes. Subtitle: "Vos paiements Orange Money, vérifications et remboursements."
 
-- Seed flags: `om_checkout_enabled`, `om_provider_mode` (`manual|automated|disabled`, default `manual`), `om_ride_checkout_enabled`, `om_repas_checkout_enabled`, `om_marche_checkout_enabled`. Extend `FlagKey` union and the flag loader.
-- Extend `payment_state` enum if missing values (`proof_submitted`, `in_review`, `authorized`, `needs_review`) — added additively, never renaming existing values. Add columns to `payment_intents` if missing: `expires_at`, `authorized_at`, `rejected_at`, `rejection_reason`, `ledger_hold_tx_id`, `ledger_capture_tx_id`, `ledger_release_tx_id`, `checkout_session_id`, `payer_phone`, `provider_event_id`, `source_module` (rides/repas/marche).
-- Kill-switch UI in `FlagsAdmin` (module-level pause).
+### Slice C — Sandbox mode foundation
 
-## Slice 2 — Checkout session + unified OM submission RPCs
+- Migration: seed feature flags `om_sandbox_enabled` (default false) + description-based mode ("sandbox"/"manual"/"automated"/"disabled") on `om_provider_mode`.
+- `FlagKey` union + `useFeatureFlag` helpers: `useOmProviderMode()`, `useOmSandboxEnabled()`.
+- Environment resolver: `getOmEnvironment()` returns `"sandbox" | "production"` based on flag + host.
+- Sandbox mode never exposed to end users in production.
 
-- New table `service_checkout_sessions` (fields per Phase 3), RLS: user reads own, service_role writes, expiry TTL, one finalized source per session.
-- SECURITY DEFINER RPCs:
-  - `om_checkout_create(source_module, source_payload jsonb, quoted_amount_gnf)` — validates payload server-side per module, computes authoritative amount, creates intent + session
-  - `om_payment_submit_proof(p_payment_intent_id, p_payer_phone, p_provider_reference, p_proof_url)` — ownership check, duplicate-reference detection → `needs_review`, idempotent
-  - `om_payment_authorize(p_intent_id, p_note)` — finance/god-admin only, atomic: locks intent, validates uniqueness, calls source-specific finalizer, links source_id, marks `authorized`, on finalization failure → `needs_review` + high-severity support issue
-  - `om_payment_reject(p_intent_id, p_reason)` — finance/god-admin
-- All idempotent; audit entries via existing `audit_logs`.
+### Slice D — Provider adapter + deterministic test refs
 
-## Slice 3 — Ride OM checkout (replaces wallet_hold dead end)
+- Extend `src/lib/payments/providers/` with `orangeMoneySandbox.ts` adapter fulfilling the same `PaymentProviderAdapter` interface.
+- Server-side: new Edge Function `om-sandbox-simulate` (God Admin + sandbox mode gated) that dispatches deterministic outcomes for the reference codes:
+  - `OM-SBX-SUCCESS-001`, `OM-SBX-REVIEW-001`, `OM-SBX-REJECT-001`, `OM-SBX-DUPLICATE-001`, `OM-SBX-EXPIRED-001`, `OM-SBX-REFUND-001`, `OM-SBX-REFUND-REVIEW-001`.
+- Extend `om_payment_submit_proof` (or add `om_payment_submit_sandbox_reference`) RPC to accept sandbox refs only when the intent is `is_sandbox=true`. Live/manual intents reject sandbox refs; sandbox intents reject non-sandbox proof. Idempotency + duplicate detection preserved.
 
-- New RPCs `ride_om_checkout_create(pickup, dropoff, quoted_fare)` (recomputes fare server-side, creates session+intent, no ride yet) and `ride_om_finalize(p_intent_id)` (creates ride row atomically inside `om_payment_authorize`).
-- Frontend: replace `wallet_hold → ride_create` in booking sheet with `ride_om_checkout_create` → OM payment sheet (reused from top-up) → poll intent status → dispatch begins only after `authorized`. Resumable from a "Paiements" entry if user refreshes.
-- Legacy wallet path retained behind `wallet_public_enabled=true`.
-- Copy strictly matches Phase 4 whitelist.
+### Slice E — Sandbox data isolation
 
-## Slice 4 — Ride cancellation + OM refund requests
+- Migration: add `is_sandbox boolean not null default false` and `environment text not null default 'production'` to `payment_intents`, `payment_provider_events`, `payment_reconciliation_events`, `wallet_transactions` (nullable), `driver_cashout_requests`, `audit_logs` (nullable), `support_issues` (nullable). Backfill = false.
+- Update all finance aggregate views/RPCs (`wallet_master_get_balance`, driver earnings, Ops Command Center metrics, cashout eligibility, merchant settlement) to filter `is_sandbox = false` by default. Add optional `include_sandbox` param on admin-only paths.
+- Add `test_run_id uuid null` to sandbox rows for cleanup grouping.
 
-- New table `om_refund_requests` (intent_id, amount_gnf, status: pending/in_review/paid/rejected/needs_review, provider_reference, operator_id, timestamps). RLS: owner reads, finance/god-admin manages.
-- Rewrite `ride_cancel` for OM-funded rides: pre-assignment → 100% refund request; post-assignment → 10% to master wallet + 90% refund request; in-progress → current review path. Idempotent.
-- Admin finance UI to mark refunds paid with OM reference.
-- Customer sees refund status in Payment Center.
+### Slice F — Module coverage in sandbox
 
-## Slice 5 — Repas + Marché OM checkout wiring
+- Ride: `ride_om_finalize` already exists behind `om_ride_checkout_enabled`; verify it honors `is_sandbox` and creates sandbox rides tagged `is_sandbox=true` in `rides`.
+- Repas: `om_repas_checkout_enabled` path — sandbox order rows tagged.
+- Marché: `om_marche_checkout_enabled` path — sandbox offer rows tagged.
+- Cancellation-fee logic runs in sandbox against sandbox master-wallet-shadow row (never touches real master wallet).
+- Driver cashout sandbox: optional Slice F.1 — reuse cashout RPC with `is_sandbox=true`; never debits real balances.
 
-- Reuse `om_checkout_create` with `source_module='repas'|'marche'`. Server-side cart/offer revalidation is the source-specific finalizer inside `om_payment_authorize`.
-- Repas: restaurant sees confirmed order only after `authorized`. Existing capture/settlement untouched.
-- Marché: accepted-offer flow gated on authorization. Existing capture/settlement untouched.
+### Slice G — Admin/finance controls
 
-## Slice 6 — Admin finance verification page
+- Extend `/admin/payments` (or equivalent) with filter chips: Sandbox / Live / Automated / Source module / Status / Duplicate risk.
+- Sandbox-only action panel (God Admin gated) invoking `om-sandbox-simulate` for: verified, rejected, needs_review, expired, refund paid, checkout reset.
+- Audit every sandbox action.
 
-- New `/admin/payments/orange-money` (or integrate into `PaymentsAdmin`): queues by status/module, duplicate-reference warning, expected-amount vs submitted, acknowledgement checkbox before `om_payment_authorize`. Ops admin read-only, finance/god-admin can authorize.
+### Slice H — Cleanup/reset
 
-## Slice 7 — Customer Payment Center
+- RPC `om_sandbox_purge(test_run_id, before_date)` — archive sandbox intents/events/sessions/refunds/ledger rows scoped by sandbox=true. God Admin only. Logs the actor.
+- Never touches live rows.
 
-- New `/payments` and `/payments/:intentId` — reads own intents/refunds/sessions. No wallet balance shown. Entry points from Activity, Orders, archived wallet panel.
+### Slice I — Observability
 
-## Slice 8 — Provider adapter, event table, webhook hardening
+- Emit sandbox audit events listed in §11 into `audit_logs` with `is_sandbox=true`. No secrets, no proof image bytes.
 
-- Extend `orangeMoneyAdapter` with `createPaymentRequest`, `queryTransaction`, `initiateRefund` stubs (real work is `verifyPayment`/`handleWebhook`).
-- Confirm `payment_provider_events` schema matches Phase 14 fields; add missing ones.
-- Harden `payment-webhook-orange-money` edge function: require signature when `om_provider_mode=automated`; in `manual` mode webhook only files evidence, never authorizes.
+### Slice J — Docs + memory
 
-## Slice 9 — Ops Command Center, Support, Observability
+- Update `docs/finance/orange-money-checkout-architecture.md` (sandbox section).
+- New `docs/finance/orange-money-sandbox.md` (how it works, how to run a mission, how to reset).
+- New `docs/qa/orange-money-sandbox-test-matrix.md` (the A–U matrix).
+- New milestone file `.lovable/memory/milestones/orange-money-sandbox-ecosystem-ready-stable.md`.
+- Update `.lovable/memory/index.md`.
 
-- Add OM cards to `OpsCommandCenter` (awaiting/in_review/needs_review/refunds pending/unmatched events/oldest age). Links only, no actions.
-- Extend `ReportIssueButton` with OM categories + metadata attachments.
-- Audit events emitted from RPCs into `audit_logs`. No secrets logged.
+## Technical section
 
-## Slice 10 — Security sweep, QA A–X, milestone lock
+- All new/altered public tables get GRANTs in the same migration.
+- All SECURITY DEFINER functions set `search_path = public`, validate `auth.uid()`, validate God Admin role via `has_role`, validate `is_sandbox` matches the intent, and validate `om_provider_mode` when relevant.
+- No service_role or provider credentials leave server side.
+- Sandbox references are rejected server-side when `om_provider_mode <> 'sandbox'`.
+- Manual↔sandbox conversion is explicitly disallowed at RPC layer.
+- Aggregates default to `is_sandbox = false` filter, ensuring master wallet, driver earnings, cashout eligibility, merchant settlement, Ops Command Center are unaffected by sandbox activity.
 
-- RLS cross-user tests, role tests, secret audit, `tsgo` build.
-- Fill the return format (A–Z).
-- Write `.lovable/memory/milestones/orange-money-checkout-orchestration-production-stable.md` and update `mem://index.md`.
+## Order of execution
 
----
+1. Audit `/payments` existence + current flag machinery (read-only).
+2. Slice A + B (naming + payment center) — small UI patch, high user visibility, no financial risk.
+3. Slice C + E migrations (flags + isolation columns).
+4. Slice D provider adapter + submit RPC.
+5. Slice F module wiring behind flags.
+6. Slice G admin controls.
+7. Slice H cleanup RPC.
+8. Slices I + J docs/memory.
+9. Run QA matrix A–U and report.
 
-## Files (new)
+## Lock policy
 
-Migrations for slices 1/2/3/4/5/8; `src/lib/checkout/orangeMoney.ts`; `src/components/checkout/OrangeMoneyCheckoutSheet.tsx`; `src/pages/PaymentCenter.tsx`; `src/pages/PaymentDetail.tsx`; `src/pages/admin/OrangeMoneyReview.tsx`; `docs/finance/orange-money-checkout-architecture.md`; milestone doc.
+Neither lock lands from a rename alone. Locks require: consistent public naming; functional payment center; sandbox isolated from all financial aggregates; ride/Repas/Marché sandbox flows pass A–U; no client-side fake-success; build clean.
 
-## Files (edited)
+## Return format
 
-`src/lib/flags/featureFlags.ts`, ride booking components, `src/lib/repas/orders.ts`, `src/lib/marche/payments.ts`, `src/pages/admin/PaymentsAdmin.tsx`, `src/pages/admin/OpsCommandCenter.tsx`, `src/pages/admin/FlagsAdmin.tsx`, `supabase/functions/payment-webhook-orange-money/index.ts`, `src/App.tsx`, `.lovable/memory/index.md`.
-
-## Risks
-
-- Existing ride/wallet integration is broad — Slice 3 is the highest-risk step. Legacy path stays available behind `wallet_public_enabled=true` for rollback.
-- Enum/column additions must be additive; no renames. Migration audit before writing.
-- Full 21-phase execution in one turn would exceed safe review — I execute slice by slice.
-
-## Approve to proceed
-
-If you approve, I start with **Phase 0 audit + Slice 1 (flags + payment-intent alignment migration)** and return for review before Slice 2.
+Full A–V report per user's §16 upon completion.

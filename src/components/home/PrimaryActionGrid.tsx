@@ -36,10 +36,10 @@ const WALLET_TILE: ActionDef = {
 
 const OM_TILE: ActionDef = {
   id: "topup",
-  label: "Orange Money",
-  subtitle: "Payer par Orange Money",
+  label: "OM Wallet",
+  subtitle: "Paiements Orange Money",
   img: walletIcon,
-  alt: "Payer avec Orange Money",
+  alt: "Ouvrir OM Wallet",
   halo: "bg-primary/12 ring-1 ring-primary/15",
 };
 
