@@ -2,6 +2,7 @@ import { Smartphone, ShieldCheck, History, LifeBuoy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { OmPaymentsList } from "./OmPaymentsList";
 
 /**
  * Rendered on /wallet when `wallet_public_enabled` is off (Orange Money
@@ -18,7 +19,10 @@ export function WalletArchivedPanel({
 }) {
   return (
     <div className="max-w-md mx-auto">
-      <ScreenHeader title="Paiements" subtitle="Orange Money" />
+      <ScreenHeader
+        title="OM Wallet"
+        subtitle="Vos paiements Orange Money, vérifications et remboursements."
+      />
 
       <div className="px-4 mt-4 space-y-4 pb-24">
         <section className="rounded-3xl gradient-wallet-premium text-primary-foreground p-5 relative overflow-hidden shadow-wallet">
@@ -28,15 +32,15 @@ export function WalletArchivedPanel({
               <Smartphone className="w-4 h-4" />
             </span>
             <p className="text-[11px] uppercase tracking-[0.22em] font-semibold">
-              Paiement Orange Money
+              OM Wallet · Paiement Orange Money
             </p>
           </div>
           <h2 className="text-xl font-extrabold leading-tight">
-            CHOP Wallet est désactivé pour ce lancement.
+            Payez en toute simplicité avec Orange Money.
           </h2>
           <p className="text-sm opacity-90 mt-2 leading-relaxed">
-            Les paiements passent par Orange Money.<br />
-            Vos transactions restent suivies par CHOPCHOP.
+            Aucun solde à recharger. Chaque paiement est vérifié
+            par un opérateur CHOPCHOP.
           </p>
           <Button
             onClick={onOpenOm}
@@ -45,6 +49,8 @@ export function WalletArchivedPanel({
             Payer avec Orange Money
           </Button>
         </section>
+
+        <OmPaymentsList />
 
         <section className="rounded-2xl bg-card border border-border/60 p-4 space-y-3">
           <div className="flex items-start gap-3">
