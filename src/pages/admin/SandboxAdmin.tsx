@@ -109,13 +109,18 @@ export default function SandboxAdmin() {
   };
 
   if (!canRead) {
-    return <ModulePage title="Orange Money Sandbox"><Card className="p-6 text-sm">Accès refusé.</Card></ModulePage>;
+    return (
+      <ModulePage module="payments" title="Orange Money Sandbox">
+        <Card className="p-6 text-sm">Accès refusé.</Card>
+      </ModulePage>
+    );
   }
 
   return (
     <ModulePage
+      module="payments"
       title="Orange Money Sandbox"
-      description="Environnement de test — aucune valeur financière réelle."
+      subtitle="Environnement de test — aucune valeur financière réelle."
       actions={
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Rafraîchir
