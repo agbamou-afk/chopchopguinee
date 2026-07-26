@@ -73,6 +73,22 @@ Slice 1 adds:
 
 All default off. Rollback = flip flag in `/admin/flags`.
 
+### Sandbox extension
+
+Two additional flags govern the sandbox rail (see
+`orange-money-sandbox.md` for the full spec):
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `om_environment` | false | true = this deployment is sandbox/staging |
+| `om_sandbox_enabled` | false | Master switch for sandbox references |
+
+Sandbox rows are visibly tagged (`is_sandbox=true`,
+`environment='sandbox'`) on `payment_intents`, `payment_provider_events`
+and `payment_reconciliation_events`. Production aggregates default to
+filtering these out; sandbox never touches real master wallet, driver
+earnings, cashout eligibility, or Ops Command Center totals.
+
 ## Roll-forward sequence (this milestone)
 
 See `.lovable/plan.md` for the 10 slices. Each slice is landable and
