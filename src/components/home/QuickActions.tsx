@@ -5,6 +5,7 @@ import repasIcon from "@/assets/icons/repas.png";
 import marcheIcon from "@/assets/icons/marche.png";
 import scannerIcon from "@/assets/icons/scanner.png";
 import walletIcon from "@/assets/icons/wallet.png";
+import { usePublicWalletLabel } from "@/lib/flags/useFeatureFlag";
 
 interface QuickActionsProps {
   onActionClick: (action: string) => void;
@@ -23,13 +24,13 @@ const SERVICE_ICON_TUNING: Record<string, IconTuning> = {
   wallet:  { scale: 1.47, x: 0, y: 0 },
 };
 
-const actions = [
-  { id: "moto",   img: motoIcon,    label: "Moto",         alt: "Réserver une moto-taxi" },
-  { id: "toktok", img: toktokIcon,  label: "TokTok",       alt: "Réserver un TokTok tricycle" },
-  { id: "food",   img: repasIcon,   label: "Repas",        alt: "Commander un repas à domicile" },
-  { id: "market", img: marcheIcon,  label: "Marché",       alt: "Acheter au marché en ligne" },
-  { id: "scan",   img: scannerIcon, label: "Scanner",      alt: "Scanner un QR code marchand" },
-  { id: "wallet", img: walletIcon,  label: "ChopWallet", alt: "Ouvrir ChopWallet" },
+const buildActions = (walletLabel: string) => [
+  { id: "moto",   img: motoIcon,    label: "Moto",       alt: "Réserver une moto-taxi" },
+  { id: "toktok", img: toktokIcon,  label: "TokTok",     alt: "Réserver un TokTok tricycle" },
+  { id: "food",   img: repasIcon,   label: "Repas",      alt: "Commander un repas à domicile" },
+  { id: "market", img: marcheIcon,  label: "Marché",     alt: "Acheter au marché en ligne" },
+  { id: "scan",   img: scannerIcon, label: "Scanner",    alt: "Scanner un QR code marchand" },
+  { id: "wallet", img: walletIcon,  label: walletLabel,  alt: `Ouvrir ${walletLabel}` },
 ];
 
 const container = {
@@ -48,6 +49,8 @@ const item = {
 };
 
 export function QuickActions({ onActionClick }: QuickActionsProps) {
+  const walletLabel = usePublicWalletLabel();
+  const actions = buildActions(walletLabel);
   return (
     <motion.div
       variants={container}
