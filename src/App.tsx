@@ -208,6 +208,7 @@ const App = () => {
             <Route path="audit" element={<AuditAdmin />} />
             <Route path="analytics" element={<AnalyticsAdmin />} />
             <Route path="payments" element={<PaymentsAdmin />} />
+            <Route path="payments/sandbox" element={<SandboxAdmin />} />
             <Route path="pilot-command" element={<PilotCommandCenter />} />
             <Route path="ops" element={<OpsCommandCenter />} />
             <Route path="driver-groups" element={<DriverGroupsAdmin />} />
