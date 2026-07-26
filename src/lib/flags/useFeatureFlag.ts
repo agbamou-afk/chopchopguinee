@@ -7,6 +7,8 @@ import {
   isOmSandboxActive,
   loadFeatureFlags,
   subscribeFlags,
+  publicPaymentProductName,
+  publicPaymentProductSubtitle,
 } from "./featureFlags";
 
 function useFlag(key: FlagKey): boolean {
@@ -54,9 +56,24 @@ export function usePublicWalletLabel(): string {
   return publicOn ? "ChopWallet" : "OM Wallet";
 }
 
+/** Canonical public-payment product name — prefer over `usePublicWalletLabel` in new code. */
+export function usePublicPaymentProductName(): string {
+  return usePublicWalletLabel();
+}
+
+/** Public-payment tile subtitle (reactive to the same flag). */
+export function usePublicPaymentProductSubtitle(): string {
+  const publicOn = usePublicWalletEnabled();
+  return publicOn
+    ? "Solde CHOPCHOP · recharges et paiements"
+    : "Vos paiements Orange Money, vérifications et remboursements.";
+}
+
 export {
   isPublicWalletEnabled,
   isOmSandboxActive,
   getPublicWalletLabel,
+  publicPaymentProductName,
+  publicPaymentProductSubtitle,
   loadFeatureFlags,
 };
