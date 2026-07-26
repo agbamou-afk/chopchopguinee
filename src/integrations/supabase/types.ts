@@ -4643,6 +4643,103 @@ export type Database = {
           },
         ]
       }
+      payment_refund_requests: {
+        Row: {
+          amount_gnf: number
+          created_at: string
+          environment: string
+          fee_gnf: number
+          id: string
+          is_sandbox: boolean
+          metadata: Json
+          original_amount_gnf: number
+          payment_intent_id: string
+          provider: string
+          provider_event_id: string | null
+          provider_reference: string | null
+          reason: string | null
+          requested_at: string
+          resolved_at: string | null
+          source_id: string
+          source_module: string
+          status: string
+          support_issue_id: string | null
+          test_run_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_gnf: number
+          created_at?: string
+          environment?: string
+          fee_gnf?: number
+          id?: string
+          is_sandbox?: boolean
+          metadata?: Json
+          original_amount_gnf: number
+          payment_intent_id: string
+          provider?: string
+          provider_event_id?: string | null
+          provider_reference?: string | null
+          reason?: string | null
+          requested_at?: string
+          resolved_at?: string | null
+          source_id: string
+          source_module: string
+          status?: string
+          support_issue_id?: string | null
+          test_run_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_gnf?: number
+          created_at?: string
+          environment?: string
+          fee_gnf?: number
+          id?: string
+          is_sandbox?: boolean
+          metadata?: Json
+          original_amount_gnf?: number
+          payment_intent_id?: string
+          provider?: string
+          provider_event_id?: string | null
+          provider_reference?: string | null
+          reason?: string | null
+          requested_at?: string
+          resolved_at?: string | null
+          source_id?: string
+          source_module?: string
+          status?: string
+          support_issue_id?: string | null
+          test_run_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_refund_requests_payment_intent_id_fkey"
+            columns: ["payment_intent_id"]
+            isOneToOne: false
+            referencedRelation: "payment_intents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_refund_requests_provider_event_id_fkey"
+            columns: ["provider_event_id"]
+            isOneToOne: false
+            referencedRelation: "payment_provider_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_refund_requests_support_issue_id_fkey"
+            columns: ["support_issue_id"]
+            isOneToOne: false
+            referencedRelation: "support_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       physical_markets: {
         Row: {
           address: string | null
@@ -8130,6 +8227,10 @@ export type Database = {
           topup_id: string
         }[]
       }
+      om_sandbox_cancel_ride: {
+        Args: { p_ride_id: string; p_test_run_id?: string }
+        Returns: Json
+      }
       om_sandbox_create_marche_intent: {
         Args: { p_offer_id: string; p_test_run_id?: string }
         Returns: {
@@ -8227,9 +8328,9 @@ export type Database = {
       om_sandbox_create_ride_intent: {
         Args: {
           p_checkout_session_id: string
+          p_client_display_fare_gnf?: number
           p_dest_lat: number
           p_dest_lng: number
-          p_fare_gnf: number
           p_mode: Database["public"]["Enums"]["ride_mode"]
           p_pickup_lat: number
           p_pickup_lng: number
@@ -8287,6 +8388,30 @@ export type Database = {
       om_sandbox_reference_outcome: {
         Args: { p_reference: string }
         Returns: string
+      }
+      om_sandbox_refund_reference_outcome: {
+        Args: { p_ref: string }
+        Returns: string
+      }
+      om_sandbox_request_marche_refund: {
+        Args: { p_offer_id: string; p_reason?: string; p_test_run_id?: string }
+        Returns: Json
+      }
+      om_sandbox_request_repas_refund: {
+        Args: {
+          p_food_order_id: string
+          p_reason?: string
+          p_test_run_id?: string
+        }
+        Returns: Json
+      }
+      om_sandbox_submit_refund_reference: {
+        Args: {
+          p_provider_reference: string
+          p_refund_request_id: string
+          p_test_run_id?: string
+        }
+        Returns: Json
       }
       open_food_order_thread: {
         Args: {
@@ -8437,6 +8562,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      ride_compute_quote_gnf: {
+        Args: {
+          p_dest_lat: number
+          p_dest_lng: number
+          p_mode: Database["public"]["Enums"]["ride_mode"]
+          p_pickup_lat: number
+          p_pickup_lng: number
+        }
+        Returns: number
+      }
       ride_confirm_pickup: {
         Args: { p_code: string; p_ride_id: string }
         Returns: {
@@ -8505,6 +8640,16 @@ export type Database = {
         }
       }
       ride_dispatch: { Args: { p_ride_id: string }; Returns: string }
+      ride_get_quote: {
+        Args: {
+          p_dest_lat?: number
+          p_dest_lng?: number
+          p_mode: Database["public"]["Enums"]["ride_mode"]
+          p_pickup_lat: number
+          p_pickup_lng: number
+        }
+        Returns: Json
+      }
       ride_integrity_check: { Args: { p_ride_id: string }; Returns: Json }
       ride_rate: {
         Args: {
