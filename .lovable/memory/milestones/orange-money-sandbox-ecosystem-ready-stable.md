@@ -16,14 +16,22 @@ Status: **CANDIDATE — not yet locked.**
 - Runtime helpers: `useOmSandboxActive()`, `isOmSandboxActive()`, `usePublicWalletLabel()`.
 - Docs: `docs/finance/orange-money-sandbox.md`, `docs/qa/orange-money-sandbox-test-matrix.md`, and sandbox section appended to the checkout architecture doc.
 
+## Slice A delivered (2026-07-26)
+
+- `public.om_payment_submit_sandbox_reference(uuid, text, text, uuid)` — server-authoritative deterministic sandbox execution. Requires both sandbox flags, whitelists `OM-SBX-*`, locks the intent, enforces ownership (or God Admin), drives the real `payment_intents` state machine + real `payment_provider_events`, idempotent on replay, and emits reconciliation + audit events. Never touches `wallet_*`.
+- `public.om_sandbox_reference_outcome(text)` — immutable server-side deterministic reference registry.
+- Production guards: `confirm_payment_intent`, `fail_payment_intent`, `choppay_capture_payment_intent` now reject sandbox intents at the boundary.
+- Financial isolation: `admin_preview_payment_intents` and `admin_preview_marche_payment_intents` gained `p_include_sandbox boolean default false` (God Admin only opt-in). Master / driver / merchant wallet math is safe by construction — sandbox path calls no `wallet_*` function.
+- QA harness (9/9 rows) executed in transactional rollback against staging; master wallet delta = 0, no non-sandbox provider events created.
+
 ## Not yet delivered (blockers to full lock)
 
-- Server-side `OrangeMoneySandboxProvider` adapter + Edge Function `om-sandbox-simulate` deployment.
-- `om_payment_submit_sandbox_reference` RPC + mismatch rejection between sandbox/live intents.
-- Wiring `is_sandbox` filter into all finance aggregate RPCs (master wallet balance, driver earnings, cashout eligibility, merchant settlement, Ops Command Center metrics).
-- Sandbox admin controls panel in `/admin/payments` (God Admin gated simulate/reset).
-- `om_sandbox_purge` cleanup RPC.
-- End-to-end sandbox flow QA per matrix rows D–N.
+- Slice B: ride / repas / marché sandbox execution paths (customer submission wired to the RPC, sandbox source finalization, `OM-SBX-FINALIZE-FAIL-001`).
+- Slice C: sandbox refund RPC + provider event lifecycle for `OM-SBX-REFUND-*`.
+- Sandbox admin controls panel in `/admin/payments` (God-Admin simulate / reset).
+- `om_sandbox_purge(test_run_id, before_date)` cleanup RPC.
+- Optional `om-sandbox-simulate` Edge Function (God-Admin invocation from admin UI).
+- End-to-end sandbox flow QA per matrix rows D–N (Slice B unblocks).
 
 ## Rollback
 
