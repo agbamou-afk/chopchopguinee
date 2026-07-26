@@ -41,3 +41,41 @@ Flip `wallet_public_enabled=true` to restore legacy ChopWallet naming and surfac
 
 - Primary lock still open: `orange-money-checkout-orchestration-production-stable`
 - Prior lock: `orange-money-first-wallet-archive-stable`
+## Slice C delivered (2026-07-26)
+
+- Authoritative ride fare: `public.ride_compute_quote_gnf` and
+  `public.ride_get_quote` (SECURITY DEFINER). `om_sandbox_create_ride_intent`
+  rewritten to derive the intent amount from the server helper; any
+  caller-supplied display fare is only used to record a mismatch flag.
+- New refund model: `public.payment_refund_requests` with statuses
+  `pending | in_review | paid | rejected | needs_review`, per-intent
+  active-refund uniqueness, per-intent provider-reference uniqueness,
+  owner + admin RLS, all writes through SECURITY DEFINER RPCs.
+- Sandbox refund request creators (owner or God Admin):
+  `om_sandbox_cancel_ride` (applies 10% fee only when a driver is
+  assigned, otherwise full refund), `om_sandbox_request_repas_refund`
+  (routes `out_for_delivery` / `completed` orders to `needs_review`),
+  `om_sandbox_request_marche_refund`.
+- Sandbox refund orchestrator:
+  `om_sandbox_submit_refund_reference(refund_request_id, provider_reference, test_run_id)`
+  drives the state machine via deterministic fixtures
+  (`OM-SBX-REFUND-001` → paid, `OM-SBX-REFUND-REVIEW-001` → needs_review),
+  idempotent, blocks cross-user and cross-environment reference use,
+  and never invokes any `wallet_*` function.
+- Fixture registry: `om_sandbox_refund_reference_outcome(text)`.
+- QA helper: `om_sandbox_assign_mock_driver` for exercising the
+  10% fee split path without touching real dispatch.
+- Financial isolation reverified end-to-end (QA row R):
+  master wallet delta = 0, wallet_transactions delta = 0.
+
+## Not yet delivered (blockers to full lock)
+
+- God-Admin sandbox surface in `/admin/payments` (refund inspector +
+  simulate / reset controls, audited).
+- `om_sandbox_purge(test_run_id, before_date)` archival RPC + admin
+  trigger for test-run cleanup.
+- Optional `om-sandbox-simulate` Edge Function.
+- Customer-facing archived-wallet UX to render refund state
+  (`requested / in_review / paid / needs_review`) with a Sandbox
+  badge — currently visible only through `OmPaymentsList` intent
+  metadata.

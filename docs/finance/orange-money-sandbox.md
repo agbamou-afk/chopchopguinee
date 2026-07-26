@@ -174,3 +174,137 @@ admin code mistakenly targets a sandbox intent.
 - God-Admin `/admin/payments` Sandbox tab and simulate/reset controls.
 - `om_sandbox_purge(test_run_id, before_date)` archival RPC.
 - `om-sandbox-simulate` Edge Function.
+## Slice C (2026-07-26) — Refund lifecycle + authoritative ride fare
+
+### Authoritative ride fare (production-safe correction)
+
+Slice B's `om_sandbox_create_ride_intent` accepted a caller-supplied
+`p_fare_gnf`. That is unsafe as a launch-grade pattern even for sandbox,
+because it implies the same shape for the live checkout path. Slice C
+replaces that signature.
+
+- New helper `public.ride_compute_quote_gnf(mode, plat, plng, dlat, dlng)`
+  — server-authoritative Haversine * `fare_settings.price_per_km` +
+  `fare_settings.base_price` per ride mode. `SECURITY DEFINER`, no
+  caller input other than coordinates and mode.
+- New helper `public.ride_get_quote(...)` returns the JSON quote for
+  display (`{fare_gnf, currency:'GNF', authoritative:true, source:'server:ride_compute_quote_gnf'}`).
+- `om_sandbox_create_ride_intent(mode, plat, plng, dlat, dlng,
+  checkout_session_id, test_run_id, client_display_fare_gnf DEFAULT NULL)`
+  — server computes fare via `ride_compute_quote_gnf`. Intent amount is
+  always the server value. `client_display_fare_gnf` is optional and
+  only recorded as `metadata.client_display_amount_mismatch=true`
+  when it disagrees with the server fare — never used as source of truth.
+- QA row A proves that passing `p_client_display_fare_gnf=15000` when
+  the server computes `16117` still produces an intent with
+  `amount_gnf=16117` and `client_display_amount_mismatch=true`.
+
+Parity limitation: `ride_compute_quote_gnf` currently reads only
+`fare_settings` (base + per-km). Surge, waiting-time, and service-zone
+multipliers are not yet expressed as server functions and are therefore
+absent from both live and sandbox quotes. This matches production
+behaviour today — no divergence.
+
+### Refund model
+
+New table `public.payment_refund_requests` — the single source of truth
+for refund lifecycle across all modules.
+
+Columns: `payment_intent_id`, `user_id`, `source_module` (ride /
+repas / marketplace), `source_id`, `original_amount_gnf`, `fee_gnf`,
+`amount_gnf`, `status`, `provider`, `provider_reference`,
+`provider_event_id`, `reason`, `is_sandbox`, `environment`,
+`test_run_id`, `metadata`, `support_issue_id`, timestamps.
+
+Statuses: `pending`, `in_review`, `paid`, `rejected`, `needs_review`.
+
+Guardrails:
+- Unique partial index prevents more than one active
+  (`pending|in_review|paid`) refund per intent — no double refund.
+- Unique index on `(payment_intent_id, provider_reference)` prevents
+  reusing the same provider reference on the same intent.
+- RLS: customer reads own; admins read all; all writes go through
+  `SECURITY DEFINER` RPCs.
+
+### Sandbox refund request creators
+
+- `om_sandbox_cancel_ride(ride_id, test_run_id DEFAULT NULL)` —
+  owner or God Admin, sandbox flags active, ride must be sandbox.
+  Applies the production cancellation policy:
+  - Before assignment: `fee_gnf = 0`, `amount_gnf = intent.amount_gnf`.
+  - After assignment: `fee_gnf = round(intent.amount * 10%)`,
+    `amount_gnf = intent - fee`.
+  Marks the ride cancelled with sandbox metadata, creates a
+  `payment_refund_requests` row in `pending`, emits
+  `sandbox.refund_requested` provider event and `refund_created`
+  reconciliation event. Idempotent: replaying returns the same refund
+  request.
+- `om_sandbox_request_repas_refund(order_id, test_run_id, reason)` —
+  owner-only, order must be `payment_status=paid` and
+  `settlement_state='sandbox'`. Cancels order state (unless already
+  terminal). Orders already in `out_for_delivery`/`completed` are
+  routed to `needs_review` instead of `pending`.
+- `om_sandbox_request_marche_refund(offer_id, test_run_id, reason)` —
+  same shape for marketplace offers.
+- `om_sandbox_assign_mock_driver(ride_id, driver_user_id)` — sandbox
+  QA helper for exercising the "after assignment" fee split without
+  the real dispatch pipeline.
+
+### Sandbox refund reference orchestrator
+
+`om_sandbox_submit_refund_reference(refund_request_id,
+provider_reference, test_run_id)` — the single generic orchestrator
+callers use. Behaviour:
+
+1. Requires auth + both sandbox flags active.
+2. Rejects non-`OM-SBX-*` references (`live_reference_not_allowed_on_sandbox_refund_rpc`).
+3. Rejects unknown `OM-SBX-*` references (`unknown_sandbox_refund_reference`).
+4. Locks refund row and intent row; enforces ownership (owner or God Admin).
+5. Rejects any submission targeting a non-sandbox intent
+   (`sandbox_reference_rejected_on_non_sandbox_intent`).
+6. Idempotent: resubmitting the same reference on an already-resolved
+   refund returns `idempotent=true`.
+7. Rejects double-refund: same reference used on another refund row
+   for the same intent (`duplicate_provider_reference_on_intent`).
+8. `paid` outcome (`OM-SBX-REFUND-001`):
+   - refund → `paid`, resolved_at set;
+   - intent → `refunded`;
+   - food order → `payment_status='refunded'`;
+   - offer → `payment_status='refunded'`, fulfillment_status →
+     `cancelled` unless already delivered/completed;
+   - ride source is left `cancelled` (already done at request time);
+   - provider event `sandbox.refund_paid`, recon `refund_completed`,
+     audit `sandbox.refund.paid`.
+9. `needs_review` outcome (`OM-SBX-REFUND-REVIEW-001`):
+   - refund → `needs_review`; high-severity `payment_failed`
+     support issue linked with `test_run_id` and fixture metadata;
+   - provider event `sandbox.refund_review`; audit
+     `sandbox.refund.needs_review`.
+
+### Deterministic refund fixture registry
+
+`om_sandbox_refund_reference_outcome(text)` returns `paid` for
+`OM-SBX-REFUND-001` and `needs_review` for
+`OM-SBX-REFUND-REVIEW-001`. Case-insensitive, whitespace-tolerant.
+
+### Financial isolation (Slice C)
+
+- `payment_refund_requests` write path never invokes `wallet_*`.
+- Ride cancellation fee is recorded on the refund row
+  (`fee_gnf`, `sandbox_fee_gnf`), NOT captured into the master wallet.
+- QA row R confirmed `master delta = 0` and
+  `wallet_transactions delta = 0` after the full ride / repas /
+  marché refund cycle including a 10% fee split case.
+- No driver earning, no merchant payable, no cashout eligibility
+  change on any sandbox refund.
+
+### Remaining gaps for full sandbox milestone lock
+
+- God-Admin `/admin/payments` Sandbox tab: refund inspector +
+  simulate/reset controls; must be explicit and audited.
+- `om_sandbox_purge(test_run_id, before_date)` archival RPC and
+  admin trigger for test-run cleanup.
+- Optional `om-sandbox-simulate` Edge Function for CI harness.
+- Long-form checkout UX surface for refund request / status /
+  needs_review — currently exposed only through the internal
+  archived-wallet payments list.

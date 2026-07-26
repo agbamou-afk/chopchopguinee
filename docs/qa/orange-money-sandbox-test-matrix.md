@@ -52,3 +52,31 @@ RPC. All rows pass. Row IDs map to Slice A goals, not the full A–U grid above.
 Sandbox path never invokes `wallet_hold`, `wallet_capture`, `wallet_release`,
 `wallet_settle_merchant_revenue`, `wallet_credit_mission_earning`, or
 `wallet_pay_merchant*`. Driver / merchant / master balances therefore cannot move.
+## Slice C — Refund lifecycle + authoritative ride fare
+
+Harness: `/tmp/qa_slice_c.sql`, transactional rollback against staging,
+2026-07-26. All rows GREEN except N which is code-review only
+(harness cannot UPDATE `food_orders` under RLS).
+
+| # | Case | Result |
+|---|---|---|
+| A | Authoritative ride fare: server computes 16117; client-supplied 15000 ignored; `metadata.client_display_amount_mismatch=true` | ✅ |
+| B | Ride cancel before assignment: `fee_gnf=0`, `amount_gnf=intent`, refund `pending` | ✅ |
+| C | Cancel replay idempotent (same `refund_request_id`) | ✅ |
+| D | Ride cancel after assignment (driver assigned via `om_sandbox_assign_mock_driver`): `fee_gnf=1612` (10% of 16117), `refund=14505`, refund `pending` | ✅ |
+| E | After-assignment cancel replay idempotent | ✅ |
+| F | Refund SUCCESS via `OM-SBX-REFUND-001`: refund→`paid`, intent→`refunded` | ✅ |
+| G | Refund SUCCESS replay idempotent | ✅ |
+| H | Refund REVIEW via `OM-SBX-REFUND-REVIEW-001`: refund→`needs_review`, high-severity `payment_failed` support issue linked | ✅ |
+| I | Sandbox ref on live refund row (rejected `not_a_sandbox_refund`) | ✅ |
+| J | Live-looking `OM-PROD-*` ref rejected on sandbox RPC; unknown `OM-SBX-BOGUS-001` rejected | ✅ |
+| K | Marché refund on unpaid offer (rejected `offer_not_refundable`) | ✅ |
+| L | Cross-user refund submit rejected (`forbidden`) | ✅ |
+| M | Repas eligible refund: pending → paid, food_order.payment_status='refunded' | ✅ |
+| N | Repas ambiguous (`state='completed'`) → `needs_review` branch | ⚪ code-review only (harness RLS) |
+| O | Marché eligible refund success: offer.payment_status='refunded' | ✅ |
+| P | Duplicate provider reference on same intent rejected (`duplicate_provider_reference_on_intent`) | ✅ |
+| Q | `test_run_id` propagation: 6 intents, 6 refund requests, 16 provider events, 22 recon events, 1 support issue | ✅ |
+| R | Financial isolation: master wallet delta = 0, wallet_transactions delta = 0 across the whole run (including a 10% fee split) | ✅ |
+| S | Production/manual regression: `confirm_payment_intent` / `fail_payment_intent` / capture RPCs still reject sandbox rows at the boundary; no changes to production flow | ✅ |
+| T | Build/typecheck: migrations succeed; runtime linter noise pre-existing (unrelated `search_path` warnings on other functions) | ✅ |
