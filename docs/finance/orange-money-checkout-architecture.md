@@ -102,3 +102,20 @@ non-breaking on its own; downstream slices are guarded by their flags.
   `om_provider_mode='manual'`.
 - Storing provider secrets in frontend code.
 - Trusting client-computed prices.
+## Slice C addendum
+
+- Ride checkout amount is server-authoritative. `ride_compute_quote_gnf`
+  is the only supported quote source for ride payment intents; any
+  callers supplying `client_display_fare_gnf` do so for mismatch
+  detection only.
+- Refund lifecycle uses `public.payment_refund_requests` with statuses
+  `pending | in_review | paid | rejected | needs_review`. Only one
+  active refund per intent. Provider references unique per intent.
+- Sandbox refund entry points: `om_sandbox_cancel_ride`,
+  `om_sandbox_request_repas_refund`, `om_sandbox_request_marche_refund`.
+  Reference submission uses the shared orchestrator
+  `om_sandbox_submit_refund_reference`.
+- Cancellation fee policy: 10% platform fee applies only when a driver
+  is assigned at cancel time (matches `ride_cancel` production
+  semantics). Sandbox records the fee on the refund row and never
+  captures to the master wallet.
