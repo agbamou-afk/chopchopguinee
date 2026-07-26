@@ -5717,6 +5717,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _om_sandbox_require_active: { Args: never; Returns: undefined }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -8128,6 +8129,160 @@ export type Database = {
           status: string
           topup_id: string
         }[]
+      }
+      om_sandbox_create_marche_intent: {
+        Args: { p_offer_id: string; p_test_run_id?: string }
+        Returns: {
+          amount_gnf: number
+          authorized_at: string | null
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
+          checkout_session_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          environment: string
+          expires_at: string | null
+          id: string
+          internal_reference: string
+          is_sandbox: boolean
+          ledger_release_tx_id: string | null
+          metadata: Json
+          payee_user_id: string | null
+          payer_phone: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
+          updated_at: string
+          user_id: string
+          wallet_hold_tx_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      om_sandbox_create_repas_intent: {
+        Args: { p_food_order_id: string; p_test_run_id?: string }
+        Returns: {
+          amount_gnf: number
+          authorized_at: string | null
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
+          checkout_session_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          environment: string
+          expires_at: string | null
+          id: string
+          internal_reference: string
+          is_sandbox: boolean
+          ledger_release_tx_id: string | null
+          metadata: Json
+          payee_user_id: string | null
+          payer_phone: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
+          updated_at: string
+          user_id: string
+          wallet_hold_tx_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      om_sandbox_create_ride_intent: {
+        Args: {
+          p_checkout_session_id: string
+          p_dest_lat: number
+          p_dest_lng: number
+          p_fare_gnf: number
+          p_mode: Database["public"]["Enums"]["ride_mode"]
+          p_pickup_lat: number
+          p_pickup_lng: number
+          p_test_run_id?: string
+        }
+        Returns: {
+          amount_gnf: number
+          authorized_at: string | null
+          cancelled_at: string | null
+          captured_at: string | null
+          captured_tx_id: string | null
+          checkout_session_id: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          environment: string
+          expires_at: string | null
+          id: string
+          internal_reference: string
+          is_sandbox: boolean
+          ledger_release_tx_id: string | null
+          metadata: Json
+          payee_user_id: string | null
+          payer_phone: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_event_id: string | null
+          provider_reference: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          rejected_at: string | null
+          rejection_reason: string | null
+          related_listing_id: string | null
+          related_mission_id: string | null
+          related_order_id: string | null
+          related_store_id: string | null
+          settlement_tx_id: string | null
+          source_id: string | null
+          source_module: string | null
+          state: Database["public"]["Enums"]["payment_state"]
+          test_run_id: string | null
+          updated_at: string
+          user_id: string
+          wallet_hold_tx_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      om_sandbox_finalize_authorized_intent: {
+        Args: { p_payment_intent_id: string }
+        Returns: Json
       }
       om_sandbox_reference_outcome: {
         Args: { p_reference: string }
