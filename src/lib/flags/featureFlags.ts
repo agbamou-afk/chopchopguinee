@@ -109,6 +109,23 @@ export function getPublicWalletLabel(): string {
 }
 
 /**
+ * Public-facing name for the customer payment product. Alias of
+ * `getPublicWalletLabel` — kept as the canonical import for new call
+ * sites so intent (public payment product) is obvious. Do not hardcode
+ * "ChopWallet" / "OM Wallet" in components.
+ */
+export function publicPaymentProductName(): string {
+  return getPublicWalletLabel();
+}
+
+/** Short subtitle shown under the public payment tile. */
+export function publicPaymentProductSubtitle(): string {
+  return isPublicWalletEnabled()
+    ? "Solde CHOPCHOP · recharges et paiements"
+    : "Vos paiements Orange Money, vérifications et remboursements.";
+}
+
+/**
  * Sandbox environment resolver. Sandbox is only "on" when the deployment
  * is explicitly tagged sandbox AND the sandbox master flag is enabled.
  * Ordinary production users must never see sandbox affordances.
