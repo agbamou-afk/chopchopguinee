@@ -82,6 +82,7 @@ const AdminsAdmin = lazy(() => import("./pages/admin/AdminsAdmin"));
 const AuditAdmin = lazy(() => import("./pages/admin/AuditAdmin"));
 const AnalyticsAdmin = lazy(() => import("./pages/admin/AnalyticsAdmin"));
 const PaymentsAdmin = lazy(() => import("./pages/admin/PaymentsAdmin"));
+const SandboxAdmin = lazy(() => import("./pages/admin/SandboxAdmin"));
 const PilotCommandCenter = lazy(() => import("./pages/admin/PilotCommandCenter"));
 const OpsCommandCenter = lazy(() => import("./pages/admin/OpsCommandCenter"));
 const DriverGroupsAdmin = lazy(() => import("./pages/admin/DriverGroupsAdmin"));
