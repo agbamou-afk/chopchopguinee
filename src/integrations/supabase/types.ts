@@ -5081,6 +5081,54 @@ export type Database = {
           },
         ]
       }
+      sandbox_test_runs: {
+        Row: {
+          archived_at: string | null
+          archived_by: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string | null
+          metadata: Json
+          notes: string | null
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id: string
+          label?: string | null
+          metadata?: Json
+          notes?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          archived_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+          metadata?: Json
+          notes?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       saved_listings: {
         Row: {
           created_at: string
@@ -5812,6 +5860,10 @@ export type Database = {
           _title: string
           _user: string
         }
+        Returns: undefined
+      }
+      _om_sandbox_register_test_run: {
+        Args: { p_actor?: string; p_test_run_id: string }
         Returns: undefined
       }
       _om_sandbox_require_active: { Args: never; Returns: undefined }
@@ -8227,12 +8279,43 @@ export type Database = {
           topup_id: string
         }[]
       }
+      om_sandbox_admin_list_runs: {
+        Args: { p_limit?: number }
+        Returns: {
+          archived_at: string
+          created_by: string
+          event_count: number
+          id: string
+          intent_count: number
+          label: string
+          last_activity_at: string
+          modules: string[]
+          refund_count: number
+          started_at: string
+          status: string
+          support_count: number
+          unresolved_count: number
+        }[]
+      }
+      om_sandbox_admin_metrics: { Args: never; Returns: Json }
+      om_sandbox_admin_run_detail: {
+        Args: { p_test_run_id: string }
+        Returns: Json
+      }
+      om_sandbox_archive_test_run: {
+        Args: { p_notes?: string; p_test_run_id: string }
+        Returns: Json
+      }
       om_sandbox_assign_mock_driver: {
         Args: { p_driver_user_id: string; p_ride_id: string }
         Returns: Json
       }
       om_sandbox_cancel_ride: {
         Args: { p_ride_id: string; p_test_run_id?: string }
+        Returns: Json
+      }
+      om_sandbox_complete_test_run: {
+        Args: { p_notes?: string; p_test_run_id: string }
         Returns: Json
       }
       om_sandbox_create_marche_intent: {

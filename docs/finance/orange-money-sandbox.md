@@ -308,3 +308,83 @@ callers use. Behaviour:
 - Long-form checkout UX surface for refund request / status /
   needs_review — currently exposed only through the internal
   archived-wallet payments list.
+
+## Slice D (2026-07-26) — God-Admin control plane + archival + wallet refund UX
+
+### Test-run registry
+
+- Table `public.sandbox_test_runs` — `id` reuses `test_run_id`. Status:
+  `active | completed | archived | needs_review`. Fields: `label`,
+  `created_by`, `started_at`, `completed_at`, `completed_by`,
+  `archived_at`, `archived_by`, `notes`, `metadata`.
+- RLS: God Admin + Finance Admin `SELECT`; all writes through
+  `SECURITY DEFINER` RPCs.
+- Backfilled from existing sandbox `payment_intents.test_run_id`
+  (marked `metadata.backfilled=true`).
+
+### RPCs
+
+- `om_sandbox_complete_test_run(uuid, text)` — God Admin; active → completed. Idempotent.
+- `om_sandbox_archive_test_run(uuid, text)` — God Admin. Refuses any
+  test run containing non-sandbox / production rows. Marks
+  `payment_intents`, `payment_refund_requests`,
+  `payment_provider_events`, `payment_reconciliation_events` with
+  `sandbox_archived_at`. Returns per-table counts. Idempotent.
+  Never deletes.
+- `om_sandbox_admin_metrics()` — sandbox-only aggregates for the admin
+  cockpit. God + Finance.
+- `om_sandbox_admin_list_runs(int)` — per-run counts + module coverage
+  + last activity. God + Finance.
+- `om_sandbox_admin_run_detail(uuid)` — correlated intents, refunds,
+  provider events, reconciliation events, support issues. God + Finance.
+- `om_sandbox_assign_mock_driver(uuid, uuid)` — **tightened to God Admin
+  only** (Slice C used ownership; Slice D removes that path).
+
+### Archive lockout trigger
+
+`_om_sandbox_block_archived` — BEFORE INSERT/UPDATE on
+`payment_intents` and `payment_refund_requests`. If the row is
+`is_sandbox=true` and its `test_run_id` maps to an archived run, the
+statement is rejected with `sandbox_test_run_archived` (unless the
+archive RPC itself is running, indicated by the `om.archiving` GUC).
+
+### Admin route
+
+`/admin/payments/sandbox` (added to the Finance sidebar as
+"Sandbox OM"). Renders overview cards (runs, intents by state,
+refunds by state, needs_review, module counts, provider events),
+list of test runs, and per-run detail sheet with correlated logs and
+inline simulation controls (auth fixtures for pending intents,
+finalize for authorized intents, refund fixtures for pending refunds,
+complete / archive actions for the run). Every control is disabled
+when either sandbox flag is off or when the run is archived.
+
+### OM Wallet refund UX
+
+`OmPaymentsList` now co-loads the customer's own
+`payment_refund_requests` (RLS-scoped) and renders — under each intent
+— a neutral refund line: status label (`En cours de vérification`,
+`Remboursé`, `Révision requise`), refunded amount, cancellation fee
+when > 0, requested date, resolved date, and — for `needs_review` —
+the same "Ouvrir un signalement" link that already covered failed
+intents. Sandbox intents keep the existing amber "Sandbox" badge.
+No internal balance, no master wallet, no raw provider payload, no
+admin notes.
+
+### Financial isolation (Slice D)
+
+- No new `wallet_*` calls introduced.
+- Archive RPC only mutates sandbox rows and the registry; it never
+  touches production rows or `wallet_transactions`.
+- Frontend read paths query `payment_intents` and
+  `payment_refund_requests` under existing RLS — customer sees own,
+  God/Finance Admin see via SECURITY DEFINER read RPCs.
+
+### Not delivered by design
+
+- Broad `om_sandbox_purge(before_date)` — intentionally omitted;
+  archival is the only cleanup surface.
+- `sandbox_test_admin` sub-role — omitted per instruction ("God Admin
+  only for this release rather than introducing a broad new role").
+- `om-sandbox-simulate` Edge Function — remains optional; the
+  transactional path is already fully server-authoritative.

@@ -25,6 +25,26 @@ type Intent = {
   rejection_reason: string | null;
 };
 
+type Refund = {
+  id: string;
+  payment_intent_id: string;
+  status: string;
+  amount_gnf: number;
+  fee_gnf: number;
+  source_module: string;
+  is_sandbox: boolean;
+  created_at: string;
+  resolved_at: string | null;
+};
+
+const REFUND_LABEL: Record<string, { label: string; tone: string }> = {
+  pending:      { label: "Remboursement en cours de vérification", tone: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+  in_review:    { label: "Remboursement en cours de vérification", tone: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+  paid:         { label: "Remboursé",                             tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
+  needs_review: { label: "Révision requise",                       tone: "bg-red-500/15 text-red-700 dark:text-red-300" },
+  rejected:     { label: "Remboursement refusé",                   tone: "bg-muted text-muted-foreground" },
+};
+
 const STATE_LABEL: Record<string, { label: string; tone: string }> = {
   pending:         { label: "En attente de paiement", tone: "bg-muted text-muted-foreground" },
   processing:      { label: "Traitement",              tone: "bg-muted text-muted-foreground" },
@@ -49,6 +69,7 @@ const MODULE_LABEL: Record<string, string> = {
 
 export function OmPaymentsList() {
   const [rows, setRows] = useState<Intent[] | null>(null);
+  const [refunds, setRefunds] = useState<Record<string, Refund>>({});
   const [err, setErr] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -57,16 +78,30 @@ export function OmPaymentsList() {
     setErr(null);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setRows([]); setRefreshing(false); return; }
-    const { data, error } = await supabase
-      .from("payment_intents")
-      .select("id,amount_gnf,state,provider_reference,internal_reference,source_module,is_sandbox,created_at,rejection_reason")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(30);
+    const [{ data, error }, { data: rf }] = await Promise.all([
+      supabase
+        .from("payment_intents")
+        .select("id,amount_gnf,state,provider_reference,internal_reference,source_module,is_sandbox,created_at,rejection_reason")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(30),
+      supabase
+        .from("payment_refund_requests")
+        .select("id,payment_intent_id,status,amount_gnf,fee_gnf,source_module,is_sandbox,created_at,resolved_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(60),
+    ]);
     if (error) {
       setErr("Impossible de charger vos paiements.");
     } else {
       setRows((data ?? []) as Intent[]);
+      const map: Record<string, Refund> = {};
+      for (const r of ((rf ?? []) as Refund[])) {
+        // Keep the most recent refund per intent (query already sorted DESC)
+        if (!map[r.payment_intent_id]) map[r.payment_intent_id] = r;
+      }
+      setRefunds(map);
     }
     setRefreshing(false);
   };
@@ -114,6 +149,8 @@ export function OmPaymentsList() {
         {rows.map((r) => {
           const meta = STATE_LABEL[r.state] ?? { label: r.state, tone: "bg-muted text-muted-foreground" };
           const mod = r.source_module ? (MODULE_LABEL[r.source_module] ?? r.source_module) : "Paiement";
+          const rf = refunds[r.id];
+          const rfMeta = rf ? (REFUND_LABEL[rf.status] ?? { label: rf.status, tone: "bg-muted" }) : null;
           return (
             <li key={r.id} className="rounded-xl border border-border/60 bg-card p-3">
               <div className="flex items-center justify-between gap-2">
@@ -135,10 +172,26 @@ export function OmPaymentsList() {
                   )}
                 </div>
               </div>
+              {rf && rfMeta && (
+                <div className="mt-2 pt-2 border-t border-border/40 flex items-center justify-between gap-2 text-[11px]">
+                  <div className="min-w-0">
+                    <p className="text-foreground/80">
+                      {rfMeta.label}
+                      {rf.fee_gnf > 0 && ` · Frais ${formatGNF(rf.fee_gnf)}`}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Remboursement {formatGNF(rf.amount_gnf)} · Demandé {new Date(rf.created_at).toLocaleDateString("fr-FR")}
+                      {rf.resolved_at ? ` · Résolu ${new Date(rf.resolved_at).toLocaleDateString("fr-FR")}` : ""}
+                    </p>
+                  </div>
+                  <Badge className={`${rfMeta.tone} border-0 text-[10px] shrink-0`}>{rf.status}</Badge>
+                </div>
+              )}
               {r.state === "failed" && r.rejection_reason && (
                 <p className="mt-1.5 text-[11px] text-red-700 dark:text-red-300">{r.rejection_reason}</p>
               )}
-              {(r.state === "in_review" || r.state === "needs_review" || r.state === "failed") && (
+              {((r.state === "in_review" || r.state === "needs_review" || r.state === "failed") ||
+                (rf && (rf.status === "needs_review"))) && (
                 <a
                   href="/help/issues"
                   className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-primary"

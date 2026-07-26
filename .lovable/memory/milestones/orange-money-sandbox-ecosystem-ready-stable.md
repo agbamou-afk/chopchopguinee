@@ -79,3 +79,35 @@ Flip `wallet_public_enabled=true` to restore legacy ChopWallet naming and surfac
   (`requested / in_review / paid / needs_review`) with a Sandbox
   badge — currently visible only through `OmPaymentsList` intent
   metadata.
+
+## Slice D delivered (2026-07-26) — MILESTONE LOCK
+
+- Test-run registry `sandbox_test_runs` (active / completed / archived / needs_review) + backfill from existing sandbox intents. God + Finance read; all writes via SECURITY DEFINER RPCs.
+- `om_sandbox_complete_test_run(uuid,text)` and `om_sandbox_archive_test_run(uuid,text)` — God Admin only. Archive refuses mixed/live runs, marks records via `metadata.sandbox_archived_at`, returns per-table counts, idempotent, never deletes.
+- Archive lockout: `_om_sandbox_block_archived` BEFORE INSERT/UPDATE on `payment_intents` and `payment_refund_requests` rejects any sandbox mutation whose `test_run_id` is archived (bypassed only by the archive RPC via the `om.archiving` GUC).
+- Read RPCs: `om_sandbox_admin_metrics`, `om_sandbox_admin_list_runs`, `om_sandbox_admin_run_detail` — God + Finance.
+- `om_sandbox_assign_mock_driver` tightened to God Admin only.
+- Admin route `/admin/payments/sandbox` (SandboxAdmin.tsx) added to the Finance sidebar as "Sandbox OM". Metric cards, run list, detail sheet with inline auth / finalize / refund / complete / archive controls. All controls disabled when either flag is off or the run is archived.
+- OM Wallet refund UX: `OmPaymentsList` renders own `payment_refund_requests` under each intent with neutral status labels (`en cours de vérification`, `remboursé`, `révision requise`), refunded amount, cancellation fee, requested / resolved dates, Sandbox badge, and support link on `needs_review`. No internal balance surface.
+- Final production isolation reverified: master wallet delta = 0 across full Slice D flow + archive; `wallet_transactions` delta = 0; production admin previews already exclude sandbox by default (Slice A guard); driver / merchant / cashout paths untouched.
+- Sandbox flags restored to `false` after QA (`om_environment=false`, `om_sandbox_enabled=false`, `om_provider_mode=manual`, `wallet_public_enabled=false`).
+
+## Lock recommendation
+
+Full milestone `orange-money-sandbox-ecosystem-ready-stable` is READY TO LOCK.
+
+Every remaining Slice D exit criterion met:
+- God Admin can run deterministic end-to-end tests through secure RPCs from the UI.
+- Production financial totals and payable balances unaffected.
+- Test runs can be safely archived (no deletion, audit preserved).
+- Ordinary and Operations users cannot simulate financial outcomes.
+- Customers see own refund status without internal wallet exposure.
+- Sandbox flags default OFF.
+- QA A–Z materially complete (`M/N/O` inherit from Slice C parity).
+
+## Non-blocking follow-ups (deferred by design)
+
+- `om_sandbox_purge(before_date)` — intentionally omitted; archival is the sole cleanup path.
+- `sandbox_test_admin` sub-role — omitted per instruction ("God Admin only for this release").
+- `om-sandbox-simulate` Edge Function — optional; server RPCs already cover CI harness.
+- Ride surge / waiting-time / service-zone multipliers — not yet server-authoritative; matches production behaviour.
