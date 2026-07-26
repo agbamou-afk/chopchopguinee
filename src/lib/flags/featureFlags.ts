@@ -17,7 +17,9 @@ export type FlagKey =
   | "om_provider_mode"
   | "om_ride_checkout_enabled"
   | "om_repas_checkout_enabled"
-  | "om_marche_checkout_enabled";
+  | "om_marche_checkout_enabled"
+  | "om_sandbox_enabled"
+  | "om_environment";
 
 const DEFAULTS: Record<FlagKey, boolean> = {
   // Orange Money First pivot: public CHOP Wallet UI is archived until
@@ -31,6 +33,11 @@ const DEFAULTS: Record<FlagKey, boolean> = {
   om_ride_checkout_enabled: false,
   om_repas_checkout_enabled: false,
   om_marche_checkout_enabled: false,
+  // Sandbox ecosystem — sandbox test references (OM-SBX-*) are only
+  // honored when both env=sandbox and om_sandbox_enabled=true. Production
+  // defaults keep both off so real customers can never trigger fake flows.
+  om_sandbox_enabled: false,
+  om_environment: false, // false = production, true = sandbox/staging
 };
 
 const KNOWN_FLAGS: FlagKey[] = [
@@ -40,6 +47,8 @@ const KNOWN_FLAGS: FlagKey[] = [
   "om_ride_checkout_enabled",
   "om_repas_checkout_enabled",
   "om_marche_checkout_enabled",
+  "om_sandbox_enabled",
+  "om_environment",
 ];
 
 let cache: Record<FlagKey, boolean> = { ...DEFAULTS };
@@ -88,6 +97,24 @@ export function getFlag(key: FlagKey): boolean {
 
 export function isPublicWalletEnabled(): boolean {
   return getFlag("wallet_public_enabled");
+}
+
+/**
+ * Centralized public label for the money/payments surface. When the
+ * public CHOP Wallet is archived (Orange Money First pivot), all public
+ * tiles / nav labels must read "OM Wallet" instead of "ChopWallet".
+ */
+export function getPublicWalletLabel(): string {
+  return isPublicWalletEnabled() ? "ChopWallet" : "OM Wallet";
+}
+
+/**
+ * Sandbox environment resolver. Sandbox is only "on" when the deployment
+ * is explicitly tagged sandbox AND the sandbox master flag is enabled.
+ * Ordinary production users must never see sandbox affordances.
+ */
+export function isOmSandboxActive(): boolean {
+  return getFlag("om_environment") && getFlag("om_sandbox_enabled");
 }
 
 export function subscribeFlags(cb: () => void): () => void {
