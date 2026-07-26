@@ -30,3 +30,25 @@ the modules you are testing.
 
 See `docs/finance/orange-money-sandbox.md` for the reference table and
 isolation invariants.
+
+## Slice A verification (2026-07-26)
+
+Executed via SQL harness against the deployed `om_payment_submit_sandbox_reference`
+RPC. All rows pass. Row IDs map to Slice A goals, not the full A–U grid above.
+
+| Row | Scenario | Result |
+|---|---|---|
+| A1 | SUCCESS ref (`  om-sbx-success-001 `, mixed case + padding) on owned sandbox intent | intent → `authorized`, `authorized_at` set, event stored |
+| A2 | Same SUCCESS ref replayed | `idempotent=true`, no duplicate provider event, no duplicate transition |
+| A3 | Live-looking ref (`OM-12345678`) via sandbox RPC | rejected `live_reference_rejected_on_sandbox_rpc` |
+| A4 | Sandbox ref on live intent (`is_sandbox=false`) | rejected `not_a_sandbox_intent` |
+| A5 | Sandbox ref on another user's sandbox intent | rejected `forbidden` |
+| A6 | REJECT / REVIEW / EXPIRED / DUPLICATE deterministic outcomes | intents → `failed` / `needs_review` / `expired` / `needs_review` |
+| A6b | DUPLICATE reference re-used across a fresh sandbox intent | duplicate branch fires, second intent stays `pending`, no double-authorization |
+| A7 | `confirm_payment_intent` invoked against a sandbox intent | rejected before wallet touch (admin gate + `sandbox_intent_use_om_payment_submit_sandbox_reference` guard) |
+| A8 | Master wallet balance before vs after full run | delta = 0 |
+| A9 | Non-sandbox provider events created during the run | 0 |
+
+Sandbox path never invokes `wallet_hold`, `wallet_capture`, `wallet_release`,
+`wallet_settle_merchant_revenue`, `wallet_credit_mission_earning`, or
+`wallet_pay_merchant*`. Driver / merchant / master balances therefore cannot move.

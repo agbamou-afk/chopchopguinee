@@ -6097,27 +6097,49 @@ export type Database = {
         }
       }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
-      admin_preview_marche_payment_intents: {
-        Args: { p_limit?: number }
-        Returns: {
-          amount_gnf: number
-          authorized_at: string
-          buyer_user_id: string
-          captured_tx_id: string
-          created_at: string
-          listing_id: string
-          listing_title: string
-          merchant_store_id: string
-          merchant_user_id: string
-          offer_id: string
-          offer_status: string
-          payment_intent_id: string
-          payment_intent_state: Database["public"]["Enums"]["payment_state"]
-          payment_status: string
-          settlement_tx_id: string
-          wallet_hold_tx_id: string
-        }[]
-      }
+      admin_preview_marche_payment_intents:
+        | {
+            Args: { p_limit?: number }
+            Returns: {
+              amount_gnf: number
+              authorized_at: string
+              buyer_user_id: string
+              captured_tx_id: string
+              created_at: string
+              listing_id: string
+              listing_title: string
+              merchant_store_id: string
+              merchant_user_id: string
+              offer_id: string
+              offer_status: string
+              payment_intent_id: string
+              payment_intent_state: Database["public"]["Enums"]["payment_state"]
+              payment_status: string
+              settlement_tx_id: string
+              wallet_hold_tx_id: string
+            }[]
+          }
+        | {
+            Args: { p_include_sandbox?: boolean; p_limit?: number }
+            Returns: {
+              amount_gnf: number
+              authorized_at: string
+              buyer_user_id: string
+              captured_tx_id: string
+              created_at: string
+              listing_id: string
+              listing_title: string
+              merchant_store_id: string
+              merchant_user_id: string
+              offer_id: string
+              offer_status: string
+              payment_intent_id: string
+              payment_intent_state: Database["public"]["Enums"]["payment_state"]
+              payment_status: string
+              settlement_tx_id: string
+              wallet_hold_tx_id: string
+            }[]
+          }
       admin_preview_marche_payment_settlement: {
         Args: { p_limit?: number }
         Returns: {
@@ -6197,28 +6219,62 @@ export type Database = {
           status: string
         }[]
       }
-      admin_preview_payment_intents: {
-        Args: { p_limit?: number; p_source_module?: string; p_state?: string }
-        Returns: {
-          amount_gnf: number
-          cancelled_at: string
-          captured_at: string
-          captured_tx_id: string
-          created_at: string
-          id: string
-          internal_reference: string
-          merchant_store_id: string
-          metadata: Json
-          payee_user_id: string
-          payer_user_id: string
-          provider: Database["public"]["Enums"]["payment_provider"]
-          settlement_tx_id: string
-          source_id: string
-          source_module: string
-          state: Database["public"]["Enums"]["payment_state"]
-          wallet_hold_tx_id: string
-        }[]
-      }
+      admin_preview_payment_intents:
+        | {
+            Args: {
+              p_limit?: number
+              p_source_module?: string
+              p_state?: string
+            }
+            Returns: {
+              amount_gnf: number
+              cancelled_at: string
+              captured_at: string
+              captured_tx_id: string
+              created_at: string
+              id: string
+              internal_reference: string
+              merchant_store_id: string
+              metadata: Json
+              payee_user_id: string
+              payer_user_id: string
+              provider: Database["public"]["Enums"]["payment_provider"]
+              settlement_tx_id: string
+              source_id: string
+              source_module: string
+              state: Database["public"]["Enums"]["payment_state"]
+              wallet_hold_tx_id: string
+            }[]
+          }
+        | {
+            Args: {
+              p_include_sandbox?: boolean
+              p_limit?: number
+              p_source_module?: string
+              p_state?: string
+            }
+            Returns: {
+              amount_gnf: number
+              cancelled_at: string
+              captured_at: string
+              captured_tx_id: string
+              created_at: string
+              id: string
+              internal_reference: string
+              is_sandbox: boolean
+              merchant_store_id: string
+              metadata: Json
+              payee_user_id: string
+              payer_user_id: string
+              provider: Database["public"]["Enums"]["payment_provider"]
+              settlement_tx_id: string
+              source_id: string
+              source_module: string
+              state: Database["public"]["Enums"]["payment_state"]
+              test_run_id: string
+              wallet_hold_tx_id: string
+            }[]
+          }
       admin_preview_repas_payment_settlement: {
         Args: { p_limit?: number }
         Returns: {
@@ -8048,6 +8104,15 @@ export type Database = {
       next_wongo_reference: { Args: never; Returns: string }
       normalize_om_code: { Args: { p_code: string }; Returns: string }
       om_auto_match: { Args: { p_event_id: string }; Returns: Json }
+      om_payment_submit_sandbox_reference: {
+        Args: {
+          p_payer_phone?: string
+          p_payment_intent_id: string
+          p_provider_reference: string
+          p_test_run_id?: string
+        }
+        Returns: Json
+      }
       om_pending_topups_for_event: {
         Args: { p_event_id: string }
         Returns: {
@@ -8063,6 +8128,10 @@ export type Database = {
           status: string
           topup_id: string
         }[]
+      }
+      om_sandbox_reference_outcome: {
+        Args: { p_reference: string }
+        Returns: string
       }
       open_food_order_thread: {
         Args: {
