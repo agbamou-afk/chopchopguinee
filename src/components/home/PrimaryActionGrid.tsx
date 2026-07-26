@@ -3,7 +3,11 @@ import walletIcon from "@/assets/icons/wallet.png";
 import motoIcon from "@/assets/icons/moto.png";
 import repasIcon from "@/assets/icons/repas.png";
 import marcheIcon from "@/assets/icons/marche.png";
-import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
+import {
+  usePublicWalletEnabled,
+  usePublicPaymentProductName,
+  usePublicPaymentProductSubtitle,
+} from "@/lib/flags/useFeatureFlag";
 
 export type PrimaryAction = "topup" | "ride" | "order" | "market";
 
@@ -34,12 +38,9 @@ const WALLET_TILE: ActionDef = {
   halo: "bg-primary/12 ring-1 ring-primary/15",
 };
 
-const OM_TILE: ActionDef = {
+const OM_TILE_BASE: Omit<ActionDef, "label" | "subtitle" | "alt"> = {
   id: "topup",
-  label: "OM Wallet",
-  subtitle: "Paiements Orange Money",
   img: walletIcon,
-  alt: "Ouvrir OM Wallet",
   halo: "bg-primary/12 ring-1 ring-primary/15",
 };
 
@@ -72,8 +73,16 @@ const RIDE_TILES: ActionDef[] = [
 
 export function PrimaryActionGrid({ onAction }: Props) {
   const publicWalletEnabled = usePublicWalletEnabled();
+  const publicName = usePublicPaymentProductName();
+  const publicSubtitle = usePublicPaymentProductSubtitle();
+  const omTile: ActionDef = {
+    ...OM_TILE_BASE,
+    label: publicName,
+    subtitle: publicSubtitle,
+    alt: `Ouvrir ${publicName}`,
+  };
   const actions: ActionDef[] = [
-    publicWalletEnabled ? WALLET_TILE : OM_TILE,
+    publicWalletEnabled ? WALLET_TILE : omTile,
     ...RIDE_TILES,
   ];
   return (
