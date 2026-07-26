@@ -2,7 +2,9 @@ import { useEffect, useSyncExternalStore } from "react";
 import {
   type FlagKey,
   getFlag,
+  getPublicWalletLabel,
   isPublicWalletEnabled,
+  isOmSandboxActive,
   loadFeatureFlags,
   subscribeFlags,
 } from "./featureFlags";
@@ -39,4 +41,22 @@ export function useOmProviderAutomated(): boolean {
   return useFlag("om_provider_mode");
 }
 
-export { isPublicWalletEnabled, loadFeatureFlags };
+/** true only when the deployment is a sandbox env AND sandbox is enabled. */
+export function useOmSandboxActive(): boolean {
+  const env = useFlag("om_environment");
+  const sbx = useFlag("om_sandbox_enabled");
+  return env && sbx;
+}
+
+/** Returns "OM Wallet" when public wallet is archived, else "ChopWallet". */
+export function usePublicWalletLabel(): string {
+  const publicOn = usePublicWalletEnabled();
+  return publicOn ? "ChopWallet" : "OM Wallet";
+}
+
+export {
+  isPublicWalletEnabled,
+  isOmSandboxActive,
+  getPublicWalletLabel,
+  loadFeatureFlags,
+};
