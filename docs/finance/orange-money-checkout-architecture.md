@@ -119,3 +119,23 @@ non-breaking on its own; downstream slices are guarded by their flags.
   is assigned at cancel time (matches `ride_cancel` production
   semantics). Sandbox records the fee on the refund row and never
   captures to the master wallet.
+
+## Slice D addendum
+
+- Sandbox lifecycle is now a first-class registry: `sandbox_test_runs`
+  (statuses `active | completed | archived | needs_review`), backfilled
+  from existing sandbox `payment_intents.test_run_id`.
+- Archival is safe by construction: God Admin only, refuses mixed/live
+  runs, marks rows via `metadata.sandbox_archived_at`, never deletes.
+  A BEFORE trigger on `payment_intents` and `payment_refund_requests`
+  freezes any archived sandbox row.
+- Mock-driver simulation (`om_sandbox_assign_mock_driver`) tightened
+  from ride-owner to God Admin only.
+- Admin surface at `/admin/payments/sandbox` uses server-authoritative
+  read RPCs (`om_sandbox_admin_metrics`,
+  `om_sandbox_admin_list_runs`, `om_sandbox_admin_run_detail`); no
+  direct frontend mutation of payment / refund state.
+- Customer OM Wallet renders own refund status
+  (`en cours de vérification`, `remboursé`, `révision requise`) with
+  Sandbox badge on sandbox rows. Never exposes internal ledger,
+  master wallet, or raw provider payloads.

@@ -80,3 +80,36 @@ Harness: `/tmp/qa_slice_c.sql`, transactional rollback against staging,
 | R | Financial isolation: master wallet delta = 0, wallet_transactions delta = 0 across the whole run (including a 10% fee split) | ✅ |
 | S | Production/manual regression: `confirm_payment_intent` / `fail_payment_intent` / capture RPCs still reject sandbox rows at the boundary; no changes to production flow | ✅ |
 | T | Build/typecheck: migrations succeed; runtime linter noise pre-existing (unrelated `search_path` warnings on other functions) | ✅ |
+
+## Slice D — God Admin control plane + archival + wallet refund UX
+
+Harness: SQL harness against staging + manual UI walkthrough.
+
+| # | Case | Result |
+|---|---|---|
+| A | God Admin opens `/admin/payments/sandbox` — sandbox-only metrics and test runs | ✅ |
+| B | Finance Admin opens route — read-only, no simulate/archive buttons | ✅ |
+| C | Operations Admin opens route — `ModulePage` denies (no `payments` view) | ✅ |
+| D | Ordinary user opens `/admin/payments/sandbox` — AdminGuard denies | ✅ |
+| E | Both flags off — inactive amber banner, all simulation controls hidden/disabled | ✅ |
+| F | Both flags on — simulation controls appear for God Admin only | ✅ |
+| G | Simulate Ride SUCCESS from admin — exactly one intent transitions, structured RPC result | ✅ |
+| H | Replay same fixture — `idempotent=true` | ✅ |
+| I | FINALIZE_FAIL fixture — needs_review + support issue linked | ✅ |
+| J | Mock driver as ordinary user — `forbidden` | ✅ |
+| K | Mock driver as Operations Admin — `forbidden` | ✅ |
+| L | Mock driver as God Admin — driver attached, audit row written | ✅ |
+| M | Ride cancel via admin — 10% fee split when driver assigned, else 0% | ✅ (Slice C parity) |
+| N | Repas refund via admin | ✅ (Slice C parity) |
+| O | Marché refund via admin | ✅ (Slice C parity) |
+| P | OM Wallet refund card renders own refund state, amounts, Sandbox badge, support link | ✅ |
+| Q | Cross-user refund invisible — RLS `refund_owner_read` scopes to `auth.uid()` | ✅ |
+| R | `om_sandbox_archive_test_run` on active run — marks 6 intents / 6 refunds / N events / M recon / 1 support, `status='archived'` | ✅ |
+| S | Archive replay — `idempotent=true` | ✅ |
+| T | Simulate on archived run — trigger raises `sandbox_test_run_archived` | ✅ |
+| U | Archive mixed/live run — refused (`refuse_archive_mixed_or_live_run`) | ✅ |
+| V | Master wallet delta across full Slice D run + archive = 0; `wallet_transactions` delta = 0 | ✅ |
+| W | Driver balance / `held_gnf` / cashout eligibility / merchant payable unchanged | ✅ |
+| X | Production `admin_preview_payment_intents` excludes sandbox by default (Slice A guard) | ✅ |
+| Y | Post-QA: both sandbox flags restored to `false`, provider mode manual | ✅ |
+| Z | Build + typecheck clean (`bunx tsgo`), HMR flush 200 | ✅ |
