@@ -8227,6 +8227,10 @@ export type Database = {
           topup_id: string
         }[]
       }
+      om_sandbox_assign_mock_driver: {
+        Args: { p_driver_user_id: string; p_ride_id: string }
+        Returns: Json
+      }
       om_sandbox_cancel_ride: {
         Args: { p_ride_id: string; p_test_run_id?: string }
         Returns: Json
