@@ -42,6 +42,9 @@ vi.mock("@/integrations/supabase/client", () => ({
           : {}),
       }),
     }),
+    // AuthContext also calls the `current_freeze` RPC alongside profile/roles.
+    // Without this the Promise.all rejects and roles silently fall back to [].
+    rpc: () => Promise.resolve({ data: [], error: null }),
   },
 }));
 

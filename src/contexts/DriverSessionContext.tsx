@@ -265,8 +265,11 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
       return;
     }
     const offerId = (data as { offer_id?: string } | null)?.offer_id;
-    // eslint-disable-next-line no-console
-    console.log("[driver_offer_debug] created offer", offerId, data);
+    if (import.meta.env.DEV) {
+      // Release hardening: never emit offer payloads to the production console.
+      // eslint-disable-next-line no-console
+      console.log("[driver_offer_debug] created offer", offerId, data);
+    }
     toast.success("Offre test créée pour ce chauffeur", {
       description: offerId ? `Offer ${offerId.slice(0, 8)} • expire dans 60 s` : undefined,
     });
