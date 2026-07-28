@@ -126,7 +126,7 @@ export function ProductFormSheet({
     }
   };
 
-  const useImageAsPrimary = async (imageId: string, label: string) => {
+  const applyImageAsPrimary = async (imageId: string, label: string) => {
     try {
       await setPrimaryProductImage(imageId);
       if (product) await reloadImages(product.id);
@@ -297,7 +297,7 @@ export function ProductFormSheet({
                         <button
                           type="button"
                           className="text-[11px] text-primary underline"
-                          onClick={() => useImageAsPrimary(original.id, "Image originale utilisée.")}
+                          onClick={() => applyImageAsPrimary(original.id, "Image originale utilisée.")}
                         >
                           Garder l'original
                         </button>
@@ -318,7 +318,7 @@ export function ProductFormSheet({
                         <button
                           type="button"
                           className="text-[11px] text-primary underline"
-                          onClick={() => useImageAsPrimary(cleaned.id, "Image nettoyée utilisée.")}
+                          onClick={() => applyImageAsPrimary(cleaned.id, "Image nettoyée utilisée.")}
                         >
                           Utiliser l'image nettoyée
                         </button>
