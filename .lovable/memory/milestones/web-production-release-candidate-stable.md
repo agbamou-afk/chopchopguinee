@@ -1,54 +1,68 @@
 ---
 name: Web Production Release Candidate
-description: Release-freeze baseline web-rc-1 for Android 1.0 packaging — audit, QA matrix, defect registry, deploy/rollback runbooks; NOT locked (OM + SMTP + deploy-rollback gates YELLOW)
+description: Release-freeze baseline web-rc-1 — RC freeze rules, mission matrix, defect register, secret audit, release/rollback/checklist docs. NOT LOCKED; OM real-money, SMTP inbox and deployment-rollback gates are YELLOW.
 type: feature
 ---
 
 # Web Production Release Candidate — `web-rc-1`
 
-Status: **RELEASE CANDIDATE — LOCK WITHHELD**
-Date: 2026-07-28
-Baseline: main after `orange-money-sandbox-ecosystem-ready-stable`
+**Status: RELEASE CANDIDATE — LOCK WITHHELD**
+Date: 2026-07-28 · Baseline: main after `orange-money-sandbox-ecosystem-ready-stable`
 
-## Freeze rule (binding)
+## Freeze rule (binding once locked)
 
-The web app is now the authoritative baseline for Android 1.0. Only these change
-classes are permitted: release blocker fix, security fix, payment/provider
-adapter fix, Android packaging compatibility fix. Everything else is
-deferred post-1.0. No broad features, no redesigns, no new service modules.
+After this lock, allowed Android 1.0 changes are limited to:
+packaging / native integration · Android permissions · deep links ·
+push-notification integration · safe-area & status-bar behaviour ·
+Android-specific crash fixes · P0/P1 regressions.
 
-## Provider neutrality (binding)
+Not allowed without reopening the web RC:
+new business modules · new payment architecture · broad navigation changes ·
+major role-flow redesign · new wallet model · major database state-machine
+changes.
 
-Orange Money is the launch provider only. Ledger, intent, refund, reconciliation
-and mission-orchestration layers remain provider-abstracted via
-`src/lib/payments/providers/registry.ts`. A second low-fee rail must be addable
-as a new adapter with zero mission-layer change. Do not deepen OM coupling.
+A future provider pivot is a **provider adapter plus its own tested release
+phase**, never a silent insertion into the frozen Android baseline. Orange Money
+stays the active launch rail; the intent/refund/reconciliation/ledger layers stay
+provider-abstracted.
 
-## Delivered
+## Gate state at RC
 
-- Release-candidate record, deploy runbook, rollback runbook (`docs/releases/`)
-- Full role QA matrix + defect registry (`docs/qa/`)
-- DEF-001 **P0 fixed**: sandbox flags (`om_sandbox_enabled`, `om_environment`)
-  were left `true` in production after Slice D QA — now `false`
-- DEF-002 P2 fixed: AuthProvider test mock lacked `rpc`, masking role loading
-- DEF-003 P2 fixed: production console emitted driver offer payload
-- Frontend secret sweep clean (only public anon key + public map token)
-- Build / typecheck / 12 unit tests green
+GREEN: production build, typecheck, 12/12 tests, frontend secret sweep (0 source
+maps, only the anon key, demo panel absent from bundle), sandbox flags OFF, RLS
+on every public table, 0 error-level linter findings, feature-flag rollback
+(materially tested), offline/low-data recovery, staff forced-password
+enforcement, P0 open = 0, P1 open = 0.
 
-## Gates
+YELLOW (external/manual, block the lock):
+1. Orange Money real production payment evidence (16 paths A–P).
+2. SMTP live inbox delivery (Gmail / Yahoo / iCloud / Orange).
+3. Deployment rollback rehearsal (publish → rollback → re-publish).
 
-GREEN: build, typecheck, tests, secret sweep, sandbox-off, flag rollback,
-offline/low-data, staff password enforcement (code), P0=0, P1=0.
-YELLOW: Orange Money real/manual evidence, SMTP live inbox evidence,
-deployment rollback executed for real.
+## P0 found and fixed this phase
+
+DEF-001: `om_sandbox_enabled` and `om_environment` were still `true` in the
+production database after the sandbox phase claimed they were restored OFF.
+Simulated references would have been honoured for real customers. Both now
+`false`; a flag assertion is now a documented preflight step.
 
 ## Accepted P2
 
-DEF-004 bundle size, DEF-005 451 warn-level Supabase linter findings,
-DEF-006 self-serve read gaps on `driver_applications` / `driver_referrals` /
-`topup_requests` (to be closed post-1.0 with sanitized RPCs, never raw SELECT).
+DEF-004 bundle size · DEF-005 451 warn-level linter findings (0 error-level) ·
+DEF-006 self-serve read gaps (close with sanitized RPCs, never raw SELECT) ·
+DEF-007 four platform-managed email queue functions without pinned search_path
+(no PUBLIC execute) · DEF-008 `merchant_ensure_wallet` PUBLIC execute without an
+internal guard (creates an empty wallet row only).
 
-## Do not lock until
+## Canonical documents
 
-The three YELLOW gates have real external evidence attached in
-`docs/qa/web-production-release-matrix.md` §Manual actions.
+`docs/releases/web-production-rc.md`, `web-production-release.md`,
+`web-production-rollback.md`, `web-production-checklist.md`,
+`docs/qa/web-production-release-matrix.md`, `web-rc-defect-register.md`,
+`smtp-inbox-test-results.md`, `docs/security/web-rc-frontend-secret-audit.md`.
+
+## Lock condition
+
+Lock only when the three YELLOW gates carry real external evidence, signed in
+the release checklist. Record the lock commit SHA, release owner and date here
+at that time. Code readiness is not operational readiness.
