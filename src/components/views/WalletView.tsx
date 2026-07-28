@@ -115,37 +115,11 @@ export function WalletView() {
     } catch {}
   }, []);
 
-  // Orange Money First pivot: when the public wallet UI is archived we
-  // render a focused OM-first surface. The internal ledger, top-up
-  // sheet, receipts and support entrypoints all stay reachable — we
-  // just stop framing them as a public "wallet balance" product.
-  if (!publicWalletEnabled) {
-    return (
-      <>
-        <WalletArchivedPanel
-          onOpenOm={() => setTopUpOpen(true)}
-          onOpenActivity={() => {
-            try { window.location.assign("/?view=orders"); } catch { /* ignore */ }
-          }}
-        />
-        <Sheet open={topUpOpen} onOpenChange={setTopUpOpen}>
-          <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
-            <SheetHeader className="text-left">
-              <SheetTitle>Paiement Orange Money</SheetTitle>
-              <SheetDescription>
-                Envoyez votre paiement OM à CHOPCHOP, puis collez le code.
-                Aucun crédit automatique sans validation opérateur.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="mt-4">
-              <TopUpOrangeMoney onClose={() => { setTopUpOpen(false); refresh(); }} />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </>
-    );
-  }
-
+  // NOTE (web-rc-1 / DEF-009): these memos MUST stay above the
+  // `publicWalletEnabled` early return. The flag resolves asynchronously
+  // (`useSyncExternalStore`), so flipping `wallet_public_enabled` — including a
+  // rollback — changes the hook count between renders and crashes this view
+  // with "Rendered more hooks than during the previous render".
   const filteredTransactions = useMemo(() => {
     const now = Date.now();
     return transactions.filter((tx) => {
@@ -189,6 +163,37 @@ export function WalletView() {
       .slice(0, 6)
       .map(([name, lastAt]) => ({ name, lastAt }));
   }, [transactions, wallet]);
+
+  // Orange Money First pivot: when the public wallet UI is archived we
+  // render a focused OM-first surface. The internal ledger, top-up
+  // sheet, receipts and support entrypoints all stay reachable — we
+  // just stop framing them as a public "wallet balance" product.
+  if (!publicWalletEnabled) {
+    return (
+      <>
+        <WalletArchivedPanel
+          onOpenOm={() => setTopUpOpen(true)}
+          onOpenActivity={() => {
+            try { window.location.assign("/?view=orders"); } catch { /* ignore */ }
+          }}
+        />
+        <Sheet open={topUpOpen} onOpenChange={setTopUpOpen}>
+          <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-3xl">
+            <SheetHeader className="text-left">
+              <SheetTitle>Paiement Orange Money</SheetTitle>
+              <SheetDescription>
+                Envoyez votre paiement OM à CHOPCHOP, puis collez le code.
+                Aucun crédit automatique sans validation opérateur.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-4">
+              <TopUpOrangeMoney onClose={() => { setTopUpOpen(false); refresh(); }} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
 
   if (loading) {
     return (

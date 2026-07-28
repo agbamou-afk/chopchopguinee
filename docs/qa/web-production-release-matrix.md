@@ -180,3 +180,18 @@ Swept `dist/` (post-build) and `src/`:
    Yahoo, iCloud and an Orange-hosted mailbox.
 3. **Rollback (God Admin):** perform one real publish → rollback → re-publish
    cycle and record the outcome in the rollback runbook §Rollback test status.
+
+---
+
+## Superseded references
+
+The deploy/rollback runbooks and the earlier defect list were consolidated into
+the canonical RC set:
+
+- `docs/releases/web-production-rc.md` — freeze rules, severity, gates
+- `docs/releases/web-production-release.md` — release instructions
+- `docs/releases/web-production-rollback.md` — rollback instructions
+- `docs/releases/web-production-checklist.md` — tick-list
+- `docs/qa/web-rc-defect-register.md` — canonical defect register
+- `docs/qa/smtp-inbox-test-results.md` — SMTP evidence sheet
+- `docs/security/web-rc-frontend-secret-audit.md` — secret audit
