@@ -34,6 +34,29 @@ evidence · root cause · fix · regression test · status · accepted-by.
 - **Fix:** gated behind `import.meta.env.DEV` in `DriverSessionContext.tsx`.
 - **Status:** CLOSED.
 
+### DEF-009 — P1 — Wallet / feature-flag rollback — production
+- **Steps:** flip `wallet_public_enabled` while a user is on `/wallet` (i.e. any
+  forward-enable or rollback of the public wallet surface).
+- **Expected:** the view re-renders into the other surface cleanly.
+- **Actual:** `WalletView` returned early on `!publicWalletEnabled` *before*
+  three `useMemo` calls. The flag resolves asynchronously through
+  `useSyncExternalStore`, so the hook count changed between renders and React
+  threw "Rendered more hooks than during the previous render" — a white-screen
+  crash on the wallet surface at the exact moment a flag rollback is executed.
+- **Evidence:** `react-hooks/rules-of-hooks`, `WalletView.tsx:149/163/177`.
+- **Root cause:** conditional hooks introduced by the Orange Money First early
+  return; latent because the flag has been `false` since seeding.
+- **Fix:** the three memos were hoisted above the early return, with a comment
+  pinning the ordering requirement.
+- **Regression test:** `npx eslint .` → `react-hooks/rules-of-hooks` count 0
+  (was 5); added to the release checklist preflight.
+- **Status:** CLOSED.
+
+### DEF-010 — P2 — Merchant product form — production
+`ProductFormSheet` defined a plain async handler named `useImageAsPrimary`,
+which the hook linter (correctly) read as a hook called inside a callback.
+Renamed to `applyImageAsPrimary`. No runtime behaviour change. **Status:** CLOSED.
+
 ## Accepted P2 (documented, awaiting release-owner signature)
 
 ### DEF-004 — P2 — Performance — production
@@ -66,8 +89,15 @@ no data disclosure. Add an explicit guard post-1.0. **Accepted-by:** _________
 
 ## Open
 
-**P0 open: 0 · P1 open: 0.**
+**P0 open: 0 · P1 open: 0.** (DEF-001 P0 and DEF-009 P1 were found and closed
+in this phase.)
 
 Note: zero open P1 reflects everything *observable in this environment*. The
 Orange Money and SMTP gates are unexecuted, not passed — a real failure there
 would be a new P0/P1 and is the reason the lock is withheld.
+
+### DEF-011 — P2 — Lint baseline — dev
+602 ESLint errors remain, dominated by `@typescript-eslint/no-explicit-any`
+(520) and `no-empty` (71). All hook-rule errors are now 0. These are typing and
+style debt with no known runtime impact; burning them down is a post-1.0
+refactor and is explicitly out of scope under the RC freeze. **Accepted-by:** _________

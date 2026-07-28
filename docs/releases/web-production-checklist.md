@@ -15,6 +15,7 @@ Tick only what was actually observed. `PASS(code)` is not a tick for a gate.
 - [x] Clean production build (27.9s, `dist/sw.js`, 127 precache entries)
 - [x] Typecheck clean
 - [x] Unit tests 12/12
+- [x] `react-hooks/rules-of-hooks` errors = 0 (guards flag-rollback safety)
 - [x] Frontend secret sweep clean, 0 source maps
 - [x] Demo panel absent from production bundle
 - [ ] Orange Money real-money evidence attached
