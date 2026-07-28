@@ -39,6 +39,14 @@ YELLOW (external/manual, block the lock):
 2. SMTP live inbox delivery (Gmail / Yahoo / iCloud / Orange).
 3. Deployment rollback rehearsal (publish → rollback → re-publish).
 
+## P0 / P1 found and fixed this phase
+
+DEF-009 (P1): `WalletView` called three `useMemo` hooks *after* the
+`wallet_public_enabled` early return. Because the flag resolves asynchronously,
+executing a public-wallet flag rollback would have white-screened `/wallet` with
+a React hook-order crash — the failure would have landed precisely during an
+emergency rollback. Hooks hoisted; `react-hooks/rules-of-hooks` errors now 0.
+
 ## P0 found and fixed this phase
 
 DEF-001: `om_sandbox_enabled` and `om_environment` were still `true` in the
@@ -52,7 +60,9 @@ DEF-004 bundle size · DEF-005 451 warn-level linter findings (0 error-level) ·
 DEF-006 self-serve read gaps (close with sanitized RPCs, never raw SELECT) ·
 DEF-007 four platform-managed email queue functions without pinned search_path
 (no PUBLIC execute) · DEF-008 `merchant_ensure_wallet` PUBLIC execute without an
-internal guard (creates an empty wallet row only).
+internal guard (creates an empty wallet row only) · DEF-010 misleading non-hook
+helper name (fixed) · DEF-011 602 lint errors, mostly `no-explicit-any`, no
+known runtime impact, burn-down deferred post-1.0.
 
 ## Canonical documents
 
