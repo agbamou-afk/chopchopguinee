@@ -16,6 +16,7 @@ import { MarketView } from "@/components/views/MarketView";
 import { WalletView } from "@/components/views/WalletView";
 import { ProfileView } from "@/components/views/ProfileView";
 import { OrdersView } from "@/components/views/OrdersView";
+import { ServicesView } from "@/components/views/ServicesView";
 import { DriverOrdersView } from "@/components/views/DriverOrdersView";
 import { DriverEarningsView } from "@/components/views/DriverEarningsView";
 import { BottomNav } from "@/components/ui/BottomNav";
@@ -60,7 +61,7 @@ import {
 } from "@/lib/merchantRouting";
 
 export type RideType = "moto" | "toktok" | null;
-export type ActiveView = "home" | "food" | "market" | "wallet" | "profile" | "orders";
+export type ActiveView = "home" | "services" | "food" | "market" | "wallet" | "profile" | "orders";
 
 /**
  * Public (logged-out) client onboarding completion flag. Separate from the
@@ -117,7 +118,7 @@ const Index = () => {
   // directly on the activity timeline, wallet, or profile.
   const initialTab = (() => {
     if (typeof window === "undefined") return "home";
-    const m = /[?&]tab=(home|orders|wallet|profile)\b/.exec(window.location.search);
+    const m = /[?&]tab=(home|services|orders|wallet|profile)\b/.exec(window.location.search);
     return m?.[1] ?? "home";
   })();
   const initialView: ActiveView = (initialTab as ActiveView) ?? "home";
@@ -611,7 +612,7 @@ const Index = () => {
     // Public exploration: ride booking, food and market browsing are allowed
     // without an account. Signup is enforced later at commitment points
     // (real wallet hold / real ride creation) via the conversion gate.
-    const publicActions = new Set(["market", "food", "moto", "toktok", "parcel", "scan", "support"]);
+    const publicActions = new Set(["services", "market", "food", "moto", "toktok", "parcel", "scan", "support"]);
     const commitmentMap: Record<string, ConversionIntent> = {
       send: "wallet",
       wallet: "wallet",
@@ -631,6 +632,10 @@ const Index = () => {
         setBookingDestination(params?.destination);
         setBookingRide("toktok");
         break;
+      case "services":
+        setActiveView("services");
+        setActiveTab("services");
+        break;
       case "food":
         setActiveView("food");
         break;
@@ -643,7 +648,13 @@ const Index = () => {
         setActiveTab("wallet");
         break;
       case "parcel":
-        // Parcel delivery shares the moto coursier flow for now.
+        // Honest interim behaviour: the dedicated parcel module (tracking,
+        // proof of delivery, parcel pricing) is not shipped yet, so we say so
+        // and open the moto-coursier ride flow instead of pretending.
+        toast({
+          title: "Envoyer : module colis en préparation",
+          description: "Nous ouvrons une course moto-coursier au tarif course normal.",
+        });
         setBookingDestination(params?.destination);
         setBookingRide("moto");
         break;
@@ -710,10 +721,11 @@ const Index = () => {
   };
 
   const handleTabChange = (tab: string) => {
-    // Home tab is public; every other tab requires an account.
-    if (tab !== "home" && !requireAuth()) return;
+    // Home and the Services directory are public; Activité/Compte require an account.
+    if (tab !== "home" && tab !== "services" && !requireAuth()) return;
     setActiveTab(tab);
     if (tab === "home") setActiveView("home");
+    if (tab === "services") setActiveView("services");
     if (tab === "orders") setActiveView("orders");
     if (tab === "wallet") setActiveView("wallet");
     if (tab === "profile") setActiveView("profile");
@@ -765,6 +777,8 @@ const Index = () => {
 
   const renderUserView = () => {
     switch (activeView) {
+      case "services":
+        return <ServicesView onActionClick={handleAction} />;
       case "food":
         return <FoodView onBack={handleBackToHome} />;
       case "market":
