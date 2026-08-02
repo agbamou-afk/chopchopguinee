@@ -5701,6 +5701,36 @@ export type Database = {
         }
         Relationships: []
       }
+      welcome_email_dispatches: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          http_request_id: number | null
+          message_key: string
+          recipient_email: string
+          template_version: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          http_request_id?: number | null
+          message_key: string
+          recipient_email: string
+          template_version?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          http_request_id?: number | null
+          message_key?: string
+          recipient_email?: string
+          template_version?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       zones: {
         Row: {
           city: string | null

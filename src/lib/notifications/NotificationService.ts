@@ -303,24 +303,10 @@ export const NotificationService = {
 
   // ---------- Convenience helpers (top 10 transactional flows) ----------
 
-  welcome: (userId: string, email: string, firstName?: string) =>
-    notify({
-      template: "welcome",
-      priority: "normal",
-      userId,
-      channels: ["email"],
-      to: { email },
-      payload: {
-        email: {
-          templateName: "welcome",
-          data: { firstName },
-          idempotencyKey: `welcome-${userId}`,
-          // Runs under the brand-new user's own JWT: the general endpoint
-          // would (correctly) return 403 here.
-          functionName: "send-welcome-email",
-        },
-      },
-    }),
+  // NOTE: there is deliberately no `welcome()` client helper. The welcome mail
+  // is dispatched server-side by the AFTER INSERT trigger on `public.profiles`
+  // (`_dispatch_welcome_email`) and claimed exactly once via
+  // `welcome_email_dispatches`. Adding a client path would risk a duplicate.
 
   topupSuccess: (
     userId: string,
