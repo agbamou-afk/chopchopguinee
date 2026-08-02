@@ -65,8 +65,8 @@ export function LocationField({
   const useMyPosition = async () => {
     setLocating(true);
     try {
-      const pos = await geo.requestPosition?.();
-      const p = pos ?? geo.position;
+      geo.request();
+      const p = geo.position;
       if (!p) return;
       const rev = await reverseGeocode(p.lat, p.lng);
       onChange({ lat: p.lat, lng: p.lng, label: rev?.label ?? "Ma position actuelle" });
@@ -76,6 +76,22 @@ export function LocationField({
       setLocating(false);
     }
   };
+
+  // The geolocation hook resolves asynchronously; adopt the position as soon
+  // as it lands so "Ma position" never shows a stale/empty state.
+  useEffect(() => {
+    if (!locating || !geo.position) return;
+    const p = geo.position;
+    let alive = true;
+    (async () => {
+      const rev = await reverseGeocode(p.lat, p.lng);
+      if (!alive) return;
+      onChange({ lat: p.lat, lng: p.lng, label: rev?.label ?? "Ma position actuelle" });
+      setLocating(false);
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.position, locating]);
 
   return (
     <div className="space-y-2">
