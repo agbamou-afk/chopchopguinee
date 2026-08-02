@@ -993,6 +993,14 @@ const Index = () => {
           setShowDriverOnboarding(true);
         }}
       />
+      <EnvoyerComposer
+        open={envoyerOpen}
+        onOpenChange={setEnvoyerOpen}
+        onCreated={() => {
+          setActiveView("orders");
+          setActiveTab("orders");
+        }}
+      />
       <SignupInviteSheet
         open={signupInviteOpen}
         onOpenChange={setSignupInviteOpen}

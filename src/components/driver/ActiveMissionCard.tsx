@@ -33,6 +33,7 @@ import type { ChopMapHandle } from "@/components/map/ChopMap";
 import { RoutingService } from "@/lib/maps/RoutingService";
 import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
 import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { PackageHandoffPanel } from "./PackageHandoffPanel";
 import { useAuth } from "@/contexts/AuthContext";
 
 /** Extract a phone number from payload_summary (we embed ☎ +224... in Repas). */
