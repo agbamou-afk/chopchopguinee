@@ -186,39 +186,6 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
         })}
       </div>
 
-      {/* Honest interim state for Envoyer until the dedicated parcel module ships. */}
-      <Dialog open={envoyerOpen} onOpenChange={setEnvoyerOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Envoyer un colis</DialogTitle>
-            <DialogDescription className="space-y-2 text-left">
-              <span className="block">
-                Le module colis dédié (suivi, preuve de remise, tarif colis) n’est pas encore
-                ouvert. Nous ne pouvons donc pas encore le proposer comme service livré.
-              </span>
-              <span className="block">
-                En attendant, vous pouvez réserver une <strong>course moto-coursier</strong> :
-                un chauffeur récupère votre pli et le dépose à l’adresse indiquée, au tarif
-                course normal.
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setEnvoyerOpen(false)}>
-              Plus tard
-            </Button>
-            <Button
-              onClick={() => {
-                setEnvoyerOpen(false);
-                onActionClick("moto");
-              }}
-            >
-              Course moto-coursier
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

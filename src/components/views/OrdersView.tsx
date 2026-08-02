@@ -6,6 +6,7 @@ import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { ActiveRideTile } from "@/components/activity/ActiveRideTile";
 import { useActivityFeed } from "@/lib/activity/useActivityFeed";
 import { CustomerMarketplaceDeliveries } from "@/components/missions/CustomerMarketplaceDeliveries";
+import { PackageDeliveries } from "@/components/envoyer/PackageDeliveries";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,7 @@ export function OrdersView() {
 
       <div className="px-3 pb-28">
         <ActiveRideTile />
+        <PackageDeliveries userId={user?.id ?? null} />
         <CustomerMarketplaceDeliveries userId={user?.id ?? null} />
         <ActivityTimeline items={items} loading={loading} filter={filter} />
       </div>
