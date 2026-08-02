@@ -21,6 +21,7 @@ import {
   normalizeGuineaPhone,
 } from "@/lib/phone/guinea";
 import { EmailConfirmationPendingCard } from "@/components/auth/EmailConfirmationPendingCard";
+import { NotificationService } from "@/lib/notifications/NotificationService";
 import {
   clearMerchantIntent,
   hasStoredMerchantIntent,
