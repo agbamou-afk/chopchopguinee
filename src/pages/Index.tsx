@@ -38,6 +38,7 @@ import {
 } from "@/components/onboarding/DriverOnboarding";
 import { isAdminUser, isLiveUser, isSandboxMode } from "@/lib/runtimeMode";
 import { ConversionGateSheet, type ConversionIntent } from "@/components/onboarding/ConversionGateSheet";
+import { EnvoyerComposer } from "@/components/envoyer/EnvoyerComposer";
 import {
   SignupInviteSheet,
   shouldSkipSignupInvite,
