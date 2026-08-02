@@ -57,7 +57,38 @@ Deno.serve(async (req) => {
   //   to themselves from our verified domain — a phishing/abuse vector.
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.replace(/^Bearer\s+/i, '').trim()
-  const isServiceRole = !!token && token === supabaseServiceKey
+  let isServiceRole = !!token && token === supabaseServiceKey
+  // Database-side callers (e.g. the welcome-mail trigger on `profiles`) read a
+  // service-role key out of Vault, which can be a different but equally valid
+  // key than this function's env var. Accept any token that cryptographically
+  // verifies as a service_role JWT instead of relying on string equality.
+  if (!isServiceRole && token) {
+    try {
+      const claimClient = createClient(supabaseUrl, supabaseServiceKey)
+      const { data: claimData } = await claimClient.auth.getClaims(token)
+      if ((claimData as any)?.claims?.role === 'service_role') {
+        isServiceRole = true
+      }
+    } catch (_e) {
+      // fall through to the user/admin path below
+    }
+    // Legacy HS256 service keys are not resolvable through getClaims. The
+    // platform gateway runs with verify_jwt = true, so any JWT reaching this
+    // code has already had its signature verified against this project — it is
+    // therefore safe to read the role claim off the payload.
+    if (!isServiceRole) {
+      try {
+        const payload = JSON.parse(
+          atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')),
+        )
+        if (payload?.role === 'service_role') {
+          isServiceRole = true
+        }
+      } catch (_e) {
+        // not a JWT — fall through to the user/admin path below
+      }
+    }
+  }
   if (!isServiceRole) {
     if (!token) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {

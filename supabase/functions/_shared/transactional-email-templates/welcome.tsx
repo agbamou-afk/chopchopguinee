@@ -10,16 +10,23 @@ const WelcomeEmail = ({ firstName }: Props) => (
   <EmailLayout preview="Bienvenue dans CHOPCHOP">
     <H1>{firstName ? `Bienvenue, ${firstName} 🇬🇳` : 'Bienvenue sur CHOPCHOP 🇬🇳'}</H1>
     <P>
-      Votre compte est actif. Vous pouvez désormais commander une moto ou un
-      toktok, recharger votre portefeuille auprès d'un agent, payer chez les
-      marchands, et explorer le marché local.
+      Votre compte est actif, aucune vérification supplémentaire n'est requise
+      pour commencer. Vous pouvez commander une moto ou un toktok, commander un
+      repas, explorer le marché local et payer vos courses avec Orange Money.
     </P>
     <CTAButton href={BRAND.url}>Ouvrir CHOPCHOP</CTAButton>
     <H2>Prochaines étapes</H2>
     <P muted>
-      • Configurez votre code PIN portefeuille pour sécuriser vos paiements.<br />
-      • Activez WhatsApp pour recevoir vos confirmations en temps réel.<br />
-      • Recharger votre portefeuille auprès d'un agent agréé près de chez vous.
+      • Complétez votre profil (nom et numéro) pour des courses plus rapides.<br />
+      • Préparez votre compte Orange Money : les paiements sont vérifiés
+      manuellement par notre équipe.<br />
+      • Activez WhatsApp pour recevoir vos confirmations en temps réel.
+    </P>
+    <H2>Sécurité</H2>
+    <P muted>
+      CHOPCHOP ne vous demandera jamais votre mot de passe, votre code PIN ni un
+      code Orange Money par email ou par téléphone. Si vous n'êtes pas à
+      l'origine de cette inscription, contactez-nous immédiatement.
     </P>
     <SupportSection />
   </EmailLayout>

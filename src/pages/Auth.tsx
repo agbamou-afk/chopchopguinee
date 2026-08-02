@@ -21,7 +21,6 @@ import {
   normalizeGuineaPhone,
 } from "@/lib/phone/guinea";
 import { EmailConfirmationPendingCard } from "@/components/auth/EmailConfirmationPendingCard";
-import { NotificationService } from "@/lib/notifications/NotificationService";
 import {
   clearMerchantIntent,
   hasStoredMerchantIntent,
@@ -288,22 +287,11 @@ export default function Auth() {
       }
       // Record acceptance immediately if a session was created (auto-confirm).
       void recordLegalAcceptance({ source: "signup" });
-      // Welcome email. Auto-confirm is ON in pilot mode, so GoTrue never sends
-      // a signup confirmation — this is the only mail a new account receives.
-      // Fire-and-forget: a mail failure must never block account creation, and
-      // the idempotency key (`welcome-<userId>`) makes a retry safe.
-      {
-        const newUserId = signUpData?.user?.id;
-        if (newUserId) {
-          void NotificationService.welcome(
-            newUserId,
-            email.trim(),
-            first.trim() || undefined,
-          ).catch(() => {
-            /* non-blocking: delivery is observable in the email send log */
-          });
-        }
-      }
+      // Welcome email is dispatched server-side by the AFTER INSERT trigger on
+      // `profiles` (`_dispatch_welcome_email`), claimed exactly once through
+      // `welcome_email_dispatches`. Deliberately NOT sent from the browser: a
+      // closed tab or failed fetch must not silently skip it, and two paths
+      // would risk a duplicate.
       // Pilot mode: email confirmation is NOT required. If a session was
       // created (auto-confirm), the AuthContext effect above will route to
       // /complete-profile then to client home or /driver/apply based on intent.
