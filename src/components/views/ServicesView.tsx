@@ -1,21 +1,13 @@
-import { useState, type ComponentType } from "react";
+import { type ComponentType } from "react";
 import { motion } from "framer-motion";
-import { ScanLine, Store, LifeBuoy, ChevronRight } from "lucide-react";
+import { ScanLine, Store, LifeBuoy } from "lucide-react";
 import { SteeringWheel } from "@/components/icons/SteeringWheel";
 import { useNavigate } from "react-router-dom";
 import {
   usePublicPaymentProductName,
   usePublicPaymentProductSubtitle,
+  useEnvoyerEnabled,
 } from "@/lib/flags/useFeatureFlag";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import motoIcon from "@/assets/icons/moto.png";
 import toktokIcon from "@/assets/icons/toktok.png";
 import envoyerIcon from "@/assets/icons/envoyer.png";
@@ -50,7 +42,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
   const navigate = useNavigate();
   const omName = usePublicPaymentProductName();
   const omSubtitle = usePublicPaymentProductSubtitle();
-  const [envoyerOpen, setEnvoyerOpen] = useState(false);
+  const envoyerOn = useEnvoyerEnabled();
 
   const tiles: ServiceTile[] = [
     {
@@ -70,9 +62,10 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     {
       id: "envoyer",
       label: "Envoyer",
-      desc: "Colis et plis — bientôt dédié",
+      desc: "Documents et petits colis en Guinée",
       img: envoyerIcon,
-      onSelect: () => setEnvoyerOpen(true),
+      disabledReason: envoyerOn ? undefined : "Bientôt disponible",
+      onSelect: () => onActionClick("parcel"),
     },
     {
       id: "food",
