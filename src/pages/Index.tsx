@@ -135,6 +135,7 @@ const Index = () => {
     rideId?: string | null;
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
+  const [envoyerOpen, setEnvoyerOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showDriverOnboarding, setShowDriverOnboarding] = useState(false);
   const [conversionGate, setConversionGate] = useState<{ open: boolean; intent?: ConversionIntent }>({ open: false });
@@ -650,15 +651,10 @@ const Index = () => {
         setActiveTab("services");
         break;
       case "parcel":
-        // Honest interim behaviour: the dedicated parcel module (tracking,
-        // proof of delivery, parcel pricing) is not shipped yet, so we say so
-        // and open the moto-coursier ride flow instead of pretending.
-        toast({
-          title: "Envoyer : module colis en préparation",
-          description: "Nous ouvrons une course moto-coursier au tarif course normal.",
-        });
-        setBookingDestination(params?.destination);
-        setBookingRide("moto");
+        // Envoyer v1 — real parcel/document delivery composer. The server
+        // enforces the `envoyer_enabled` flag; the composer states honestly
+        // when the service is not open yet.
+        setEnvoyerOpen(true);
         break;
       case "scan":
         setShowScanner(true);
