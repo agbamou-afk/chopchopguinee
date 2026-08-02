@@ -123,10 +123,37 @@ ON, so GoTrue never generates a `signup` confirmation email — every account ha
 `welcome` template was registered and `NotificationService.welcome()` existed,
 but nothing ever called it. Sender domain `notify.chopchopguinee.com` is
 verified with a healthy queue throughout.
-**Fix:** signup now fires the registered `welcome` template once, fire-and-forget,
-keyed `welcome-<userId>` so retries cannot duplicate. Auto-confirm stays ON —
-account creation and login remain non-blocking. Turning confirmation into a
-blocking step must not happen before live inbox delivery is observed, or new
-signups would be locked out.
-**Note:** this is the first real send attempt since 2026-06-06 and is the
-cheapest source of evidence for the still-YELLOW SMTP gate.
+**Fix (final, server-side):** the welcome mail is dispatched by an
+`AFTER INSERT` trigger on `public.profiles` (`_dispatch_welcome_email`), not by
+the browser. The trigger claims a row in `public.welcome_email_dispatches`
+(PK `user_id`, unique `message_key = welcome-v1-<userId>`) with
+`ON CONFLICT DO NOTHING` **before** calling `send-transactional-email` over
+`pg_net`, so replays, reloads, re-auth and concurrent inserts can never produce
+a second send. The whole dispatch is wrapped so it can never raise: a mail
+failure never rolls back or blocks account creation, and is recorded in
+`welcome_email_dispatches.error_message` plus `email_send_log`. All accounts
+existing at migration time were backfilled as already-welcomed, so no
+retroactive blast is possible. The client-side `NotificationService.welcome()`
+helper and the `send-welcome-email` wrapper function were removed so exactly one
+path exists. Auto-confirm stays ON — account creation and login remain
+non-blocking. Turning confirmation into a blocking step must not happen before
+live inbox delivery is observed, or new signups would be locked out.
+**Regression:** fresh signup → `net._http_response` 200 `{"success":true,"queued":true}`
+→ `email_send_log` `welcome` `pending → sent`; repeat signup with the same
+address → GoTrue 422, still exactly 1 dispatch row and 1 `sent` row.
+
+### DEF-014 — P1 — Trigger-dispatched email rejected with 401 — CLOSED
+**Symptom:** the first two trigger dispatches returned
+`401 {"error":"Unauthorized"}` from `send-transactional-email`; the dispatch row
+was already claimed, so those two test accounts never received a mail.
+**Root cause:** the function authorised internal callers with a raw string
+comparison `token === SUPABASE_SERVICE_ROLE_KEY`. The database reads its
+service-role key from Vault (`email_queue_service_role_key`), which is a valid
+but *different-format* key than the function's env var, so equality failed and
+the caller fell through to the user/admin branch.
+**Fix:** the internal check now also accepts a token whose `role` claim is
+`service_role`. The claim is read via `getClaims`, falling back to the JWT
+payload — safe because the platform gateway runs `verify_jwt = true` for this
+function, so any token reaching the handler has an already-verified signature.
+User and admin paths are unchanged; ordinary authenticated users are still
+rejected.
