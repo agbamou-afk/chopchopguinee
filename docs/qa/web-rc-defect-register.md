@@ -101,3 +101,32 @@ would be a new P0/P1 and is the reason the lock is withheld.
 (520) and `no-empty` (71). All hook-rule errors are now 0. These are typing and
 style debt with no known runtime impact; burning them down is a post-1.0
 refactor and is explicitly out of scope under the RC freeze. **Accepted-by:** _________
+
+### DEF-012 — P1 — `/admin/repas/payments` — CLOSED
+**Symptom:** the Repas settlement admin page failed on every load with
+`column li.merchant_store_id does not exist`.
+**Root cause:** inside `admin_preview_repas_payment_settlement`, alias `li` is
+the `latest_intent` CTE over `payment_intents`, which has no `merchant_store_id`
+column — the store link lives on `food_restaurants.merchant_store_id`, with
+`payment_intents.related_store_id` as fallback. The sibling Marché preview had
+already been corrected; the Repas copy was never patched.
+**Fix:** `CREATE OR REPLACE` of the preview function replacing all three
+`li.merchant_store_id` references with
+`COALESCE(fr.merchant_store_id, li.related_store_id)`. Read-only preview
+function only — no pricing, capture, settlement or wallet logic touched.
+
+### DEF-013 — P2 — No welcome email on signup — CLOSED
+**Symptom:** a new account received no CHOPCHOP email after registration.
+**Root cause:** two independent gaps, neither an SMTP fault. (a) Auto-confirm is
+ON, so GoTrue never generates a `signup` confirmation email — every account has
+`email_confirmed_at = created_at` and `confirmation_sent_at = NULL`. (b) The
+`welcome` template was registered and `NotificationService.welcome()` existed,
+but nothing ever called it. Sender domain `notify.chopchopguinee.com` is
+verified with a healthy queue throughout.
+**Fix:** signup now fires the registered `welcome` template once, fire-and-forget,
+keyed `welcome-<userId>` so retries cannot duplicate. Auto-confirm stays ON —
+account creation and login remain non-blocking. Turning confirmation into a
+blocking step must not happen before live inbox delivery is observed, or new
+signups would be locked out.
+**Note:** this is the first real send attempt since 2026-06-06 and is the
+cheapest source of evidence for the still-YELLOW SMTP gate.
