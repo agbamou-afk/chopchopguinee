@@ -45,7 +45,16 @@ export interface NotifyOptions {
   };
   /** Per-channel template payloads. */
   payload?: {
-    email?: { templateName: string; data: Record<string, unknown> };
+    email?: {
+      templateName: string;
+      data: Record<string, unknown>;
+      /**
+       * Stable key so a retried send (double submit, remount, offline retry)
+       * does not produce a duplicate email. Derived from the triggering
+       * entity id + template name.
+       */
+      idempotencyKey?: string;
+    };
     sms?: { template: MessageTemplate; vars?: Record<string, string | number> };
     whatsapp?: { template: MessageTemplate; vars?: Record<string, string | number> };
     inapp?: { template: MessageTemplate; vars?: Record<string, string | number> };
@@ -121,6 +130,7 @@ async function sendEmail(opts: NotifyOptions): Promise<ChannelResult> {
         templateName: tpl.templateName,
         recipientEmail: email,
         templateData: tpl.data,
+        ...(tpl.idempotencyKey ? { idempotencyKey: tpl.idempotencyKey } : {}),
       },
     },
   );
@@ -292,7 +302,13 @@ export const NotificationService = {
       userId,
       channels: ["email"],
       to: { email },
-      payload: { email: { templateName: "welcome", data: { firstName } } },
+      payload: {
+        email: {
+          templateName: "welcome",
+          data: { firstName },
+          idempotencyKey: `welcome-${userId}`,
+        },
+      },
     }),
 
   topupSuccess: (
