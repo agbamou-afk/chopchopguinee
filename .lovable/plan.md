@@ -1,111 +1,66 @@
-# Orange Money Wallet Surface + Sandbox Ecosystem Readiness
+## Audit only — no code changed
 
-Extends the OM Checkout Orchestration phase. Two locks in play:
-- Primary (still open): `orange-money-checkout-orchestration-production-stable`
-- New sub-lock: `orange-money-sandbox-ecosystem-ready-stable`
+### A. New-account email — exact missing link
 
-## Scope discipline
+Two separate gaps, neither is an SMTP failure.
 
-Surgical patch. No reopening of ride/repas/marché business logic beyond what is needed to route them through the OM checkout state machine in sandbox. Public wallet stays archived. Internal ledger stays untouched as an accounting substrate.
+1. **Email confirmation is disabled at the auth layer.** Every account in the database has `email_confirmed_at` equal to `created_at` and `confirmation_sent_at = NULL` — including the fresh test account created 2026-08-02 21:16 UTC. Auto-confirm is ON, so the `signup` confirmation email is never generated. This is why `email_send_log` shows zero activity since 2026-06-06 (8 historic rows only).
+2. **No welcome email is wired.** A `welcome` template exists and is registered, and `NotificationService.welcome()` exists as a wrapper around `send-transactional-email` — but nothing ever calls it. The DB trigger on user creation only inserts profile/wallet/role rows. Zero references to `send-transactional-email` anywhere in `supabase/functions/`.
 
-## Assumptions (flag if wrong)
+**SMTP itself is healthy:** `notify.chopchopguinee.com` is verified, NS-delegated to Lovable nameservers, project email setup complete, queue healthy. Auth hook is on the correct queue-based pattern with all six auth templates mapped. No live delivery is claimed — no send has been attempted since June.
 
-1. `/payments` and `/payments/:id` do NOT yet exist as customer-facing routes — Slice 1 audit will confirm; if they do, we reuse.
-2. `om_provider_mode` today is a boolean flag row (`enabled` = manual vs automated). We will extend it to a 4-value string via `feature_flags.description` or add `om_sandbox_enabled` as a separate boolean flag rather than mutating the enum column (safer, non-breaking).
-3. Sandbox isolation is done via `is_sandbox boolean` + `environment text` metadata on payment intents, checkout sessions, provider events, refunds, audit logs. No parallel tables.
-4. Sandbox ledger entries reuse existing ledger tables but are tagged `is_sandbox=true` and excluded from every finance aggregate. Master wallet card, driver earnings, cashout eligibility, Ops Command Center totals all get sandbox-exclusion filters.
-5. Manual/live intents and sandbox intents are strictly non-convertible.
+**Registration is email-first**, deliberately: email + password only, phone collected as profile metadata, phone-as-email explicitly rejected (pilot restriction).
 
-## Deliverables
+**Safest launch behavior** matches what you described and requires no security tradeoff, because auto-confirm is already the current posture:
+- Keep account creation and login non-blocking (leave auto-confirm ON for now).
+- Add a welcome email fired once after profile creation, using the existing registered `welcome` template.
+- Optionally surface a soft, dismissible "confirm your email" nudge later — turning auto-confirm OFF must not happen until a live inbox delivery is actually observed, otherwise new signups get locked out.
 
-### Slice A — Public naming: "OM Wallet"
+### B. Repas `/admin/repas/payments` — root cause
 
-- Add `getPublicWalletLabel()` in `src/lib/flags/useFeatureFlag.ts` returning `"OM Wallet"` when `wallet_public_enabled=false`, else `"ChopWallet"`.
-- Sweep home service grid (`PrimaryActionGrid`, `MoreServicesGrid`), `BottomNav` (already 4-col), any "Portefeuille"/"Wallet"/"ChopWallet" public label. Route the tile to `/payments` (payment center) when archived, `/wallet` when public wallet re-enabled.
-- Icon: keep `Smartphone`/`Wallet` per Orange Money hero visual language.
+The error is in the database function `admin_preview_repas_payment_settlement`, called from `src/pages/admin/RepasPayments.tsx`. Inside it, alias `li` is the `latest_intent` CTE over `payment_intents` — and `payment_intents` has no `merchant_store_id` column (verified live: the only store column is `related_store_id`). Three lines reference `li.merchant_store_id`.
 
-### Slice B — Neutral OM Payment Center (`/payments`)
+The sibling Marché function was already corrected to use `li.related_store_id`; the Repas copy was never patched. Correct relationship: the store link for Repas lives on `food_restaurants.merchant_store_id`, with `payment_intents.related_store_id` as fallback.
 
-- Audit first. If missing, create `src/pages/Payments.tsx` + optional `src/pages/PaymentDetail.tsx`.
-- Lists the authenticated user's OM payment intents grouped by status: awaiting proof, submitted, in_review, authorized, captured, rejected, expired, refund pending/paid. Deep-links to related ride/order/offer. Support escalation button per row.
-- Explicitly no balance, no master wallet, no raw provider payload, no admin notes. Subtitle: "Vos paiements Orange Money, vérifications et remboursements."
+**Pipeline completeness:** ownership, order creation, incoming orders, accept, preparing, ready, courier handoff (mission created at order time), trusted completion (`repas_complete_order`, DB-trigger-guarded), payment intent creation, capture and settlement are all implemented. Gaps: the admin settlement preview is broken (this bug); there is no restaurant "reject" transition and no dedicated cancel RPC (customer cancel is a raw RLS update while `placed`/`confirmed`); refunds exist only through the sandbox/OM refund path, not a merchant-initiated refund.
 
-### Slice C — Sandbox mode foundation
+### C. Bottom nav / Services architecture
 
-- Migration: seed feature flags `om_sandbox_enabled` (default false) + description-based mode ("sandbox"/"manual"/"automated"/"disabled") on `om_provider_mode`.
-- `FlagKey` union + `useFeatureFlag` helpers: `useOmProviderMode()`, `useOmSandboxEnabled()`.
-- Environment resolver: `getOmEnvironment()` returns `"sandbox" | "production"` based on flag + host.
-- Sandbox mode never exposed to end users in production.
+Current client tabs are Accueil, Activité, Compte (the Wallet tab is dropped under the Orange-Money-first flag), plus a permanent center FAB that opens one universal QR scanner whose result is routed by payload prefix (ride pickup / payment / merchant code). There is **no Services screen** — the closest artefact is `PrimaryActionGrid`, a 4-tile grid embedded in the home view (Wallet/OM, Course, Repas, Marché). Merchant and Driver are separate surfaces, not reachable from client nav. Navigation is a state machine in `Index.tsx`, not routes.
 
-### Slice D — Provider adapter + deterministic test refs
+**Recommendation:** yes — move the scanner out of the primary tab slot. It is a situational action, not a destination, and it currently occupies the most valuable position in the bar. Target: Accueil, Services, Activité, Compte, with Services as a full grid (Course moto, Course toktok, Repas, Marché, Orange Money, Envoyer, Scanner, Devenir marchand, Devenir chauffeur, Aide). Scanner becomes a tile in Services plus an optional small header action on Home. This is a **product change**, not a defect.
 
-- Extend `src/lib/payments/providers/` with `orangeMoneySandbox.ts` adapter fulfilling the same `PaymentProviderAdapter` interface.
-- Server-side: new Edge Function `om-sandbox-simulate` (God Admin + sandbox mode gated) that dispatches deterministic outcomes for the reference codes:
-  - `OM-SBX-SUCCESS-001`, `OM-SBX-REVIEW-001`, `OM-SBX-REJECT-001`, `OM-SBX-DUPLICATE-001`, `OM-SBX-EXPIRED-001`, `OM-SBX-REFUND-001`, `OM-SBX-REFUND-REVIEW-001`.
-- Extend `om_payment_submit_proof` (or add `om_payment_submit_sandbox_reference`) RPC to accept sandbox refs only when the intent is `is_sandbox=true`. Live/manual intents reject sandbox refs; sandbox intents reject non-sandbox proof. Idempotency + duplicate detection preserved.
+### D. Envoyer / colis — current status
 
-### Slice E — Sandbox data isolation
+**Partially implemented — schema and presentation layer only, no creation path.**
 
-- Migration: add `is_sandbox boolean not null default false` and `environment text not null default 'production'` to `payment_intents`, `payment_provider_events`, `payment_reconciliation_events`, `wallet_transactions` (nullable), `driver_cashout_requests`, `audit_logs` (nullable), `support_issues` (nullable). Backfill = false.
-- Update all finance aggregate views/RPCs (`wallet_master_get_balance`, driver earnings, Ops Command Center metrics, cashout eligibility, merchant settlement) to filter `is_sandbox = false` by default. Add optional `include_sandbox` param on admin-only paths.
-- Add `test_run_id uuid null` to sandbox rows for cleanup grouping.
+Present: `mission_type` enum value `package_delivery`, matching driver capability, capability→mission-type mapping, full mission identity (Package icon, Expéditeur/Destinataire labels, `accent-envoyer` token), a complete `PACKAGE_PIPELINE` of driver states, `package_dispute` support type, and fully type-agnostic lifecycle RPCs that would work today.
 
-### Slice F — Module coverage in sandbox
+Absent: no RPC or app code ever inserts a `package_delivery` mission; no driver ever receives the `package_delivery` capability (default is `rides_moto` only, and no admin or apply UI grants it); no route or composer screen. The one "Envoyer un colis" action explicitly falls through to the moto ride booking flow, with an in-code comment saying so.
 
-- Ride: `ride_om_finalize` already exists behind `om_ride_checkout_enabled`; verify it honors `is_sandbox` and creates sandbox rides tagged `is_sandbox=true` in `rides`.
-- Repas: `om_repas_checkout_enabled` path — sandbox order rows tagged.
-- Marché: `om_marche_checkout_enabled` path — sandbox offer rows tagged.
-- Cancellation-fee logic runs in sandbox against sandbox master-wallet-shadow row (never touches real master wallet).
-- Driver cashout sandbox: optional Slice F.1 — reuse cashout RPC with `is_sandbox=true`; never debits real balances.
+**Narrowest safe path under the RC freeze:** do not reopen scope now. Keep the existing moto-coursier fallback, and in the new Services grid present Envoyer honestly — either as the moto-coursier flow labelled as such, or as a "Bientôt" tile. A real Envoyer module (sender/recipient composer, parcel pricing, capability grant UI, dedicated mission creation) is a post-RC phase of its own.
 
-### Slice G — Admin/finance controls
+### E. Severity
 
-- Extend `/admin/payments` (or equivalent) with filter chips: Sandbox / Live / Automated / Source module / Status / Duplicate risk.
-- Sandbox-only action panel (God Admin gated) invoking `om-sandbox-simulate` for: verified, rejected, needs_review, expired, refund paid, checkout reset.
-- Audit every sandbox action.
+| Item | Severity | Rationale |
+|---|---|---|
+| Repas admin settlement preview crash | **P1** | Admin-only page, hard error, blocks Repas settlement operations; no customer-facing impact and no financial corruption |
+| No welcome email after signup | **P2** | Missing courtesy communication; account creation and login work |
+| Auto-confirm ON / no confirmation email | **P2 (accepted posture)** | Deliberate today; becomes P1 only if you decide confirmation must block login before launch |
+| Bottom nav → Services | **Product change** | Not a defect |
+| Envoyer | **Product change / deferred scope** | Not a defect; current fallback is functional but under-labelled |
 
-### Slice H — Cleanup/reset
+### F. Recommended execution order
 
-- RPC `om_sandbox_purge(test_run_id, before_date)` — archive sandbox intents/events/sessions/refunds/ledger rows scoped by sandbox=true. God Admin only. Logs the actor.
-- Never touches live rows.
+1. Fix `admin_preview_repas_payment_settlement` — one `CREATE OR REPLACE` migration replacing `li.merchant_store_id` with `COALESCE(fr.merchant_store_id, li.related_store_id)`. Verify the page loads. Log as a new defect in the RC register.
+2. Wire the welcome email: call the existing `welcome` template once after profile creation, with an idempotency key so retries don't duplicate. This produces the first real send since June and finally exercises the live pipeline — the first genuine data point for the SMTP gate.
+3. Bottom nav restructure + Services grid (Home / Services / Activity / Account, scanner relocated into Services).
+4. Envoyer decision: keep the honest moto-coursier fallback in Services for RC; schedule the real module post-RC.
 
-### Slice I — Observability
+### G. Do these block `web-production-release-candidate-stable`?
 
-- Emit sandbox audit events listed in §11 into `audit_logs` with `is_sandbox=true`. No secrets, no proof image bytes.
+- **Item 2 (Repas) blocks it** — a hard 500-class error on a shipped admin page cannot be inside a locked RC baseline. It is a small, contained fix.
+- **Item 1 (email)** does not strictly block the lock, but the SMTP gate is already YELLOW and will stay YELLOW regardless; wiring the welcome email is the cheapest way to generate the delivery evidence that gate needs.
+- **Items 3 and 4 are product changes and must not enter the RC freeze.** They belong to a post-RC phase (proposed lock: `client-shell-services-navigation-stable`). Folding them in now would invalidate the mission matrix that has already been executed against this baseline.
 
-### Slice J — Docs + memory
-
-- Update `docs/finance/orange-money-checkout-architecture.md` (sandbox section).
-- New `docs/finance/orange-money-sandbox.md` (how it works, how to run a mission, how to reset).
-- New `docs/qa/orange-money-sandbox-test-matrix.md` (the A–U matrix).
-- New milestone file `.lovable/memory/milestones/orange-money-sandbox-ecosystem-ready-stable.md`.
-- Update `.lovable/memory/index.md`.
-
-## Technical section
-
-- All new/altered public tables get GRANTs in the same migration.
-- All SECURITY DEFINER functions set `search_path = public`, validate `auth.uid()`, validate God Admin role via `has_role`, validate `is_sandbox` matches the intent, and validate `om_provider_mode` when relevant.
-- No service_role or provider credentials leave server side.
-- Sandbox references are rejected server-side when `om_provider_mode <> 'sandbox'`.
-- Manual↔sandbox conversion is explicitly disallowed at RPC layer.
-- Aggregates default to `is_sandbox = false` filter, ensuring master wallet, driver earnings, cashout eligibility, merchant settlement, Ops Command Center are unaffected by sandbox activity.
-
-## Order of execution
-
-1. Audit `/payments` existence + current flag machinery (read-only).
-2. Slice A + B (naming + payment center) — small UI patch, high user visibility, no financial risk.
-3. Slice C + E migrations (flags + isolation columns).
-4. Slice D provider adapter + submit RPC.
-5. Slice F module wiring behind flags.
-6. Slice G admin controls.
-7. Slice H cleanup RPC.
-8. Slices I + J docs/memory.
-9. Run QA matrix A–U and report.
-
-## Lock policy
-
-Neither lock lands from a rename alone. Locks require: consistent public naming; functional payment center; sandbox isolated from all financial aggregates; ride/Repas/Marché sandbox flows pass A–U; no client-side fake-success; build clean.
-
-## Return format
-
-Full A–V report per user's §16 upon completion.
+Recommendation: fix Repas, wire the welcome email, re-run the affected admin and signup checks, then lock the RC on the remaining external-evidence gates. Ship nav and Envoyer immediately after, as their own phase.
