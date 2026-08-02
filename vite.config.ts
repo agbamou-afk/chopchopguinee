@@ -41,6 +41,9 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webp,woff2}"],
+        // The main app chunk (and mapbox-gl) exceed Workbox's 2 MiB default,
+        // which fails the build instead of silently skipping precache.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [
           /^\/~oauth/,
