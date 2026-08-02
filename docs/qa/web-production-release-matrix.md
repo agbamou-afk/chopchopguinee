@@ -178,6 +178,12 @@ Swept `dist/` (post-build) and `src/`:
    low-value production transaction; attach intent + reconciliation IDs.
 2. **SMTP (Ops):** complete the 5×4 inbox matrix with screenshots from Gmail,
    Yahoo, iCloud and an Orange-hosted mailbox.
+   The welcome mail is the intended vehicle: it is dispatched server-side by
+   the `profiles` insert trigger, exactly once per account
+   (`welcome_email_dispatches`), and is the only mail a new account receives
+   while auto-confirm stays ON. Rail evidence (render → queue → provider
+   accepted → `sent`) is already recorded in
+   `docs/qa/smtp-inbox-test-results.md`; only real inbox placement is missing.
 3. **Rollback (God Admin):** perform one real publish → rollback → re-publish
    cycle and record the outcome in the rollback runbook §Rollback test status.
 
