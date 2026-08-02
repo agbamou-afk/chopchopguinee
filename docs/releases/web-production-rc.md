@@ -87,3 +87,21 @@ Defects are never downgraded to pass a gate.
   published build reverted to.
 - Nothing may be marked GREEN from code review alone where a runnable path
   exists but was not run.
+
+## RC amendment — Slice 2: Client shell + Services navigation (approved pre-lock)
+
+Approved by the product owner before lock, so the release freeze does not apply.
+
+- Bottom navigation is now exactly four destinations: Accueil, Services, Activité, Compte.
+- The permanent center scanner FAB was removed; Scanner is a Services tile plus a
+  compact shortcut in the Services header.
+- The flag-gated ChopWallet tab was removed from the nav; the Orange-Money-first
+  payment surface is reached from the Services directory.
+- New client `Services` destination (`src/components/views/ServicesView.tsx`) with the
+  full 10-service directory, wired to the existing actions and routes only.
+- Home shows a compact subset with `Voir tous les services`.
+- Envoyer has its final tile but an explicitly honest interim state pending Slice 3.
+
+See `docs/product/client-services-navigation.md` for the full action map.
+No pricing/wallet/backend changes. Sandbox flags remain OFF; public wallet remains OFF.
+RC remains **UNLOCKED** pending Slice 3 and real-money/SMTP verification.

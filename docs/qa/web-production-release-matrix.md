@@ -201,3 +201,34 @@ the canonical RC set:
 - `docs/qa/web-rc-defect-register.md` — canonical defect register
 - `docs/qa/smtp-inbox-test-results.md` — SMTP evidence sheet
 - `docs/security/web-rc-frontend-secret-audit.md` — secret audit
+
+## Slice 2 — Client shell + Services navigation QA (A–Z)
+
+| # | Case | Result |
+|---|---|---|
+| A | Home shows four-tab nav | PASS |
+| B | No oversized center scanner FAB | PASS (removed from `BottomNav`) |
+| C | Services tab opens the directory | PASS |
+| D | Home active state correct | PASS |
+| E | Services active state correct | PASS |
+| F | Activité active state/content unchanged | PASS |
+| G | Compte active state/content unchanged | PASS |
+| H | Course Moto opens moto flow | PASS |
+| I | Course TokTok opens toktok flow | PASS |
+| J | Repas opens FoodView | PASS |
+| K | Marché opens MarketView | PASS |
+| L | OM Wallet opens Orange-Money-first surface | PASS |
+| M | Scanner opens universal scanner | PASS |
+| N | Devenir marchand → /devenir-marchand | PASS |
+| O | Devenir chauffeur → /driver/apply | PASS |
+| P | Aide → /help | PASS |
+| Q | Envoyer honest, not falsely operational | PASS (interim dialog + toast) |
+| R | Flag-disabled state honest | PASS (payment copy is flag-driven; no internal balance) |
+| S | 390×844 layout clean | PASS (screenshot, no horizontal scroll) |
+| T | 360×800 layout clean | PASS |
+| U | 412×915 layout clean | PASS |
+| V | Offline Services shell loads | PASS (static directory, no fetch on mount) |
+| W | No hook-order errors | PASS (no conditional hooks; console clean of React errors) |
+| X | Typecheck + production build clean | PASS |
+| Y | Sandbox flags OFF | PASS (unchanged) |
+| Z | Public internal wallet balance hidden | PASS (`wallet_public_enabled` still off) |
