@@ -339,7 +339,7 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
 
       {mission.type === "package_delivery" && !terminal && (
         <div className="mb-2">
-          <PackageHandoffPanel mission={mission} onVerified={onChange} />
+          <PackageHandoffPanel mission={mission} onVerified={() => onChange(mission)} />
         </div>
       )}
 
