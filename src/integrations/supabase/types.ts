@@ -4318,6 +4318,235 @@ export type Database = {
         }
         Relationships: []
       }
+      package_deliveries: {
+        Row: {
+          cancellation_fee_gnf: number
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          category: string
+          created_at: string
+          delivered_at: string | null
+          description: string | null
+          destination_label: string | null
+          destination_lat: number
+          destination_lng: number
+          distance_meters: number | null
+          duration_seconds: number | null
+          environment: string
+          handling_notes: string | null
+          id: string
+          idempotency_key: string
+          is_sandbox: boolean
+          metadata: Json
+          mission_id: string | null
+          package_status: string
+          payment_intent_id: string | null
+          payment_status: string
+          pickup_label: string | null
+          pickup_lat: number
+          pickup_lng: number
+          quote_id: string | null
+          quoted_amount_gnf: number
+          recipient_confirmed_name: string | null
+          recipient_name: string
+          recipient_phone: string
+          reference: string
+          refund_request_id: string | null
+          sender_name: string | null
+          sender_phone: string | null
+          sender_user_id: string
+          support_issue_id: string | null
+          test_run_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cancellation_fee_gnf?: number
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          category: string
+          created_at?: string
+          delivered_at?: string | null
+          description?: string | null
+          destination_label?: string | null
+          destination_lat: number
+          destination_lng: number
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          environment?: string
+          handling_notes?: string | null
+          id?: string
+          idempotency_key: string
+          is_sandbox?: boolean
+          metadata?: Json
+          mission_id?: string | null
+          package_status?: string
+          payment_intent_id?: string | null
+          payment_status?: string
+          pickup_label?: string | null
+          pickup_lat: number
+          pickup_lng: number
+          quote_id?: string | null
+          quoted_amount_gnf: number
+          recipient_confirmed_name?: string | null
+          recipient_name: string
+          recipient_phone: string
+          reference: string
+          refund_request_id?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
+          sender_user_id: string
+          support_issue_id?: string | null
+          test_run_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancellation_fee_gnf?: number
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          category?: string
+          created_at?: string
+          delivered_at?: string | null
+          description?: string | null
+          destination_label?: string | null
+          destination_lat?: number
+          destination_lng?: number
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          environment?: string
+          handling_notes?: string | null
+          id?: string
+          idempotency_key?: string
+          is_sandbox?: boolean
+          metadata?: Json
+          mission_id?: string | null
+          package_status?: string
+          payment_intent_id?: string | null
+          payment_status?: string
+          pickup_label?: string | null
+          pickup_lat?: number
+          pickup_lng?: number
+          quote_id?: string | null
+          quoted_amount_gnf?: number
+          recipient_confirmed_name?: string | null
+          recipient_name?: string
+          recipient_phone?: string
+          reference?: string
+          refund_request_id?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
+          sender_user_id?: string
+          support_issue_id?: string | null
+          test_run_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_deliveries_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "package_delivery_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_delivery_quotes: {
+        Row: {
+          amount_gnf: number
+          category: string
+          consumed_at: string | null
+          created_at: string
+          destination_label: string | null
+          destination_lat: number
+          destination_lng: number
+          distance_meters: number | null
+          duration_seconds: number | null
+          expires_at: string
+          id: string
+          pickup_label: string | null
+          pickup_lat: number
+          pickup_lng: number
+          tariff_snapshot: Json
+          user_id: string
+        }
+        Insert: {
+          amount_gnf: number
+          category: string
+          consumed_at?: string | null
+          created_at?: string
+          destination_label?: string | null
+          destination_lat: number
+          destination_lng: number
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          expires_at: string
+          id?: string
+          pickup_label?: string | null
+          pickup_lat: number
+          pickup_lng: number
+          tariff_snapshot?: Json
+          user_id: string
+        }
+        Update: {
+          amount_gnf?: number
+          category?: string
+          consumed_at?: string | null
+          created_at?: string
+          destination_label?: string | null
+          destination_lat?: number
+          destination_lng?: number
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          expires_at?: string
+          id?: string
+          pickup_label?: string | null
+          pickup_lat?: number
+          pickup_lng?: number
+          tariff_snapshot?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      package_delivery_secrets: {
+        Row: {
+          created_at: string
+          delivery_attempts: number
+          delivery_code: string
+          delivery_verified_at: string | null
+          package_id: string
+          pickup_attempts: number
+          pickup_code: string
+          pickup_verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_attempts?: number
+          delivery_code: string
+          delivery_verified_at?: string | null
+          package_id: string
+          pickup_attempts?: number
+          pickup_code: string
+          pickup_verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_attempts?: number
+          delivery_code?: string
+          delivery_verified_at?: string | null
+          package_id?: string
+          pickup_attempts?: number
+          pickup_code?: string
+          pickup_verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_delivery_secrets_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: true
+            referencedRelation: "package_deliveries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_intents: {
         Row: {
           amount_gnf: number
@@ -5871,6 +6100,7 @@ export type Database = {
           signup_bonus_paid_gnf: number
         }[]
       }
+      _envoyer_enabled: { Args: never; Returns: boolean }
       _is_approved_service_agent: {
         Args: { _user_id: string }
         Returns: boolean
@@ -5897,6 +6127,7 @@ export type Database = {
         Returns: undefined
       }
       _om_sandbox_require_active: { Args: never; Returns: undefined }
+      _package_new_code: { Args: never; Returns: string }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -8537,6 +8768,57 @@ export type Database = {
         }
         Returns: string
       }
+      package_delivery_cancel: {
+        Args: { p_package_id: string; p_reason?: string }
+        Returns: Json
+      }
+      package_delivery_courier_view: {
+        Args: { p_mission_id: string }
+        Returns: Json
+      }
+      package_delivery_create_checkout: {
+        Args: {
+          p_description?: string
+          p_idempotency_key?: string
+          p_instructions?: string
+          p_provider?: string
+          p_quote_id: string
+          p_recipient_name: string
+          p_recipient_phone: string
+          p_sandbox?: boolean
+          p_sender_phone?: string
+          p_test_run_id?: string
+        }
+        Returns: Json
+      }
+      package_delivery_finalize_from_intent: {
+        Args: { p_intent_id: string }
+        Returns: Json
+      }
+      package_delivery_quote: {
+        Args: {
+          p_category: string
+          p_dest_label?: string
+          p_dest_lat: number
+          p_dest_lng: number
+          p_pickup_label?: string
+          p_pickup_lat: number
+          p_pickup_lng: number
+        }
+        Returns: Json
+      }
+      package_verify_delivery: {
+        Args: {
+          p_code: string
+          p_package_id: string
+          p_recipient_name?: string
+        }
+        Returns: Json
+      }
+      package_verify_pickup: {
+        Args: { p_code: string; p_package_id: string }
+        Returns: Json
+      }
       process_driver_referral_milestone_jobs: {
         Args: { p_limit?: number }
         Returns: {
@@ -9611,6 +9893,7 @@ export type Database = {
         | "courier_payout"
         | "merchant_settlement"
         | "refund"
+        | "package_payment"
       payment_recon_event:
         | "intent_created"
         | "provider_pending"
@@ -10020,6 +10303,7 @@ export const Constants = {
         "courier_payout",
         "merchant_settlement",
         "refund",
+        "package_payment",
       ],
       payment_recon_event: [
         "intent_created",

@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type FlagKey =
   | "wallet_public_enabled"
+  | "envoyer_enabled"
   | "om_checkout_enabled"
   | "om_provider_mode"
   | "om_ride_checkout_enabled"
@@ -25,6 +26,9 @@ const DEFAULTS: Record<FlagKey, boolean> = {
   // Orange Money First pivot: public CHOP Wallet UI is archived until
   // explicitly re-enabled by a Super Admin from /admin/flags.
   wallet_public_enabled: false,
+  // Envoyer v1 — parcel/document delivery. Server RPCs enforce this same
+  // flag; the client value is only used to pick the honest UI state.
+  envoyer_enabled: false,
   // Orange Money Checkout Orchestration — all off by default. Each slice
   // is landable behind its own flag; downstream code stays on legacy paths
   // until the flag is flipped in /admin/flags.
@@ -42,6 +46,7 @@ const DEFAULTS: Record<FlagKey, boolean> = {
 
 const KNOWN_FLAGS: FlagKey[] = [
   "wallet_public_enabled",
+  "envoyer_enabled",
   "om_checkout_enabled",
   "om_provider_mode",
   "om_ride_checkout_enabled",

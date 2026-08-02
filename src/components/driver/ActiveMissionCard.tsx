@@ -33,6 +33,7 @@ import type { ChopMapHandle } from "@/components/map/ChopMap";
 import { RoutingService } from "@/lib/maps/RoutingService";
 import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
 import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { PackageHandoffPanel } from "./PackageHandoffPanel";
 import { useAuth } from "@/contexts/AuthContext";
 
 /** Extract a phone number from payload_summary (we embed ☎ +224... in Repas). */
@@ -336,7 +337,16 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         </button>
       )}
 
-      {!terminal && step && (
+      {mission.type === "package_delivery" && !terminal && (
+        <div className="mb-2">
+          <PackageHandoffPanel mission={mission} onVerified={() => onChange(mission)} />
+        </div>
+      )}
+
+      {!terminal && step && !(
+        mission.type === "package_delivery" &&
+        (mission.state === "arrived_pickup" || mission.state === "arrived_dropoff")
+      ) && (
         <Button
           className="w-full h-12"
           onClick={handleNext}

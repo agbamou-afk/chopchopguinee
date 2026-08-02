@@ -1,21 +1,13 @@
-import { useState, type ComponentType } from "react";
+import { type ComponentType } from "react";
 import { motion } from "framer-motion";
-import { ScanLine, Store, LifeBuoy, ChevronRight } from "lucide-react";
+import { ScanLine, Store, LifeBuoy } from "lucide-react";
 import { SteeringWheel } from "@/components/icons/SteeringWheel";
 import { useNavigate } from "react-router-dom";
 import {
   usePublicPaymentProductName,
   usePublicPaymentProductSubtitle,
+  useEnvoyerEnabled,
 } from "@/lib/flags/useFeatureFlag";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import motoIcon from "@/assets/icons/moto.png";
 import toktokIcon from "@/assets/icons/toktok.png";
 import envoyerIcon from "@/assets/icons/envoyer.png";
@@ -50,7 +42,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
   const navigate = useNavigate();
   const omName = usePublicPaymentProductName();
   const omSubtitle = usePublicPaymentProductSubtitle();
-  const [envoyerOpen, setEnvoyerOpen] = useState(false);
+  const envoyerOn = useEnvoyerEnabled();
 
   const tiles: ServiceTile[] = [
     {
@@ -70,9 +62,10 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     {
       id: "envoyer",
       label: "Envoyer",
-      desc: "Colis et plis — bientôt dédié",
+      desc: "Documents et petits colis en Guinée",
       img: envoyerIcon,
-      onSelect: () => setEnvoyerOpen(true),
+      disabledReason: envoyerOn ? undefined : "Bientôt disponible",
+      onSelect: () => onActionClick("parcel"),
     },
     {
       id: "food",
@@ -193,39 +186,6 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
         })}
       </div>
 
-      {/* Honest interim state for Envoyer until the dedicated parcel module ships. */}
-      <Dialog open={envoyerOpen} onOpenChange={setEnvoyerOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Envoyer un colis</DialogTitle>
-            <DialogDescription className="space-y-2 text-left">
-              <span className="block">
-                Le module colis dédié (suivi, preuve de remise, tarif colis) n’est pas encore
-                ouvert. Nous ne pouvons donc pas encore le proposer comme service livré.
-              </span>
-              <span className="block">
-                En attendant, vous pouvez réserver une <strong>course moto-coursier</strong> :
-                un chauffeur récupère votre pli et le dépose à l’adresse indiquée, au tarif
-                course normal.
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setEnvoyerOpen(false)}>
-              Plus tard
-            </Button>
-            <Button
-              onClick={() => {
-                setEnvoyerOpen(false);
-                onActionClick("moto");
-              }}
-            >
-              Course moto-coursier
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

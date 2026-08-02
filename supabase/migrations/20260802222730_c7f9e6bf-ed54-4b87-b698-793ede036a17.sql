@@ -1,0 +1,1 @@
+ALTER TYPE public.payment_purpose ADD VALUE IF NOT EXISTS 'package_payment';
