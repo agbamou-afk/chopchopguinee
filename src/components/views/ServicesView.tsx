@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { motion } from "framer-motion";
 import { ScanLine, Store, LifeBuoy, ChevronRight } from "lucide-react";
 import { SteeringWheel } from "@/components/icons/SteeringWheel";
@@ -34,7 +34,7 @@ type ServiceTile = {
   label: string;
   desc: string;
   img?: string;
-  Icon?: (props: { className?: string }) => JSX.Element;
+  Icon?: ComponentType<{ className?: string }>;
   /** Honest unavailable copy when the service is gated off. */
   disabledReason?: string;
   onSelect: () => void;
