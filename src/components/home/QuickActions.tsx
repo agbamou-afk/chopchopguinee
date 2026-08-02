@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import motoIcon from "@/assets/icons/moto.png";
-import toktokIcon from "@/assets/icons/toktok.png";
 import repasIcon from "@/assets/icons/repas.png";
 import marcheIcon from "@/assets/icons/marche.png";
 import envoyerIcon from "@/assets/icons/envoyer.png";
@@ -15,7 +14,6 @@ interface QuickActionsProps {
 type IconTuning = { scale: number; x: number; y: number };
 const SERVICE_ICON_TUNING: Record<string, IconTuning> = {
   moto:    { scale: 1.57, x: 0, y: 0 },
-  toktok:  { scale: 1.43, x: 0, y: 0 },
   food:    { scale: 1.59, x: 0, y: 0 },
   market:  { scale: 1.49, x: 0, y: 0 },
   parcel:  { scale: 1.42, x: 0, y: 0 },
