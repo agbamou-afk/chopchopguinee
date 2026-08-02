@@ -34,7 +34,7 @@ type ServiceTile = {
   label: string;
   desc: string;
   img?: string;
-  Icon?: typeof Store;
+  Icon?: (props: { className?: string }) => JSX.Element;
   /** Honest unavailable copy when the service is gated off. */
   disabledReason?: string;
   onSelect: () => void;
