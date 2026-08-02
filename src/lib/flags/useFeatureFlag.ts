@@ -38,6 +38,11 @@ export function useOmCheckoutEnabled(): boolean {
   return useFlag("om_checkout_enabled");
 }
 
+/** Envoyer v1 (parcel / document delivery) gate. Server enforces it too. */
+export function useEnvoyerEnabled(): boolean {
+  return useFlag("envoyer_enabled");
+}
+
 /** true = provider webhooks trusted; false = manual verification (launch default). */
 export function useOmProviderAutomated(): boolean {
   return useFlag("om_provider_mode");
