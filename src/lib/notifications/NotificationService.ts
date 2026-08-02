@@ -54,6 +54,14 @@ export interface NotifyOptions {
        * entity id + template name.
        */
       idempotencyKey?: string;
+      /**
+       * Edge function to dispatch through. Defaults to the general
+       * `send-transactional-email` endpoint, which only accepts service-role
+       * and admin callers. Flows that legitimately run under a plain user JWT
+       * (e.g. the welcome mail at signup) point at a narrow wrapper function
+       * that hard-codes both template and recipient server-side.
+       */
+      functionName?: string;
     };
     sms?: { template: MessageTemplate; vars?: Record<string, string | number> };
     whatsapp?: { template: MessageTemplate; vars?: Record<string, string | number> };
@@ -124,7 +132,7 @@ async function sendEmail(opts: NotifyOptions): Promise<ChannelResult> {
     return { channel: "email", ok: false, error: "missing_email_recipient_or_template" };
   }
   const { data, error } = await supabase.functions.invoke(
-    "send-transactional-email",
+    tpl.functionName ?? "send-transactional-email",
     {
       body: {
         templateName: tpl.templateName,
@@ -307,6 +315,9 @@ export const NotificationService = {
           templateName: "welcome",
           data: { firstName },
           idempotencyKey: `welcome-${userId}`,
+          // Runs under the brand-new user's own JWT: the general endpoint
+          // would (correctly) return 403 here.
+          functionName: "send-welcome-email",
         },
       },
     }),
