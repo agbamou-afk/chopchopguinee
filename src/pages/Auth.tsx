@@ -287,6 +287,22 @@ export default function Auth() {
       }
       // Record acceptance immediately if a session was created (auto-confirm).
       void recordLegalAcceptance({ source: "signup" });
+      // Welcome email. Auto-confirm is ON in pilot mode, so GoTrue never sends
+      // a signup confirmation — this is the only mail a new account receives.
+      // Fire-and-forget: a mail failure must never block account creation, and
+      // the idempotency key (`welcome-<userId>`) makes a retry safe.
+      {
+        const newUserId = signUpData?.user?.id;
+        if (newUserId) {
+          void NotificationService.welcome(
+            newUserId,
+            email.trim(),
+            first.trim() || undefined,
+          ).catch(() => {
+            /* non-blocking: delivery is observable in the email send log */
+          });
+        }
+      }
       // Pilot mode: email confirmation is NOT required. If a session was
       // created (auto-confirm), the AuthContext effect above will route to
       // /complete-profile then to client home or /driver/apply based on intent.
