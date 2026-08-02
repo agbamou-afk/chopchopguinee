@@ -644,8 +644,10 @@ const Index = () => {
         break;
       case "send":
       case "wallet":
+        // Payments live under the Services directory now that the ChopWallet
+        // tab is gone, so keep Services highlighted while the surface is open.
         setActiveView("wallet");
-        setActiveTab("wallet");
+        setActiveTab("services");
         break;
       case "parcel":
         // Honest interim behaviour: the dedicated parcel module (tracking,
