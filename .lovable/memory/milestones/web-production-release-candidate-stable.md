@@ -97,3 +97,13 @@ at that time. Code readiness is not operational readiness.
   release. Sandbox flags and public wallet remain OFF.
 - SMTP gate stays **YELLOW**: rail proven end-to-end, real inbox placement not
   yet observed. Milestone remains **UNLOCKED**.
+
+## Slice 2 — Client shell + Services navigation (approved amendment, NOT locked)
+
+- Bottom nav: Accueil · Services · Activité · Compte. Center scanner FAB removed.
+  Wallet tab removed from nav (payments reachable from Services).
+- New `ServicesView` directory: 10 services wired to existing actions/routes.
+- Home reduced to a compact subset + `Voir tous les services`.
+- Envoyer: final tile, honest interim state, dedicated parcel module is Slice 3.
+- No pricing/wallet/backend changes. Flags unchanged (sandbox OFF, public wallet OFF).
+- RC deliberately remains UNLOCKED.

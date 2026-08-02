@@ -1,8 +1,7 @@
-import { Home, Receipt, Wallet, User, ScanLine, type LucideIcon } from "lucide-react";
+import { Home, Receipt, LayoutGrid, User, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { SteeringWheel } from "@/components/icons/SteeringWheel";
 import type { ComponentType, SVGProps } from "react";
-import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
 
 type IconType = LucideIcon | ComponentType<SVGProps<SVGSVGElement> & { size?: number | string }>;
 type Tab = { id: string; icon: IconType; label: string };
@@ -11,21 +10,18 @@ interface BottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   isDriverMode?: boolean;
+  /** @deprecated Kept for call-site compatibility; the center scanner FAB was removed. */
   onScanClick?: () => void;
 }
 
-const userTabsFull: Tab[] = [
+/**
+ * Approved Android 1.0 client shell: exactly four persistent destinations,
+ * equal weighting, no floating center button. Payments (Orange Money) and
+ * the scanner live inside the Services directory.
+ */
+const userTabs: Tab[] = [
   { id: "home", icon: Home, label: "Accueil" },
-  { id: "orders", icon: Receipt, label: "Activité" },
-  { id: "wallet", icon: Wallet, label: "ChopWallet" },
-  { id: "profile", icon: User, label: "Compte" },
-];
-
-// Orange Money First pivot: when the public wallet is archived we drop
-// the ChopWallet tab entirely rather than renaming it to something the
-// user can't act on. Activity (orders) already covers payment history.
-const userTabsOmFirst: Tab[] = [
-  { id: "home", icon: Home, label: "Accueil" },
+  { id: "services", icon: LayoutGrid, label: "Services" },
   { id: "orders", icon: Receipt, label: "Activité" },
   { id: "profile", icon: User, label: "Compte" },
 ];
@@ -36,52 +32,21 @@ const driverTabs: Tab[] = [
   { id: "profile", icon: User, label: "Profil" },
 ];
 
-export function BottomNav({ activeTab, onTabChange, isDriverMode = false, onScanClick }: BottomNavProps) {
-  const publicWallet = usePublicWalletEnabled();
-  const clientTabs = publicWallet ? userTabsFull : userTabsOmFirst;
-  const tabs = isDriverMode ? driverTabs : clientTabs;
-  // Insert center Scanner button only in client mode
-  const left = tabs.slice(0, 2);
-  const right = tabs.slice(2);
-  // Grid columns adapt so the layout stays balanced when the wallet
-  // tab is hidden (2 left + scanner + 1 right = 4 cols).
-  const clientCols = right.length === 2 ? "grid-cols-5" : "grid-cols-4";
+export function BottomNav({ activeTab, onTabChange, isDriverMode = false }: BottomNavProps) {
+  const tabs = isDriverMode ? driverTabs : userTabs;
+  const cols = isDriverMode ? "grid-cols-3" : "grid-cols-4";
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card/92 backdrop-blur-md border-t border-border/70 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-50 shadow-soft">
       {/* Kente hairline — subtle brand seam at the very top edge */}
       <div className="kente-stripe pointer-events-none absolute inset-x-0 top-0 h-[2px] opacity-70" aria-hidden />
-      {isDriverMode ? (
-        <div className="max-w-md mx-auto grid grid-cols-3 items-center relative">
-          {tabs.map((tab) => (
-            <div key={tab.id} className="flex justify-center">
-              <NavButton tab={tab} active={activeTab === tab.id} onClick={() => onTabChange(tab.id)} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className={`max-w-md mx-auto grid ${clientCols} items-center relative`}>
-          {left.map((tab) => (
-            <div key={tab.id} className="flex justify-center">
-              <NavButton tab={tab} active={activeTab === tab.id} onClick={() => onTabChange(tab.id)} />
-            </div>
-          ))}
-          <div className="flex justify-center">
-            <button
-              onClick={onScanClick}
-              aria-label="Scanner un QR CHOPCHOP"
-              className="-mt-7 w-[58px] h-[58px] rounded-full gradient-cta ring-[6px] ring-card flex items-center justify-center active:scale-95 transition-transform hover:scale-[1.03]"
-            >
-              <ScanLine className="w-6 h-6 text-primary-foreground" />
-            </button>
+      <div className={`max-w-md mx-auto grid ${cols} items-center relative`}>
+        {tabs.map((tab) => (
+          <div key={tab.id} className="flex justify-center">
+            <NavButton tab={tab} active={activeTab === tab.id} onClick={() => onTabChange(tab.id)} />
           </div>
-          {right.map((tab) => (
-            <div key={tab.id} className="flex justify-center">
-              <NavButton tab={tab} active={activeTab === tab.id} onClick={() => onTabChange(tab.id)} />
-            </div>
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
     </nav>
   );
 }
@@ -98,7 +63,9 @@ function NavButton({
   return (
     <button
       onClick={onClick}
-      className="relative flex flex-col items-center py-2 px-3 min-w-[60px] transition-colors"
+      aria-current={active ? "page" : undefined}
+      aria-label={tab.label}
+      className="relative flex flex-col items-center justify-center py-2 px-2 min-w-[64px] min-h-[48px] transition-colors"
     >
       {active && (
         <motion.div
@@ -114,7 +81,7 @@ function NavButton({
         }`}
       />
       <span
-        className={`text-[11px] mt-0.5 relative z-10 transition-colors tracking-wide ${
+        className={`text-[11px] mt-0.5 relative z-10 transition-colors tracking-wide whitespace-nowrap ${
           active ? "text-primary font-semibold" : "text-muted-foreground"
         }`}
       >

@@ -1,11 +1,8 @@
 import { motion } from "framer-motion";
 import motoIcon from "@/assets/icons/moto.png";
-import toktokIcon from "@/assets/icons/toktok.png";
 import repasIcon from "@/assets/icons/repas.png";
 import marcheIcon from "@/assets/icons/marche.png";
-import scannerIcon from "@/assets/icons/scanner.png";
-import walletIcon from "@/assets/icons/wallet.png";
-import { usePublicWalletLabel } from "@/lib/flags/useFeatureFlag";
+import envoyerIcon from "@/assets/icons/envoyer.png";
 
 interface QuickActionsProps {
   onActionClick: (action: string) => void;
@@ -17,20 +14,21 @@ interface QuickActionsProps {
 type IconTuning = { scale: number; x: number; y: number };
 const SERVICE_ICON_TUNING: Record<string, IconTuning> = {
   moto:    { scale: 1.57, x: 0, y: 0 },
-  toktok:  { scale: 1.43, x: 0, y: 0 },
   food:    { scale: 1.59, x: 0, y: 0 },
   market:  { scale: 1.49, x: 0, y: 0 },
-  scan:    { scale: 1.27, x: 0, y: 0 },
-  wallet:  { scale: 1.47, x: 0, y: 0 },
+  parcel:  { scale: 1.42, x: 0, y: 0 },
 };
 
-const buildActions = (walletLabel: string) => [
-  { id: "moto",   img: motoIcon,    label: "Moto",       alt: "Réserver une moto-taxi" },
-  { id: "toktok", img: toktokIcon,  label: "TokTok",     alt: "Réserver un TokTok tricycle" },
-  { id: "food",   img: repasIcon,   label: "Repas",      alt: "Commander un repas à domicile" },
-  { id: "market", img: marcheIcon,  label: "Marché",     alt: "Acheter au marché en ligne" },
-  { id: "scan",   img: scannerIcon, label: "Scanner",    alt: "Scanner un QR code marchand" },
-  { id: "wallet", img: walletIcon,  label: walletLabel,  alt: `Ouvrir ${walletLabel}` },
+/**
+ * Home shows a compact, high-frequency subset only. The full service
+ * catalogue (scanner, paiements, onboarding marchand/chauffeur, aide)
+ * lives in the Services destination so we never duplicate it twice.
+ */
+const HOME_ACTIONS = [
+  { id: "moto",   img: motoIcon,    label: "Course",  alt: "Réserver une course moto" },
+  { id: "food",   img: repasIcon,   label: "Repas",   alt: "Commander un repas à domicile" },
+  { id: "market", img: marcheIcon,  label: "Marché",  alt: "Acheter au marché en ligne" },
+  { id: "parcel", img: envoyerIcon, label: "Envoyer", alt: "Envoyer un colis ou un pli" },
 ];
 
 const container = {
@@ -49,14 +47,13 @@ const item = {
 };
 
 export function QuickActions({ onActionClick }: QuickActionsProps) {
-  const walletLabel = usePublicWalletLabel();
-  const actions = buildActions(walletLabel);
+  const actions = HOME_ACTIONS;
   return (
     <motion.div
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-3 gap-x-2 gap-y-5"
+      className="grid grid-cols-4 gap-x-2 gap-y-5"
     >
       {actions.map((action) => {
         const t = SERVICE_ICON_TUNING[action.id] ?? { scale: 1, x: 0, y: 0 };

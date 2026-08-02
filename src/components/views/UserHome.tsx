@@ -148,10 +148,14 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/95">
                 Plus de services
               </h2>
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-white/85">
-                À {userLocation}
-                <MapPin className="w-3 h-3 text-white/80" />
-              </span>
+              <button
+                type="button"
+                onClick={() => onActionClick("services")}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-white/95 min-h-[32px] px-1"
+              >
+                Voir tous les services
+                <ArrowRight className="w-3 h-3 text-white/85" />
+              </button>
             </div>
             <QuickActions onActionClick={onActionClick} />
           </div>
