@@ -64,18 +64,17 @@ export function LocationField({
 
   const useMyPosition = async () => {
     setLocating(true);
-    try {
-      geo.request();
-      const p = geo.position;
-      if (!p) return;
-      const rev = await reverseGeocode(p.lat, p.lng);
-      onChange({ lat: p.lat, lng: p.lng, label: rev?.label ?? "Ma position actuelle" });
-      setQuery("");
-      setResults([]);
-    } finally {
+    setQuery("");
+    setResults([]);
+    geo.request();
+  };
+
+  // Stop the spinner honestly when the browser refuses the permission.
+  useEffect(() => {
+    if (locating && (geo.status === "denied" || geo.status === "blocked" || geo.status === "unavailable")) {
       setLocating(false);
     }
-  };
+  }, [geo.status, locating]);
 
   // The geolocation hook resolves asynchronously; adopt the position as soon
   // as it lands so "Ma position" never shows a stale/empty state.
