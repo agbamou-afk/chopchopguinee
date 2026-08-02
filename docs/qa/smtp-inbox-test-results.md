@@ -12,6 +12,11 @@
 | Ops chip | Ops Command Center readiness strip, 60s polling |
 | `email_send_log` rows | 8 total (4 `sent`, 4 `pending`), last activity 2026-06-06 |
 
+**Update (web-rc-1, DEF-013):** auto-confirm is ON, so GoTrue emits no `signup`
+confirmation mail — that is why the log had been silent since 2026-06-06. A
+`welcome` app email now fires once per new account (key `welcome-<userId>`),
+which is the trigger Operations should use to execute the matrix below.
+
 Configuration is not delivery. Eight historic rows with a stale timestamp and a
 `pending` remainder are **not** evidence that production mail reaches inboxes.
 
