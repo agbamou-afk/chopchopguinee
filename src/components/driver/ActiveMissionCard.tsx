@@ -337,7 +337,16 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         </button>
       )}
 
-      {!terminal && step && (
+      {mission.type === "package_delivery" && !terminal && (
+        <div className="mb-2">
+          <PackageHandoffPanel mission={mission} onVerified={onChange} />
+        </div>
+      )}
+
+      {!terminal && step && !(
+        mission.type === "package_delivery" &&
+        (mission.state === "arrived_pickup" || mission.state === "arrived_dropoff")
+      ) && (
         <Button
           className="w-full h-12"
           onClick={handleNext}
