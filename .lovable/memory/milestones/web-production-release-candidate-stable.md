@@ -76,3 +76,24 @@ known runtime impact, burn-down deferred post-1.0.
 Lock only when the three YELLOW gates carry real external evidence, signed in
 the release checklist. Record the lock commit SHA, release owner and date here
 at that time. Code readiness is not operational readiness.
+
+## Slice 1 (2026-08-02) — Repas P1 + server-side welcome email
+
+- DEF-012 (P1, Repas settlement preview) verified CLOSED: the live
+  `admin_preview_repas_payment_settlement` uses
+  `COALESCE(fr.merchant_store_id, li.related_store_id)`; no second settlement
+  model was introduced and Marché is untouched.
+- DEF-013 CLOSED with a server-side design: `AFTER INSERT` trigger on
+  `public.profiles` → `_dispatch_welcome_email` → `pg_net` →
+  `send-transactional-email`. Exactly-once is enforced by claiming
+  `public.welcome_email_dispatches` before sending; pre-existing accounts are
+  backfilled as already-welcomed. Browser-side welcome path and the
+  `send-welcome-email` wrapper were removed — one path only. Failure never
+  blocks or rolls back account creation.
+- DEF-014 CLOSED: `send-transactional-email` now recognises internal callers by
+  a verified `service_role` claim, not raw key string equality (the DB reads a
+  different-format service key out of Vault).
+- Auto-confirm remains ON; email verification stays non-blocking for this
+  release. Sandbox flags and public wallet remain OFF.
+- SMTP gate stays **YELLOW**: rail proven end-to-end, real inbox placement not
+  yet observed. Milestone remains **UNLOCKED**.
