@@ -9611,6 +9611,7 @@ export type Database = {
         | "courier_payout"
         | "merchant_settlement"
         | "refund"
+        | "package_payment"
       payment_recon_event:
         | "intent_created"
         | "provider_pending"
@@ -10020,6 +10021,7 @@ export const Constants = {
         "courier_payout",
         "merchant_settlement",
         "refund",
+        "package_payment",
       ],
       payment_recon_event: [
         "intent_created",
