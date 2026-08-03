@@ -64,7 +64,7 @@ const LOCATIONS: Array<{ label: string; aliases: string[] }> = [
 /** Synonym → intent. Matched on whole word boundaries, accent-insensitive. */
 const SYNONYMS: Array<{ words: string[]; intent: CommandIntent; weight: number }> = [
   { intent: "moto", weight: 1, words: ["moto", "bike", "motorbike", "moto-taxi", "deux-roues"] },
-  { intent: "toktok", weight: 1, words: ["toktok", "tok-tok", "tok tok", "triporteur", "tricycle"] },
+  { intent: "toktok", weight: 1, words: ["bonbonna", "bonbona", "toktok", "tok-tok", "tok tok", "triporteur", "tricycle"] },
   { intent: "moto", weight: 2, words: ["taxi", "course", "trajet", "ride"] },
   { intent: "food", weight: 1, words: ["food", "repas", "manger", "eat", "restaurant", "resto", "diner", "déjeuner", "petit dej", "à manger"] },
   { intent: "market", weight: 1, words: ["market", "marche", "marché", "shopping", "annonce", "annonces", "boutique", "produit", "produits"] },

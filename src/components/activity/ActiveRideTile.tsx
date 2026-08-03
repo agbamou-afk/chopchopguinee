@@ -3,6 +3,7 @@ import { Bike, ChevronRight, Search, MapPin, Navigation } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ACTIVE_CLIENT_RIDE_STATUSES } from "@/lib/rides/status";
+import { rideModeLabel } from "@/lib/rides/rideModeLabel";
 
 interface ActiveRide {
   id: string;
@@ -72,7 +73,7 @@ export function ActiveRideTile() {
 
   const meta = (ride.metadata ?? {}) as Record<string, unknown>;
   const phase = (meta.phase as string | undefined) ?? "approach";
-  const vehicleLabel = ride.mode === "toktok" ? "BONBONNA" : "Moto";
+  const vehicleLabel = rideModeLabel(ride.mode);
   const { sub, Icon, accent } = (() => {
     if (ride.status === "pending" && !ride.driver_id) {
       return { sub: "Recherche d'un chauffeur…", Icon: Search, accent: "bg-amber-500" };

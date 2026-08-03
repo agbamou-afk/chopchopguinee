@@ -14,6 +14,7 @@ import { TrustCues } from "@/components/trust/TrustCues";
 import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { rideQaDebug } from "@/lib/rides/debug";
+import { rideModeLabel } from "@/lib/rides/rideModeLabel";
 
 interface Props {
   rideId: string;
@@ -183,7 +184,7 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
               rideId={rideId}
               driverName={driverName}
               pickupCode={pickupCode}
-              vehicleLabel={mode === "toktok" ? "BONBONNA" : mode === "moto" ? "Moto" : undefined}
+              vehicleLabel={mode === "food" ? undefined : rideModeLabel(mode)}
               onCallDriver={ride?.driver_id ? () => handleCallDriver(ride.driver_id!) : undefined}
             />
           )}
