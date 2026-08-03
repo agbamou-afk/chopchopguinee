@@ -232,3 +232,19 @@ the canonical RC set:
 | X | Typecheck + production build clean | PASS |
 | Y | Sandbox flags OFF | PASS (unchanged) |
 | Z | Public internal wallet balance hidden | PASS (`wallet_public_enabled` still off) |
+
+## Slice 3 — Envoyer v1
+
+Full matrix: `docs/qa/envoyer-v1-test-matrix.md` (A–AH).
+Summary: 24 PASS / PASS(code), 5 YELLOW (sandbox finalisation, production
+finalisation DEF-015, driver accept, pickup verify, delivery verify — none
+executed). Envoyer ships flag-OFF, so no YELLOW here blocks the RC gates.
+
+### Packaging correction (not an Envoyer runtime defect)
+
+The production build failed once with a Workbox precache error: the main app
+chunk (`dist/assets/index-*.js`, 2,100.58 kB) exceeded Workbox's default
+2 MiB (2,097,152 B) `maximumFileSizeToCacheInBytes`. Fixed by setting the limit
+to `4 * 1024 * 1024` (4,194,304 B) in `vite.config.ts`. Rebuild is green:
+128 precache entries, 11,785.52 KiB; largest asset `index-D_RIhiRE.js`
+2,100.58 kB (gzip 606.49 kB); `mapbox-gl` 1,781.48 kB.

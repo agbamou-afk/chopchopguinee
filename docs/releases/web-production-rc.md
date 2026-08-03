@@ -105,3 +105,22 @@ Approved by the product owner before lock, so the release freeze does not apply.
 See `docs/product/client-services-navigation.md` for the full action map.
 No pricing/wallet/backend changes. Sandbox flags remain OFF; public wallet remains OFF.
 RC remains **UNLOCKED** pending Slice 3 and real-money/SMTP verification.
+
+## RC amendment — Slice 3: Envoyer v1 (approved pre-lock)
+
+- Real parcel/document module on the existing `package_delivery` mission type,
+  provider-neutral payment intents and existing map components. No new payment
+  architecture, wallet model or pricing engine.
+- Ships behind `envoyer_enabled`, **OFF** in production.
+- Docs: `docs/product/envoyer-v1.md`,
+  `docs/architecture/envoyer-mission-and-payment.md`,
+  `docs/qa/envoyer-v1-test-matrix.md`.
+- Open: DEF-015 (P1, production finaliser not wired — contained by the OFF flag),
+  DEF-016 (P2, no admin capability editor).
+- Build packaging correction: Workbox `maximumFileSizeToCacheInBytes` raised to
+  4 MiB because the main chunk (2,100.58 kB) exceeded the 2 MiB default. This was
+  a packaging/precache limit, not an Envoyer runtime defect.
+- Flags verified: `om_sandbox_enabled` false, `om_environment` false,
+  `wallet_public_enabled` false, `envoyer_enabled` false.
+
+RC remains **UNLOCKED**.

@@ -22,7 +22,7 @@ Touch targets are ≥48px, labels never wrap, and the bar keeps
 |---|---|
 | Course Moto | `handleAction("moto")` → existing `RideBooking` moto flow |
 | Course TokTok | `handleAction("toktok")` → existing `RideBooking` toktok flow |
-| Envoyer | Honest interim dialog → optional `handleAction("moto")` moto-coursier |
+| Envoyer | `EnvoyerComposer` (Slice 3 parcel module, gated by `envoyer_enabled`, currently OFF) |
 | Repas | `handleAction("food")` → `FoodView` |
 | Marché | `handleAction("market")` → `MarketView` |
 | OM Wallet | `handleAction("wallet")` → `WalletView` (Orange-Money-first surface per flags) |
@@ -35,7 +35,7 @@ Tile labels/subtitles for payments come from `usePublicPaymentProductName` /
 `usePublicPaymentProductSubtitle`, so the Orange-Money-first pivot copy stays
 consistent and no internal balance is exposed while `wallet_public_enabled` is off.
 
-## Envoyer — temporary status (pending Slice 3)
+## Envoyer — Slice 3 status (superseded)
 
 The tile has its final position (3rd) and visual identity (`envoyer.png`), but it
 opens a dialog stating plainly that the dedicated parcel module (tracking, proof
@@ -63,3 +63,9 @@ recruitment and discovery content are unchanged.
 `BottomNav`, `Index` view state/actions, `QuickActions`, `UserHome` services
 section header, new `ServicesView`. No pricing, wallet, payment, RLS, or edge
 function changes.
+
+## Envoyer update (Slice 3)
+
+The interim dialog and the moto-coursier fallback are removed. The tile now
+opens the real parcel composer (`EnvoyerComposer`) behind `envoyer_enabled`,
+which is **OFF** in production. See `docs/product/envoyer-v1.md`.
