@@ -183,7 +183,7 @@ export function routeQuery(rawQuery: string, opts: { isAdmin?: boolean } = {}): 
 
   const results: CommandResult[] = [];
 
-  // -- Service intents (Moto / BONBONNA / Food / Market / Send / Scan / Wallet)
+  // -- Service intents (Moto / Bonbonna / Food / Market / Send / Scan / Wallet)
   if (seen.has("moto")) {
     results.push(
       svc(
@@ -200,7 +200,7 @@ export function routeQuery(rawQuery: string, opts: { isAdmin?: boolean } = {}): 
     results.push(
       svc(
         "toktok",
-        loc ? `BONBONNA vers ${loc.label}` : "Réserver un BONBONNA",
+        loc ? `Bonbonna vers ${loc.label}` : "Réserver un Bonbonna",
         loc ? "Destination prête à confirmer" : "Course familiale ou colis",
         "services",
         seen.has("moto") ? 1 : 0,
@@ -210,7 +210,7 @@ export function routeQuery(rawQuery: string, opts: { isAdmin?: boolean } = {}): 
   }
   // "taxi" alone → propose both
   if (intents.some((i) => i.intent === "moto" && i.weight === 2) && !seen.has("toktok")) {
-    results.push(svc("toktok", "Ou un BONBONNA", "Plus de place, même trajet", "services", 2, loc?.label));
+    results.push(svc("toktok", "Ou un Bonbonna", "Plus de place, même trajet", "services", 2, loc?.label));
   }
 
   if (seen.has("food")) {
@@ -294,7 +294,7 @@ export function routeQuery(rawQuery: string, opts: { isAdmin?: boolean } = {}): 
   if (loc && intents.length === 0) {
     results.push(
       svc("moto", `Aller à ${loc.label} en Moto`, "Course rapide", "lieux", 0, loc.label),
-      svc("toktok", `Aller à ${loc.label} en BONBONNA`, "Plus de place", "lieux", 1, loc.label),
+      svc("toktok", `Aller à ${loc.label} en Bonbonna`, "Plus de place", "lieux", 1, loc.label),
       svc("food", `Repas à ${loc.label}`, "Restaurants du quartier", "lieux", 2, loc.label),
       svc("market", `Marché à ${loc.label}`, "Annonces locales", "lieux", 3, loc.label),
     );

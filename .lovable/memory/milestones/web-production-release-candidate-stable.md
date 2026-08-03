@@ -126,7 +126,7 @@ at that time. Code readiness is not operational readiness.
   exceeded the 2 MiB default) — a packaging correction, not a runtime defect.
 - RC remains **UNLOCKED**.
 
-## Slice 4 (2026-08-03) — DEF-015 closure + BONBONNA rename
+## Slice 4 (2026-08-03) — DEF-015 closure + Bonbonna rename
 
 - **DEF-015 (P1) CLOSED.** `confirm_payment_intent` — the canonical production /
   manual admin confirmation RPC — now finalises `source_module = 'package'`
@@ -146,14 +146,14 @@ at that time. Code readiness is not operational readiness.
 - Verification: 9 rolled-back transactional cases PASS against the live schema
   with production-shaped fixtures; zero committed financial value. Real
   Orange Money money movement remains **unexecuted (YELLOW)**.
-- **BONBONNA rename**: customer-facing TokTok copy is now `BONBONNA` everywhere
+- **Bonbonna rename**: customer-facing TokTok copy is now `Bonbonna` everywhere
   (Services, ride composer, quotes, trip screens, activity, driver cards,
   onboarding, driver apply, admin pricing tab, AI command router, SEO copy,
   alt/aria text). Internal identifiers — DB enum value `toktok`, fare keys,
   routes, analytics keys, `rides_toktok` capability, asset filenames and
   migration history — are unchanged. Rendering is centralised in
   `src/lib/rides/rideModeLabel.ts` so historical `toktok` rows display as
-  BONBONNA.
+  Bonbonna.
 - Flags at end of slice: `envoyer_enabled` false, `om_sandbox_enabled` false,
   `wallet_public_enabled` false, `app_settings.orange_money.mode` = manual_csv.
 - RC remains **UNLOCKED**.

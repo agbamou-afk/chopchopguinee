@@ -48,7 +48,7 @@ const RIDE_TILES: ActionDef[] = [
   {
     id: "ride",
     label: "Course",
-    subtitle: "Moto ou BONBONNA",
+    subtitle: "Moto ou Bonbonna",
     img: motoIcon,
     alt: "Réserver une course",
     halo: "bg-secondary/22 ring-1 ring-secondary/25",

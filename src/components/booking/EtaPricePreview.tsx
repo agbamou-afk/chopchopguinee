@@ -19,7 +19,7 @@ interface Props {
   onRetry?: () => void;
 }
 
-const SERVICE_LABEL = { moto: "Moto", toktok: "BONBONNA", livraison: "Livraison" } as const;
+const SERVICE_LABEL = { moto: "Moto", toktok: "Bonbonna", livraison: "Livraison" } as const;
 const SERVICE_ICON = { moto: Bike, toktok: Car, livraison: Bike } as const;
 
 /**
