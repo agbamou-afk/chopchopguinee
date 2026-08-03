@@ -147,7 +147,17 @@ export default function PaymentsAdmin() {
   }, [items, eventsByIntent]);
 
   const onConfirm = async (id: string) => {
-    try { await confirmIntent(id, undefined, "admin test confirmation"); await load(); }
+    try {
+      const row = await confirmIntent(id, undefined, "admin test confirmation");
+      if (row?.state === "needs_review") {
+        toast({
+          title: "Confirmé mais finalisation échouée",
+          description:
+            "Le paiement est passé en « needs_review » et un ticket support a été créé. La mission n'a pas été créée.",
+        });
+      }
+      await load();
+    }
     catch (e) { toast({ title: "Erreur", description: (e as Error).message }); }
   };
   const onFail = async (id: string) => {
