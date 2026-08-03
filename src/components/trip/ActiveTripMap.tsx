@@ -184,7 +184,7 @@ export function ActiveTripMap({
   );
   const isFinished = status === "completed" || status === "cancelled";
   const showNoDriverFallback = isSearching && searchElapsed >= NO_DRIVER_TIMEOUT_S;
-  const vehicleLabel = ride.mode === "toktok" ? "TokTok" : "Moto";
+  const vehicleLabel = ride.mode === "toktok" ? "BONBONNA" : "Moto";
   const fallbackRouteOrigin: LatLng | null = phase === "approach" ? (driverPos ?? pickup) : pickup;
   const fallbackRouteDestination: LatLng | null = phase === "approach" ? (driverPos ? pickup : dropoff) : dropoff;
 

@@ -24,7 +24,7 @@ interface Props {
  */
 const ECOSYSTEM_ICONS = [
   { src: motoIcon,   label: "Moto" },
-  { src: toktokIcon, label: "TokTok" },
+  { src: toktokIcon, label: "BONBONNA" },
   { src: repasIcon,  label: "Repas" },
   { src: marcheIcon, label: "Marché" },
   { src: walletIcon, label: "ChopWallet" },
@@ -77,10 +77,10 @@ const SLIDES: StorybookSlide[] = [
   },
   {
     id: "ride",
-    title: "Commandez un Moto ou un TokTok",
+    title: "Commandez un Moto ou un BONBONNA",
     body: "Déplacez-vous vite et en sécurité où que vous alliez à Conakry.",
     image: sceneMoto,
-    alt: "Moto et TokTok dans les rues de Conakry",
+    alt: "Moto et BONBONNA dans les rues de Conakry",
   },
   {
     id: "repas",

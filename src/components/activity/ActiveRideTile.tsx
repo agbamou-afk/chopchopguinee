@@ -72,7 +72,7 @@ export function ActiveRideTile() {
 
   const meta = (ride.metadata ?? {}) as Record<string, unknown>;
   const phase = (meta.phase as string | undefined) ?? "approach";
-  const vehicleLabel = ride.mode === "toktok" ? "TokTok" : "Moto";
+  const vehicleLabel = ride.mode === "toktok" ? "BONBONNA" : "Moto";
   const { sub, Icon, accent } = (() => {
     if (ride.status === "pending" && !ride.driver_id) {
       return { sub: "Recherche d'un chauffeur…", Icon: Search, accent: "bg-amber-500" };

@@ -124,7 +124,7 @@ function txnToActivity(tx: WalletTransaction, walletId: string): ActivityItem | 
 }
 
 function rideToActivity(ride: RideRow, role: "client" | "driver"): ActivityItem {
-  const modeLabel = ride.mode === "toktok" ? "TokTok" : "Moto";
+  const modeLabel = ride.mode === "toktok" ? "BONBONNA" : "Moto";
   const isDriver = role === "driver";
   const amount = isDriver ? (ride.driver_earning_gnf ?? 0) : -(ride.fare_gnf ?? 0);
   const status = statusFromRide(ride.status);
