@@ -13,7 +13,11 @@ export type PaymentState =
   | "cancelled"
   | "refunded"
   | "reversed"
-  | "expired";
+  | "expired"
+  | "proof_submitted"
+  | "in_review"
+  | "authorized"
+  | "needs_review";
 
 export type PaymentProvider =
   | "orange_money"

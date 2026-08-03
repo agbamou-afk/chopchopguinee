@@ -825,7 +825,7 @@ const Index = () => {
     <div className="min-h-screen bg-background pb-20">
       <Seo
         title="CHOPCHOP Guinée — Moto, livraison, marché et paiements à Conakry"
-        description="CHOPCHOP connecte transport (Moto, TokTok), Chop Repas, Chop Marché et paiements ChopWallet dans une seule app pensée pour Conakry."
+        description="CHOPCHOP connecte transport (Moto, BONBONNA), Chop Repas, Chop Marché et paiements ChopWallet dans une seule app pensée pour Conakry."
         canonical="/"
       />
       <h1 className="sr-only">CHOPCHOP — Vos services de transport, livraison et paiements en Guinée</h1>

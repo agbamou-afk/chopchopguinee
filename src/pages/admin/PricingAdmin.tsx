@@ -28,7 +28,7 @@ export default function PricingAdmin() {
     <ModulePage module="pricing" title="Tarification" subtitle="Grille tarifaire par service">
       <Tabs defaultValue="rides">
         <TabsList>
-          <TabsTrigger value="rides">Moto / TokTok</TabsTrigger>
+          <TabsTrigger value="rides">Moto / BONBONNA</TabsTrigger>
           <TabsTrigger value="envoyer">Envoyer</TabsTrigger>
           <TabsTrigger value="repas">Repas</TabsTrigger>
           <TabsTrigger value="marche">Marché</TabsTrigger>

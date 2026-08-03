@@ -7,7 +7,7 @@ export type DriverCapability =
 
 export const CAPABILITY_LABEL: Record<DriverCapability, string> = {
   rides_moto: "Moto",
-  rides_toktok: "TokTok",
+  rides_toktok: "BONBONNA",
   repas_delivery: "Livraison Repas",
   marche_delivery: "Livraison Marché",
   package_delivery: "Colis",

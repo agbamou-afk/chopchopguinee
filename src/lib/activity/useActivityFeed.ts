@@ -19,6 +19,7 @@ import {
   type Mission,
 } from "@/lib/missions/types";
 import { formatDistrictPair, detectDistrictInText, districtFor } from "@/lib/maps/zones";
+import { rideModeLabel } from "@/lib/rides/rideModeLabel";
 
 type RideRow = {
   id: string;
@@ -124,7 +125,7 @@ function txnToActivity(tx: WalletTransaction, walletId: string): ActivityItem | 
 }
 
 function rideToActivity(ride: RideRow, role: "client" | "driver"): ActivityItem {
-  const modeLabel = ride.mode === "toktok" ? "TokTok" : "Moto";
+  const modeLabel = rideModeLabel(ride.mode);
   const isDriver = role === "driver";
   const amount = isDriver ? (ride.driver_earning_gnf ?? 0) : -(ride.fare_gnf ?? 0);
   const status = statusFromRide(ride.status);

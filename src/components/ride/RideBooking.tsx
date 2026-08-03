@@ -52,7 +52,7 @@ const rideOptions = {
     speedKmh: 28,
   },
   toktok: {
-    title: "TokTok",
+    title: "BONBONNA",
     icon: Car,
     eta: "5-8 min",
     speedKmh: 22,

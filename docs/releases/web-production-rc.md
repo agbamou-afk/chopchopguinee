@@ -115,8 +115,12 @@ RC remains **UNLOCKED** pending Slice 3 and real-money/SMTP verification.
 - Docs: `docs/product/envoyer-v1.md`,
   `docs/architecture/envoyer-mission-and-payment.md`,
   `docs/qa/envoyer-v1-test-matrix.md`.
-- Open: DEF-015 (P1, production finaliser not wired — contained by the OFF flag),
-  DEF-016 (P2, no admin capability editor).
+- DEF-015 (P1) **CLOSED 2026-08-03**: the production/manual
+  `confirm_payment_intent` now finalises package intents, is replay-idempotent
+  and fails into `needs_review` + support recovery.
+- Open: DEF-016 (P2, no admin capability editor).
+- Customer-facing rename applied 2026-08-03: TokTok → **BONBONNA** (display
+  only; the internal `toktok` identifier is unchanged everywhere).
 - Build packaging correction: Workbox `maximumFileSizeToCacheInBytes` raised to
   4 MiB because the main chunk (2,100.58 kB) exceeded the 2 MiB default. This was
   a packaging/precache limit, not an Envoyer runtime defect.

@@ -32,6 +32,7 @@ import { getRuntimeMode } from "@/lib/runtimeMode";
 import { useAuth } from "@/contexts/AuthContext";
 import { playArrivedAtPickup, playRideCompleted } from "@/lib/sound/driverSounds";
 import { rideQaDebug } from "@/lib/rides/debug";
+import { rideModeLabel } from "@/lib/rides/rideModeLabel";
 
 type Phase = "approach" | "arrived" | "on_trip" | "at_destination";
 
@@ -346,7 +347,7 @@ export function DriverActiveTrip({ rideId, onClose }: Props) {
         </button>
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-primary-foreground text-sm font-semibold truncate">
-            {ride.mode === "moto" ? "Moto" : "TokTok"} · Conducteur
+            {rideModeLabel(ride.mode)} · Conducteur
           </span>
           <RidePhaseChip phase={deriveRidePhase(ride)} size="sm" />
         </div>

@@ -31,6 +31,7 @@ import {
 import { useRideRealtime } from "@/hooks/useRideRealtime";
 import { supabase } from "@/integrations/supabase/client";
 import { formatGNF } from "@/lib/format";
+import { rideModeLabel } from "@/lib/rides/rideModeLabel";
 
 interface Props {
   rideId: string;
@@ -184,7 +185,7 @@ export function ActiveTripMap({
   );
   const isFinished = status === "completed" || status === "cancelled";
   const showNoDriverFallback = isSearching && searchElapsed >= NO_DRIVER_TIMEOUT_S;
-  const vehicleLabel = ride.mode === "toktok" ? "TokTok" : "Moto";
+  const vehicleLabel = rideModeLabel(ride.mode);
   const fallbackRouteOrigin: LatLng | null = phase === "approach" ? (driverPos ?? pickup) : pickup;
   const fallbackRouteDestination: LatLng | null = phase === "approach" ? (driverPos ? pickup : dropoff) : dropoff;
 

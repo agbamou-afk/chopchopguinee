@@ -40,7 +40,7 @@ interface LiveTrackingProps {
 
 const MODE_LABELS: Record<TrackingMode, { title: string; emoji: string }> = {
   moto: { title: "Moto", emoji: "🛵" },
-  toktok: { title: "TokTok", emoji: "🛺" },
+  toktok: { title: "BONBONNA", emoji: "🛺" },
   food: { title: "Repas", emoji: "🍱" },
 };
 
