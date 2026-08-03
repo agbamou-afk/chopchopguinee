@@ -157,3 +157,21 @@ payload — safe because the platform gateway runs `verify_jwt = true` for this
 function, so any token reaching the handler has an already-verified signature.
 User and admin paths are unchanged; ordinary authenticated users are still
 rejected.
+
+### DEF-015 — P1 (Envoyer, flag-gated) — OPEN
+**Symptom:** a real-money / manually-confirmed Envoyer payment would confirm the
+payment intent without creating the delivery mission or the verification codes.
+**Root cause:** `package_delivery_finalize_from_intent` is only called by
+`om_sandbox_finalize_authorized_intent`. The production/manual admin path
+`confirm_payment_intent` has no package branch.
+**Containment:** `envoyer_enabled` is OFF, so no customer can create a package
+intent. Not an RC blocker in the shipped configuration.
+**Exit condition:** wire the package branch into the production finaliser and
+execute one sandbox and one controlled real-money path before enabling the flag.
+
+### DEF-016 — P2 (Envoyer) — OPEN
+**Symptom:** no admin/God-Admin editor for driver capabilities; `package_delivery`
+is currently driver self-selected via `CapabilityPicker`, and
+`PilotCommandCenter` shows capabilities read-only.
+**Impact:** operations cannot grant or revoke the package capability for pilot
+couriers from the admin console. Workaround: driver self-selection.

@@ -107,3 +107,21 @@ at that time. Code readiness is not operational readiness.
 - Envoyer: final tile, honest interim state, dedicated parcel module is Slice 3.
 - No pricing/wallet/backend changes. Flags unchanged (sandbox OFF, public wallet OFF).
 - RC deliberately remains UNLOCKED.
+
+## Slice 3 (2026-08-03) — Envoyer v1, flag-OFF
+
+- Real parcel module on `package_delivery` missions: server-authoritative quote
+  from the moto tariff, provider-neutral payment intent (`source_module='package'`,
+  `package_payment`), sender-only 6-digit pickup/delivery codes, courier view
+  without codes, idempotent sender-only cancellation with fee/refund/dispute
+  branches. No pricing, wallet or payment-architecture change.
+- Ships behind `envoyer_enabled = false`. `om_sandbox_enabled`, `om_environment`
+  and `wallet_public_enabled` all verified false.
+- QA A–AH: 24 PASS/PASS(code), 5 YELLOW (no sandbox, driver or real-money run).
+- DEF-015 (P1, contained by the OFF flag): production `confirm_payment_intent`
+  does not call `package_delivery_finalize_from_intent` — sandbox path only.
+- DEF-016 (P2): no admin capability editor; `package_delivery` is driver
+  self-selected.
+- Build: green. Workbox precache limit raised to 4 MiB (main chunk 2,100.58 kB
+  exceeded the 2 MiB default) — a packaging correction, not a runtime defect.
+- RC remains **UNLOCKED**.
