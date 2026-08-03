@@ -119,7 +119,7 @@ RC remains **UNLOCKED** pending Slice 3 and real-money/SMTP verification.
   `confirm_payment_intent` now finalises package intents, is replay-idempotent
   and fails into `needs_review` + support recovery.
 - Open: DEF-016 (P2, no admin capability editor).
-- Customer-facing rename applied 2026-08-03: TokTok → **BONBONNA** (display
+- Customer-facing rename applied 2026-08-03: TokTok → **Bonbonna** (display
   only; the internal `toktok` identifier is unchanged everywhere).
 - Build packaging correction: Workbox `maximumFileSizeToCacheInBytes` raised to
   4 MiB because the main chunk (2,100.58 kB) exceeded the 2 MiB default. This was

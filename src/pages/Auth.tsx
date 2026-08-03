@@ -506,7 +506,7 @@ export default function Auth() {
                     <div className="grid grid-cols-3 gap-2">
                       {([
                         { id: "moto" as const, label: "Moto", icon: Bike },
-                        { id: "toktok" as const, label: "BONBONNA", icon: Car },
+                        { id: "toktok" as const, label: "Bonbonna", icon: Car },
                         { id: "livraison" as const, label: "Livraison", icon: Package },
                       ]).map((opt) => (
                         <button

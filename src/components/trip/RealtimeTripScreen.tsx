@@ -31,7 +31,7 @@ interface Props {
 
 const TITLES: Record<Props["mode"], string> = {
   moto: "Moto · Suivi en direct",
-  toktok: "BONBONNA · Suivi en direct",
+  toktok: "Bonbonna · Suivi en direct",
   food: "Repas · Suivi en direct",
 };
 

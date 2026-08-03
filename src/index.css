@@ -560,7 +560,7 @@
   }
 
   /* === Service icon system ===
-     Shared holder + asset classes so every service tile (Moto, BONBONNA, Repas,
+     Shared holder + asset classes so every service tile (Moto, Bonbonna, Repas,
      Marché, Scanner, ChopWallet…) renders at the same scale, padding and
      optical weight. Used by QuickActions and any future service grid. */
   .service-icon-holder {

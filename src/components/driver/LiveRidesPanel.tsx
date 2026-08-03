@@ -22,7 +22,7 @@ type Ride = {
 };
 
 const fmt = (n: number) => formatGNF(Math.round(n));
-const MODE_LABEL: Record<Ride["mode"], string> = { moto: "Moto", toktok: "BONBONNA", food: "Repas" };
+const MODE_LABEL: Record<Ride["mode"], string> = { moto: "Moto", toktok: "Bonbonna", food: "Repas" };
 
 export function LiveRidesPanel() {
   const [uid, setUid] = useState<string | null>(null);

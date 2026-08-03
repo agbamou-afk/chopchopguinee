@@ -29,7 +29,7 @@ const FAQS = [
   },
   {
     q: "Comment réserver une moto ou un toktok ?",
-    a: "Sur l'écran d'accueil, choisissez Moto ou BONBONNA, indiquez votre destination puis confirmez. Les fonds sont réservés sur votre portefeuille jusqu'à la fin de la course.",
+    a: "Sur l'écran d'accueil, choisissez Moto ou Bonbonna, indiquez votre destination puis confirmez. Les fonds sont réservés sur votre portefeuille jusqu'à la fin de la course.",
   },
   {
     q: "Comment annuler une course ?",

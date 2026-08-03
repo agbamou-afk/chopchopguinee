@@ -11,7 +11,7 @@ import { validateReferralCode } from "@/lib/admin/driverGroups";
 
 const VEHICLE_OPTIONS: Array<{ id: DriverVehicle; label: string; sub: string; icon: typeof Bike }> = [
   { id: "moto", label: "Moto", sub: "Course rapide en ville", icon: Bike },
-  { id: "toktok", label: "BONBONNA", sub: "Tricycle, plus de place", icon: Car },
+  { id: "toktok", label: "Bonbonna", sub: "Tricycle, plus de place", icon: Car },
   { id: "livraison", label: "Livraison", sub: "Coursier colis", icon: Package },
 ];
 

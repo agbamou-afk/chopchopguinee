@@ -242,12 +242,12 @@ pickup verify, delivery verify — none executed). Production finalisation
 live schema. Real Orange Money money movement remains unexecuted. Envoyer ships
 flag-OFF, so no YELLOW here blocks the RC gates.
 
-## Amendment — BONBONNA rename (2026-08-03)
+## Amendment — Bonbonna rename (2026-08-03)
 
-Customer-facing TokTok copy renamed to **BONBONNA** through a single display
+Customer-facing TokTok copy renamed to **Bonbonna** through a single display
 helper (`src/lib/rides/rideModeLabel.ts`). Internal `toktok` identifiers (DB
 enum, fare keys, routes, analytics, capabilities, asset filenames, history) are
-unchanged, so historical records render as BONBONNA without a data migration.
+unchanged, so historical records render as Bonbonna without a data migration.
 
 ### Packaging correction (not an Envoyer runtime defect)
 
