@@ -18,7 +18,7 @@ only · **YELLOW** not executed.
 | K | Checkout creates intent with `source_module='package'` | PASS(code) | constraint updated |
 | L | Idempotency key prevents duplicate packages | PASS(code) | unique key in RPC |
 | M | Sandbox finalisation creates mission + codes | YELLOW | not executed |
-| N | Production/manual finalisation creates mission | **YELLOW — DEF-015** | `confirm_payment_intent` does not call the finaliser |
+| N | Production/manual finalisation creates mission | **PASS** | DEF-015 closed; verified in a rolled-back transaction against the live schema |
 | O | Codes visible to sender only | PASS(code) | `pds_sender_read` RLS is the only SELECT policy |
 | P | Courier cannot read secrets | PASS(code) | no courier policy on `package_delivery_secrets` |
 | Q | Courier view excludes codes | PASS(code) | `package_delivery_courier_view` payload |
@@ -39,3 +39,21 @@ only · **YELLOW** not executed.
 | AF | No wallet balance exposure | PASS | `wallet_public_enabled` false; no balance read added |
 | AG | Typecheck clean | PASS | `tsgo` exit 0 |
 | AH | Production build clean | PASS | build green, PWA precache 128 entries |
+
+## DEF-015 closure QA (2026-08-03)
+
+Executed with `psql` inside `BEGIN … ROLLBACK`, real schema, production-shaped
+(non-sandbox) fixtures, zero committed financial value.
+
+| # | Case | Result | Evidence |
+|---|---|---|---|
+| 1 | Pending package intent has no mission before confirmation | PASS | `mission_id` NULL pre-confirm |
+| 2 | Confirmation creates exactly one mission | PASS | 1 mission, 1 code pair |
+| 3 | Replay returns same mission, no duplicates | PASS | missions 1, secrets 1, recon events unchanged at 2 |
+| 4 | Amount mismatch rejected | PASS | `amount_mismatch`, no mission created |
+| 5 | Wrong source module cannot call the finaliser | PASS | `not_a_package_intent` |
+| 6 | Induced failure → `needs_review` + support issue, no fake success | PASS | state `needs_review`, 1 linked `payment_failed` issue, error recorded in metadata |
+| 7 | No wallet/master-wallet/driver earning at confirmation | PASS | 0 wallet transactions |
+| 8 | Sandbox package flow zero-delta | PASS(code) | `om_sandbox_finalize_authorized_intent` untouched; `confirm_payment_intent` still rejects sandbox intents |
+| 9 | Non-package confirmation regresses cleanly | PASS | Repas intent confirms to `confirmed` |
+| 10 | Real Orange Money money movement | YELLOW | not executed — no real-money run performed |
