@@ -125,3 +125,35 @@ at that time. Code readiness is not operational readiness.
 - Build: green. Workbox precache limit raised to 4 MiB (main chunk 2,100.58 kB
   exceeded the 2 MiB default) — a packaging correction, not a runtime defect.
 - RC remains **UNLOCKED**.
+
+## Slice 4 (2026-08-03) — DEF-015 closure + BONBONNA rename
+
+- **DEF-015 (P1) CLOSED.** `confirm_payment_intent` — the canonical production /
+  manual admin confirmation RPC — now finalises `source_module = 'package'`
+  intents through the existing `package_delivery_finalize_from_intent`, accepts
+  `pending | processing | authorized`, is replay-idempotent (one mission, one
+  code pair, no duplicate reconciliation events, earnings or support issues),
+  and on finalisation failure moves the intent to `needs_review`, opens a linked
+  high-severity `payment_failed` support issue and writes a `provider_failed`
+  reconciliation event **without re-raising** (a raise would roll the recovery
+  trail back). No wallet, master-wallet or driver-earning movement at
+  confirmation; earnings still only at trusted delivery completion. Sandbox
+  finalisation untouched and still isolated.
+- Confirmation-path audit: `confirm_payment_intent` is the only genuinely active
+  production route for package intents. `choppay_capture_payment_intent`
+  requires a wallet hold (Envoyer creates none; `wallet_public_enabled` OFF) and
+  the Orange Money webhook edge function is still a TODO stub with no dispatch.
+- Verification: 9 rolled-back transactional cases PASS against the live schema
+  with production-shaped fixtures; zero committed financial value. Real
+  Orange Money money movement remains **unexecuted (YELLOW)**.
+- **BONBONNA rename**: customer-facing TokTok copy is now `BONBONNA` everywhere
+  (Services, ride composer, quotes, trip screens, activity, driver cards,
+  onboarding, driver apply, admin pricing tab, AI command router, SEO copy,
+  alt/aria text). Internal identifiers — DB enum value `toktok`, fare keys,
+  routes, analytics keys, `rides_toktok` capability, asset filenames and
+  migration history — are unchanged. Rendering is centralised in
+  `src/lib/rides/rideModeLabel.ts` so historical `toktok` rows display as
+  BONBONNA.
+- Flags at end of slice: `envoyer_enabled` false, `om_sandbox_enabled` false,
+  `wallet_public_enabled` false, `app_settings.orange_money.mode` = manual_csv.
+- RC remains **UNLOCKED**.
