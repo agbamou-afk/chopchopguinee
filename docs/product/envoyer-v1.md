@@ -50,6 +50,7 @@ sender-only pickup and delivery codes.
 
 - Feature flag OFF; no customer sees Envoyer yet.
 - No real-money Envoyer payment has been executed.
-- Production payment finalisation is not yet wired (see DEF-015).
+- Production payment finalisation is wired and transactionally verified
+  (DEF-015 closed 2026-08-03); no real-money run has been executed.
 - Driver `package_delivery` capability is currently driver self-selected;
   there is no admin capability editor.

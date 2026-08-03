@@ -236,9 +236,18 @@ the canonical RC set:
 ## Slice 3 — Envoyer v1
 
 Full matrix: `docs/qa/envoyer-v1-test-matrix.md` (A–AH).
-Summary: 24 PASS / PASS(code), 5 YELLOW (sandbox finalisation, production
-finalisation DEF-015, driver accept, pickup verify, delivery verify — none
-executed). Envoyer ships flag-OFF, so no YELLOW here blocks the RC gates.
+Summary: 25 PASS / PASS(code), 4 YELLOW (sandbox finalisation, driver accept,
+pickup verify, delivery verify — none executed). Production finalisation
+(DEF-015) is now PASS: 9 rolled-back transactional cases verified against the
+live schema. Real Orange Money money movement remains unexecuted. Envoyer ships
+flag-OFF, so no YELLOW here blocks the RC gates.
+
+## Amendment — BONBONNA rename (2026-08-03)
+
+Customer-facing TokTok copy renamed to **BONBONNA** through a single display
+helper (`src/lib/rides/rideModeLabel.ts`). Internal `toktok` identifiers (DB
+enum, fare keys, routes, analytics, capabilities, asset filenames, history) are
+unchanged, so historical records render as BONBONNA without a data migration.
 
 ### Packaging correction (not an Envoyer runtime defect)
 

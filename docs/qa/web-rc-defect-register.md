@@ -158,16 +158,21 @@ function, so any token reaching the handler has an already-verified signature.
 User and admin paths are unchanged; ordinary authenticated users are still
 rejected.
 
-### DEF-015 — P1 (Envoyer, flag-gated) — OPEN
+### DEF-015 — P1 (Envoyer) — CLOSED 2026-08-03
 **Symptom:** a real-money / manually-confirmed Envoyer payment would confirm the
 payment intent without creating the delivery mission or the verification codes.
-**Root cause:** `package_delivery_finalize_from_intent` is only called by
-`om_sandbox_finalize_authorized_intent`. The production/manual admin path
-`confirm_payment_intent` has no package branch.
-**Containment:** `envoyer_enabled` is OFF, so no customer can create a package
-intent. Not an RC blocker in the shipped configuration.
-**Exit condition:** wire the package branch into the production finaliser and
-execute one sandbox and one controlled real-money path before enabling the flag.
+**Root cause:** `package_delivery_finalize_from_intent` was only called by
+`om_sandbox_finalize_authorized_intent`; the production/manual admin path
+`confirm_payment_intent` had no package branch.
+**Fix:** `confirm_payment_intent` now branches on `source_module = 'package'`,
+calls the existing finaliser, is replay-idempotent, and on finalisation failure
+moves the intent to `needs_review`, opens a linked high-severity support issue
+and writes a `provider_failed` reconciliation event instead of reporting
+success. No wallet/master-wallet/driver-earning movement at confirmation.
+**Verification:** 9 rolled-back transactional cases PASS against the live
+schema (see `docs/qa/envoyer-v1-test-matrix.md`, DEF-015 closure section).
+**Residual (not DEF-015):** no real Orange Money money-movement run has been
+executed; `envoyer_enabled` stays OFF pending that and a driver-side run.
 
 ### DEF-016 — P2 (Envoyer) — OPEN
 **Symptom:** no admin/God-Admin editor for driver capabilities; `package_delivery`
