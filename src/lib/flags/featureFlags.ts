@@ -13,6 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type FlagKey =
   | "wallet_public_enabled"
+  | "chop_pay_enabled"
+  | "om_topup_enabled"
+  | "om_direct_checkout_enabled"
+  | "driver_balance_gate_enabled"
   | "envoyer_enabled"
   | "om_checkout_enabled"
   | "om_provider_mode"
@@ -26,6 +30,16 @@ const DEFAULTS: Record<FlagKey, boolean> = {
   // Orange Money First pivot: public CHOP Wallet UI is archived until
   // explicitly re-enabled by a Super Admin from /admin/flags.
   wallet_public_enabled: false,
+  // Chop Pay revival (chop-pay-ledger-revival). `chop_pay_enabled` is the
+  // canonical switch for the public payment product; `wallet_public_enabled`
+  // is kept as a backwards-compatible alias for existing call sites.
+  chop_pay_enabled: false,
+  // Orange Money is RETAINED as a manual cash-in / top-up rail.
+  om_topup_enabled: true,
+  // Orange Money as a DIRECT customer checkout method is ARCHIVED.
+  om_direct_checkout_enabled: false,
+  // Driver operating-balance gate (commission reserve + mission collateral).
+  driver_balance_gate_enabled: false,
   // Envoyer v1 — parcel/document delivery. Server RPCs enforce this same
   // flag; the client value is only used to pick the honest UI state.
   envoyer_enabled: false,
@@ -46,6 +60,10 @@ const DEFAULTS: Record<FlagKey, boolean> = {
 
 const KNOWN_FLAGS: FlagKey[] = [
   "wallet_public_enabled",
+  "chop_pay_enabled",
+  "om_topup_enabled",
+  "om_direct_checkout_enabled",
+  "driver_balance_gate_enabled",
   "envoyer_enabled",
   "om_checkout_enabled",
   "om_provider_mode",
@@ -101,7 +119,27 @@ export function getFlag(key: FlagKey): boolean {
 }
 
 export function isPublicWalletEnabled(): boolean {
-  return getFlag("wallet_public_enabled");
+  // Chop Pay is the canonical flag; the legacy key stays as an alias so a
+  // rollback of either switch never corrupts balances or history.
+  return getFlag("chop_pay_enabled") || getFlag("wallet_public_enabled");
+}
+
+/** Canonical customer-facing product name for the money surface. */
+export const CHOP_PAY_NAME = "Chop Pay";
+
+/** Orange Money as a direct checkout method — archived by default. */
+export function isOmDirectCheckoutEnabled(): boolean {
+  return getFlag("om_direct_checkout_enabled");
+}
+
+/** Orange Money retained as the manual top-up / cash-in rail. */
+export function isOmTopupEnabled(): boolean {
+  return getFlag("om_topup_enabled");
+}
+
+/** Driver operating-balance eligibility gate. */
+export function isDriverBalanceGateEnabled(): boolean {
+  return getFlag("driver_balance_gate_enabled");
 }
 
 /**
@@ -110,7 +148,7 @@ export function isPublicWalletEnabled(): boolean {
  * tiles / nav labels must read "OM Wallet" instead of "ChopWallet".
  */
 export function getPublicWalletLabel(): string {
-  return isPublicWalletEnabled() ? "ChopWallet" : "OM Wallet";
+  return CHOP_PAY_NAME;
 }
 
 /**
@@ -126,8 +164,8 @@ export function publicPaymentProductName(): string {
 /** Short subtitle shown under the public payment tile. */
 export function publicPaymentProductSubtitle(): string {
   return isPublicWalletEnabled()
-    ? "Solde CHOPCHOP · recharges et paiements"
-    : "Vos paiements Orange Money, vérifications et remboursements.";
+    ? "Votre solde CHOPCHOP · recharges, envois et paiements"
+    : "Paiement en espèces · rechargement Orange Money bientôt activé.";
 }
 
 /**

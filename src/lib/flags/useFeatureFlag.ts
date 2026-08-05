@@ -5,6 +5,10 @@ import {
   getPublicWalletLabel,
   isPublicWalletEnabled,
   isOmSandboxActive,
+  isOmDirectCheckoutEnabled,
+  isOmTopupEnabled,
+  isDriverBalanceGateEnabled,
+  CHOP_PAY_NAME,
   loadFeatureFlags,
   subscribeFlags,
   publicPaymentProductName,
@@ -30,12 +34,41 @@ export function useFeatureFlag(key: FlagKey): boolean {
  * behind the flag. The internal ledger is never affected.
  */
 export function usePublicWalletEnabled(): boolean {
-  return useFlag("wallet_public_enabled");
+  const chopPay = useFlag("chop_pay_enabled");
+  const legacy = useFlag("wallet_public_enabled");
+  return chopPay || legacy;
 }
 
-/** OM checkout master gate. */
+/** Canonical Chop Pay availability hook (alias of `usePublicWalletEnabled`). */
+export function useChopPayEnabled(): boolean {
+  return usePublicWalletEnabled();
+}
+
+/** ARCHIVED rail: Orange Money as a direct customer checkout method. */
+export function useOmDirectCheckoutEnabled(): boolean {
+  return useFlag("om_direct_checkout_enabled");
+}
+
+/** RETAINED rail: Orange Money manual cash-in / top-up. */
+export function useOmTopupEnabled(): boolean {
+  return useFlag("om_topup_enabled");
+}
+
+/** Driver operating-balance eligibility gate. */
+export function useDriverBalanceGateEnabled(): boolean {
+  return useFlag("driver_balance_gate_enabled");
+}
+
+/**
+ * OM DIRECT checkout master gate. Since the Chop Pay pivot this requires
+ * BOTH the legacy rail flag and the explicit archive-override flag
+ * `om_direct_checkout_enabled`, so no public surface can regress into
+ * offering Orange Money as a direct payment method.
+ */
 export function useOmCheckoutEnabled(): boolean {
-  return useFlag("om_checkout_enabled");
+  const legacy = useFlag("om_checkout_enabled");
+  const direct = useFlag("om_direct_checkout_enabled");
+  return legacy && direct;
 }
 
 /** Envoyer v1 (parcel / document delivery) gate. Server enforces it too. */
@@ -55,10 +88,8 @@ export function useOmSandboxActive(): boolean {
   return env && sbx;
 }
 
-/** Returns "OM Wallet" when public wallet is archived, else "ChopWallet". */
 export function usePublicWalletLabel(): string {
-  const publicOn = usePublicWalletEnabled();
-  return publicOn ? "ChopWallet" : "OM Wallet";
+  return CHOP_PAY_NAME;
 }
 
 /** Canonical public-payment product name — prefer over `usePublicWalletLabel` in new code. */
@@ -70,13 +101,17 @@ export function usePublicPaymentProductName(): string {
 export function usePublicPaymentProductSubtitle(): string {
   const publicOn = usePublicWalletEnabled();
   return publicOn
-    ? "Solde CHOPCHOP · recharges et paiements"
-    : "Vos paiements Orange Money, vérifications et remboursements.";
+    ? "Votre solde CHOPCHOP · recharges, envois et paiements"
+    : "Paiement en espèces · rechargement Orange Money bientôt activé.";
 }
 
 export {
   isPublicWalletEnabled,
   isOmSandboxActive,
+  isOmDirectCheckoutEnabled,
+  isOmTopupEnabled,
+  isDriverBalanceGateEnabled,
+  CHOP_PAY_NAME,
   getPublicWalletLabel,
   publicPaymentProductName,
   publicPaymentProductSubtitle,

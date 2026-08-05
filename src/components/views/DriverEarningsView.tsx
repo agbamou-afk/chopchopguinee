@@ -12,6 +12,7 @@ import { useActivityFeed } from "@/lib/activity/useActivityFeed";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { DriverCashoutSheet } from "@/components/wallet/DriverCashoutSheet";
 import { ReportIssueButton } from "@/components/support/ReportIssueButton";
+import { DriverOperatingBalanceCard } from "@/components/driver/DriverOperatingBalanceCard";
 
 export function DriverEarningsView() {
   const e = useDriverEarnings();
@@ -54,6 +55,15 @@ export function DriverEarningsView() {
           </button>
         }
       />
+
+      <div className="px-4 mt-3">
+        <DriverOperatingBalanceCard
+          onTopUp={() => {
+            try { sessionStorage.setItem("cc:open_topup", "1"); } catch { /* ignore */ }
+            window.location.assign("/?view=wallet");
+          }}
+        />
+      </div>
 
       {cashOverLimit && (
         <div className="px-4 mt-3">

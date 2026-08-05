@@ -64,6 +64,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
     label: "Plateforme",
     items: [
       { title: "Zones", url: "/admin/zones", icon: MapPin, module: "zones" },
+      { title: "Politique financière", url: "/admin/finance-policy", icon: ToggleLeft, module: "pricing" },
       { title: "Feature flags", url: "/admin/flags", icon: ToggleLeft, module: "flags" },
       { title: "Paramètres", url: "/admin/settings", icon: Settings, module: "settings" },
       { title: "Admins", url: "/admin/admins", icon: UserCog, module: "admins" },

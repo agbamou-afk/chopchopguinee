@@ -2258,6 +2258,66 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_policies: {
+        Row: {
+          collateral_fixed_gnf: number
+          collateral_max_gnf: number | null
+          collateral_min_gnf: number
+          collateral_mode: string
+          collateral_pct_bps: number
+          commission_bps: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fixed_commission_gnf: number
+          id: string
+          min_driver_balance_gnf: number
+          mission_type: string
+          note: string | null
+          require_collateral_before_offer: boolean
+          updated_at: string
+        }
+        Insert: {
+          collateral_fixed_gnf?: number
+          collateral_max_gnf?: number | null
+          collateral_min_gnf?: number
+          collateral_mode?: string
+          collateral_pct_bps?: number
+          commission_bps?: number
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          enabled?: boolean
+          fixed_commission_gnf?: number
+          id?: string
+          min_driver_balance_gnf?: number
+          mission_type: string
+          note?: string | null
+          require_collateral_before_offer?: boolean
+          updated_at?: string
+        }
+        Update: {
+          collateral_fixed_gnf?: number
+          collateral_max_gnf?: number | null
+          collateral_min_gnf?: number
+          collateral_mode?: string
+          collateral_pct_bps?: number
+          commission_bps?: number
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          enabled?: boolean
+          fixed_commission_gnf?: number
+          id?: string
+          min_driver_balance_gnf?: number
+          mission_type?: string
+          note?: string | null
+          require_collateral_before_offer?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       food_menu_items: {
         Row: {
           category: string | null
@@ -4204,6 +4264,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mission_financial_holds: {
+        Row: {
+          amount_gnf: number
+          basis_value_gnf: number
+          captured_gnf: number
+          created_at: string
+          driver_user_id: string
+          hold_tx_id: string | null
+          id: string
+          is_sandbox: boolean
+          kind: string
+          mission_type: string
+          policy_id: string | null
+          policy_snapshot: Json
+          reason: string | null
+          resolution_tx_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source_id: string
+          source_module: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          amount_gnf: number
+          basis_value_gnf?: number
+          captured_gnf?: number
+          created_at?: string
+          driver_user_id: string
+          hold_tx_id?: string | null
+          id?: string
+          is_sandbox?: boolean
+          kind: string
+          mission_type: string
+          policy_id?: string | null
+          policy_snapshot?: Json
+          reason?: string | null
+          resolution_tx_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id: string
+          source_module: string
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_gnf?: number
+          basis_value_gnf?: number
+          captured_gnf?: number
+          created_at?: string
+          driver_user_id?: string
+          hold_tx_id?: string | null
+          id?: string
+          is_sandbox?: boolean
+          kind?: string
+          mission_type?: string
+          policy_id?: string | null
+          policy_snapshot?: Json
+          reason?: string | null
+          resolution_tx_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id?: string
+          source_module?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       missions: {
         Row: {
@@ -6931,6 +7060,47 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_set_finance_policy: {
+        Args: {
+          p_collateral_fixed_gnf?: number
+          p_collateral_max_gnf?: number
+          p_collateral_min_gnf?: number
+          p_collateral_mode?: string
+          p_collateral_pct_bps?: number
+          p_commission_bps: number
+          p_effective_from?: string
+          p_fixed_commission_gnf?: number
+          p_min_driver_balance_gnf?: number
+          p_mission_type: string
+          p_note?: string
+          p_require_collateral_before_offer?: boolean
+        }
+        Returns: {
+          collateral_fixed_gnf: number
+          collateral_max_gnf: number | null
+          collateral_min_gnf: number
+          collateral_mode: string
+          collateral_pct_bps: number
+          commission_bps: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fixed_commission_gnf: number
+          id: string
+          min_driver_balance_gnf: number
+          mission_type: string
+          note: string | null
+          require_collateral_before_offer: boolean
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "finance_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_merchant_location_status: {
         Args: { p_note?: string; p_status: string; p_store_id: string }
         Returns: undefined
@@ -7355,6 +7525,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      driver_balance_summary: { Args: { p_driver?: string }; Returns: Json }
       driver_cash_settle: {
         Args: {
           p_amount_gnf: number
@@ -7478,11 +7649,60 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      driver_collateral_resolve: {
+        Args: {
+          p_capture_gnf: number
+          p_reason: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      driver_financial_eligibility: {
+        Args: {
+          p_driver?: string
+          p_mission_type: string
+          p_value_gnf?: number
+        }
+        Returns: Json
+      }
       driver_has_capability: {
         Args: { _capability: string; _user_id: string }
         Returns: boolean
       }
       driver_mark_offline_signal: { Args: never; Returns: undefined }
+      driver_mission_commission_capture: {
+        Args: {
+          p_final_value_gnf: number
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      driver_mission_hold_freeze: {
+        Args: { p_reason: string; p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      driver_mission_hold_place: {
+        Args: {
+          p_driver?: string
+          p_is_sandbox?: boolean
+          p_mission_type: string
+          p_source_id: string
+          p_source_module: string
+          p_value_gnf?: number
+        }
+        Returns: Json
+      }
+      driver_mission_hold_release: {
+        Args: {
+          p_kind?: string
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       driver_offer_accept: {
         Args: { p_offer_id: string }
         Returns: {
@@ -7706,6 +7926,38 @@ export type Database = {
           p_zone_id?: string
         }
         Returns: string
+      }
+      finance_mission_requirement: {
+        Args: { p_mission_type: string; p_value_gnf?: number }
+        Returns: Json
+      }
+      finance_policy_current: {
+        Args: { p_mission_type: string }
+        Returns: {
+          collateral_fixed_gnf: number
+          collateral_max_gnf: number | null
+          collateral_min_gnf: number
+          collateral_mode: string
+          collateral_pct_bps: number
+          commission_bps: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fixed_commission_gnf: number
+          id: string
+          min_driver_balance_gnf: number
+          mission_type: string
+          note: string | null
+          require_collateral_before_offer: boolean
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "finance_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       find_user_by_phone: {
         Args: { p_phone: string }
