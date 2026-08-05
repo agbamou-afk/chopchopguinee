@@ -609,6 +609,11 @@ Deno.serve(async (req) => {
       }
 
       const resetToken = randomToken();
+      // A genuine success clears the failure budget for this identifier.
+      await admin
+        .from("account_recovery_lockouts")
+        .update({ exhausted_count: 0, cooldown_until: null, updated_at: new Date().toISOString() })
+        .eq("key_hash", ch.identifier_hash as string);
       await admin
         .from("account_recovery_challenges")
         .update({
