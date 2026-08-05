@@ -40,3 +40,28 @@ type: feature
 Runtime wiring of holds into ride/mission acceptance and completion, Chop Pay ecosystem checkout, Finance top-up ops surface for driver balances, full end-to-end QA.
 Also: grant-on-approval wiring (DEF-019), admin starting-credit/treasury UI
 (DEF-020), cash-order funding caller (DEF-021). All new flags remain OFF.
+
+## Slice 1 (ledger primitives) — landed 2026-08-05, INERT
+- Double-entry journal: `ledger_accounts`, `ledger_journals`, `ledger_postings`,
+  `_ledger_post` / `_ledger_reverse`, deferred zero-sum constraint trigger.
+  Idempotent by `journal_key`; corrections are compensating entries, never edits.
+- Distinct basis resolver `finance_mission_requirement_v2(mission_type, fare,
+  merchandise_subtotal, delivery_fee, declared_value, payment_mode)`. The legacy
+  2-arg `finance_mission_requirement` is now a routing wrapper.
+- Source-attributed holds: `mission_financial_holds` carries
+  unrestricted/promo/customer/platform splits, `released_gnf`, `journal_key`,
+  `party_type`, and supports `partially_captured`.
+- New primitives: `chop_pay_customer_hold_place/_capture/_refund`,
+  `merchant_payable_create/_fund`, `merchant_settlement_hold/_complete/_fail`,
+  `driver_mission_fee_capture`, `driver_mission_capture_reverse`,
+  `customer_cancellation_debt_create/_collect/_waive`,
+  `claims_reserve_allocate/_resolve`,
+  `driver_payout_hold_place/_confirm/_cancel`.
+- Hardening: starter credit is God-Admin/service only (finance_admin and self
+  removed); `driver_funding_allocate`, `_promo_consume`, `driver_promo_balance`
+  revoked from `authenticated`; settlement and payout require evidence; claims
+  require God Admin + evidence; capture reversal requires God Admin + reason.
+- Data correction: `finance_policies.fee_basis` for `envoyer` is now
+  `delivery_fee` (canonical §7). Closes open item 1 of the canonical policy.
+- QA: 30/30 PASS via a self-rolling-back harness (dropped afterwards); all
+  fixtures verified rolled back, all activation flags still OFF.
