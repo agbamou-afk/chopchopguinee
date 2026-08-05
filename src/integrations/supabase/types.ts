@@ -2916,6 +2916,140 @@ export type Database = {
         }
         Relationships: []
       }
+      ledger_accounts: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          kind: string
+          name: string
+          restricted: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          kind: string
+          name: string
+          restricted?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          kind?: string
+          name?: string
+          restricted?: boolean
+        }
+        Relationships: []
+      }
+      ledger_journals: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          evidence_ref: string | null
+          id: string
+          is_sandbox: boolean
+          journal_key: string
+          mission_type: string | null
+          policy_snapshot: Json
+          reason: string | null
+          reverses_journal_id: string | null
+          source_id: string | null
+          source_module: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          evidence_ref?: string | null
+          id?: string
+          is_sandbox?: boolean
+          journal_key: string
+          mission_type?: string | null
+          policy_snapshot?: Json
+          reason?: string | null
+          reverses_journal_id?: string | null
+          source_id?: string | null
+          source_module: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          evidence_ref?: string | null
+          id?: string
+          is_sandbox?: boolean
+          journal_key?: string
+          mission_type?: string | null
+          policy_snapshot?: Json
+          reason?: string | null
+          reverses_journal_id?: string | null
+          source_id?: string | null
+          source_module?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_journals_reverses_journal_id_fkey"
+            columns: ["reverses_journal_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_journals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ledger_postings: {
+        Row: {
+          account_code: string
+          amount_gnf: number
+          created_at: string
+          id: string
+          journal_id: string
+          memo: string | null
+          merchant_store_id: string | null
+          party_type: Database["public"]["Enums"]["party_type"] | null
+          party_user_id: string | null
+        }
+        Insert: {
+          account_code: string
+          amount_gnf: number
+          created_at?: string
+          id?: string
+          journal_id: string
+          memo?: string | null
+          merchant_store_id?: string | null
+          party_type?: Database["public"]["Enums"]["party_type"] | null
+          party_user_id?: string | null
+        }
+        Update: {
+          account_code?: string
+          amount_gnf?: number
+          created_at?: string
+          id?: string
+          journal_id?: string
+          memo?: string | null
+          merchant_store_id?: string | null
+          party_type?: Database["public"]["Enums"]["party_type"] | null
+          party_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_postings_account_code_fkey"
+            columns: ["account_code"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "ledger_postings_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_journals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_images: {
         Row: {
           created_at: string
@@ -6431,6 +6565,24 @@ export type Database = {
           },
         ]
       }
+      ledger_account_totals: {
+        Row: {
+          account_code: string | null
+          kind: string | null
+          net_debit_gnf: number | null
+          posting_count: number | null
+          restricted: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_postings_account_code_fkey"
+            columns: ["account_code"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       public_agents: {
         Row: {
           business_name: string | null
@@ -6488,6 +6640,32 @@ export type Database = {
       _is_god_admin: { Args: { _user: string }; Returns: boolean }
       _is_ops_or_god_admin: { Args: { _user: string }; Returns: boolean }
       _leader_group_id: { Args: { _uid: string }; Returns: string }
+      _ledger_post: {
+        Args: {
+          p_action: string
+          p_actor?: string
+          p_evidence?: string
+          p_is_sandbox?: boolean
+          p_journal_key: string
+          p_lines: Json
+          p_mission_type?: string
+          p_policy?: Json
+          p_reason?: string
+          p_reverses?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _ledger_reverse: {
+        Args: {
+          p_actor?: string
+          p_evidence?: string
+          p_original_key: string
+          p_reason: string
+        }
+        Returns: Json
+      }
       _map_distance_meters: {
         Args: { a_lat: number; a_lng: number; b_lat: number; b_lng: number }
         Returns: number
