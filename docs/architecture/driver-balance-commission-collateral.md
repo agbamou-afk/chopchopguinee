@@ -1,9 +1,12 @@
-# Driver operating balance, commission and collateral
+# Driver wallet, commission and collateral
 
 ## Purpose
-The driver **operating balance** (party_type `driver`) funds CHOPCHOP
-commission and mission collateral. It is not personal earnings; earnings
-remain separately visible and withdrawable under existing cashout policy.
+There is **one driver ledger wallet** (party_type `driver`). Orange Money
+top-ups and mission earnings credit it; CHOPCHOP commission, mission
+collateral and cashout requests place **holds** on it. Held funds are not
+withdrawable until released or captured. A driver may withdraw the
+available balance; if that drops below mission requirements, future offers
+pause until a new top-up or earning restores eligibility.
 
 ## Policy source of truth — `public.finance_policies`
 Per mission type (`ride`, `bonbonna`, `repas`, `marche`, `envoyer`):
@@ -15,15 +18,32 @@ Rows are **append-only in practice**: `admin_set_finance_policy` inserts a
 new effective-dated row rather than editing history. God Admin only,
 audited into `audit_logs` with before/after.
 
-### Launch defaults
-| Mission | Commission | Collateral |
+### Launch defaults (corrected — Slice A.1, 2026-08-05)
+| Mission | Driver commission | Collateral |
 | --- | --- | --- |
-| ride | 10% | none |
-| bonbonna | 10% | none |
-| repas | 10% | 100% of order value, cap 500 000 GNF |
-| marche | 10% | 100% of merchandise value, cap 1 000 000 GNF |
-| envoyer | 10% | 50% of declared value, cap 500 000 GNF |
+| ride | 10% of fare | none |
+| bonbonna | 10% of fare | none |
+| repas | 0% | 50% of the food/merchandise **subtotal**, cap 500 000 GNF |
+| marche | 0% | 50% of the merchandise **subtotal**, cap 1 000 000 GNF |
+| envoyer | 0% | 50% of the accepted declared value, cap 250 000 GNF |
 | all | — | minimum available balance 5 000 GNF |
+
+The collateral basis for repas/marche is the server-authoritative
+item subtotal **only**: delivery fee, driver earning, tip, tax, platform
+fee and service fee are excluded. Merchant/platform commissions are a
+separate settlement policy and are never charged to the driver as
+"driver commission".
+
+Worked example (repas): subtotal 150 000 GNF, delivery fee 25 000 GNF →
+collateral hold 75 000 GNF, driver commission 0. On trusted completion the
+75 000 collateral is **released** and the 25 000 earning is **credited**
+as two distinct ledger entries; available balance rises by 100 000 GNF but
+net earning is 25 000 GNF. Released collateral is never labelled earnings.
+
+Prior provisional defaults (repas/marche 100% collateral, 10% commission on
+every mission type) were superseded by new effective-dated rows on
+2026-08-05; historical rows were not rewritten and no mission holds had
+been placed (runtime gate still OFF).
 
 ## Lifecycle
 1. `finance_mission_requirement(type, value)` computes commission +
