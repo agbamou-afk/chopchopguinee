@@ -677,6 +677,75 @@ export type Database = {
         }
         Relationships: []
       }
+      claims_reserves: {
+        Row: {
+          authorized_by: string
+          authorized_gnf: number
+          claim_key: string
+          created_at: string
+          customer_user_id: string | null
+          declared_value_gnf: number
+          driver_user_id: string | null
+          evidence_ref: string
+          id: string
+          is_sandbox: boolean
+          mission_type: string | null
+          paid_gnf: number
+          reason: string
+          released_gnf: number
+          resolved_at: string | null
+          resolved_by: string | null
+          source_id: string
+          source_module: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          authorized_by: string
+          authorized_gnf: number
+          claim_key: string
+          created_at?: string
+          customer_user_id?: string | null
+          declared_value_gnf?: number
+          driver_user_id?: string | null
+          evidence_ref: string
+          id?: string
+          is_sandbox?: boolean
+          mission_type?: string | null
+          paid_gnf?: number
+          reason: string
+          released_gnf?: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id: string
+          source_module: string
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          authorized_by?: string
+          authorized_gnf?: number
+          claim_key?: string
+          created_at?: string
+          customer_user_id?: string | null
+          declared_value_gnf?: number
+          driver_user_id?: string | null
+          evidence_ref?: string
+          id?: string
+          is_sandbox?: boolean
+          mission_type?: string | null
+          paid_gnf?: number
+          reason?: string
+          released_gnf?: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id?: string
+          source_module?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           buyer_id: string
@@ -711,6 +780,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      customer_cancellation_debts: {
+        Row: {
+          amount_gnf: number
+          applied_bps: number
+          basis_gnf: number
+          created_at: string
+          customer_user_id: string
+          debt_key: string
+          exempt_reason: string | null
+          id: string
+          is_sandbox: boolean
+          mission_type: string
+          paid_gnf: number
+          policy_snapshot: Json
+          resolved_at: string | null
+          resolved_by: string | null
+          source_id: string
+          source_module: string
+          stage: string
+          state: string
+          updated_at: string
+          waived_gnf: number
+        }
+        Insert: {
+          amount_gnf: number
+          applied_bps: number
+          basis_gnf: number
+          created_at?: string
+          customer_user_id: string
+          debt_key: string
+          exempt_reason?: string | null
+          id?: string
+          is_sandbox?: boolean
+          mission_type: string
+          paid_gnf?: number
+          policy_snapshot?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id: string
+          source_module: string
+          stage: string
+          state?: string
+          updated_at?: string
+          waived_gnf?: number
+        }
+        Update: {
+          amount_gnf?: number
+          applied_bps?: number
+          basis_gnf?: number
+          created_at?: string
+          customer_user_id?: string
+          debt_key?: string
+          exempt_reason?: string | null
+          id?: string
+          is_sandbox?: boolean
+          mission_type?: string
+          paid_gnf?: number
+          policy_snapshot?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id?: string
+          source_module?: string
+          stage?: string
+          state?: string
+          updated_at?: string
+          waived_gnf?: number
+        }
+        Relationships: []
       }
       district_hubs: {
         Row: {
@@ -2353,10 +2491,12 @@ export type Database = {
       finance_policies: {
         Row: {
           cancel_after_dispatch_bps: number
+          cancel_basis: string
           cancel_before_dispatch_bps: number
           cash_funding_max_gnf: number | null
           cash_funding_mode: string
           cash_funding_pct_bps: number
+          collateral_basis: string
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
           collateral_min_gnf: number
@@ -2380,10 +2520,12 @@ export type Database = {
         }
         Insert: {
           cancel_after_dispatch_bps?: number
+          cancel_basis?: string
           cancel_before_dispatch_bps?: number
           cash_funding_max_gnf?: number | null
           cash_funding_mode?: string
           cash_funding_pct_bps?: number
+          collateral_basis?: string
           collateral_fixed_gnf?: number
           collateral_max_gnf?: number | null
           collateral_min_gnf?: number
@@ -2407,10 +2549,12 @@ export type Database = {
         }
         Update: {
           cancel_after_dispatch_bps?: number
+          cancel_basis?: string
           cancel_before_dispatch_bps?: number
           cash_funding_max_gnf?: number | null
           cash_funding_mode?: string
           cash_funding_pct_bps?: number
+          collateral_basis?: string
           collateral_fixed_gnf?: number
           collateral_max_gnf?: number | null
           collateral_min_gnf?: number
@@ -4140,6 +4284,81 @@ export type Database = {
           },
         ]
       }
+      merchant_payables: {
+        Row: {
+          amount_gnf: number
+          created_at: string
+          deduction_gnf: number
+          evidence_ref: string | null
+          funded_gnf: number
+          funding_source: string
+          id: string
+          is_sandbox: boolean
+          merchant_store_id: string
+          merchant_user_id: string | null
+          mission_type: string | null
+          payable_key: string
+          policy_snapshot: Json
+          reason: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          settled_gnf: number
+          source_id: string
+          source_module: string
+          state: string
+          subtotal_gnf: number
+          updated_at: string
+        }
+        Insert: {
+          amount_gnf: number
+          created_at?: string
+          deduction_gnf?: number
+          evidence_ref?: string | null
+          funded_gnf?: number
+          funding_source?: string
+          id?: string
+          is_sandbox?: boolean
+          merchant_store_id: string
+          merchant_user_id?: string | null
+          mission_type?: string | null
+          payable_key: string
+          policy_snapshot?: Json
+          reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          settled_gnf?: number
+          source_id: string
+          source_module: string
+          state?: string
+          subtotal_gnf: number
+          updated_at?: string
+        }
+        Update: {
+          amount_gnf?: number
+          created_at?: string
+          deduction_gnf?: number
+          evidence_ref?: string | null
+          funded_gnf?: number
+          funding_source?: string
+          id?: string
+          is_sandbox?: boolean
+          merchant_store_id?: string
+          merchant_user_id?: string | null
+          mission_type?: string | null
+          payable_key?: string
+          policy_snapshot?: Json
+          reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          settled_gnf?: number
+          source_id?: string
+          source_module?: string
+          state?: string
+          subtotal_gnf?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       merchant_stores: {
         Row: {
           address_label: string | null
@@ -4521,16 +4740,24 @@ export type Database = {
           basis_value_gnf: number
           captured_gnf: number
           created_at: string
-          driver_user_id: string
+          customer_gnf: number
+          driver_user_id: string | null
+          evidence_ref: string | null
           hold_tx_id: string | null
           id: string
           is_sandbox: boolean
+          journal_key: string | null
           kind: string
+          merchant_store_id: string | null
           mission_type: string
+          party_type: Database["public"]["Enums"]["party_type"]
+          party_user_id: string | null
+          platform_gnf: number
           policy_id: string | null
           policy_snapshot: Json
           promo_gnf: number
           reason: string | null
+          released_gnf: number
           resolution_tx_id: string | null
           resolved_at: string | null
           resolved_by: string | null
@@ -4545,16 +4772,24 @@ export type Database = {
           basis_value_gnf?: number
           captured_gnf?: number
           created_at?: string
-          driver_user_id: string
+          customer_gnf?: number
+          driver_user_id?: string | null
+          evidence_ref?: string | null
           hold_tx_id?: string | null
           id?: string
           is_sandbox?: boolean
+          journal_key?: string | null
           kind: string
+          merchant_store_id?: string | null
           mission_type: string
+          party_type?: Database["public"]["Enums"]["party_type"]
+          party_user_id?: string | null
+          platform_gnf?: number
           policy_id?: string | null
           policy_snapshot?: Json
           promo_gnf?: number
           reason?: string | null
+          released_gnf?: number
           resolution_tx_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -4569,16 +4804,24 @@ export type Database = {
           basis_value_gnf?: number
           captured_gnf?: number
           created_at?: string
-          driver_user_id?: string
+          customer_gnf?: number
+          driver_user_id?: string | null
+          evidence_ref?: string | null
           hold_tx_id?: string | null
           id?: string
           is_sandbox?: boolean
+          journal_key?: string | null
           kind?: string
+          merchant_store_id?: string | null
           mission_type?: string
+          party_type?: Database["public"]["Enums"]["party_type"]
+          party_user_id?: string | null
+          platform_gnf?: number
           policy_id?: string | null
           policy_snapshot?: Json
           promo_gnf?: number
           reason?: string | null
+          released_gnf?: number
           resolution_tx_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -7386,10 +7629,12 @@ export type Database = {
         }
         Returns: {
           cancel_after_dispatch_bps: number
+          cancel_basis: string
           cancel_before_dispatch_bps: number
           cash_funding_max_gnf: number | null
           cash_funding_mode: string
           cash_funding_pct_bps: number
+          collateral_basis: string
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
           collateral_min_gnf: number
@@ -8286,10 +8531,12 @@ export type Database = {
         Args: { p_mission_type: string }
         Returns: {
           cancel_after_dispatch_bps: number
+          cancel_basis: string
           cancel_before_dispatch_bps: number
           cash_funding_max_gnf: number | null
           cash_funding_mode: string
           cash_funding_pct_bps: number
+          collateral_basis: string
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
           collateral_min_gnf: number
