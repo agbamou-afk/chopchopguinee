@@ -346,28 +346,13 @@ export default function Auth() {
     }
   };
 
-  const resendConfirmation = async () => {
-    const e1 = emailSchema.safeParse(email);
-    if (!e1.success) {
-      toast({ title: "Email requis", description: "Entrez votre adresse email puis réessayez." });
-      return;
-    }
-    setBusy(true);
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/` },
-    });
-    setBusy(false);
-    if (error) {
-      toast({ title: "Échec", description: frenchAuthError(error.message) });
-      return;
-    }
-    toast({
-      title: "Email de confirmation renvoyé",
-      description: "Vérifiez votre boîte de réception et vos spams.",
-    });
-  };
+  // NOTE: the former "Renvoyer l'email de confirmation" action was removed from
+  // the normal sign-in surface. Signups are auto-confirmed, so it did nothing
+  // useful and was read as "reset my password". Password recovery is now fully
+  // self-service at /recovery — no email, no OTP, no support involvement.
+  //
+  // The resend path still exists inside EmailConfirmationPendingCard for the
+  // rare legacy unconfirmed account.
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
