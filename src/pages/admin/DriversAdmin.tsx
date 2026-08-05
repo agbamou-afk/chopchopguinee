@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { adminSetDriverCapability } from "@/lib/packages/api";
+import { ALL_CAPABILITIES, CAPABILITY_LABEL } from "@/lib/missions/capabilities";
 
 type Tab = "pending" | "approved" | "suspended" | "needs_info" | "all";
 
@@ -259,6 +261,10 @@ function ReviewSheet({
               )}
             </section>
 
+            {row?.status === "approved" && (
+              <CapabilitySection userId={row.user_id} />
+            )}
+
             <section className="rounded-lg border p-3 space-y-2">
               <div className="font-semibold">Demander des informations</div>
               <div className="grid grid-cols-2 gap-1 text-sm">
@@ -303,6 +309,95 @@ function ReviewSheet({
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+/**
+ * Admin capability control (DEF-016). Grants such as `package_delivery`
+ * (Envoyer) are operational permissions: only ops/god admins can change them
+ * and every change is written to `audit_logs` server-side.
+ */
+function CapabilitySection({ userId }: { userId: string }) {
+  const [caps, setCaps] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    supabase
+      .from("driver_profiles")
+      .select("capabilities")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!alive) return;
+        setCaps(((data as any)?.capabilities as string[]) ?? []);
+        setLoading(false);
+      });
+    return () => { alive = false; };
+  }, [userId]);
+
+  const toggle = async (cap: string, grant: boolean) => {
+    setBusy(cap);
+    try {
+      const row = await adminSetDriverCapability(userId, cap, grant);
+      setCaps(row?.capabilities ?? []);
+      toast.success(grant ? "Capacité attribuée" : "Capacité retirée");
+    } catch (e: any) {
+      toast.error(
+        String(e?.message ?? "").includes("forbidden")
+          ? "Réservé aux admins opérations / god admin."
+          : e?.message ?? "Modification impossible",
+      );
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <section className="rounded-lg border p-3 space-y-2">
+      <div className="font-semibold">Capacités de mission</div>
+      {loading ? (
+        <div className="text-sm text-muted-foreground">Chargement…</div>
+      ) : (
+        <div className="space-y-1.5">
+          {ALL_CAPABILITIES.map((cap) => {
+            const has = caps.includes(cap);
+            return (
+              <div key={cap} className="flex items-center justify-between text-sm">
+                <span>
+                  {CAPABILITY_LABEL[cap]}
+                  {cap === "package_delivery" && (
+                    <span className="ml-1 text-[11px] text-muted-foreground">(Envoyer)</span>
+                  )}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className={has ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}
+                  >
+                    {has ? "Attribuée" : "Non attribuée"}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant={has ? "ghost" : "outline"}
+                    className="h-7"
+                    disabled={busy === cap}
+                    onClick={() => toggle(cap, !has)}
+                  >
+                    {has ? "Retirer" : "Attribuer"}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <p className="text-[11px] text-muted-foreground">
+        Un chauffeur ne voit les missions Envoyer que s’il possède la capacité « Colis ».
+      </p>
+    </section>
   );
 }
 

@@ -7,6 +7,7 @@ import {
   cancelPackageDelivery,
   getPackageSecrets,
   listMyPackageDeliveries,
+  previewPackageCancel,
 } from "@/lib/packages/api";
 import {
   PACKAGE_CATEGORY_LABEL,
@@ -71,6 +72,19 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
   const doCancel = async (d: PackageDelivery) => {
     setBusyId(d.id);
     try {
+      // Read-only preview first: the sender confirms the exact fee/refund.
+      const p = await previewPackageCancel(d.id);
+      if (!p.already_cancelled) {
+        const message = p.self_service
+          ? `Annuler ${d.reference} ?\n\nFrais d’annulation : ${formatGNF(p.fee_gnf)}\nRemboursement demandé : ${formatGNF(p.refund_gnf)}${
+              p.courier_assigned ? "\n\nUn coursier est déjà assigné." : ""
+            }`
+          : `Ce colis est déjà récupéré par le coursier.\n\nAucun remboursement automatique n’est possible : un dossier support sera ouvert.\n\nContinuer ?`;
+        if (!window.confirm(message)) {
+          setBusyId(null);
+          return;
+        }
+      }
       const res = await cancelPackageDelivery(d.id, "client_cancelled");
       if (res.self_service === false) {
         toast.info("Colis déjà récupéré — un dossier support a été ouvert.");

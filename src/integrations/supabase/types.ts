@@ -6128,6 +6128,15 @@ export type Database = {
       }
       _om_sandbox_require_active: { Args: never; Returns: undefined }
       _package_new_code: { Args: never; Returns: string }
+      _package_notify: {
+        Args: {
+          _payload?: Json
+          _priority?: Database["public"]["Enums"]["notification_priority"]
+          _template: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -6757,6 +6766,41 @@ export type Database = {
       admin_review_referral_risk: {
         Args: { p_action: string; p_reason?: string; p_referral: string }
         Returns: undefined
+      }
+      admin_set_driver_capability: {
+        Args: { _capability: string; _driver_user_id: string; _grant: boolean }
+        Returns: {
+          accept_rate: number
+          approved_at: string | null
+          approved_by: string | null
+          capabilities: string[]
+          cash_debt_gnf: number
+          created_at: string
+          current_operating_district: string | null
+          debt_limit_gnf: number
+          driver_photo_url: string | null
+          id_doc_url: string | null
+          last_seen_at: string | null
+          last_seen_district: string | null
+          plate_number: string | null
+          preferred_district: string | null
+          presence: Database["public"]["Enums"]["driver_presence"]
+          rating: number
+          rejected_reason: string | null
+          status: Database["public"]["Enums"]["driver_status"]
+          suspended_reason: string | null
+          updated_at: string
+          user_id: string
+          vehicle_photo_url: string | null
+          vehicle_type: Database["public"]["Enums"]["driver_vehicle_type"]
+          zones: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_set_merchant_location_status: {
         Args: { p_note?: string; p_status: string; p_store_id: string }
@@ -8770,6 +8814,10 @@ export type Database = {
       }
       package_delivery_cancel: {
         Args: { p_package_id: string; p_reason?: string }
+        Returns: Json
+      }
+      package_delivery_cancel_preview: {
+        Args: { p_package_id: string }
         Returns: Json
       }
       package_delivery_courier_view: {
