@@ -7000,6 +7000,7 @@ export type Database = {
         Returns: number
       }
       _qa_s1x_run: { Args: never; Returns: Json }
+      _qa_s1x_run2: { Args: never; Returns: Json }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
