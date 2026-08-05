@@ -18,15 +18,30 @@ Rows are **append-only in practice**: `admin_set_finance_policy` inserts a
 new effective-dated row rather than editing history. God Admin only,
 audited into `audit_logs` with before/after.
 
-### Launch defaults (corrected — Slice A.1, 2026-08-05)
+### Launch defaults (frozen — Slice 0/1, 2026-08-05)
+Canonical source: `docs/finance/CHOPCHOP_FINANCE_POLICY_FREEZE.md`.
 | Mission | Driver commission | Collateral |
 | --- | --- | --- |
 | ride | 10% of fare | none |
 | bonbonna | 10% of fare | none |
-| repas | 0% | 50% of the food/merchandise **subtotal**, cap 500 000 GNF |
-| marche | 0% | 50% of the merchandise **subtotal**, cap 1 000 000 GNF |
-| envoyer | 0% | 50% of the accepted declared value, cap 250 000 GNF |
+| repas (Chop Pay) | 0% | 50% of the food/merchandise **subtotal**, cap 500 000 GNF |
+| marche (Chop Pay) | 0% | 50% of the merchandise **subtotal**, cap 1 000 000 GNF |
+| repas/marche (CASH) | 0% | no collateral — courier funds **100% of the subtotal** from unrestricted funds (`cash_funding` hold) |
+| envoyer | 0% | **75%** of the accepted declared value, declared value capped at 500 000 GNF (collateral cap 375 000 GNF) |
 | all | — | minimum available balance 5 000 GNF |
+
+Default non-ride transaction fee: **1%**, bases `merchandise_subtotal`
+(Repas/Marché) and `declared_value` (Envoyer). Cancellation: **5%** before
+dispatch, **10%** after dispatch; Repas customer cancellation locked once the
+kitchen marks preparation.
+
+### Restricted starting credit
+A newly approved driver receives a one-time **25 000 GNF restricted** credit in
+the same driver wallet. It funds commission, platform fees and collateral only.
+It is excluded from withdrawable balance and can never fund cash-order
+merchandise principal. Every hold records `unrestricted_gnf` / `promo_gnf`;
+release restores each bucket, capture consumes the recorded split. See the
+policy freeze document for the full rules.
 
 The collateral basis for repas/marche is the server-authoritative
 item subtotal **only**: delivery fee, driver earning, tip, tax, platform
