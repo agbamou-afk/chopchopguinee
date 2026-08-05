@@ -6945,6 +6945,20 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_ccd_shim: {
+        Args: {
+          p_basis_gnf: number
+          p_customer: string
+          p_exempt_reason?: string
+          p_ignored: string
+          p_is_sandbox?: boolean
+          p_mission_type: string
+          p_source_id: string
+          p_source_module: string
+          p_stage: string
+        }
+        Returns: Json
+      }
       _qa_slice1_run: { Args: never; Returns: Json }
       admin_adjust_agent_float: {
         Args: {
@@ -8110,19 +8124,34 @@ export type Database = {
         Args: { p_debt_id: string }
         Returns: Json
       }
-      customer_cancellation_debt_create: {
-        Args: {
-          p_basis_gnf: number
-          p_customer: string
-          p_exempt_reason?: string
-          p_is_sandbox?: boolean
-          p_mission_type: string
-          p_source_id: string
-          p_source_module: string
-          p_stage: string
-        }
-        Returns: Json
-      }
+      customer_cancellation_debt_create:
+        | {
+            Args: {
+              p_basis_gnf: number
+              p_customer: string
+              p_exempt_reason?: string
+              p_ignored: string
+              p_is_sandbox?: boolean
+              p_mission_type: string
+              p_source_id: string
+              p_source_module: string
+              p_stage: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_basis_gnf: number
+              p_customer: string
+              p_exempt_reason?: string
+              p_is_sandbox?: boolean
+              p_mission_type: string
+              p_source_id: string
+              p_source_module: string
+              p_stage: string
+            }
+            Returns: Json
+          }
       customer_cancellation_debt_waive: {
         Args: { p_debt_id: string; p_reason: string }
         Returns: Json
