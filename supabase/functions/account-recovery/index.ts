@@ -732,8 +732,10 @@ Deno.serve(async (req) => {
     }
 
     return json({ ok: false, message: "Action inconnue." }, 400);
-  } catch {
+  } catch (err) {
     // Never leak an internal error shape into the public recovery surface.
+    // The detail is logged server-side only; the response stays generic.
+    console.error("account-recovery failure", String(err));
     await padTiming(startedAt);
     return json({ ok: false, message: "Service indisponible. Réessayez." }, 500);
   }
