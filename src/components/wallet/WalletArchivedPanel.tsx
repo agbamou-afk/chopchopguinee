@@ -5,10 +5,11 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { OmPaymentsList } from "./OmPaymentsList";
 
 /**
- * Rendered on /wallet when `wallet_public_enabled` is off (Orange Money
- * First pivot). The internal ledger is NOT touched — this panel simply
- * reframes the surface so no user is told they have a public "wallet
- * balance" that would imply instant top-up automation.
+ * Rendered on /wallet when Chop Pay is not yet publicly enabled
+ * (`chop_pay_enabled` / legacy `wallet_public_enabled` both off).
+ * The internal ledger is NOT touched — this panel simply reframes the
+ * surface honestly: cash is the launch payment model and Orange Money is
+ * kept only as a manual top-up rail, never as a direct checkout method.
  */
 export function WalletArchivedPanel({
   onOpenOm,
@@ -20,8 +21,8 @@ export function WalletArchivedPanel({
   return (
     <div className="max-w-md mx-auto">
       <ScreenHeader
-        title="OM Wallet"
-        subtitle="Vos paiements Orange Money, vérifications et remboursements."
+        title="Chop Pay"
+        subtitle="Paiement en espèces · rechargement Orange Money vérifié par un opérateur."
       />
 
       <div className="px-4 mt-4 space-y-4 pb-24">
@@ -32,21 +33,22 @@ export function WalletArchivedPanel({
               <Smartphone className="w-4 h-4" />
             </span>
             <p className="text-[11px] uppercase tracking-[0.22em] font-semibold">
-              OM Wallet · Paiement Orange Money
+              Chop Pay · bientôt disponible
             </p>
           </div>
           <h2 className="text-xl font-extrabold leading-tight">
-            Payez en toute simplicité avec Orange Money.
+            Payez en espèces, rechargez avec Orange Money.
           </h2>
           <p className="text-sm opacity-90 mt-2 leading-relaxed">
-            Aucun solde à recharger. Chaque paiement est vérifié
-            par un opérateur CHOPCHOP.
+            Le solde Chop Pay n'est pas encore ouvert au public. Vos
+            rechargements Orange Money restent vérifiés manuellement par
+            un opérateur CHOPCHOP.
           </p>
           <Button
             onClick={onOpenOm}
             className="mt-4 w-full h-11 bg-white text-primary hover:bg-white/90 font-semibold"
           >
-            Payer avec Orange Money
+            Recharger avec Orange Money
           </Button>
         </section>
 
