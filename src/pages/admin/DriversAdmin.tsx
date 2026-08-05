@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { adminSetDriverCapability } from "@/lib/packages/api";
+import { ALL_CAPABILITIES, CAPABILITY_LABEL } from "@/lib/missions/capabilities";
 
 type Tab = "pending" | "approved" | "suspended" | "needs_info" | "all";
 
@@ -258,6 +260,10 @@ function ReviewSheet({
                 </div>
               )}
             </section>
+
+            {row?.status === "approved" && (
+              <CapabilitySection userId={row.user_id} />
+            )}
 
             <section className="rounded-lg border p-3 space-y-2">
               <div className="font-semibold">Demander des informations</div>
