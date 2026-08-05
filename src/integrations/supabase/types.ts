@@ -6877,6 +6877,7 @@ export type Database = {
         }[]
       }
       _envoyer_enabled: { Args: never; Returns: boolean }
+      _finance_privileged: { Args: { p_caller: string }; Returns: boolean }
       _hold_account: { Args: { p_kind: string }; Returns: string }
       _is_approved_service_agent: {
         Args: { _user_id: string }
@@ -7829,6 +7830,40 @@ export type Database = {
         Args: { _email: string; _phone: string }
         Returns: Json
       }
+      chop_pay_customer_capture: {
+        Args: {
+          p_commission_gnf: number
+          p_driver: string
+          p_driver_earning_gnf: number
+          p_fee_gnf: number
+          p_merchant_gnf: number
+          p_merchant_store_id: string
+          p_refund_remainder?: boolean
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      chop_pay_customer_hold_place: {
+        Args: {
+          p_amount_gnf: number
+          p_customer?: string
+          p_is_sandbox?: boolean
+          p_mission_type?: string
+          p_snapshot?: Json
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      chop_pay_customer_refund: {
+        Args: {
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       choppay_cancel_payment_intent: {
         Args: { p_payment_intent_id: string; p_reason?: string }
         Returns: {
@@ -7981,6 +8016,25 @@ export type Database = {
         }
       }
       claim_first_admin: { Args: never; Returns: boolean }
+      claims_reserve_allocate: {
+        Args: {
+          p_authorized_gnf: number
+          p_customer?: string
+          p_declared_value_gnf?: number
+          p_driver?: string
+          p_evidence_ref: string
+          p_is_sandbox?: boolean
+          p_mission_type?: string
+          p_reason: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      claims_reserve_resolve: {
+        Args: { p_claim_id: string; p_pay_gnf: number; p_reason: string }
+        Returns: Json
+      }
       confirm_payment_intent: {
         Args: {
           p_intent_id: string
@@ -8050,6 +8104,27 @@ export type Database = {
           reason: string
           user_id: string
         }[]
+      }
+      customer_cancellation_debt_collect: {
+        Args: { p_debt_id: string }
+        Returns: Json
+      }
+      customer_cancellation_debt_create: {
+        Args: {
+          p_basis_gnf: number
+          p_customer: string
+          p_exempt_reason?: string
+          p_is_sandbox?: boolean
+          p_mission_type: string
+          p_source_id: string
+          p_source_module: string
+          p_stage: string
+        }
+        Returns: Json
+      }
+      customer_cancellation_debt_waive: {
+        Args: { p_debt_id: string; p_reason: string }
+        Returns: Json
       }
       debug_create_offer_for_current_driver: { Args: never; Returns: Json }
       delete_email: {
@@ -8281,6 +8356,14 @@ export type Database = {
         }
         Returns: Json
       }
+      driver_mission_fee_capture: {
+        Args: {
+          p_final_fee_basis_gnf?: number
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       driver_mission_hold_freeze: {
         Args: { p_reason: string; p_source_id: string; p_source_module: string }
         Returns: Json
@@ -8358,6 +8441,18 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      driver_payout_cancel: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: Json
+      }
+      driver_payout_confirm: {
+        Args: { p_evidence_ref: string; p_request_id: string }
+        Returns: Json
+      }
+      driver_payout_hold_place: {
+        Args: { p_amount_gnf: number; p_driver: string; p_request_id: string }
+        Returns: Json
       }
       driver_promo_balance: { Args: { p_driver: string }; Returns: Json }
       driver_set_capabilities: {
@@ -9152,6 +9247,28 @@ export type Database = {
         Args: { p_merchant_id: string }
         Returns: string
       }
+      merchant_payable_create: {
+        Args: {
+          p_deduction_gnf?: number
+          p_is_sandbox?: boolean
+          p_merchant_store_id: string
+          p_mission_type?: string
+          p_snapshot?: Json
+          p_source_id: string
+          p_source_module: string
+          p_subtotal_gnf: number
+        }
+        Returns: Json
+      }
+      merchant_payable_fund: {
+        Args: {
+          p_funding_source: string
+          p_merchant_store_id: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       merchant_respond_marketplace_offer: {
         Args: {
           p_action: string
@@ -9160,6 +9277,18 @@ export type Database = {
           p_offer_id: string
         }
         Returns: undefined
+      }
+      merchant_settlement_complete: {
+        Args: { p_evidence_ref: string; p_payable_id: string }
+        Returns: Json
+      }
+      merchant_settlement_fail: {
+        Args: { p_payable_id: string; p_reason: string }
+        Returns: Json
+      }
+      merchant_settlement_hold: {
+        Args: { p_payable_id: string }
+        Returns: Json
       }
       merchant_submit_location: {
         Args: {
