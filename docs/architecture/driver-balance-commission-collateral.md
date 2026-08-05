@@ -19,7 +19,8 @@ new effective-dated row rather than editing history. God Admin only,
 audited into `audit_logs` with before/after.
 
 ### Launch defaults (frozen — Slice 0/1, 2026-08-05)
-Canonical source: `docs/finance/CHOPCHOP_FINANCE_POLICY_FREEZE.md`.
+Canonical source (authoritative, wins over this file):
+`docs/product/chop-pay-canonical-operating-policy.md`.
 | Mission | Driver commission | Collateral |
 | --- | --- | --- |
 | ride | 10% of fare | none |
@@ -30,8 +31,9 @@ Canonical source: `docs/finance/CHOPCHOP_FINANCE_POLICY_FREEZE.md`.
 | envoyer | 0% | **75%** of the accepted declared value, declared value capped at 500 000 GNF (collateral cap 375 000 GNF) |
 | all | — | minimum available balance 5 000 GNF |
 
-Default non-ride transaction fee: **1%**, bases `merchandise_subtotal`
-(Repas/Marché) and `declared_value` (Envoyer). Cancellation: **5%** before
+Default non-ride transaction fee: **1%**, bases: merchandise subtotal
+(Repas/Marché) and **delivery/service fee** (Envoyer — the seeded
+`declared_value` basis is stale and pending correction; see canonical §13). Cancellation: **5%** before
 dispatch, **10%** after dispatch; Repas customer cancellation locked once the
 kitchen marks preparation.
 
@@ -41,7 +43,7 @@ the same driver wallet. It funds commission, platform fees and collateral only.
 It is excluded from withdrawable balance and can never fund cash-order
 merchandise principal. Every hold records `unrestricted_gnf` / `promo_gnf`;
 release restores each bucket, capture consumes the recorded split. See the
-policy freeze document for the full rules.
+canonical operating policy for the full rules.
 
 The collateral basis for repas/marche is the server-authoritative
 item subtotal **only**: delivery fee, driver earning, tip, tax, platform

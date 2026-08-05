@@ -21,7 +21,7 @@ Legend: PASS (executed) · PASS(code) (inspection) · YELLOW (needs real externa
 | O | Excess reserve released | PASS(code) — capture releases full hold, moves only `LEAST(due, reserved)` |
 | P | Cancellation releases/captures per policy | PASS(code) — `driver_mission_hold_release` |
 | Q | Rate change affects future missions only | PASS — capture recomputes from the stored `policy_snapshot` |
-| R/S/T | Repas / Marché / Envoyer collateral held once | PASS — verified via `finance_mission_requirement` (Repas 120 000 → 120 000 collateral + 12 000 commission) |
+| R/S/T | Repas / Marché / Envoyer collateral held once | PASS — verified via `finance_mission_requirement` (Repas 120 000 → 120 000 collateral + 12 000 commission). **Historical record: those rates were the provisional defaults of that run and are superseded by `docs/product/chop-pay-canonical-operating-policy.md` (Repas Chop Pay collateral 50%, delivery commission 0%).** |
 | U | Delivery releases collateral, credits earning separately | PASS(code) — earning path untouched (`wallet_credit_mission_earning`) |
 | V | Dispute freezes collateral, no silent confiscation | PASS(code) — `driver_mission_hold_freeze` + audited `driver_collateral_resolve` |
 | W | Sandbox produces zero production delta | PASS(code) — `is_sandbox` flag carried on every hold |

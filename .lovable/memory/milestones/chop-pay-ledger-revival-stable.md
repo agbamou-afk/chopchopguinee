@@ -22,7 +22,7 @@ type: feature
   `admin_set_starter_credit_policy`, `admin_promotional_credit_treasury`.
   Cash-out excludes restricted funds. QA evidence:
   `docs/qa/chop-pay-slice1-results.md` (20/20 PASS, rolled back).
-- `finance_policies` (per mission type: commission, min driver balance, collateral mode/pct/min/max, effective date) + launch defaults (10% commission; Repas/Marché 100% collateral, Envoyer 50%, caps applied).
+- `finance_policies` (per mission type: commission, min driver balance, collateral mode/pct/min/max, effective date) + initial launch defaults. NOTE (superseded 2026-08-05): those first defaults (10% commission on every mission type, Repas/Marché 100% collateral, Envoyer 50%) are stale. Canonical: `docs/product/chop-pay-canonical-operating-policy.md` — 10% ride/Bonbonna only, delivery commission 0%, Repas/Marché Chop Pay collateral 50% of subtotal, cash orders 100%-of-subtotal unrestricted funding, Envoyer 75% of declared value.
 - `mission_financial_holds` with `UNIQUE (source_module, source_id, kind)` idempotency and `policy_snapshot` per hold.
 - RPCs: `finance_policy_current`, `finance_mission_requirement`, `driver_balance_summary`, `driver_financial_eligibility`, `driver_mission_hold_place`, `driver_mission_hold_release`, `driver_mission_commission_capture`, `driver_mission_hold_freeze`, `driver_collateral_resolve`, `admin_set_finance_policy`.
 - Flags: `chop_pay_enabled` (off), `om_topup_enabled` (on), `om_direct_checkout_enabled` (off), `driver_balance_gate_enabled` (off).

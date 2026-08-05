@@ -32,5 +32,6 @@ operating balance, confirmed by a Finance Admin against real evidence.
 Turning `chop_pay_enabled` off hides the public surface. It never mutates
 balances, ledger history or reconciliation data.
 
-Canonical money rules (commission, collateral, fees, cancellation, starting
-credit): `docs/finance/CHOPCHOP_FINANCE_POLICY_FREEZE.md`.
+Canonical money rules (payment matrix, commission, collateral, fees,
+cancellation, starting credit, payout restrictions, treasury): the single
+authoritative source is `docs/product/chop-pay-canonical-operating-policy.md`.
