@@ -442,16 +442,7 @@ Deno.serve(async (req) => {
       const identifierHash = await keyedHash("identifier", "global", normalized || rawIdentifier.toLowerCase());
 
       // Persistent cooldown, keyed by identifier and by IP.
-      const now = Date.now();
-      const lockKeys = [identifierHash, ipHash];
-      const { data: locks } = await admin
-        .from("account_recovery_lockouts")
-        .select("key_hash,cooldown_until")
-        .in("key_hash", lockKeys);
-      const lockedOut = (locks ?? []).some(
-        (l: { cooldown_until: string | null }) =>
-          l.cooldown_until && Date.parse(l.cooldown_until) > now,
-      );
+      const lockedOut = await isLockedOut(admin, [identifierHash, ipHash]);
 
       let userId: string | null = null;
       let askedIds: string[] = [];
@@ -531,6 +522,12 @@ Deno.serve(async (req) => {
         await padTiming(startedAt);
         return fail();
       }
+      // A cooldown earned on any earlier challenge blocks verification too —
+      // otherwise minting a fresh challenge would sidestep the limit.
+      if (await isLockedOut(admin, [ch.identifier_hash as string, ipHash])) {
+        await padTiming(startedAt);
+        return fail(429);
+      }
       const expired = Date.parse(ch.expires_at as string) < Date.now();
       const exhausted = (ch.attempts as number) >= (ch.max_attempts as number);
       const spent = Boolean(ch.consumed_at) || Boolean(ch.verified_at);
@@ -594,32 +591,18 @@ Deno.serve(async (req) => {
       }
 
       if (!success) {
-        if (attempts >= (ch.max_attempts as number)) {
-          // Third exhausted challenge inside 24h for this identifier → cooldown.
-          const { data: lock } = await admin
-            .from("account_recovery_lockouts")
-            .select("*")
-            .eq("key_hash", ch.identifier_hash as string)
-            .maybeSingle();
-          const windowFresh =
-            lock && Date.now() - Date.parse(lock.window_started_at as string) < COOLDOWN_WINDOW_MS;
-          const count = (windowFresh ? (lock!.exhausted_count as number) : 0) + 1;
-          await admin.from("account_recovery_lockouts").upsert(
-            {
-              key_hash: ch.identifier_hash as string,
-              exhausted_count: count,
-              window_started_at: windowFresh
-                ? (lock!.window_started_at as string)
-                : new Date().toISOString(),
-              cooldown_until:
-                count >= COOLDOWN_THRESHOLD
-                  ? new Date(Date.now() + COOLDOWN_MS).toISOString()
-                  : null,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "key_hash" },
+        // Count the failure against BOTH the identifier and the caller IP.
+        const identifierFailures = await registerFailure(admin, ch.identifier_hash as string);
+        await registerFailure(admin, ipHash);
+        if (identifierFailures >= FAILURES_BEFORE_COOLDOWN) {
+          await audit(
+            admin,
+            "recovery_cooldown_applied",
+            userId,
+            `${identifierFailures} failed verifications; cooldown ${COOLDOWN_MS / 60000} min`,
           );
-          await audit(admin, "recovery_challenge_exhausted", userId, "5 failed verification attempts");
+        } else if (attempts >= (ch.max_attempts as number)) {
+          await audit(admin, "recovery_challenge_exhausted", userId, `${attempts} failed attempts`);
         }
         await padTiming(startedAt);
         return fail();
