@@ -27,6 +27,7 @@ export function PackageHandoffPanel({ mission, onVerified }: Props) {
   const [code, setCode] = useState("");
   const [recipient, setRecipient] = useState("");
   const [busy, setBusy] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -50,29 +51,45 @@ export function PackageHandoffPanel({ mission, onVerified }: Props) {
 
   const submit = async () => {
     const clean = code.replace(/\D/g, "");
-    if (clean.length < 4) {
+    if (clean.length < 6) {
       toast.error("Code incomplet.");
       return;
     }
     setBusy(true);
     try {
-      if (phase === "pickup") {
-        await verifyPackagePickup(pkg.package_id, clean);
-        toast.success("Colis récupéré — code vérifié.");
-      } else {
-        await verifyPackageDelivery(pkg.package_id, clean, recipient.trim() || null);
-        toast.success("Remise confirmée.");
+      const res =
+        phase === "pickup"
+          ? await verifyPackagePickup(pkg.package_id, clean)
+          : await verifyPackageDelivery(pkg.package_id, clean, recipient.trim() || null);
+
+      if (!res.ok) {
+        if (res.error === "too_many_attempts") {
+          setLocked(true);
+          toast.error("Trop de tentatives. Contactez le support.");
+        } else {
+          const left = res.attempts_left ?? 0;
+          if (left <= 0) setLocked(true);
+          toast.error(
+            left > 0 ? `Code incorrect — ${left} tentative(s) restante(s).` : "Code incorrect.",
+          );
+        }
+        setCode("");
+        return;
       }
+
+      toast.success(phase === "pickup" ? "Colis récupéré — code vérifié." : "Remise confirmée.");
       setCode("");
       onVerified?.();
     } catch (e) {
       const msg = (e as { message?: string })?.message ?? "";
       toast.error(
-        msg.includes("invalid_code")
-          ? "Code incorrect."
-          : msg.includes("too_many_attempts")
-            ? "Trop de tentatives. Contactez le support."
-            : "Vérification impossible.",
+        msg.includes("pickup_not_verified")
+          ? "Vérifiez d’abord le code de retrait."
+          : msg.includes("invalid_state")
+            ? "Cette étape n’est pas disponible pour l’état actuel de la mission."
+            : msg.includes("forbidden")
+              ? "Cette mission ne vous est pas attribuée."
+              : "Vérification impossible.",
       );
     } finally {
       setBusy(false);

@@ -67,6 +67,32 @@ export async function listMyPackageDeliveries(limit = 20): Promise<PackageDelive
   return (data ?? []) as PackageDelivery[];
 }
 
+/** Single package row (sender-only via RLS). Used for payment/status polling. */
+export async function getPackageDelivery(packageId: string): Promise<PackageDelivery | null> {
+  const { data, error } = await (supabase as any)
+    .from("package_deliveries")
+    .select("*")
+    .eq("id", packageId)
+    .maybeSingle();
+  if (error) return null;
+  return (data ?? null) as PackageDelivery | null;
+}
+
+export interface ReceivingAccount {
+  id: string;
+  provider: string;
+  label: string;
+  phone_e164: string;
+  public_instructions: string | null;
+}
+
+/** Active Orange Money receiving accounts (admin-configured, sanitized RPC). */
+export async function listReceivingAccounts(): Promise<ReceivingAccount[]> {
+  const { data, error } = await (supabase as any).rpc("get_active_payment_receiving_accounts");
+  if (error) return [];
+  return ((data ?? []) as ReceivingAccount[]).filter((a) => a.provider === "orange_money");
+}
+
 /** Sender-only: RLS denies every other reader, including the assigned courier. */
 export async function getPackageSecrets(packageId: string): Promise<PackageSecrets | null> {
   const { data, error } = await (supabase as any)
@@ -93,6 +119,50 @@ export async function cancelPackageDelivery(packageId: string, reason?: string) 
   };
 }
 
+export interface PackageCancelPreview {
+  already_cancelled: boolean;
+  self_service: boolean;
+  courier_assigned?: boolean;
+  reason?: string;
+  fee_gnf: number;
+  refund_gnf: number;
+  paid?: boolean;
+}
+
+/** Read-only: exact fee/refund before the sender confirms a cancellation. */
+export async function previewPackageCancel(packageId: string): Promise<PackageCancelPreview> {
+  const { data, error } = await (supabase as any).rpc("package_delivery_cancel_preview", {
+    p_package_id: packageId,
+  });
+  if (error) throw error;
+  return data as PackageCancelPreview;
+}
+
+/** Admin (god / operations): grant or revoke one driver capability. */
+export async function adminSetDriverCapability(
+  driverUserId: string,
+  capability: string,
+  grant: boolean,
+) {
+  const { data, error } = await (supabase as any).rpc("admin_set_driver_capability", {
+    _driver_user_id: driverUserId,
+    _capability: capability,
+    _grant: grant,
+  });
+  if (error) throw error;
+  return data as { user_id: string; capabilities: string[] };
+}
+
+/** Shared shape of both verification RPCs. `ok:false` is a normal outcome. */
+export interface PackageVerifyResult {
+  ok: boolean;
+  idempotent: boolean;
+  mission_state: string;
+  error?: "invalid_code" | "too_many_attempts";
+  attempts?: number;
+  attempts_left?: number;
+}
+
 /** Courier-facing operational payload. Never contains verification codes. */
 export async function getCourierPackageView(missionId: string) {
   const { data, error } = await (supabase as any).rpc("package_delivery_courier_view", {
@@ -115,25 +185,28 @@ export async function getCourierPackageView(missionId: string) {
   } | null;
 }
 
-export async function verifyPackagePickup(packageId: string, code: string) {
+export async function verifyPackagePickup(
+  packageId: string,
+  code: string,
+): Promise<PackageVerifyResult> {
   const { data, error } = await (supabase as any).rpc("package_verify_pickup", {
     p_package_id: packageId,
     p_code: code,
   });
   if (error) throw error;
-  return data as { ok: boolean; idempotent: boolean; mission_state: string };
+  return data as PackageVerifyResult;
 }
 
 export async function verifyPackageDelivery(
   packageId: string,
   code: string,
   recipientName?: string | null,
-) {
+): Promise<PackageVerifyResult> {
   const { data, error } = await (supabase as any).rpc("package_verify_delivery", {
     p_package_id: packageId,
     p_code: code,
     p_recipient_name: recipientName ?? null,
   });
   if (error) throw error;
-  return data as { ok: boolean; idempotent: boolean; mission_state: string };
+  return data as PackageVerifyResult;
 }
