@@ -5,15 +5,17 @@ import { useDriverBalance, INSUFFICIENT_BALANCE_MESSAGE } from "@/lib/finance/dr
 import { useOmTopupEnabled } from "@/lib/flags/useFeatureFlag";
 
 /**
- * Driver operating balance — funds CHOPCHOP commission and mission
- * collateral. Deliberately separated from personal earnings so a driver
- * never confuses reserved funds with withdrawable income.
+ * Driver Chop Pay wallet — ONE ledger wallet. Earnings, top-ups,
+ * commission reserves, mission collateral and cashout holds all live in
+ * the same balance; "held" simply means temporarily not withdrawable.
  */
 export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }) {
   const { summary, loading } = useDriverBalance();
   const topupOn = useOmTopupEnabled();
 
   const available = summary?.available_gnf ?? 0;
+  const total = summary?.balance_gnf ?? 0;
+  const held = summary?.held_gnf ?? 0;
   const collateral = summary?.collateral_held_gnf ?? 0;
   const commission = summary?.commission_held_gnf ?? 0;
   const blocked = !loading && available <= 0;
@@ -25,9 +27,12 @@ export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }
           <Wallet className="w-5 h-5 text-primary-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-muted-foreground">Solde chauffeur · disponible</p>
+          <p className="text-xs text-muted-foreground">Portefeuille chauffeur · disponible</p>
           <p className="text-xl font-extrabold text-foreground tabular-nums">
             {loading ? "…" : formatGNF(available)}
+          </p>
+          <p className="text-[11px] text-muted-foreground tabular-nums">
+            Total {formatGNF(total)} · retenu {formatGNF(held)}
           </p>
         </div>
       </div>
@@ -41,7 +46,7 @@ export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }
         </div>
         <div className="rounded-lg bg-muted/40 p-2">
           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3" /> Réserve de commission
+            <ShieldCheck className="w-3 h-3" /> Commission retenue
           </p>
           <p className="text-xs font-bold text-foreground tabular-nums">{formatGNF(commission)}</p>
         </div>
@@ -56,8 +61,11 @@ export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }
       <div className="mt-3 flex items-start gap-2 text-[11px] text-muted-foreground">
         <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <p>
-          Ce solde sert à la commission CHOPCHOP et à la caution des missions.
-          Vos gains restent séparés et retirables selon la politique en vigueur.
+          Un seul portefeuille : recharges et gains arrivent ici. Les montants
+          « retenus » (caution de mission, commission, retrait en cours) ne sont
+          pas retirables tant qu'ils ne sont pas libérés. Vous pouvez retirer le
+          solde disponible ; s'il descend sous le minimum requis, les nouvelles
+          missions se mettent en pause jusqu'à une recharge ou un nouveau gain.
         </p>
       </div>
 

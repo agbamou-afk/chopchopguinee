@@ -1,9 +1,11 @@
 /**
- * Driver operating-balance client helpers (Chop Pay ledger revival).
+ * Driver Chop Pay wallet helpers (Chop Pay ledger revival).
  *
- * The operating balance funds CHOPCHOP commission reserves and mission
- * collateral. It is NEVER computed on the client: every value here comes
- * from server-authoritative SECURITY DEFINER RPCs.
+ * There is ONE driver ledger wallet. Top-ups and earnings credit it;
+ * commission reserves, mission collateral and cashout requests place
+ * holds on it. Held funds are not withdrawable until released or
+ * captured. Every value here comes from server-authoritative
+ * SECURITY DEFINER RPCs — nothing is computed on the client.
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +43,7 @@ export type Eligibility = {
 
 /** French, non-punitive copy shown when a driver cannot take new missions. */
 export const INSUFFICIENT_BALANCE_MESSAGE =
-  "Votre solde chauffeur est insuffisant pour recevoir de nouvelles missions. Rechargez votre compte pour reprendre les courses.";
+  "Votre solde disponible est insuffisant pour recevoir de nouvelles missions. Rechargez votre portefeuille ou attendez la libération d'une caution pour reprendre.";
 
 export async function fetchDriverBalance(): Promise<DriverBalanceSummary | null> {
   const { data, error } = await supabase.rpc("driver_balance_summary" as never, {} as never);
