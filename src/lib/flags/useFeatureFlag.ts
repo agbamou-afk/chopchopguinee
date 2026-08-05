@@ -59,9 +59,16 @@ export function useDriverBalanceGateEnabled(): boolean {
   return useFlag("driver_balance_gate_enabled");
 }
 
-/** OM checkout master gate. */
+/**
+ * OM DIRECT checkout master gate. Since the Chop Pay pivot this requires
+ * BOTH the legacy rail flag and the explicit archive-override flag
+ * `om_direct_checkout_enabled`, so no public surface can regress into
+ * offering Orange Money as a direct payment method.
+ */
 export function useOmCheckoutEnabled(): boolean {
-  return useFlag("om_checkout_enabled");
+  const legacy = useFlag("om_checkout_enabled");
+  const direct = useFlag("om_direct_checkout_enabled");
+  return legacy && direct;
 }
 
 /** Envoyer v1 (parcel / document delivery) gate. Server enforces it too. */
