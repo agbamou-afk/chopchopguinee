@@ -1,3 +1,5 @@
+> Historical QA record. Current policy authority: `docs/product/chop-pay-canonical-operating-policy.md`.
+
 # Chop Pay Slice 0/1 — QA evidence (2026-08-05)
 
 Executed through a temporary self-rolling-back SECURITY DEFINER harness

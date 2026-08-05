@@ -1,5 +1,8 @@
 # Chop Pay ledger and settlement
 
+Policy authority: `docs/product/chop-pay-canonical-operating-policy.md`.
+This file describes mechanics only; it never defines rates or bases.
+
 Reuses the existing internal ledger — no parallel wallet engine.
 
 ## Parties (`wallets.party_type`)
