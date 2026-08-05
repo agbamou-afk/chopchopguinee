@@ -173,6 +173,56 @@ async function audit(admin: Admin, action: string, userId: string | null, note: 
   }
 }
 
+/** True when any of the supplied lockout keys is inside an active cooldown. */
+async function isLockedOut(admin: Admin, keyHashes: string[]): Promise<boolean> {
+  const { data } = await admin
+    .from("account_recovery_lockouts")
+    .select("key_hash,cooldown_until")
+    .in("key_hash", keyHashes);
+  const now = Date.now();
+  return (data ?? []).some(
+    (l: { cooldown_until: string | null }) => l.cooldown_until && Date.parse(l.cooldown_until) > now,
+  );
+}
+
+/**
+ * Records ONE failed verification against a lockout key (identifier or IP).
+ *
+ * This is deliberately independent of the per-challenge attempt counter:
+ * calling `start` again mints a fresh challenge, so a per-challenge counter
+ * alone would let an attacker guess forever. Every failure — whichever
+ * challenge it belongs to — is counted here, and `FAILURES_BEFORE_COOLDOWN`
+ * failures inside the rolling window trigger a cooldown that both `start` and
+ * `verify` honour.
+ */
+async function registerFailure(admin: Admin, keyHash: string) {
+  const { data: lock } = await admin
+    .from("account_recovery_lockouts")
+    .select("*")
+    .eq("key_hash", keyHash)
+    .maybeSingle();
+  const startedAt = lock ? Date.parse(lock.window_started_at as string) : 0;
+  const cooldownUntil = lock?.cooldown_until ? Date.parse(lock.cooldown_until as string) : 0;
+  // A window is reset once it ages out, or once a served cooldown has expired.
+  const fresh =
+    !!lock && Date.now() - startedAt < COOLDOWN_WINDOW_MS && Date.now() >= cooldownUntil;
+  const count = (fresh ? (lock!.exhausted_count as number) : 0) + 1;
+  await admin.from("account_recovery_lockouts").upsert(
+    {
+      key_hash: keyHash,
+      exhausted_count: count,
+      window_started_at: fresh ? (lock!.window_started_at as string) : new Date().toISOString(),
+      cooldown_until:
+        count >= FAILURES_BEFORE_COOLDOWN
+          ? new Date(Date.now() + COOLDOWN_MS).toISOString()
+          : null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "key_hash" },
+  );
+  return count;
+}
+
 /** Validates + hashes the DOB / question / answer bundle for a given user. */
 async function buildEnrollment(
   userId: string,
