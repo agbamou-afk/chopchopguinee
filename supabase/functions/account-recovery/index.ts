@@ -40,7 +40,11 @@ const RESET_TTL_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 const COOLDOWN_MS = 30 * 60 * 1000;
 const COOLDOWN_WINDOW_MS = 24 * 60 * 60 * 1000;
-const COOLDOWN_THRESHOLD = 3;
+/**
+ * Failed verifications (counted per identifier AND per IP, across every
+ * challenge) allowed inside COOLDOWN_WINDOW_MS before a cooldown is applied.
+ */
+const FAILURES_BEFORE_COOLDOWN = 8;
 const MIN_ANSWER_LENGTH = 3;
 const MIN_PASSWORD_LENGTH = 8;
 
