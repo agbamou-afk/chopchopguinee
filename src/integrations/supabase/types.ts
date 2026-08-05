@@ -677,6 +677,75 @@ export type Database = {
         }
         Relationships: []
       }
+      claims_reserves: {
+        Row: {
+          authorized_by: string
+          authorized_gnf: number
+          claim_key: string
+          created_at: string
+          customer_user_id: string | null
+          declared_value_gnf: number
+          driver_user_id: string | null
+          evidence_ref: string
+          id: string
+          is_sandbox: boolean
+          mission_type: string | null
+          paid_gnf: number
+          reason: string
+          released_gnf: number
+          resolved_at: string | null
+          resolved_by: string | null
+          source_id: string
+          source_module: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          authorized_by: string
+          authorized_gnf: number
+          claim_key: string
+          created_at?: string
+          customer_user_id?: string | null
+          declared_value_gnf?: number
+          driver_user_id?: string | null
+          evidence_ref: string
+          id?: string
+          is_sandbox?: boolean
+          mission_type?: string | null
+          paid_gnf?: number
+          reason: string
+          released_gnf?: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id: string
+          source_module: string
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          authorized_by?: string
+          authorized_gnf?: number
+          claim_key?: string
+          created_at?: string
+          customer_user_id?: string | null
+          declared_value_gnf?: number
+          driver_user_id?: string | null
+          evidence_ref?: string
+          id?: string
+          is_sandbox?: boolean
+          mission_type?: string | null
+          paid_gnf?: number
+          reason?: string
+          released_gnf?: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id?: string
+          source_module?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           buyer_id: string
@@ -711,6 +780,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      customer_cancellation_debts: {
+        Row: {
+          amount_gnf: number
+          applied_bps: number
+          basis_gnf: number
+          created_at: string
+          customer_user_id: string
+          debt_key: string
+          exempt_reason: string | null
+          id: string
+          is_sandbox: boolean
+          mission_type: string
+          paid_gnf: number
+          policy_snapshot: Json
+          resolved_at: string | null
+          resolved_by: string | null
+          source_id: string
+          source_module: string
+          stage: string
+          state: string
+          updated_at: string
+          waived_gnf: number
+        }
+        Insert: {
+          amount_gnf: number
+          applied_bps: number
+          basis_gnf: number
+          created_at?: string
+          customer_user_id: string
+          debt_key: string
+          exempt_reason?: string | null
+          id?: string
+          is_sandbox?: boolean
+          mission_type: string
+          paid_gnf?: number
+          policy_snapshot?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id: string
+          source_module: string
+          stage: string
+          state?: string
+          updated_at?: string
+          waived_gnf?: number
+        }
+        Update: {
+          amount_gnf?: number
+          applied_bps?: number
+          basis_gnf?: number
+          created_at?: string
+          customer_user_id?: string
+          debt_key?: string
+          exempt_reason?: string | null
+          id?: string
+          is_sandbox?: boolean
+          mission_type?: string
+          paid_gnf?: number
+          policy_snapshot?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id?: string
+          source_module?: string
+          stage?: string
+          state?: string
+          updated_at?: string
+          waived_gnf?: number
+        }
+        Relationships: []
       }
       district_hubs: {
         Row: {
@@ -2353,10 +2491,12 @@ export type Database = {
       finance_policies: {
         Row: {
           cancel_after_dispatch_bps: number
+          cancel_basis: string
           cancel_before_dispatch_bps: number
           cash_funding_max_gnf: number | null
           cash_funding_mode: string
           cash_funding_pct_bps: number
+          collateral_basis: string
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
           collateral_min_gnf: number
@@ -2380,10 +2520,12 @@ export type Database = {
         }
         Insert: {
           cancel_after_dispatch_bps?: number
+          cancel_basis?: string
           cancel_before_dispatch_bps?: number
           cash_funding_max_gnf?: number | null
           cash_funding_mode?: string
           cash_funding_pct_bps?: number
+          collateral_basis?: string
           collateral_fixed_gnf?: number
           collateral_max_gnf?: number | null
           collateral_min_gnf?: number
@@ -2407,10 +2549,12 @@ export type Database = {
         }
         Update: {
           cancel_after_dispatch_bps?: number
+          cancel_basis?: string
           cancel_before_dispatch_bps?: number
           cash_funding_max_gnf?: number | null
           cash_funding_mode?: string
           cash_funding_pct_bps?: number
+          collateral_basis?: string
           collateral_fixed_gnf?: number
           collateral_max_gnf?: number | null
           collateral_min_gnf?: number
@@ -2915,6 +3059,140 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      ledger_accounts: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          kind: string
+          name: string
+          restricted: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          kind: string
+          name: string
+          restricted?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          kind?: string
+          name?: string
+          restricted?: boolean
+        }
+        Relationships: []
+      }
+      ledger_journals: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          evidence_ref: string | null
+          id: string
+          is_sandbox: boolean
+          journal_key: string
+          mission_type: string | null
+          policy_snapshot: Json
+          reason: string | null
+          reverses_journal_id: string | null
+          source_id: string | null
+          source_module: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          evidence_ref?: string | null
+          id?: string
+          is_sandbox?: boolean
+          journal_key: string
+          mission_type?: string | null
+          policy_snapshot?: Json
+          reason?: string | null
+          reverses_journal_id?: string | null
+          source_id?: string | null
+          source_module: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          evidence_ref?: string | null
+          id?: string
+          is_sandbox?: boolean
+          journal_key?: string
+          mission_type?: string | null
+          policy_snapshot?: Json
+          reason?: string | null
+          reverses_journal_id?: string | null
+          source_id?: string | null
+          source_module?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_journals_reverses_journal_id_fkey"
+            columns: ["reverses_journal_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_journals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ledger_postings: {
+        Row: {
+          account_code: string
+          amount_gnf: number
+          created_at: string
+          id: string
+          journal_id: string
+          memo: string | null
+          merchant_store_id: string | null
+          party_type: Database["public"]["Enums"]["party_type"] | null
+          party_user_id: string | null
+        }
+        Insert: {
+          account_code: string
+          amount_gnf: number
+          created_at?: string
+          id?: string
+          journal_id: string
+          memo?: string | null
+          merchant_store_id?: string | null
+          party_type?: Database["public"]["Enums"]["party_type"] | null
+          party_user_id?: string | null
+        }
+        Update: {
+          account_code?: string
+          amount_gnf?: number
+          created_at?: string
+          id?: string
+          journal_id?: string
+          memo?: string | null
+          merchant_store_id?: string | null
+          party_type?: Database["public"]["Enums"]["party_type"] | null
+          party_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_postings_account_code_fkey"
+            columns: ["account_code"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "ledger_postings_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_journals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listing_images: {
         Row: {
@@ -4006,6 +4284,81 @@ export type Database = {
           },
         ]
       }
+      merchant_payables: {
+        Row: {
+          amount_gnf: number
+          created_at: string
+          deduction_gnf: number
+          evidence_ref: string | null
+          funded_gnf: number
+          funding_source: string
+          id: string
+          is_sandbox: boolean
+          merchant_store_id: string
+          merchant_user_id: string | null
+          mission_type: string | null
+          payable_key: string
+          policy_snapshot: Json
+          reason: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          settled_gnf: number
+          source_id: string
+          source_module: string
+          state: string
+          subtotal_gnf: number
+          updated_at: string
+        }
+        Insert: {
+          amount_gnf: number
+          created_at?: string
+          deduction_gnf?: number
+          evidence_ref?: string | null
+          funded_gnf?: number
+          funding_source?: string
+          id?: string
+          is_sandbox?: boolean
+          merchant_store_id: string
+          merchant_user_id?: string | null
+          mission_type?: string | null
+          payable_key: string
+          policy_snapshot?: Json
+          reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          settled_gnf?: number
+          source_id: string
+          source_module: string
+          state?: string
+          subtotal_gnf: number
+          updated_at?: string
+        }
+        Update: {
+          amount_gnf?: number
+          created_at?: string
+          deduction_gnf?: number
+          evidence_ref?: string | null
+          funded_gnf?: number
+          funding_source?: string
+          id?: string
+          is_sandbox?: boolean
+          merchant_store_id?: string
+          merchant_user_id?: string | null
+          mission_type?: string | null
+          payable_key?: string
+          policy_snapshot?: Json
+          reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          settled_gnf?: number
+          source_id?: string
+          source_module?: string
+          state?: string
+          subtotal_gnf?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       merchant_stores: {
         Row: {
           address_label: string | null
@@ -4387,16 +4740,24 @@ export type Database = {
           basis_value_gnf: number
           captured_gnf: number
           created_at: string
-          driver_user_id: string
+          customer_gnf: number
+          driver_user_id: string | null
+          evidence_ref: string | null
           hold_tx_id: string | null
           id: string
           is_sandbox: boolean
+          journal_key: string | null
           kind: string
+          merchant_store_id: string | null
           mission_type: string
+          party_type: Database["public"]["Enums"]["party_type"]
+          party_user_id: string | null
+          platform_gnf: number
           policy_id: string | null
           policy_snapshot: Json
           promo_gnf: number
           reason: string | null
+          released_gnf: number
           resolution_tx_id: string | null
           resolved_at: string | null
           resolved_by: string | null
@@ -4411,16 +4772,24 @@ export type Database = {
           basis_value_gnf?: number
           captured_gnf?: number
           created_at?: string
-          driver_user_id: string
+          customer_gnf?: number
+          driver_user_id?: string | null
+          evidence_ref?: string | null
           hold_tx_id?: string | null
           id?: string
           is_sandbox?: boolean
+          journal_key?: string | null
           kind: string
+          merchant_store_id?: string | null
           mission_type: string
+          party_type?: Database["public"]["Enums"]["party_type"]
+          party_user_id?: string | null
+          platform_gnf?: number
           policy_id?: string | null
           policy_snapshot?: Json
           promo_gnf?: number
           reason?: string | null
+          released_gnf?: number
           resolution_tx_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -4435,16 +4804,24 @@ export type Database = {
           basis_value_gnf?: number
           captured_gnf?: number
           created_at?: string
-          driver_user_id?: string
+          customer_gnf?: number
+          driver_user_id?: string | null
+          evidence_ref?: string | null
           hold_tx_id?: string | null
           id?: string
           is_sandbox?: boolean
+          journal_key?: string | null
           kind?: string
+          merchant_store_id?: string | null
           mission_type?: string
+          party_type?: Database["public"]["Enums"]["party_type"]
+          party_user_id?: string | null
+          platform_gnf?: number
           policy_id?: string | null
           policy_snapshot?: Json
           promo_gnf?: number
           reason?: string | null
+          released_gnf?: number
           resolution_tx_id?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -6431,6 +6808,24 @@ export type Database = {
           },
         ]
       }
+      ledger_account_totals: {
+        Row: {
+          account_code: string | null
+          kind: string | null
+          net_debit_gnf: number | null
+          posting_count: number | null
+          restricted: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_postings_account_code_fkey"
+            columns: ["account_code"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       public_agents: {
         Row: {
           business_name: string | null
@@ -6467,6 +6862,7 @@ export type Database = {
         Args: { _suspended_reason: string; _target: string }
         Returns: Json
       }
+      _capture_revenue_account: { Args: { p_kind: string }; Returns: string }
       _driver_group_stats: {
         Args: { p_from: string; p_group: string; p_to: string }
         Returns: {
@@ -6481,6 +6877,8 @@ export type Database = {
         }[]
       }
       _envoyer_enabled: { Args: never; Returns: boolean }
+      _finance_privileged: { Args: { p_caller: string }; Returns: boolean }
+      _hold_account: { Args: { p_kind: string }; Returns: string }
       _is_approved_service_agent: {
         Args: { _user_id: string }
         Returns: boolean
@@ -6488,6 +6886,32 @@ export type Database = {
       _is_god_admin: { Args: { _user: string }; Returns: boolean }
       _is_ops_or_god_admin: { Args: { _user: string }; Returns: boolean }
       _leader_group_id: { Args: { _uid: string }; Returns: string }
+      _ledger_post: {
+        Args: {
+          p_action: string
+          p_actor?: string
+          p_evidence?: string
+          p_is_sandbox?: boolean
+          p_journal_key: string
+          p_lines: Json
+          p_mission_type?: string
+          p_policy?: Json
+          p_reason?: string
+          p_reverses?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _ledger_reverse: {
+        Args: {
+          p_actor?: string
+          p_evidence?: string
+          p_original_key: string
+          p_reason: string
+        }
+        Returns: Json
+      }
       _map_distance_meters: {
         Args: { a_lat: number; a_lng: number; b_lat: number; b_lng: number }
         Returns: number
@@ -7208,10 +7632,12 @@ export type Database = {
         }
         Returns: {
           cancel_after_dispatch_bps: number
+          cancel_basis: string
           cancel_before_dispatch_bps: number
           cash_funding_max_gnf: number | null
           cash_funding_mode: string
           cash_funding_pct_bps: number
+          collateral_basis: string
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
           collateral_min_gnf: number
@@ -7404,6 +7830,40 @@ export type Database = {
         Args: { _email: string; _phone: string }
         Returns: Json
       }
+      chop_pay_customer_capture: {
+        Args: {
+          p_commission_gnf: number
+          p_driver: string
+          p_driver_earning_gnf: number
+          p_fee_gnf: number
+          p_merchant_gnf: number
+          p_merchant_store_id: string
+          p_refund_remainder?: boolean
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      chop_pay_customer_hold_place: {
+        Args: {
+          p_amount_gnf: number
+          p_customer?: string
+          p_is_sandbox?: boolean
+          p_mission_type?: string
+          p_snapshot?: Json
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      chop_pay_customer_refund: {
+        Args: {
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       choppay_cancel_payment_intent: {
         Args: { p_payment_intent_id: string; p_reason?: string }
         Returns: {
@@ -7556,6 +8016,25 @@ export type Database = {
         }
       }
       claim_first_admin: { Args: never; Returns: boolean }
+      claims_reserve_allocate: {
+        Args: {
+          p_authorized_gnf: number
+          p_customer?: string
+          p_declared_value_gnf?: number
+          p_driver?: string
+          p_evidence_ref: string
+          p_is_sandbox?: boolean
+          p_mission_type?: string
+          p_reason: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      claims_reserve_resolve: {
+        Args: { p_claim_id: string; p_pay_gnf: number; p_reason: string }
+        Returns: Json
+      }
       confirm_payment_intent: {
         Args: {
           p_intent_id: string
@@ -7625,6 +8104,27 @@ export type Database = {
           reason: string
           user_id: string
         }[]
+      }
+      customer_cancellation_debt_collect: {
+        Args: { p_debt_id: string }
+        Returns: Json
+      }
+      customer_cancellation_debt_create: {
+        Args: {
+          p_basis_gnf: number
+          p_customer: string
+          p_exempt_reason?: string
+          p_is_sandbox?: boolean
+          p_mission_type: string
+          p_source_id: string
+          p_source_module: string
+          p_stage: string
+        }
+        Returns: Json
+      }
+      customer_cancellation_debt_waive: {
+        Args: { p_debt_id: string; p_reason: string }
+        Returns: Json
       }
       debug_create_offer_for_current_driver: { Args: never; Returns: Json }
       delete_email: {
@@ -7838,9 +8338,27 @@ export type Database = {
         Returns: boolean
       }
       driver_mark_offline_signal: { Args: never; Returns: undefined }
+      driver_mission_capture_reverse: {
+        Args: {
+          p_evidence?: string
+          p_kind: string
+          p_reason: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       driver_mission_commission_capture: {
         Args: {
           p_final_value_gnf: number
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      driver_mission_fee_capture: {
+        Args: {
+          p_final_fee_basis_gnf?: number
           p_source_id: string
           p_source_module: string
         }
@@ -7852,10 +8370,15 @@ export type Database = {
       }
       driver_mission_hold_place: {
         Args: {
+          p_declared_value_gnf?: number
+          p_delivery_fee_gnf?: number
           p_driver?: string
+          p_fare_gnf?: number
           p_is_sandbox?: boolean
           p_kinds?: string[]
+          p_merchandise_subtotal_gnf?: number
           p_mission_type: string
+          p_payment_mode?: string
           p_source_id: string
           p_source_module: string
           p_value_gnf?: number
@@ -7918,6 +8441,18 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      driver_payout_cancel: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: Json
+      }
+      driver_payout_confirm: {
+        Args: { p_evidence_ref: string; p_request_id: string }
+        Returns: Json
+      }
+      driver_payout_hold_place: {
+        Args: { p_amount_gnf: number; p_driver: string; p_request_id: string }
+        Returns: Json
       }
       driver_promo_balance: { Args: { p_driver: string }; Returns: Json }
       driver_set_capabilities: {
@@ -8104,14 +8639,27 @@ export type Database = {
         Args: { p_mission_type: string; p_value_gnf?: number }
         Returns: Json
       }
+      finance_mission_requirement_v2: {
+        Args: {
+          p_declared_value_gnf?: number
+          p_delivery_fee_gnf?: number
+          p_fare_gnf?: number
+          p_merchandise_subtotal_gnf?: number
+          p_mission_type: string
+          p_payment_mode?: string
+        }
+        Returns: Json
+      }
       finance_policy_current: {
         Args: { p_mission_type: string }
         Returns: {
           cancel_after_dispatch_bps: number
+          cancel_basis: string
           cancel_before_dispatch_bps: number
           cash_funding_max_gnf: number | null
           cash_funding_mode: string
           cash_funding_pct_bps: number
+          collateral_basis: string
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
           collateral_min_gnf: number
@@ -8699,6 +9247,28 @@ export type Database = {
         Args: { p_merchant_id: string }
         Returns: string
       }
+      merchant_payable_create: {
+        Args: {
+          p_deduction_gnf?: number
+          p_is_sandbox?: boolean
+          p_merchant_store_id: string
+          p_mission_type?: string
+          p_snapshot?: Json
+          p_source_id: string
+          p_source_module: string
+          p_subtotal_gnf: number
+        }
+        Returns: Json
+      }
+      merchant_payable_fund: {
+        Args: {
+          p_funding_source: string
+          p_merchant_store_id: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       merchant_respond_marketplace_offer: {
         Args: {
           p_action: string
@@ -8707,6 +9277,18 @@ export type Database = {
           p_offer_id: string
         }
         Returns: undefined
+      }
+      merchant_settlement_complete: {
+        Args: { p_evidence_ref: string; p_payable_id: string }
+        Returns: Json
+      }
+      merchant_settlement_fail: {
+        Args: { p_payable_id: string; p_reason: string }
+        Returns: Json
+      }
+      merchant_settlement_hold: {
+        Args: { p_payable_id: string }
+        Returns: Json
       }
       merchant_submit_location: {
         Args: {
