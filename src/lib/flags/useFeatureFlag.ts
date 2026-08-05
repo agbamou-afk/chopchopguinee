@@ -5,6 +5,10 @@ import {
   getPublicWalletLabel,
   isPublicWalletEnabled,
   isOmSandboxActive,
+  isOmDirectCheckoutEnabled,
+  isOmTopupEnabled,
+  isDriverBalanceGateEnabled,
+  CHOP_PAY_NAME,
   loadFeatureFlags,
   subscribeFlags,
   publicPaymentProductName,
@@ -30,7 +34,29 @@ export function useFeatureFlag(key: FlagKey): boolean {
  * behind the flag. The internal ledger is never affected.
  */
 export function usePublicWalletEnabled(): boolean {
-  return useFlag("wallet_public_enabled");
+  const chopPay = useFlag("chop_pay_enabled");
+  const legacy = useFlag("wallet_public_enabled");
+  return chopPay || legacy;
+}
+
+/** Canonical Chop Pay availability hook (alias of `usePublicWalletEnabled`). */
+export function useChopPayEnabled(): boolean {
+  return usePublicWalletEnabled();
+}
+
+/** ARCHIVED rail: Orange Money as a direct customer checkout method. */
+export function useOmDirectCheckoutEnabled(): boolean {
+  return useFlag("om_direct_checkout_enabled");
+}
+
+/** RETAINED rail: Orange Money manual cash-in / top-up. */
+export function useOmTopupEnabled(): boolean {
+  return useFlag("om_topup_enabled");
+}
+
+/** Driver operating-balance eligibility gate. */
+export function useDriverBalanceGateEnabled(): boolean {
+  return useFlag("driver_balance_gate_enabled");
 }
 
 /** OM checkout master gate. */
@@ -55,10 +81,8 @@ export function useOmSandboxActive(): boolean {
   return env && sbx;
 }
 
-/** Returns "OM Wallet" when public wallet is archived, else "ChopWallet". */
 export function usePublicWalletLabel(): string {
-  const publicOn = usePublicWalletEnabled();
-  return publicOn ? "ChopWallet" : "OM Wallet";
+  return CHOP_PAY_NAME;
 }
 
 /** Canonical public-payment product name — prefer over `usePublicWalletLabel` in new code. */
@@ -70,13 +94,17 @@ export function usePublicPaymentProductName(): string {
 export function usePublicPaymentProductSubtitle(): string {
   const publicOn = usePublicWalletEnabled();
   return publicOn
-    ? "Solde CHOPCHOP · recharges et paiements"
-    : "Vos paiements Orange Money, vérifications et remboursements.";
+    ? "Votre solde CHOPCHOP · recharges, envois et paiements"
+    : "Paiement en espèces · rechargement Orange Money bientôt activé.";
 }
 
 export {
   isPublicWalletEnabled,
   isOmSandboxActive,
+  isOmDirectCheckoutEnabled,
+  isOmTopupEnabled,
+  isDriverBalanceGateEnabled,
+  CHOP_PAY_NAME,
   getPublicWalletLabel,
   publicPaymentProductName,
   publicPaymentProductSubtitle,
