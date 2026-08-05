@@ -2488,6 +2488,39 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_evidence_refs: {
+        Row: {
+          actor_user_id: string | null
+          amount_gnf: number
+          created_at: string
+          evidence_ref: string
+          id: string
+          normalized_ref: string | null
+          target_id: string
+          usage_kind: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          amount_gnf?: number
+          created_at?: string
+          evidence_ref: string
+          id?: string
+          normalized_ref?: string | null
+          target_id: string
+          usage_kind: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          amount_gnf?: number
+          created_at?: string
+          evidence_ref?: string
+          id?: string
+          normalized_ref?: string | null
+          target_id?: string
+          usage_kind?: string
+        }
+        Relationships: []
+      }
       finance_policies: {
         Row: {
           cancel_after_dispatch_bps: number
@@ -4739,6 +4772,8 @@ export type Database = {
           amount_gnf: number
           basis_value_gnf: number
           captured_gnf: number
+          captured_promo_gnf: number
+          captured_unrestricted_gnf: number
           created_at: string
           customer_gnf: number
           driver_user_id: string | null
@@ -4771,6 +4806,8 @@ export type Database = {
           amount_gnf: number
           basis_value_gnf?: number
           captured_gnf?: number
+          captured_promo_gnf?: number
+          captured_unrestricted_gnf?: number
           created_at?: string
           customer_gnf?: number
           driver_user_id?: string | null
@@ -4803,6 +4840,8 @@ export type Database = {
           amount_gnf?: number
           basis_value_gnf?: number
           captured_gnf?: number
+          captured_promo_gnf?: number
+          captured_unrestricted_gnf?: number
           created_at?: string
           customer_gnf?: number
           driver_user_id?: string | null
@@ -6863,6 +6902,7 @@ export type Database = {
         Returns: Json
       }
       _capture_revenue_account: { Args: { p_kind: string }; Returns: string }
+      _driver_finance_eligible: { Args: { p_driver: string }; Returns: boolean }
       _driver_group_stats: {
         Args: { p_from: string; p_group: string; p_to: string }
         Returns: {
@@ -6877,6 +6917,16 @@ export type Database = {
         }[]
       }
       _envoyer_enabled: { Args: never; Returns: boolean }
+      _finance_evidence_claim: {
+        Args: {
+          p_actor: string
+          p_amount: number
+          p_evidence_ref: string
+          p_target: string
+          p_usage_kind: string
+        }
+        Returns: undefined
+      }
       _finance_privileged: { Args: { p_caller: string }; Returns: boolean }
       _hold_account: { Args: { p_kind: string }; Returns: string }
       _is_approved_service_agent: {
@@ -6942,6 +6992,10 @@ export type Database = {
         Returns: undefined
       }
       _promo_consume: {
+        Args: { p_amount: number; p_driver: string }
+        Returns: number
+      }
+      _promo_restore: {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
@@ -7617,6 +7671,13 @@ export type Database = {
       }
       admin_set_finance_policy: {
         Args: {
+          p_cancel_after_dispatch_bps?: number
+          p_cancel_basis?: string
+          p_cancel_before_dispatch_bps?: number
+          p_cash_funding_max_gnf?: number
+          p_cash_funding_mode?: string
+          p_cash_funding_pct_bps?: number
+          p_collateral_basis?: string
           p_collateral_fixed_gnf?: number
           p_collateral_max_gnf?: number
           p_collateral_min_gnf?: number
@@ -7624,11 +7685,14 @@ export type Database = {
           p_collateral_pct_bps?: number
           p_commission_bps: number
           p_effective_from?: string
+          p_fee_basis?: string
           p_fixed_commission_gnf?: number
+          p_max_declared_value_gnf?: number
           p_min_driver_balance_gnf?: number
           p_mission_type: string
           p_note?: string
           p_require_collateral_before_offer?: boolean
+          p_transaction_fee_bps?: number
         }
         Returns: {
           cancel_after_dispatch_bps: number
@@ -8111,11 +8175,14 @@ export type Database = {
       }
       customer_cancellation_debt_create: {
         Args: {
-          p_basis_gnf: number
           p_customer: string
-          p_exempt_reason?: string
+          p_delivery_fee_gnf?: number
+          p_fare_gnf?: number
           p_is_sandbox?: boolean
+          p_merchandise_subtotal_gnf?: number
           p_mission_type: string
+          p_preparation_started?: boolean
+          p_responsible_party?: string
           p_source_id: string
           p_source_module: string
           p_stage: string
@@ -8392,6 +8459,10 @@ export type Database = {
           p_source_id: string
           p_source_module: string
         }
+        Returns: Json
+      }
+      driver_mission_hold_unfreeze: {
+        Args: { p_reason: string; p_source_id: string; p_source_module: string }
         Returns: Json
       }
       driver_offer_accept: {
