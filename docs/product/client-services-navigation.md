@@ -54,9 +54,21 @@ toast before opening the moto flow. No fake success, no invisible fallback.
 ## Home cleanup
 
 Home no longer depends on the center FAB and shows a compact subset
-(Course · Repas · Marché · Envoyer) with a `Voir tous les services` action into
+of services with a `Voir tous les services` action into
 Services. Wallet hero, promos, recent activity, nearby drivers, partner
 recruitment and discovery content are unchanged.
+
+## Home quick-service rail
+
+The dark-green "Plus de services" island is a horizontal, snap-scrolling rail
+(`QuickActions`) fed by one centralized definition: Course · Bonbonna · Repas ·
+Marché · Envoyer · Scanner. Every tile calls the canonical `Index.handleAction`
+id used by the Services destination (`moto`, `toktok`, `food`, `market`,
+`parcel`, `scan`), so Home and Services can never diverge. Envoyer stays visible
+but shows the same honest `Bientôt disponible` gated state as Services while
+`envoyer_enabled` is OFF. The archived public wallet is not present in the rail.
+~3.5 cards are visible at 390px; the right-edge fade is decorative and
+pointer-events-none.
 
 ## Regression scope
 
