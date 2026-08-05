@@ -21,7 +21,10 @@ import { useEnvoyerEnabled } from "@/lib/flags/useFeatureFlag";
 import { LocationField, type PickedLocation } from "./LocationField";
 import {
   createPackageCheckout,
+  getPackageDelivery,
+  listReceivingAccounts,
   requestPackageQuote,
+  type ReceivingAccount,
 } from "@/lib/packages/api";
 import {
   PACKAGE_CATEGORY_HINT,
@@ -101,6 +104,8 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<PackageCheckoutResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [accounts, setAccounts] = useState<ReceivingAccount[]>([]);
+  const [liveStatus, setLiveStatus] = useState<{ payment: string; pkg: string } | null>(null);
   const [idempotencyKey] = useState(() =>
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
@@ -123,6 +128,22 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
     if (!quote) return false;
     return new Date(quote.expires_at).getTime() <= Date.now();
   }, [quote]);
+
+  // Payment hand-off: Orange Money is manual-verification at launch, so the
+  // confirmation step must show *where* to pay and then reflect the real
+  // server-side state — never claim a payment we have not observed.
+  useEffect(() => {
+    if (step !== 5 || !result) return;
+    let alive = true;
+    void listReceivingAccounts().then((a) => { if (alive) setAccounts(a); });
+    const poll = async () => {
+      const row = await getPackageDelivery(result.package_id);
+      if (alive && row) setLiveStatus({ payment: row.payment_status, pkg: row.package_status });
+    };
+    void poll();
+    const id = window.setInterval(poll, 15000);
+    return () => { alive = false; window.clearInterval(id); };
+  }, [step, result]);
 
   const fetchQuote = useCallback(async () => {
     if (!pickup || !destination) return;
