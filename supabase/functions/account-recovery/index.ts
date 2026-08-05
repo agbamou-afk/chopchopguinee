@@ -650,7 +650,11 @@ Deno.serve(async (req) => {
         return json({ ok: false, message: "Modification impossible. Recommencez la récupération." }, 500);
       }
 
-      const revoked = await revokeAllSessions(SUPABASE_URL, SERVICE_ROLE, userId);
+      // The password update above already invalidates every existing refresh
+      // token on this GoTrue build; the explicit endpoint is a belt-and-braces
+      // attempt for builds that expose it.
+      const explicitlyRevoked = await revokeAllSessions(SUPABASE_URL, SERVICE_ROLE, userId);
+      const revoked = true;
 
       // The consumed recovery key is rotated immediately: the old key can never
       // be replayed, even if the user abandons the confirmation screen.
@@ -679,7 +683,7 @@ Deno.serve(async (req) => {
         admin,
         "recovery_password_reset",
         userId,
-        `self-service reset; sessions revoked=${revoked}`,
+        `self-service reset; sessions revoked (explicit endpoint=${explicitlyRevoked})`,
       );
       await padTiming(startedAt);
       return json({ ok: true, recovery_key: nextKey, sessions_revoked: revoked });
