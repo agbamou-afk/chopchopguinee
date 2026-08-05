@@ -52,5 +52,37 @@ sender-only pickup and delivery codes.
 - No real-money Envoyer payment has been executed.
 - Production payment finalisation is wired and transactionally verified
   (DEF-015 closed 2026-08-03); no real-money run has been executed.
-- Driver `package_delivery` capability is currently driver self-selected;
-  there is no admin capability editor.
+- Driver `package_delivery` capability is admin-granted only
+  (DEF-016 closed): Chauffeurs → Examiner → *Capacités de mission* calls
+  `admin_set_driver_capability` (ops/god admin, audited). The driver-side
+  chip list is now a read-only summary — the previous self-service toggle was
+  removed because disabling a capability was irreversible from the client.
+
+## Payment hand-off (confirmation step)
+
+Step 5 now shows the active Orange Money receiving accounts
+(`get_active_payment_receiving_accounts`), the payable amount, the reference to
+quote, and an explicit statement that verification is manual. The displayed
+payment/delivery state is polled from `package_deliveries` every 15 s, so the
+screen never claims a payment the server has not recorded.
+
+## Cancellation preview
+
+`package_delivery_cancel_preview` is a read-only RPC returning the exact fee and
+refund (and the "already picked up → support dispute" branch). The customer
+confirms those numbers before `package_delivery_cancel` runs.
+
+## Verification attempts
+
+A wrong pickup/delivery code previously raised an exception, which rolled the
+attempt counter back and made the 6-attempt lockout unreachable. Both RPCs now
+**return** `{ ok:false, error:'invalid_code'|'too_many_attempts', attempts_left }`
+so the counter commits and the courier UI shows remaining attempts and a locked
+state.
+
+## Notifications
+
+`_package_notify` writes an in-app `notification_log` row for the sender at
+`package_dispatching`, `package_picked_up` and `package_delivered`. It is
+failure-isolated: a notification error can never roll back a delivery
+transition.
