@@ -161,6 +161,135 @@ export type Database = {
         }
         Relationships: []
       }
+      account_recovery_challenges: {
+        Row: {
+          asked_question_ids: string[]
+          attempts: number
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          identifier_hash: string
+          ip_hash: string | null
+          is_decoy: boolean
+          max_attempts: number
+          reset_token_expires_at: string | null
+          reset_token_hash: string | null
+          reset_used_at: string | null
+          user_id: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          asked_question_ids?: string[]
+          attempts?: number
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          identifier_hash: string
+          ip_hash?: string | null
+          is_decoy?: boolean
+          max_attempts?: number
+          reset_token_expires_at?: string | null
+          reset_token_hash?: string | null
+          reset_used_at?: string | null
+          user_id?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          asked_question_ids?: string[]
+          attempts?: number
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          identifier_hash?: string
+          ip_hash?: string | null
+          is_decoy?: boolean
+          max_attempts?: number
+          reset_token_expires_at?: string | null
+          reset_token_hash?: string | null
+          reset_used_at?: string | null
+          user_id?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      account_recovery_lockouts: {
+        Row: {
+          cooldown_until: string | null
+          exhausted_count: number
+          key_hash: string
+          updated_at: string
+          window_started_at: string
+        }
+        Insert: {
+          cooldown_until?: string | null
+          exhausted_count?: number
+          key_hash: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Update: {
+          cooldown_until?: string | null
+          exhausted_count?: number
+          key_hash?: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Relationships: []
+      }
+      account_recovery_profiles: {
+        Row: {
+          answer_1_hash: string
+          answer_2_hash: string
+          answer_3_hash: string
+          birthdate_hash: string
+          created_at: string
+          question_1_id: string
+          question_2_id: string
+          question_3_id: string
+          recovery_key_hash: string
+          recovery_key_version: number
+          rotated_at: string | null
+          setup_completed_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer_1_hash: string
+          answer_2_hash: string
+          answer_3_hash: string
+          birthdate_hash: string
+          created_at?: string
+          question_1_id: string
+          question_2_id: string
+          question_3_id: string
+          recovery_key_hash: string
+          recovery_key_version?: number
+          rotated_at?: string | null
+          setup_completed_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer_1_hash?: string
+          answer_2_hash?: string
+          answer_3_hash?: string
+          birthdate_hash?: string
+          created_at?: string
+          question_1_id?: string
+          question_2_id?: string
+          question_3_id?: string
+          recovery_key_hash?: string
+          recovery_key_version?: number
+          rotated_at?: string | null
+          setup_completed_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           admin_role: Database["public"]["Enums"]["admin_role"]
@@ -8556,6 +8685,7 @@ export type Database = {
         }
         Returns: number
       }
+      my_account_recovery_status: { Args: never; Returns: Json }
       next_wongo_reference: { Args: never; Returns: string }
       normalize_om_code: { Args: { p_code: string }; Returns: string }
       om_auto_match: { Args: { p_event_id: string }; Returns: Json }

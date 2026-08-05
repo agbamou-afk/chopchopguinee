@@ -16,7 +16,7 @@ import { isSandboxMode } from "@/lib/runtimeMode";
 import { useLocation } from "react-router-dom";
 import { loadFeatureFlags } from "@/lib/flags/featureFlags";
 
-const FREEZE_ALLOWED_PATHS = ["/auth", "/legal", "/privacy", "/terms", "/help", "/unsubscribe", "/offline"];
+const FREEZE_ALLOWED_PATHS = ["/auth", "/recovery", "/legal", "/privacy", "/terms", "/help", "/unsubscribe", "/offline"];
 
 function FreezeGate({ children }: { children: React.ReactNode }) {
   const { isFrozen, ready } = useAuth();
@@ -35,6 +35,10 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import CompleteProfile from "./pages/CompleteProfile";
+import ForgotPassword from "./pages/ForgotPassword";
+import RecoverySetup from "./pages/RecoverySetup";
+import AccountSecurity from "./pages/AccountSecurity";
+import { RecoverySetupRedirect } from "@/components/auth/RecoverySetupRedirect";
 import ConfirmProfile from "./pages/ConfirmProfile";
 import NoAccess from "./pages/NoAccess";
 import AgentTopup from "./pages/AgentTopup";
@@ -145,6 +149,7 @@ const App = () => {
       <BrowserRouter>
       <AuthProvider>
         <ProfileCompletionRedirect />
+        <RecoverySetupRedirect />
         <TopupNotificationsMount />
         <InstallPrompt />
         <LegalAcceptanceModal />
@@ -167,6 +172,9 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/recovery" element={<ForgotPassword />} />
+          <Route path="/account/recovery-setup" element={<RecoverySetup />} />
+          <Route path="/account/security" element={<AccountSecurity />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
           <Route path="/confirm-profile" element={<ConfirmProfile />} />
           <Route path="/no-access" element={<NoAccess />} />

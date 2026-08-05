@@ -45,7 +45,8 @@ const menuItems: Array<{
   { icon: Star, label: "Programme de fidélité", action: "loyalty", badge: "200 pts" },
   { icon: Gift, label: "Parrainer un ami", action: "referral" },
   { icon: Settings, label: "Paramètres", action: "settings", to: "/settings/notifications" },
-  { icon: Shield, label: "Sécurité et confidentialité", action: "security", to: "/settings/privacy" },
+  { icon: Shield, label: "Sécurité du compte", action: "account-security", to: "/account/security" },
+  { icon: Shield, label: "Confidentialité", action: "privacy", to: "/settings/privacy" },
   { icon: HelpCircle, label: "Aide et support", action: "help", to: "/help" },
 ];
 
