@@ -490,7 +490,7 @@ Deno.serve(async (req) => {
           is_decoy: userId === null,
           identifier_hash: identifierHash,
           asked_question_ids: askedIds,
-          expires_at: new Date(now + CHALLENGE_TTL_MS).toISOString(),
+          expires_at: new Date(Date.now() + CHALLENGE_TTL_MS).toISOString(),
           ip_hash: ipHash,
           max_attempts: MAX_ATTEMPTS,
         })
