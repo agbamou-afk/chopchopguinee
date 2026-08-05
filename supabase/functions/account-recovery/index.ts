@@ -121,20 +121,36 @@ async function revokeAllSessions(
   serviceRole: string,
   userId: string,
 ): Promise<boolean> {
-  try {
-    const res = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}/logout`, {
+  // GoTrue exposes global sign-out for a single user through the admin
+  // sessions endpoint. Older builds only accept the `logout` route, so both
+  // are attempted; the first success wins. A stolen refresh token must never
+  // survive a password reset.
+  const attempts: Array<{ url: string; method: string; body?: string }> = [
+    { url: `${supabaseUrl}/auth/v1/admin/users/${userId}/sessions`, method: "DELETE" },
+    {
+      url: `${supabaseUrl}/auth/v1/admin/users/${userId}/logout`,
       method: "POST",
-      headers: {
-        apikey: serviceRole,
-        Authorization: `Bearer ${serviceRole}`,
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({ scope: "global" }),
-    });
-    return res.ok;
-  } catch {
-    return false;
+    },
+  ];
+  for (const a of attempts) {
+    try {
+      const res = await fetch(a.url, {
+        method: a.method,
+        headers: {
+          apikey: serviceRole,
+          Authorization: `Bearer ${serviceRole}`,
+          "Content-Type": "application/json",
+        },
+        body: a.body,
+      });
+      if (res.ok) return true;
+      console.log("revokeAllSessions attempt failed", a.method, a.url.split("/auth/v1")[1], res.status);
+    } catch (e) {
+      console.log("revokeAllSessions threw", String(e));
+    }
   }
+  return false;
 }
 
 async function audit(admin: Admin, action: string, userId: string | null, note: string) {
