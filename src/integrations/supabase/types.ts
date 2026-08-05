@@ -1563,6 +1563,65 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_promo_credits: {
+        Row: {
+          consumed_gnf: number
+          created_at: string
+          driver_user_id: string
+          grant_key: string
+          grant_tx_id: string | null
+          granted_by: string | null
+          granted_gnf: number
+          id: string
+          identity_key: string | null
+          policy_id: string | null
+          reason: string | null
+          reversed_gnf: number
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          consumed_gnf?: number
+          created_at?: string
+          driver_user_id: string
+          grant_key: string
+          grant_tx_id?: string | null
+          granted_by?: string | null
+          granted_gnf: number
+          id?: string
+          identity_key?: string | null
+          policy_id?: string | null
+          reason?: string | null
+          reversed_gnf?: number
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          consumed_gnf?: number
+          created_at?: string
+          driver_user_id?: string
+          grant_key?: string
+          grant_tx_id?: string | null
+          granted_by?: string | null
+          granted_gnf?: number
+          id?: string
+          identity_key?: string | null
+          policy_id?: string | null
+          reason?: string | null
+          reversed_gnf?: number
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_promo_credits_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "driver_starter_credit_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_recruitment_campaigns: {
         Row: {
           created_at: string
@@ -1851,6 +1910,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      driver_starter_credit_policies: {
+        Row: {
+          amount_gnf: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          id: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_gnf?: number
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          enabled?: boolean
+          id?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_gnf?: number
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          enabled?: boolean
+          id?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       email_send_log: {
         Row: {
@@ -2260,6 +2352,11 @@ export type Database = {
       }
       finance_policies: {
         Row: {
+          cancel_after_dispatch_bps: number
+          cancel_before_dispatch_bps: number
+          cash_funding_max_gnf: number | null
+          cash_funding_mode: string
+          cash_funding_pct_bps: number
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
           collateral_min_gnf: number
@@ -2270,15 +2367,23 @@ export type Database = {
           created_by: string | null
           effective_from: string
           enabled: boolean
+          fee_basis: string
           fixed_commission_gnf: number
           id: string
+          max_declared_value_gnf: number | null
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
           require_collateral_before_offer: boolean
+          transaction_fee_bps: number
           updated_at: string
         }
         Insert: {
+          cancel_after_dispatch_bps?: number
+          cancel_before_dispatch_bps?: number
+          cash_funding_max_gnf?: number | null
+          cash_funding_mode?: string
+          cash_funding_pct_bps?: number
           collateral_fixed_gnf?: number
           collateral_max_gnf?: number | null
           collateral_min_gnf?: number
@@ -2289,15 +2394,23 @@ export type Database = {
           created_by?: string | null
           effective_from?: string
           enabled?: boolean
+          fee_basis?: string
           fixed_commission_gnf?: number
           id?: string
+          max_declared_value_gnf?: number | null
           min_driver_balance_gnf?: number
           mission_type: string
           note?: string | null
           require_collateral_before_offer?: boolean
+          transaction_fee_bps?: number
           updated_at?: string
         }
         Update: {
+          cancel_after_dispatch_bps?: number
+          cancel_before_dispatch_bps?: number
+          cash_funding_max_gnf?: number | null
+          cash_funding_mode?: string
+          cash_funding_pct_bps?: number
           collateral_fixed_gnf?: number
           collateral_max_gnf?: number | null
           collateral_min_gnf?: number
@@ -2308,12 +2421,15 @@ export type Database = {
           created_by?: string | null
           effective_from?: string
           enabled?: boolean
+          fee_basis?: string
           fixed_commission_gnf?: number
           id?: string
+          max_declared_value_gnf?: number | null
           min_driver_balance_gnf?: number
           mission_type?: string
           note?: string | null
           require_collateral_before_offer?: boolean
+          transaction_fee_bps?: number
           updated_at?: string
         }
         Relationships: []
@@ -4279,6 +4395,7 @@ export type Database = {
           mission_type: string
           policy_id: string | null
           policy_snapshot: Json
+          promo_gnf: number
           reason: string | null
           resolution_tx_id: string | null
           resolved_at: string | null
@@ -4286,6 +4403,7 @@ export type Database = {
           source_id: string
           source_module: string
           state: string
+          unrestricted_gnf: number
           updated_at: string
         }
         Insert: {
@@ -4301,6 +4419,7 @@ export type Database = {
           mission_type: string
           policy_id?: string | null
           policy_snapshot?: Json
+          promo_gnf?: number
           reason?: string | null
           resolution_tx_id?: string | null
           resolved_at?: string | null
@@ -4308,6 +4427,7 @@ export type Database = {
           source_id: string
           source_module: string
           state?: string
+          unrestricted_gnf?: number
           updated_at?: string
         }
         Update: {
@@ -4323,6 +4443,7 @@ export type Database = {
           mission_type?: string
           policy_id?: string | null
           policy_snapshot?: Json
+          promo_gnf?: number
           reason?: string | null
           resolution_tx_id?: string | null
           resolved_at?: string | null
@@ -4330,6 +4451,7 @@ export type Database = {
           source_id?: string
           source_module?: string
           state?: string
+          unrestricted_gnf?: number
           updated_at?: string
         }
         Relationships: []
@@ -6395,6 +6517,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _promo_consume: {
+        Args: { p_amount: number; p_driver: string }
+        Returns: number
+      }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -6986,6 +7112,7 @@ export type Database = {
           transaction_id: string
         }[]
       }
+      admin_promotional_credit_treasury: { Args: never; Returns: Json }
       admin_record_om_receipt: {
         Args: {
           p_amount_gnf: number
@@ -7013,6 +7140,10 @@ export type Database = {
         Returns: undefined
       }
       admin_retry_om_credit: { Args: { p_event_id: string }; Returns: Json }
+      admin_reverse_starter_credit: {
+        Args: { p_driver: string; p_reason: string }
+        Returns: Json
+      }
       admin_review_commission: {
         Args: { p_action: string; p_commission: string; p_notes?: string }
         Returns: undefined
@@ -7076,6 +7207,11 @@ export type Database = {
           p_require_collateral_before_offer?: boolean
         }
         Returns: {
+          cancel_after_dispatch_bps: number
+          cancel_before_dispatch_bps: number
+          cash_funding_max_gnf: number | null
+          cash_funding_mode: string
+          cash_funding_pct_bps: number
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
           collateral_min_gnf: number
@@ -7086,12 +7222,15 @@ export type Database = {
           created_by: string | null
           effective_from: string
           enabled: boolean
+          fee_basis: string
           fixed_commission_gnf: number
           id: string
+          max_declared_value_gnf: number | null
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
           require_collateral_before_offer: boolean
+          transaction_fee_bps: number
           updated_at: string
         }
         SetofOptions: {
@@ -7104,6 +7243,30 @@ export type Database = {
       admin_set_merchant_location_status: {
         Args: { p_note?: string; p_status: string; p_store_id: string }
         Returns: undefined
+      }
+      admin_set_starter_credit_policy: {
+        Args: {
+          p_amount_gnf: number
+          p_effective_from?: string
+          p_enabled?: boolean
+          p_note?: string
+        }
+        Returns: {
+          amount_gnf: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          id: string
+          note: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_starter_credit_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_set_statement_status: {
         Args: { p_notes?: string; p_statement: string; p_status: string }
@@ -7666,6 +7829,10 @@ export type Database = {
         }
         Returns: Json
       }
+      driver_funding_allocate: {
+        Args: { p_amount: number; p_driver: string; p_kind: string }
+        Returns: Json
+      }
       driver_has_capability: {
         Args: { _capability: string; _user_id: string }
         Returns: boolean
@@ -7687,6 +7854,7 @@ export type Database = {
         Args: {
           p_driver?: string
           p_is_sandbox?: boolean
+          p_kinds?: string[]
           p_mission_type: string
           p_source_id: string
           p_source_module: string
@@ -7751,6 +7919,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      driver_promo_balance: { Args: { p_driver: string }; Returns: Json }
       driver_set_capabilities: {
         Args: { _caps: string[] }
         Returns: {
@@ -7820,6 +7989,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      driver_starter_credit_grant: {
+        Args: { p_driver?: string }
+        Returns: Json
       }
       driver_update_location_signal: {
         Args: {
@@ -7934,6 +8107,11 @@ export type Database = {
       finance_policy_current: {
         Args: { p_mission_type: string }
         Returns: {
+          cancel_after_dispatch_bps: number
+          cancel_before_dispatch_bps: number
+          cash_funding_max_gnf: number | null
+          cash_funding_mode: string
+          cash_funding_pct_bps: number
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
           collateral_min_gnf: number
@@ -7944,12 +8122,15 @@ export type Database = {
           created_by: string | null
           effective_from: string
           enabled: boolean
+          fee_basis: string
           fixed_commission_gnf: number
           id: string
+          max_declared_value_gnf: number | null
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
           require_collateral_before_offer: boolean
+          transaction_fee_bps: number
           updated_at: string
         }
         SetofOptions: {
@@ -9569,6 +9750,25 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      starter_credit_policy_current: {
+        Args: never
+        Returns: {
+          amount_gnf: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          id: string
+          note: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_starter_credit_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       submit_customer_om_code: {
         Args: { p_om_code: string; p_topup_request_id: string }
         Returns: Json

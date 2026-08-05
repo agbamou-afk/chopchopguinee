@@ -18,6 +18,16 @@ export type DriverBalanceSummary = {
   collateral_held_gnf: number;
   commission_held_gnf: number;
   status: string;
+  /** Restricted CHOPCHOP starting credit still in the ledger (incl. held part). */
+  promo_remaining_gnf?: number;
+  promo_held_gnf?: number;
+  promo_available_gnf?: number;
+  /** Available funds excluding the restricted promotional bonus. */
+  unrestricted_available_gnf?: number;
+  /** What the driver may actually cash out — never includes the bonus. */
+  withdrawable_gnf?: number;
+  platform_fee_held_gnf?: number;
+  cash_funding_held_gnf?: number;
 };
 
 export type MissionRequirement = {
@@ -44,6 +54,11 @@ export type Eligibility = {
 /** French, non-punitive copy shown when a driver cannot take new missions. */
 export const INSUFFICIENT_BALANCE_MESSAGE =
   "Votre solde disponible est insuffisant pour recevoir de nouvelles missions. Rechargez votre portefeuille ou attendez la libération d'une caution pour reprendre.";
+
+/** Canonical driver-facing wording for the restricted starting credit. */
+export const STARTER_CREDIT_LABEL = "Bonus de démarrage CHOPCHOP";
+export const STARTER_CREDIT_NOTE =
+  "Ce bonus de 25 000 GNF peut servir aux cautions et frais CHOPCHOP. Il ne peut pas être retiré ni transféré.";
 
 export async function fetchDriverBalance(): Promise<DriverBalanceSummary | null> {
   const { data, error } = await supabase.rpc("driver_balance_summary" as never, {} as never);

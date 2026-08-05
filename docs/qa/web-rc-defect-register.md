@@ -186,3 +186,19 @@ couriers from the admin console. Workaround: driver self-selection.
 
 ### DEF-018 (P2, OPEN) — Chop Pay public surface gated
 `chop_pay_enabled` is OFF; `/wallet` renders the honest Chop Pay pre-launch panel (cash + OM top-up). Ledger, history and reconciliation unaffected.
+
+### DEF-019 (P1, OPEN) — starting-credit grant not wired to driver approval
+`driver_starter_credit_grant` exists, is idempotent and eligibility-checked, but
+no approval path calls it and `driver_starter_credit_enabled` is OFF, so the RPC
+returns `disabled`. Existing approved drivers without a grant are intentionally
+untouched pending an explicit one-time migration policy. Wiring is a later slice.
+
+### DEF-020 (P2, OPEN) — no admin UI for the starting-credit policy/treasury
+`admin_set_starter_credit_policy`, `admin_reverse_starter_credit` and
+`admin_promotional_credit_treasury` are server-side only; the finance-policy
+admin page does not yet expose them.
+
+### DEF-021 (P2, OPEN) — cash-order funding hold has no caller
+`cash_funding` hold kind and the unrestricted-only rule are implemented and the
+Repas/Marché policy rows carry the 100%-of-subtotal rule, but no Repas/Marché
+runtime path places the hold. `cash_order_funding_enabled` is OFF.

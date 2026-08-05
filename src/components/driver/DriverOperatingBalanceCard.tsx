@@ -1,7 +1,12 @@
-import { Wallet, Lock, ShieldCheck, Plus, Info } from "lucide-react";
+import { Wallet, Lock, ShieldCheck, Plus, Info, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatGNF } from "@/lib/format";
-import { useDriverBalance, INSUFFICIENT_BALANCE_MESSAGE } from "@/lib/finance/driverBalance";
+import {
+  useDriverBalance,
+  INSUFFICIENT_BALANCE_MESSAGE,
+  STARTER_CREDIT_LABEL,
+  STARTER_CREDIT_NOTE,
+} from "@/lib/finance/driverBalance";
 import { useOmTopupEnabled } from "@/lib/flags/useFeatureFlag";
 
 /**
@@ -18,6 +23,9 @@ export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }
   const held = summary?.held_gnf ?? 0;
   const collateral = summary?.collateral_held_gnf ?? 0;
   const commission = summary?.commission_held_gnf ?? 0;
+  const promo = summary?.promo_available_gnf ?? 0;
+  // Withdrawable NEVER includes the restricted starting credit.
+  const withdrawable = summary?.withdrawable_gnf ?? Math.max(0, available - promo);
   const blocked = !loading && available <= 0;
 
   return (
@@ -33,6 +41,9 @@ export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }
           </p>
           <p className="text-[11px] text-muted-foreground tabular-nums">
             Total {formatGNF(total)} · retenu {formatGNF(held)}
+          </p>
+          <p className="text-[11px] text-muted-foreground tabular-nums">
+            Montant retirable {formatGNF(withdrawable)}
           </p>
         </div>
       </div>
@@ -51,6 +62,16 @@ export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }
           <p className="text-xs font-bold text-foreground tabular-nums">{formatGNF(commission)}</p>
         </div>
       </div>
+
+      {promo > 0 && (
+        <div className="mt-2 rounded-lg border border-primary/30 bg-primary/5 p-2">
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <Gift className="w-3 h-3" /> {STARTER_CREDIT_LABEL}
+          </p>
+          <p className="text-xs font-bold text-foreground tabular-nums">{formatGNF(promo)}</p>
+          <p className="text-[10px] text-muted-foreground mt-1">{STARTER_CREDIT_NOTE}</p>
+        </div>
+      )}
 
       {blocked && (
         <div className="mt-3 rounded-xl border border-secondary/40 bg-secondary/10 p-3 text-xs text-foreground">

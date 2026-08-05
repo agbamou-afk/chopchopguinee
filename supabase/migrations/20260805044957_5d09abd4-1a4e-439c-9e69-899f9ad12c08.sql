@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public._qa_slice1_selftest(uuid) TO service_role;
