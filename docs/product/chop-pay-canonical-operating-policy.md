@@ -227,3 +227,15 @@ this document.
    per-service basis columns in `finance_policies`.
 3. Customer-side cash-order cancellation debt (§8) has no ledger primitive yet.
 4. Merchant settlement infrastructure (§3, §9) is not built.
+
+## 14. Historical artifacts intentionally left unmodified
+
+These files are applied-migration history and dated QA records. Their text is
+accurate for the date it was written and is **superseded by this document**;
+they were not rewritten:
+
+- `supabase/migrations/20260805033206_*.sql` — comments state "Envoyer: 50% of
+  declared package value" and "10% commission" for cash rides.
+- `supabase/migrations/20260805044552_*.sql` — Slice 1 seed comments.
+- `docs/qa/chop-pay-test-matrix.md`, `docs/qa/chop-pay-slice1-results.md` —
+  dated QA runs, each now carrying a supersession pointer.
