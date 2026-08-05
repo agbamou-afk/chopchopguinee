@@ -6862,6 +6862,7 @@ export type Database = {
         Args: { _suspended_reason: string; _target: string }
         Returns: Json
       }
+      _capture_revenue_account: { Args: { p_kind: string }; Returns: string }
       _driver_group_stats: {
         Args: { p_from: string; p_group: string; p_to: string }
         Returns: {
@@ -6876,6 +6877,7 @@ export type Database = {
         }[]
       }
       _envoyer_enabled: { Args: never; Returns: boolean }
+      _hold_account: { Args: { p_kind: string }; Returns: string }
       _is_approved_service_agent: {
         Args: { _user_id: string }
         Returns: boolean
@@ -8261,6 +8263,16 @@ export type Database = {
         Returns: boolean
       }
       driver_mark_offline_signal: { Args: never; Returns: undefined }
+      driver_mission_capture_reverse: {
+        Args: {
+          p_evidence?: string
+          p_kind: string
+          p_reason: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       driver_mission_commission_capture: {
         Args: {
           p_final_value_gnf: number
@@ -8275,10 +8287,15 @@ export type Database = {
       }
       driver_mission_hold_place: {
         Args: {
+          p_declared_value_gnf?: number
+          p_delivery_fee_gnf?: number
           p_driver?: string
+          p_fare_gnf?: number
           p_is_sandbox?: boolean
           p_kinds?: string[]
+          p_merchandise_subtotal_gnf?: number
           p_mission_type: string
+          p_payment_mode?: string
           p_source_id: string
           p_source_module: string
           p_value_gnf?: number
@@ -8525,6 +8542,17 @@ export type Database = {
       }
       finance_mission_requirement: {
         Args: { p_mission_type: string; p_value_gnf?: number }
+        Returns: Json
+      }
+      finance_mission_requirement_v2: {
+        Args: {
+          p_declared_value_gnf?: number
+          p_delivery_fee_gnf?: number
+          p_fare_gnf?: number
+          p_merchandise_subtotal_gnf?: number
+          p_mission_type: string
+          p_payment_mode?: string
+        }
         Returns: Json
       }
       finance_policy_current: {
