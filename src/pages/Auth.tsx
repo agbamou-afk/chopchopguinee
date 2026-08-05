@@ -585,14 +585,12 @@ export default function Auth() {
           )}
 
           {mode === "signin" && (
-            <button
-              type="button"
-              onClick={resendConfirmation}
-              disabled={busy}
-              className="block w-full text-[12px] text-primary underline text-center pt-1"
+            <Link
+              to={safeNext ? `/recovery?next=${encodeURIComponent(safeNext)}` : "/recovery"}
+              className="block w-full text-[13px] font-medium text-primary underline text-center pt-1"
             >
-              Renvoyer l'email de confirmation
-            </button>
+              Mot de passe oublié ?
+            </Link>
           )}
         </form>
 
