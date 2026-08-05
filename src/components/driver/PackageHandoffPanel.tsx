@@ -117,6 +117,11 @@ export function PackageHandoffPanel({ mission, onVerified }: Props) {
         <p className="text-[12.5px] text-muted-foreground flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5" /> Remise vérifiée et horodatée.
         </p>
+      ) : locked ? (
+        <p className="text-[12.5px] text-destructive leading-snug">
+          Vérification bloquée après trop de tentatives. Contactez le support pour débloquer ce
+          colis.
+        </p>
       ) : (
         <>
           <p className="text-[12px] text-muted-foreground">

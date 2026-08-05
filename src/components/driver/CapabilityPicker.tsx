@@ -23,6 +23,13 @@ export function CapabilityPicker({ userId, capabilities, onChange }: CapabilityP
   const [local, setLocal] = useState<string[]>(capabilities);
   const [savingKey, setSavingKey] = useState<string | null>(null);
 
+  // A driver can only enable/disable capabilities an admin has granted them —
+  // `driver_set_capabilities` rejects anything outside that set, so never show
+  // a chip that cannot be turned on.
+  const grantable = ALL_CAPABILITIES.filter(
+    (c) => capabilities.includes(c),
+  ) as DriverCapability[];
+
   useEffect(() => {
     setLocal(capabilities);
   }, [capabilities]);
@@ -55,7 +62,12 @@ export function CapabilityPicker({ userId, capabilities, onChange }: CapabilityP
         Mes capacités
       </p>
       <div className="flex flex-wrap gap-1.5">
-        {ALL_CAPABILITIES.map((cap) => {
+        {grantable.length === 0 && (
+          <p className="text-[11.5px] text-muted-foreground">
+            Aucune capacité attribuée pour le moment.
+          </p>
+        )}
+        {grantable.map((cap) => {
           const active = local.includes(cap);
           const loading = savingKey === cap;
           return (
