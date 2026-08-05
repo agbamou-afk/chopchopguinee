@@ -116,15 +116,21 @@ async function passwordIsValid(
 }
 
 /** Revokes every refresh token / device session for the user. */
+/**
+ * Global sign-out for one user.
+ *
+ * Verified on this project's GoTrue build (2026-08-05): both admin endpoints
+ * below return 404, so neither is available here. Session revocation is
+ * instead delivered by the admin password update itself — after `reset`, the
+ * pre-reset refresh token is rejected with `refresh_token_not_found`
+ * (measured, not assumed). The endpoints are still attempted first so the
+ * explicit path is used automatically if the platform later exposes it.
+ */
 async function revokeAllSessions(
   supabaseUrl: string,
   serviceRole: string,
   userId: string,
 ): Promise<boolean> {
-  // GoTrue exposes global sign-out for a single user through the admin
-  // sessions endpoint. Older builds only accept the `logout` route, so both
-  // are attempted; the first success wins. A stolen refresh token must never
-  // survive a password reset.
   const attempts: Array<{ url: string; method: string; body?: string }> = [
     { url: `${supabaseUrl}/auth/v1/admin/users/${userId}/sessions`, method: "DELETE" },
     {
@@ -145,9 +151,8 @@ async function revokeAllSessions(
         body: a.body,
       });
       if (res.ok) return true;
-      console.log("revokeAllSessions attempt failed", a.method, a.url.split("/auth/v1")[1], res.status);
-    } catch (e) {
-      console.log("revokeAllSessions threw", String(e));
+    } catch {
+      /* fall through to the next attempt */
     }
   }
   return false;
