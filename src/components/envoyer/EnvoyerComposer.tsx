@@ -505,10 +505,67 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
                   </p>
                 </div>
               </div>
+
+              <div className="rounded-xl border border-border p-3 space-y-2">
+                <p className="text-[13px] font-semibold text-foreground">
+                  Payer {formatGNF(result.amount_gnf)} par Orange Money
+                </p>
+                {accounts.length === 0 ? (
+                  <p className="text-[12.5px] text-muted-foreground leading-snug">
+                    Aucun compte de réception Orange Money n’est publié pour le moment. Contactez le
+                    support avant de payer — ne transférez à aucun autre numéro.
+                  </p>
+                ) : (
+                  accounts.map((a) => (
+                    <div key={a.id} className="rounded-lg bg-muted/50 p-2.5 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[12.5px] text-foreground">{a.label}</span>
+                        <button
+                          type="button"
+                          className="text-[13px] font-bold tracking-wide min-h-[44px]"
+                          onClick={() => {
+                            void navigator.clipboard.writeText(a.phone_e164);
+                            toast.success("Numéro copié");
+                          }}
+                        >
+                          {a.phone_e164}
+                        </button>
+                      </div>
+                      {a.public_instructions && (
+                        <p className="text-[11.5px] text-muted-foreground leading-snug">
+                          {a.public_instructions}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <span className="text-[12.5px] text-muted-foreground">Référence à indiquer</span>
+                  <button
+                    type="button"
+                    className="text-[13px] font-bold tracking-widest min-h-[44px]"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(result.reference);
+                      toast.success("Référence copiée");
+                    }}
+                  >
+                    {result.reference}
+                  </button>
+                </div>
+                <p className="text-[11.5px] text-muted-foreground leading-snug">
+                  Le paiement est vérifié manuellement par nos équipes. La recherche d’un coursier
+                  démarre uniquement après cette vérification — aucun paiement en espèces n’est
+                  collecté à la remise.
+                </p>
+              </div>
+
               <div className="rounded-xl border border-border p-3">
                 <p className="text-[12.5px] text-muted-foreground leading-snug">
-                  État du paiement : <strong>{result.intent_state}</strong>. Suivez la livraison et
-                  vos codes de remise dans l’onglet <strong>Activité</strong>.
+                  État du paiement :{" "}
+                  <strong>{liveStatus?.payment ?? result.intent_state}</strong>
+                  {liveStatus?.pkg ? ` · Livraison : ${liveStatus.pkg}` : ""}. Cet état est lu depuis
+                  le serveur. Suivez la livraison et vos codes de remise dans l’onglet{" "}
+                  <strong>Activité</strong>.
                 </p>
               </div>
               <Button className="w-full h-12" onClick={() => onOpenChange(false)}>
