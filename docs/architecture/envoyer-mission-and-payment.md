@@ -20,7 +20,28 @@ functions.
 | `package_delivery_finalize_from_intent` | On authorised payment: creates the `package_delivery` mission and the verification codes |
 | `package_verify_pickup` / `package_verify_delivery` | Code comparison, mission state transition, earnings credit **guarded by `IF NOT is_sandbox`** |
 | `package_delivery_cancel` | Sender-only, idempotent; fee/refund/support-dispute branches |
+| `package_delivery_cancel_preview` | Read-only fee/refund preview shown before the sender confirms |
 | `package_delivery_courier_view` | SECURITY DEFINER operational payload for the assigned courier; excludes codes |
+| `admin_set_driver_capability` | Ops/god admin only, audited grant/revoke of one driver capability (DEF-016) |
+| `_package_notify` | Failure-isolated `notification_log` insert for sender-facing package events |
+
+All of the above are `EXECUTE`-revoked from `anon`/`PUBLIC`;
+`_package_notify` and `package_delivery_finalize_from_intent` are
+`service_role` only.
+
+### Verification attempt semantics
+
+A wrong code returns `{ ok:false, error:'invalid_code', attempts_left }` instead
+of raising. Raising rolled back the `pickup_attempts` / `delivery_attempts`
+increment in the same transaction, which made the 6-attempt lockout
+unreachable. Authorisation and state errors still raise.
+
+### Dispatch semantics
+
+`state = 'assigned'` with `courier_id IS NULL` is the project-wide "available"
+convention — the `Eligible couriers read available missions` RLS policy encodes
+exactly that predicate plus `driver_has_capability(...)`. Package missions
+therefore enter the normal courier pool with no separate dispatch path.
 
 ## Payment path
 
