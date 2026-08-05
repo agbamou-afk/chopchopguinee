@@ -180,3 +180,9 @@ is currently driver self-selected via `CapabilityPicker`, and
 `PilotCommandCenter` shows capabilities read-only.
 **Impact:** operations cannot grant or revoke the package capability for pilot
 couriers from the admin console. Workaround: driver self-selection.
+
+### DEF-017 (P1, OPEN) — mission holds not yet wired into acceptance/completion
+`driver_mission_hold_place` / `driver_mission_commission_capture` exist and are verified in isolation, but `ride_accept`, `driver_offer_accept`, `mission_claim` and `ride_complete` do not call them yet. `driver_balance_gate_enabled` is OFF so no runtime behaviour changed. Closing this is the next slice.
+
+### DEF-018 (P2, OPEN) — Chop Pay public surface gated
+`chop_pay_enabled` is OFF; `/wallet` renders the honest Chop Pay pre-launch panel (cash + OM top-up). Ledger, history and reconciliation unaffected.

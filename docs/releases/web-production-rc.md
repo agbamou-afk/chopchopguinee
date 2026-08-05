@@ -128,3 +128,10 @@ RC remains **UNLOCKED** pending Slice 3 and real-money/SMTP verification.
   `wallet_public_enabled` false, `envoyer_enabled` false.
 
 RC remains **UNLOCKED**.
+
+## Amendment — Chop Pay ledger revival (2026-08-05)
+- Orange Money **direct checkout** archived behind `om_direct_checkout_enabled` (off). Not deleted: provider abstraction, intents, reconciliation history and audit records are intact.
+- Orange Money **top-up rail retained** (`om_topup_enabled`, on) with unchanged manual Finance confirmation.
+- Public money surface renamed **Chop Pay**; `chop_pay_enabled` stays OFF pending QA.
+- New finance-policy + driver commission/collateral engine (see `docs/architecture/driver-balance-commission-collateral.md`).
+- RC remains **UNLOCKED**.
