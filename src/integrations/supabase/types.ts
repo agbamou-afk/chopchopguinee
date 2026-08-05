@@ -6521,6 +6521,8 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_slice1_run: { Args: { p_driver: string }; Returns: undefined }
+      _qa_slice1_selftest: { Args: { p_driver: string }; Returns: string }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -7850,30 +7852,18 @@ export type Database = {
         Args: { p_reason: string; p_source_id: string; p_source_module: string }
         Returns: Json
       }
-      driver_mission_hold_place:
-        | {
-            Args: {
-              p_driver?: string
-              p_is_sandbox?: boolean
-              p_mission_type: string
-              p_source_id: string
-              p_source_module: string
-              p_value_gnf?: number
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_driver?: string
-              p_is_sandbox?: boolean
-              p_kinds?: string[]
-              p_mission_type: string
-              p_source_id: string
-              p_source_module: string
-              p_value_gnf?: number
-            }
-            Returns: Json
-          }
+      driver_mission_hold_place: {
+        Args: {
+          p_driver?: string
+          p_is_sandbox?: boolean
+          p_kinds?: string[]
+          p_mission_type: string
+          p_source_id: string
+          p_source_module: string
+          p_value_gnf?: number
+        }
+        Returns: Json
+      }
       driver_mission_hold_release: {
         Args: {
           p_kind?: string
