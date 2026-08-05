@@ -65,3 +65,20 @@ Also: grant-on-approval wiring (DEF-019), admin starting-credit/treasury UI
   `delivery_fee` (canonical §7). Closes open item 1 of the canonical policy.
 - QA: 30/30 PASS via a self-rolling-back harness (dropped afterwards); all
   fixtures verified rolled back, all activation flags still OFF.
+
+## Slice 1 micro-closeout (P1 RPC authority) — 2026-08-05, INERT
+- Mission money resolution is now **service-role only**: EXECUTE revoked from
+  PUBLIC/anon/authenticated on every settlement, capture, release, refund,
+  merchant-funding, debt, payout, settlement and claims primitive. Owner-driver
+  identity is no longer sufficient authority.
+- Guards hoisted above the hold lookup in `driver_mission_hold_release` and
+  `driver_mission_fee_capture` (an early `no_hold` return previously leaked a
+  silent no-op success); `driver_funding_allocate` gained its missing guard.
+- Read-only helpers (`driver_balance_summary`, `driver_financial_eligibility`,
+  `finance_policy_current`, `finance_mission_requirement(_v2)`) are
+  authenticated-only; anon revoked.
+- Abuse QA 22/22 PASS with rollback proof; QA runner source removed.
+- **DEF-FIN-001**: platform master wallet `b6858980-43d2-425d-b12d-b02aac3de52d`
+  holds **-100 435 GNF**. Pre-existing production data, Finance reconciliation
+  follow-up. Do not credit or normalize.
+- Evidence: `docs/qa/chop-pay-slice1-closeout.md`.
