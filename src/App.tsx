@@ -81,6 +81,7 @@ const FieldPilotsAdmin = lazy(() => import("./pages/admin/FieldPilotsAdmin"));
 const FieldCaptain = lazy(() => import("./pages/field/FieldCaptain"));
 const FieldVisit = lazy(() => import("./pages/field/FieldVisit"));
 const FlagsAdmin = lazy(() => import("./pages/admin/FlagsAdmin"));
+const FinancePolicyAdmin = lazy(() => import("./pages/admin/FinancePolicyAdmin"));
 const SettingsAdmin = lazy(() => import("./pages/admin/SettingsAdmin"));
 const AdminsAdmin = lazy(() => import("./pages/admin/AdminsAdmin"));
 const AuditAdmin = lazy(() => import("./pages/admin/AuditAdmin"));
@@ -211,6 +212,7 @@ const App = () => {
             <Route path="map/driver-signals" element={<DriverSignalsAdmin />} />
             <Route path="field/pilots" element={<FieldPilotsAdmin />} />
             <Route path="flags" element={<FlagsAdmin />} />
+            <Route path="finance-policy" element={<FinancePolicyAdmin />} />
             <Route path="settings" element={<SettingsAdmin />} />
             <Route path="admins" element={<AdminsAdmin />} />
             <Route path="audit" element={<AuditAdmin />} />
