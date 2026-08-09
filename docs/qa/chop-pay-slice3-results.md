@@ -136,3 +136,82 @@ the new driver top-up CTA were **not** visually verified. No visual PASS is clai
 ### Exit verdict — Slice 3 PASS
 Automatic driver top-up recovery is demonstrated end-to-end through a confirmed Orange Money
 provider event into the driver operating wallet, with idempotency, isolation, and cleanup proven.
+
+---
+
+## Part 3 — Slice 3D: inbound-OM privilege micro-closeout
+
+### Defect (P1)
+`om_auto_match(uuid)` and `wallet_topup_om_credit(uuid,uuid)` were `EXECUTE`-able by `anon`
+and `authenticated`. Both are `SECURITY DEFINER`; `om_auto_match` had no caller guard and
+`wallet_topup_om_credit` treated `auth.uid() IS NULL` as the trusted/service branch, so an
+anonymous invocation entered the path intended for `service_role`.
+
+### Fix (internal primitives only)
+- `REVOKE ALL` on both functions from `PUBLIC`, `anon`, `authenticated`; `GRANT EXECUTE` to
+  `service_role` only. No behavioural change to amount, status, matching, rate/high-value,
+  `target_party_type` or idempotency checks.
+- Direct-caller audit found exactly one authenticated caller: the admin Reconciliation OM
+  "approve candidate" action in `src/pages/admin/WalletReconciliation.tsx`.
+  New `admin_manual_om_credit(uuid,uuid)` — `SECURITY DEFINER`, `SET search_path = public`,
+  requires `can_manage_wallet(auth.uid())`, granted to `authenticated`/`service_role` — now
+  fronts that call. The UI calls the wrapper.
+- Trusted internal callers unchanged and still work because they are `SECURITY DEFINER`:
+  `submit_customer_om_code`, `admin_record_om_receipt`, `admin_retry_om_credit`,
+  `om_import_csv` edge function (service_role).
+
+### Targeted QA — harness `_qa_s3d_run()` (self-rolling-back, dropped after the run)
+**23/23 assertions PASS.**
+
+| ID | Assertion | Result |
+| -- | --------- | ------ |
+| A1 | `anon` cannot execute `om_auto_match` | PASS |
+| A2 | `authenticated` cannot execute `om_auto_match` | PASS |
+| A3 | `anon` cannot execute `wallet_topup_om_credit` | PASS |
+| A4 | `authenticated` cannot execute `wallet_topup_om_credit` | PASS |
+| A5 | `service_role` can execute both primitives | PASS |
+| A6 | `submit_customer_om_code` still open to the customer | PASS |
+| A7 | `admin_record_om_receipt` / `admin_retry_om_credit` / `admin_manual_om_credit` still open to authorized admins | PASS |
+| E1 | Approved driver, 0 available → ineligible for 100 000 GNF ride | PASS |
+| E2 | `driver_wallet_topup_om_create(50 000)` → `target_party_type='driver'`, owner = caller | PASS |
+| E3 | Real `submit_customer_om_code` + provider event → `om_auto_match` = `credited` (`code_match`) | PASS |
+| E4 | Driver wallet +50 000 | PASS |
+| E5 | Same user's client wallet +0 | PASS |
+| E6 | Master −50 000 contra only; exactly 1 `topup` txn master → driver | PASS |
+| E7 | `driver_financial_eligibility('ride',100000)` becomes eligible automatically | PASS |
+| E8 | No `unblocked` flag — eligibility is pure `balance_gnf - held_gnf` | PASS |
+| E9 | Replay of `wallet_topup_om_credit` adds zero (1 txn, balance unchanged) | PASS |
+| E10 | Non-driver caller denied by `driver_wallet_topup_om_create` | PASS |
+| E11 | Ordinary customer top-up still targets `client` | PASS |
+| G1 | `ride_accept` authenticated = false | PASS |
+| G2 | `ride_dispatch` anon = false | PASS |
+| G3 | `ride_dispatch` authenticated = false | PASS |
+| G4 | `wallet_internal_transfer` authenticated = false | PASS |
+
+### Cleanup — read-only proof after rollback
+- `pg_proc` matching `_qa_s3%`: **0**
+- Slice 3 QA audit rows (`module like 'qa.slice3%'`): **0**
+- QA provider events (`raw_payload->>'source'='qa_sandbox'`): **0**
+- `topup_requests` with `target_party_type='driver'`: **0**; NULL target: **0**
+- Synthetic QA auth users: **0**
+- Canonical finance flags: **`om_topup_enabled` only**; all 16 others (`chop_pay_*` ×5,
+  `om_*` ×10, `driver_cashout_enabled`, `merchant_om_settlement_enabled`,
+  `merchant_wallet_enabled`, `wallet_public_enabled`) false. Legacy non-canonical `wallet`
+  flag unchanged.
+- DEF-FIN-001 master wallet: **−100 435 GNF**, unchanged after rollback.
+
+### Build / type / test / PWA evidence (this commit)
+- `tsgo --noEmit` — clean (exit 0); `types.ts` regenerated (`admin_manual_om_credit` present).
+- Vitest — **12 passed / 12** (2 files).
+- `vite build` — green in 18.65 s.
+- PWA `generateSW` — precache **129 entries (11 855.71 KiB)**; largest single asset
+  `index-*.js` **2 131.94 kB**, under the 4 MiB per-file constraint.
+
+### Visual QA — **YELLOW**
+Preview session remains signed out; the admin Reconciliation OM approve action was not
+visually exercised. No visual PASS claimed.
+
+### Slice 3D verdict — PASS
+Both inbound-OM primitives are now internal (`service_role` only), the legitimate customer
+and admin entrypoints are intact, and the full driver recovery E1–E11 path still passes
+through the real matching flow. Milestones remain **UNLOCKED**; Slice 4 not started.
