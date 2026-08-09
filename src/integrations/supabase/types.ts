@@ -7086,6 +7086,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _finance_flag: { Args: { p_key: string }; Returns: boolean }
       _finance_privileged: { Args: { p_caller: string }; Returns: boolean }
       _hold_account: { Args: { p_kind: string }; Returns: string }
       _is_approved_service_agent: {
@@ -7157,6 +7158,13 @@ export type Database = {
       _promo_restore: {
         Args: { p_amount: number; p_driver: string }
         Returns: number
+      }
+      _qa_s3_inner: { Args: never; Returns: undefined }
+      _qa_s3_run: { Args: never; Returns: Json }
+      _ride_mission_type: { Args: { p_mode: string }; Returns: string }
+      _ride_payment_mode: {
+        Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
+        Returns: string
       }
       admin_adjust_agent_float: {
         Args: {
