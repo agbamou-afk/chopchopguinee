@@ -383,6 +383,11 @@ export function TopUpOrangeMoney({
       )}
       <div>
         <p className="text-sm text-muted-foreground">Montant du paiement Orange Money</p>
+        {target === "driver" && (
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Cette recharge crédite votre <span className="font-semibold text-foreground">portefeuille chauffeur</span>.
+          </p>
+        )}
         <div className="mt-2 flex items-baseline gap-2">
           <Input
             type="number"
