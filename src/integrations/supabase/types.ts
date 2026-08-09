@@ -1620,6 +1620,66 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_payout_policies: {
+        Row: {
+          block_on_dispute_or_freeze: boolean
+          cancel_window_seconds: number
+          created_at: string
+          created_by: string | null
+          daily_limit_gnf: number
+          effective_from: string
+          enabled: boolean
+          id: string
+          max_request_gnf: number
+          min_request_gnf: number
+          note: string | null
+          one_pending_request_only: boolean
+          processing_estimate_max_minutes: number
+          processing_estimate_min_minutes: number
+          provider_fee_passthrough: boolean
+          registered_om_phone_only: boolean
+          restricted_funds_withdrawable: boolean
+        }
+        Insert: {
+          block_on_dispute_or_freeze?: boolean
+          cancel_window_seconds?: number
+          created_at?: string
+          created_by?: string | null
+          daily_limit_gnf?: number
+          effective_from?: string
+          enabled?: boolean
+          id?: string
+          max_request_gnf?: number
+          min_request_gnf?: number
+          note?: string | null
+          one_pending_request_only?: boolean
+          processing_estimate_max_minutes?: number
+          processing_estimate_min_minutes?: number
+          provider_fee_passthrough?: boolean
+          registered_om_phone_only?: boolean
+          restricted_funds_withdrawable?: boolean
+        }
+        Update: {
+          block_on_dispute_or_freeze?: boolean
+          cancel_window_seconds?: number
+          created_at?: string
+          created_by?: string | null
+          daily_limit_gnf?: number
+          effective_from?: string
+          enabled?: boolean
+          id?: string
+          max_request_gnf?: number
+          min_request_gnf?: number
+          note?: string | null
+          one_pending_request_only?: boolean
+          processing_estimate_max_minutes?: number
+          processing_estimate_min_minutes?: number
+          provider_fee_passthrough?: boolean
+          registered_om_phone_only?: boolean
+          restricted_funds_withdrawable?: boolean
+        }
+        Relationships: []
+      }
       driver_profiles: {
         Row: {
           accept_rate: number
@@ -2529,6 +2589,7 @@ export type Database = {
           cash_funding_max_gnf: number | null
           cash_funding_mode: string
           cash_funding_pct_bps: number
+          claims_exposure_max_gnf: number | null
           collateral_basis: string
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
@@ -2558,6 +2619,7 @@ export type Database = {
           cash_funding_max_gnf?: number | null
           cash_funding_mode?: string
           cash_funding_pct_bps?: number
+          claims_exposure_max_gnf?: number | null
           collateral_basis?: string
           collateral_fixed_gnf?: number
           collateral_max_gnf?: number | null
@@ -2587,6 +2649,7 @@ export type Database = {
           cash_funding_max_gnf?: number | null
           cash_funding_mode?: string
           cash_funding_pct_bps?: number
+          claims_exposure_max_gnf?: number | null
           collateral_basis?: string
           collateral_fixed_gnf?: number
           collateral_max_gnf?: number | null
@@ -4392,6 +4455,57 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_settlement_policies: {
+        Row: {
+          cadence: string | null
+          configured: boolean
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_bps: number | null
+          fee_fixed_gnf: number | null
+          fee_passthrough: boolean | null
+          id: string
+          max_settlement_gnf: number | null
+          min_settlement_gnf: number | null
+          note: string | null
+          requires_evidence_reconciliation: boolean
+        }
+        Insert: {
+          cadence?: string | null
+          configured?: boolean
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          enabled?: boolean
+          fee_bps?: number | null
+          fee_fixed_gnf?: number | null
+          fee_passthrough?: boolean | null
+          id?: string
+          max_settlement_gnf?: number | null
+          min_settlement_gnf?: number | null
+          note?: string | null
+          requires_evidence_reconciliation?: boolean
+        }
+        Update: {
+          cadence?: string | null
+          configured?: boolean
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          enabled?: boolean
+          fee_bps?: number | null
+          fee_fixed_gnf?: number | null
+          fee_passthrough?: boolean | null
+          id?: string
+          max_settlement_gnf?: number | null
+          min_settlement_gnf?: number | null
+          note?: string | null
+          requires_evidence_reconciliation?: boolean
+        }
+        Relationships: []
+      }
       merchant_stores: {
         Row: {
           address_label: string | null
@@ -5870,6 +5984,51 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_fee_schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_bps: number
+          fee_fixed_gnf: number
+          id: string
+          max_fee_gnf: number | null
+          min_fee_gnf: number
+          note: string | null
+          passthrough_to_recipient: boolean
+          provider: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          enabled?: boolean
+          fee_bps?: number
+          fee_fixed_gnf?: number
+          id?: string
+          max_fee_gnf?: number | null
+          min_fee_gnf?: number
+          note?: string | null
+          passthrough_to_recipient?: boolean
+          provider?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          enabled?: boolean
+          fee_bps?: number
+          fee_fixed_gnf?: number
+          id?: string
+          max_fee_gnf?: number | null
+          min_fee_gnf?: number
+          note?: string | null
+          passthrough_to_recipient?: boolean
+          provider?: string
+        }
+        Relationships: []
+      }
       ride_offers: {
         Row: {
           decline_reason: string | null
@@ -6999,6 +7158,7 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_s2_run: { Args: never; Returns: string }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -7669,70 +7829,260 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      admin_set_finance_policy: {
-        Args: {
-          p_cancel_after_dispatch_bps?: number
-          p_cancel_basis?: string
-          p_cancel_before_dispatch_bps?: number
-          p_cash_funding_max_gnf?: number
-          p_cash_funding_mode?: string
-          p_cash_funding_pct_bps?: number
-          p_collateral_basis?: string
-          p_collateral_fixed_gnf?: number
-          p_collateral_max_gnf?: number
-          p_collateral_min_gnf?: number
-          p_collateral_mode?: string
-          p_collateral_pct_bps?: number
-          p_commission_bps: number
-          p_effective_from?: string
-          p_fee_basis?: string
-          p_fixed_commission_gnf?: number
-          p_max_declared_value_gnf?: number
-          p_min_driver_balance_gnf?: number
-          p_mission_type: string
-          p_note?: string
-          p_require_collateral_before_offer?: boolean
-          p_transaction_fee_bps?: number
-        }
+      admin_set_feature_flag: {
+        Args: { p_enabled: boolean; p_key: string; p_note?: string }
         Returns: {
-          cancel_after_dispatch_bps: number
-          cancel_basis: string
-          cancel_before_dispatch_bps: number
-          cash_funding_max_gnf: number | null
-          cash_funding_mode: string
-          cash_funding_pct_bps: number
-          collateral_basis: string
-          collateral_fixed_gnf: number
-          collateral_max_gnf: number | null
-          collateral_min_gnf: number
-          collateral_mode: string
-          collateral_pct_bps: number
-          commission_bps: number
-          created_at: string
-          created_by: string | null
-          effective_from: string
+          description: string | null
           enabled: boolean
-          fee_basis: string
-          fixed_commission_gnf: number
-          id: string
-          max_declared_value_gnf: number | null
-          min_driver_balance_gnf: number
-          mission_type: string
-          note: string | null
-          require_collateral_before_offer: boolean
-          transaction_fee_bps: number
+          key: string
           updated_at: string
+          updated_by: string | null
         }
         SetofOptions: {
           from: "*"
-          to: "finance_policies"
+          to: "feature_flags"
           isOneToOne: true
           isSetofReturn: false
         }
       }
+      admin_set_finance_delegation: {
+        Args: { p_note?: string; p_provider_fee_to_finance_admin: boolean }
+        Returns: Json
+      }
+      admin_set_finance_policy:
+        | {
+            Args: {
+              p_cancel_after_dispatch_bps?: number
+              p_cancel_basis?: string
+              p_cancel_before_dispatch_bps?: number
+              p_cash_funding_max_gnf?: number
+              p_cash_funding_mode?: string
+              p_cash_funding_pct_bps?: number
+              p_collateral_basis?: string
+              p_collateral_fixed_gnf?: number
+              p_collateral_max_gnf?: number
+              p_collateral_min_gnf?: number
+              p_collateral_mode?: string
+              p_collateral_pct_bps?: number
+              p_commission_bps: number
+              p_effective_from?: string
+              p_fee_basis?: string
+              p_fixed_commission_gnf?: number
+              p_max_declared_value_gnf?: number
+              p_min_driver_balance_gnf?: number
+              p_mission_type: string
+              p_note?: string
+              p_require_collateral_before_offer?: boolean
+              p_transaction_fee_bps?: number
+            }
+            Returns: {
+              cancel_after_dispatch_bps: number
+              cancel_basis: string
+              cancel_before_dispatch_bps: number
+              cash_funding_max_gnf: number | null
+              cash_funding_mode: string
+              cash_funding_pct_bps: number
+              claims_exposure_max_gnf: number | null
+              collateral_basis: string
+              collateral_fixed_gnf: number
+              collateral_max_gnf: number | null
+              collateral_min_gnf: number
+              collateral_mode: string
+              collateral_pct_bps: number
+              commission_bps: number
+              created_at: string
+              created_by: string | null
+              effective_from: string
+              enabled: boolean
+              fee_basis: string
+              fixed_commission_gnf: number
+              id: string
+              max_declared_value_gnf: number | null
+              min_driver_balance_gnf: number
+              mission_type: string
+              note: string | null
+              require_collateral_before_offer: boolean
+              transaction_fee_bps: number
+              updated_at: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "finance_policies"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_cancel_after_dispatch_bps?: number
+              p_cancel_basis?: string
+              p_cancel_before_dispatch_bps?: number
+              p_cash_funding_max_gnf?: number
+              p_cash_funding_mode?: string
+              p_cash_funding_pct_bps?: number
+              p_claims_exposure_max_gnf?: number
+              p_collateral_basis?: string
+              p_collateral_fixed_gnf?: number
+              p_collateral_max_gnf?: number
+              p_collateral_min_gnf?: number
+              p_collateral_mode?: string
+              p_collateral_pct_bps?: number
+              p_commission_bps: number
+              p_effective_from?: string
+              p_fee_basis?: string
+              p_fixed_commission_gnf?: number
+              p_max_declared_value_gnf?: number
+              p_min_driver_balance_gnf?: number
+              p_mission_type: string
+              p_note?: string
+              p_require_collateral_before_offer?: boolean
+              p_transaction_fee_bps?: number
+            }
+            Returns: {
+              cancel_after_dispatch_bps: number
+              cancel_basis: string
+              cancel_before_dispatch_bps: number
+              cash_funding_max_gnf: number | null
+              cash_funding_mode: string
+              cash_funding_pct_bps: number
+              claims_exposure_max_gnf: number | null
+              collateral_basis: string
+              collateral_fixed_gnf: number
+              collateral_max_gnf: number | null
+              collateral_min_gnf: number
+              collateral_mode: string
+              collateral_pct_bps: number
+              commission_bps: number
+              created_at: string
+              created_by: string | null
+              effective_from: string
+              enabled: boolean
+              fee_basis: string
+              fixed_commission_gnf: number
+              id: string
+              max_declared_value_gnf: number | null
+              min_driver_balance_gnf: number
+              mission_type: string
+              note: string | null
+              require_collateral_before_offer: boolean
+              transaction_fee_bps: number
+              updated_at: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "finance_policies"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       admin_set_merchant_location_status: {
         Args: { p_note?: string; p_status: string; p_store_id: string }
         Returns: undefined
+      }
+      admin_set_merchant_settlement_policy: {
+        Args: {
+          p_cadence?: string
+          p_configured: boolean
+          p_effective_from?: string
+          p_fee_bps?: number
+          p_fee_fixed_gnf?: number
+          p_fee_passthrough?: boolean
+          p_max_settlement_gnf?: number
+          p_min_settlement_gnf?: number
+          p_note?: string
+        }
+        Returns: {
+          cadence: string | null
+          configured: boolean
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_bps: number | null
+          fee_fixed_gnf: number | null
+          fee_passthrough: boolean | null
+          id: string
+          max_settlement_gnf: number | null
+          min_settlement_gnf: number | null
+          note: string | null
+          requires_evidence_reconciliation: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "merchant_settlement_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_set_payout_policy: {
+        Args: {
+          p_cancel_window_seconds?: number
+          p_daily_limit_gnf: number
+          p_effective_from?: string
+          p_max_request_gnf: number
+          p_min_request_gnf: number
+          p_note?: string
+          p_processing_estimate_max_minutes?: number
+          p_processing_estimate_min_minutes?: number
+          p_provider_fee_passthrough?: boolean
+        }
+        Returns: {
+          block_on_dispute_or_freeze: boolean
+          cancel_window_seconds: number
+          created_at: string
+          created_by: string | null
+          daily_limit_gnf: number
+          effective_from: string
+          enabled: boolean
+          id: string
+          max_request_gnf: number
+          min_request_gnf: number
+          note: string | null
+          one_pending_request_only: boolean
+          processing_estimate_max_minutes: number
+          processing_estimate_min_minutes: number
+          provider_fee_passthrough: boolean
+          registered_om_phone_only: boolean
+          restricted_funds_withdrawable: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_payout_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_set_provider_fee_schedule: {
+        Args: {
+          p_effective_from?: string
+          p_fee_bps: number
+          p_fee_fixed_gnf?: number
+          p_max_fee_gnf?: number
+          p_min_fee_gnf?: number
+          p_note?: string
+          p_passthrough_to_recipient?: boolean
+          p_provider: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_bps: number
+          fee_fixed_gnf: number
+          id: string
+          max_fee_gnf: number | null
+          min_fee_gnf: number
+          note: string | null
+          passthrough_to_recipient: boolean
+          provider: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "provider_fee_schedules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_set_starter_credit_policy: {
         Args: {
@@ -8525,6 +8875,34 @@ export type Database = {
         Args: { p_amount_gnf: number; p_driver: string; p_request_id: string }
         Returns: Json
       }
+      driver_payout_policy_at: {
+        Args: { p_as_of?: string }
+        Returns: {
+          block_on_dispute_or_freeze: boolean
+          cancel_window_seconds: number
+          created_at: string
+          created_by: string | null
+          daily_limit_gnf: number
+          effective_from: string
+          enabled: boolean
+          id: string
+          max_request_gnf: number
+          min_request_gnf: number
+          note: string | null
+          one_pending_request_only: boolean
+          processing_estimate_max_minutes: number
+          processing_estimate_min_minutes: number
+          provider_fee_passthrough: boolean
+          registered_om_phone_only: boolean
+          restricted_funds_withdrawable: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_payout_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       driver_promo_balance: { Args: { p_driver: string }; Returns: Json }
       driver_set_capabilities: {
         Args: { _caps: string[] }
@@ -8721,8 +9099,8 @@ export type Database = {
         }
         Returns: Json
       }
-      finance_policy_current: {
-        Args: { p_mission_type: string }
+      finance_policy_at: {
+        Args: { p_as_of?: string; p_mission_type: string }
         Returns: {
           cancel_after_dispatch_bps: number
           cancel_basis: string
@@ -8730,6 +9108,7 @@ export type Database = {
           cash_funding_max_gnf: number | null
           cash_funding_mode: string
           cash_funding_pct_bps: number
+          claims_exposure_max_gnf: number | null
           collateral_basis: string
           collateral_fixed_gnf: number
           collateral_max_gnf: number | null
@@ -8758,6 +9137,62 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      finance_policy_current: {
+        Args: { p_mission_type: string }
+        Returns: {
+          cancel_after_dispatch_bps: number
+          cancel_basis: string
+          cancel_before_dispatch_bps: number
+          cash_funding_max_gnf: number | null
+          cash_funding_mode: string
+          cash_funding_pct_bps: number
+          claims_exposure_max_gnf: number | null
+          collateral_basis: string
+          collateral_fixed_gnf: number
+          collateral_max_gnf: number | null
+          collateral_min_gnf: number
+          collateral_mode: string
+          collateral_pct_bps: number
+          commission_bps: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_basis: string
+          fixed_commission_gnf: number
+          id: string
+          max_declared_value_gnf: number | null
+          min_driver_balance_gnf: number
+          mission_type: string
+          note: string | null
+          require_collateral_before_offer: boolean
+          transaction_fee_bps: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "finance_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      finance_policy_snapshot: {
+        Args: {
+          p_as_of?: string
+          p_declared_value_gnf?: number
+          p_delivery_fee_gnf?: number
+          p_fare_gnf?: number
+          p_is_sandbox?: boolean
+          p_merchandise_subtotal_gnf?: number
+          p_mission_type: string
+          p_payment_mode?: string
+        }
+        Returns: Json
+      }
+      finance_policy_snapshot_validate: {
+        Args: { p_snapshot: Json }
+        Returns: boolean
       }
       find_user_by_phone: {
         Args: { p_phone: string }
@@ -9360,6 +9795,31 @@ export type Database = {
       merchant_settlement_hold: {
         Args: { p_payable_id: string }
         Returns: Json
+      }
+      merchant_settlement_policy_at: {
+        Args: { p_as_of?: string }
+        Returns: {
+          cadence: string | null
+          configured: boolean
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_bps: number | null
+          fee_fixed_gnf: number | null
+          fee_passthrough: boolean | null
+          id: string
+          max_settlement_gnf: number | null
+          min_settlement_gnf: number | null
+          note: string | null
+          requires_evidence_reconciliation: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "merchant_settlement_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       merchant_submit_location: {
         Args: {
@@ -10109,6 +10569,29 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      provider_fee_schedule_at: {
+        Args: { p_as_of?: string; p_provider?: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_bps: number
+          fee_fixed_gnf: number
+          id: string
+          max_fee_gnf: number | null
+          min_fee_gnf: number
+          note: string | null
+          passthrough_to_recipient: boolean
+          provider: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "provider_fee_schedules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -10403,6 +10886,25 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      starter_credit_policy_at: {
+        Args: { p_as_of?: string }
+        Returns: {
+          amount_gnf: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          id: string
+          note: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_starter_credit_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       starter_credit_policy_current: {
         Args: never
         Returns: {
