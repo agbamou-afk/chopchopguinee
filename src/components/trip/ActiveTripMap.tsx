@@ -192,7 +192,7 @@ export function ActiveTripMap({
   const handleRetryDispatch = async () => {
     setRetrying(true);
     try {
-      await supabase.rpc("ride_dispatch", { p_ride_id: rideId });
+      await supabase.rpc("ride_request_dispatch", { p_ride_id: rideId });
       setSearchElapsed(0);
     } finally {
       setRetrying(false);

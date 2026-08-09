@@ -7160,6 +7160,9 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_s3b_guards: { Args: never; Returns: Json }
+      _qa_s3b_ok: { Args: { p: boolean }; Returns: string }
+      _qa_s3b_run: { Args: never; Returns: Json }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
@@ -8474,6 +8477,7 @@ export type Database = {
           p_is_sandbox?: boolean
           p_merchandise_subtotal_gnf?: number
           p_mission_type: string
+          p_policy_snapshot?: Json
           p_preparation_started?: boolean
           p_responsible_party?: string
           p_source_id: string
@@ -8760,6 +8764,30 @@ export type Database = {
       }
       driver_offer_accept: {
         Args: { p_offer_id: string }
+        Returns: {
+          decline_reason: string | null
+          destination_zone: string | null
+          distance_to_pickup_m: number | null
+          driver_id: string
+          estimated_earning_gnf: number | null
+          estimated_fare_gnf: number | null
+          expires_at: string
+          id: string
+          pickup_zone: string | null
+          responded_at: string | null
+          ride_id: string
+          sent_at: string
+          status: Database["public"]["Enums"]["ride_offer_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ride_offers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      driver_offer_accept_for_ride: {
+        Args: { p_ride_id: string }
         Returns: {
           decline_reason: string | null
           destination_zone: string | null
@@ -10788,6 +10816,7 @@ export type Database = {
         }
         Returns: string
       }
+      ride_request_dispatch: { Args: { p_ride_id: string }; Returns: string }
       ride_set_phase: {
         Args: { p_phase: string; p_ride_id: string }
         Returns: {
@@ -11051,6 +11080,7 @@ export type Database = {
           p_description: string
           p_from_party_type: string
           p_from_user_id: string
+          p_reference?: string
           p_to_party_type: string
           p_to_user_id: string
         }

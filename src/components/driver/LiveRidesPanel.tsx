@@ -58,7 +58,8 @@ export function LiveRidesPanel() {
 
   const accept = async (id: string) => {
     setBusyId(id);
-    const { error } = await supabase.rpc("ride_accept", { p_ride_id: id });
+    // Offer contract: drivers accept through their live offer, never by ride id.
+    const { error } = await supabase.rpc("driver_offer_accept_for_ride", { p_ride_id: id });
     setBusyId(null);
     if (error) return toast.error(error.message);
     toast.success("Course acceptée");
