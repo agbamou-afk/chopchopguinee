@@ -43,11 +43,17 @@ export function PolicyConfirmDialog({
           <div className="rounded-md border divide-y max-h-64 overflow-auto">
             {diff.map((d) => (
               <div key={d.field} className="p-2 text-xs flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">{FIELD_LABELS[d.field]}</span>
+                <span className="text-muted-foreground">
+                  {d.label ?? FIELD_LABELS[d.field as keyof typeof FIELD_LABELS] ?? d.field}
+                </span>
                 <span className="font-mono">
-                  <span className="line-through opacity-60">{formatFieldValue(d.field, d.before)}</span>
+                  <span className="line-through opacity-60">
+                    {(d.format ?? ((v: unknown) => formatFieldValue(d.field, v)))(d.before)}
+                  </span>
                   {" → "}
-                  <span className="font-semibold">{formatFieldValue(d.field, d.after)}</span>
+                  <span className="font-semibold">
+                    {(d.format ?? ((v: unknown) => formatFieldValue(d.field, v)))(d.after)}
+                  </span>
                 </span>
               </div>
             ))}
