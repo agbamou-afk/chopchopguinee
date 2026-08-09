@@ -27,7 +27,19 @@ type ReceivingAccount = {
 
 const QUICK_AMOUNTS = [10000, 25000, 50000, 100000, 250000, 500000];
 
-export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
+/**
+ * `target` selects which wallet the confirmed OM payment credits.
+ * "client" (default) keeps the historical customer behaviour untouched;
+ * "driver" creates a driver-targeted request through the dedicated RPC so
+ * an approved driver's operating balance is credited directly.
+ */
+export function TopUpOrangeMoney({
+  onClose,
+  target = "client",
+}: {
+  onClose: () => void;
+  target?: "client" | "driver";
+}) {
   const [step, setStep] = useState<"amount" | "instructions">("amount");
   const [amount, setAmount] = useState<number>(50000);
   const [creating, setCreating] = useState(false);
@@ -120,10 +132,16 @@ export function TopUpOrangeMoney({ onClose }: { onClose: () => void }) {
       return;
     }
     setCreating(true);
-    const { data, error } = await supabase.rpc("wallet_topup_om_create", {
-      p_amount_gnf: amount,
-      p_receiving_account_id: activeAccount.id,
-    });
+    const { data, error } =
+      target === "driver"
+        ? await supabase.rpc("driver_wallet_topup_om_create", {
+            p_amount_gnf: amount,
+            p_receiving_account_id: activeAccount.id,
+          })
+        : await supabase.rpc("wallet_topup_om_create", {
+            p_amount_gnf: amount,
+            p_receiving_account_id: activeAccount.id,
+          });
     setCreating(false);
     if (error) {
       toast.error(error.message);
