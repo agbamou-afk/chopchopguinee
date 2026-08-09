@@ -63,7 +63,7 @@ export function FinanceControlsPanel({ isGodAdmin }: { isGodAdmin: boolean }) {
 
   useEffect(() => { void load(); }, [load]);
 
-  const run = async (id: string, fn: () => Promise<{ error: { message: string } | null }>, okMsg: string) => {
+  const run = async (id: string, fn: () => PromiseLike<{ error: { message: string } | null }>, okMsg: string) => {
     setBusy(id);
     const { error } = await fn();
     setBusy(null);
