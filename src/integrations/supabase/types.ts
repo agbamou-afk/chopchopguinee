@@ -7166,6 +7166,7 @@ export type Database = {
       _qa_s3b_guards: { Args: never; Returns: Json }
       _qa_s3b_ok: { Args: { p: boolean }; Returns: string }
       _qa_s3b_run: { Args: never; Returns: Json }
+      _qa_s3c_run: { Args: never; Returns: undefined }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
