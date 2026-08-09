@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public._qa_s3d_run() TO PUBLIC;

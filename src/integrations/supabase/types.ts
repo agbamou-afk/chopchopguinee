@@ -7387,6 +7387,10 @@ export type Database = {
         Args: { _caller: string; _reason: string; _target: string }
         Returns: undefined
       }
+      admin_manual_om_credit: {
+        Args: { p_event_id: string; p_topup_request_id: string }
+        Returns: Json
+      }
       admin_marche_capture_and_settle_offer: {
         Args: { p_offer_id: string; p_reason?: string }
         Returns: Json
