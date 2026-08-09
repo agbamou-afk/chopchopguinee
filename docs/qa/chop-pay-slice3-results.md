@@ -1,4 +1,12 @@
-# Chop Pay — Slice 3B hardening QA results
+# Chop Pay — Slice 3 closeout report
+
+Covers Slice 3 (ride + Bonbonna runtime), Slice 3B hardening, and the Slice 3C
+micro-closeout (driver-targeted OM top-up recovery). Both milestones remain
+**UNLOCKED**.
+
+---
+
+## Part 1 — Slice 3B hardening (prior run)
 
 Harness: `_qa_s3b_run()` (self-rolling-back, raises `QA_S3B_RESULT`).
 
@@ -34,3 +42,97 @@ Security matrix
   `payment_provider_events` row; the harness calls it against a driver with no client wallet, so it
   reports `Wallet not found`. Driver funding via top-up + client→driver internal transfer must be
   re-tested in the Slice 4 harness.
+
+> **Superseded.** Read-only verification proved this was a *real product gap*, not a harness
+> artefact — see Part 2.
+
+---
+
+## Part 2 — Slice 3C: driver OM top-up recovery
+
+### Why E2 was a real product gap
+- `wallet_topup_om_create` resolved and required the caller's `party_type='client'` wallet.
+- `wallet_topup_om_credit` credited only that client wallet.
+- Ride/Bonbonna eligibility reads the `party_type='driver'` operating wallet.
+
+A driver could therefore complete a confirmed Orange Money top-up and stay financially
+ineligible. There was no path — automatic or manual — from a confirmed provider event to the
+driver operating balance.
+
+### Fix (extend, do not break)
+- `topup_requests.target_party_type text NOT NULL DEFAULT 'client'`, `CHECK (in ('client','driver'))`.
+  Legacy rows resolve as `client`.
+- `wallet_topup_om_create` unchanged in behaviour; now writes `target_party_type='client'` explicitly.
+- New `driver_wallet_topup_om_create(p_amount_gnf, p_receiving_account_id)` — self-only
+  (no user parameter), requires `driver_profiles.status='approved'`, `_driver_finance_eligible`,
+  and an existing **active** `party_type='driver'` wallet. `EXECUTE` revoked from `PUBLIC`/`anon`,
+  granted to `authenticated`/`service_role`.
+- `wallet_topup_om_credit` credits the wallet the request explicitly targeted (master → target
+  contra), never guessing from driver-profile existence. No client→driver internal transfer is used.
+- UI: `TopUpOrangeMoney` accepts `target="client" | "driver"`; the driver earnings screen opens a
+  driver-targeted sheet instead of routing into the customer wallet.
+
+### E-series proof — harness `_qa_s3c_run()` (self-rolling-back, real `om_auto_match` path)
+
+| ID | Assertion | Result |
+| -- | --------- | ------ |
+| E1 | Approved driver, 0 available → ineligible for 100 000 GNF ride (required 10 000, available 0) | PASS |
+| E2 | Driver-targeted request created via real RPC — `target_party_type='driver'`, owner = caller, 50 000 | PASS |
+| E3 | Customer OM code + `payment_provider_events` fixture → `om_auto_match` = `credited` (`code_match`) | PASS |
+| E4 | Driver wallet +50 000 | PASS |
+| E5 | Same user's client wallet unchanged (+0) | PASS |
+| E6 | Master/treasury −50 000 contra only; single `topup` txn master→driver; no revenue txn | PASS |
+| E7 | `driver_financial_eligibility('ride',100000)` becomes eligible automatically (available 50 000) | PASS |
+| E8 | No `unblocked` flag; eligibility equals `balance_gnf - held_gnf` from wallet truth | PASS |
+| E9 | Replay of `wallet_topup_om_credit` returns the same txn, zero delta, exactly 1 txn per event | PASS |
+| E10 | Self-only signature (2 args); non-driver caller denied (`driver_profile_not_found`) | PASS |
+| E11 | Ordinary customer top-up still targets `client`, credits client wallet, no driver wallet created | PASS |
+
+### Slice 3 critical regression (re-run, `_qa_s3b_run()`)
+All previously green money/security assertions re-confirmed PASS:
+100k cash ride → reserve 10 000, captured once, no 90 000 wallet credit, replay zero ·
+Bonbonna 10 000 · Chop Pay −100 000 / +90 000 / +10 000, replay zero ·
+insufficient hold blocks settlement (`SETTLEMENT_REQUIRED_INSUFFICIENT_HOLD`) ·
+`PICKUP_CONFIRMATION_REQUIRED` enforced · customer / cross-driver / premature completion denied ·
+cancellation 5 % before dispatch, 10 % after, driver-caused zero fee and no debt row ·
+journals zero-sum, posting update and journal delete denied.
+The only non-PASS remained the harness's own client-wallet `E2` stub, now superseded by Part 2.
+
+### Privilege matrix (unchanged from 622067bd)
+
+| Function | anon | authenticated | service_role |
+| -------- | ---- | ------------- | ------------ |
+| `wallet_internal_transfer` | denied | denied | allowed |
+| `ride_accept` | denied | denied | allowed |
+| `ride_dispatch` | denied | denied | allowed |
+| `driver_offer_accept` | denied | allowed | allowed |
+| `ride_request_dispatch` | denied | allowed | allowed |
+| `driver_wallet_topup_om_create` | denied | allowed | allowed |
+
+### Cleanup — read-only counts after rollback
+- `pg_proc` matching `_qa_s3%`: **0** (`_qa_s3b_run`, `_qa_s3b_ok`, `_qa_s3b_guards`, `_qa_s3c_run` dropped).
+- `audit_logs` for `qa.slice3` / `qa.slice3b`: **0**.
+- QA provider events (`raw_payload->>'source'='qa_sandbox'`): **0**.
+- `topup_requests` with `target_party_type='driver'`: **0**; with NULL target: **0**.
+- Orphan synthetic driver profiles: **0**.
+- Canonical finance flags enabled: **`om_topup_enabled` only** (all 10 others verified OFF).
+
+### Build / type / test / PWA evidence
+- `tsgo --noEmit` — clean (exit 0), after `types.ts` regeneration (10 hits for
+  `driver_wallet_topup_om_create` / `target_party_type`).
+- Vitest — **12 passed / 12** (2 files).
+- `vite build` — green in 23.06 s.
+- PWA `generateSW` — precache **129 entries (11 855.71 KiB)**; largest single asset
+  `index-*.js` **2 131.94 kB**, under the 4 MiB per-file constraint.
+
+### Visual QA — **YELLOW**
+No authenticated preview session was available (`signed_out`), so the driver Ride/Bonbonna flow and
+the new driver top-up CTA were **not** visually verified. No visual PASS is claimed.
+
+### Standing items
+- DEF-FIN-001 (negative platform balance) — unchanged, still open.
+- Milestones `chop-pay-ledger-revival-stable` and Slice 3 lock candidate — **UNLOCKED**.
+
+### Exit verdict — Slice 3 PASS
+Automatic driver top-up recovery is demonstrated end-to-end through a confirmed Orange Money
+provider event into the driver operating wallet, with idempotency, isolation, and cleanup proven.
