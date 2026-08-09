@@ -14,24 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _qa_s2x_out: {
-        Row: {
-          created_at: string | null
-          id: number
-          txt: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          txt?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          txt?: string | null
-        }
-        Relationships: []
-      }
       account_bans: {
         Row: {
           banned_at: string
@@ -7176,8 +7158,6 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
-      _qa_s2x_pick_second: { Args: { p_god: string }; Returns: string }
-      _qa_s2x_run: { Args: never; Returns: string }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
