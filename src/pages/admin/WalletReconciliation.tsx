@@ -332,7 +332,7 @@ export default function WalletReconciliation() {
   const approve = async (topupId: string) => {
     if (!reviewEvent) return;
     setActing(true);
-    const { error } = await supabase.rpc("wallet_topup_om_credit", {
+    const { error } = await supabase.rpc("admin_manual_om_credit", {
       p_event_id: reviewEvent.id, p_topup_request_id: topupId,
     });
     setActing(false);
