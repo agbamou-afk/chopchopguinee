@@ -220,11 +220,12 @@ this document.
 
 ## 13. Open items (require a later authorized slice)
 
-1. Seeded `finance_policies` row for `envoyer` currently uses fee basis
-   `declared_value`; canonical basis is the **delivery/service fee** (§7).
-   Correction requires an authorized data/schema slice.
-2. Cancellation-fee bases (§8) are frozen in policy but not yet represented as
-   per-service basis columns in `finance_policies`.
+1. ~~Seeded `finance_policies` row for `envoyer` used fee basis
+   `declared_value`.~~ **Closed in Slice 2** — canonical basis is now
+   `delivery_fee`, verified by QA T4.
+2. ~~Cancellation-fee bases (§8) not represented as columns.~~ **Closed in
+   Slice 2** — `cancel_before_dispatch_bps`, `cancel_after_dispatch_bps` and
+   `cancel_basis` are per-service policy columns, snapshotted per mission.
 3. Customer-side cash-order cancellation debt (§8) has no ledger primitive yet.
 4. Merchant settlement infrastructure (§3, §9) is not built.
 

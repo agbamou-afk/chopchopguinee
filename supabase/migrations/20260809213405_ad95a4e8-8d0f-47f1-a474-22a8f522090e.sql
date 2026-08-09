@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public._qa_s2_run();
