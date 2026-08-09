@@ -7060,6 +7060,7 @@ export type Database = {
         Args: { _suspended_reason: string; _target: string }
         Returns: Json
       }
+      _as_user_claims: { Args: { p_user: string }; Returns: string }
       _capture_revenue_account: { Args: { p_kind: string }; Returns: string }
       _driver_finance_eligible: { Args: { p_driver: string }; Returns: boolean }
       _driver_group_stats: {
@@ -7086,6 +7087,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _finance_flag: { Args: { p_key: string }; Returns: boolean }
       _finance_privileged: { Args: { p_caller: string }; Returns: boolean }
       _hold_account: { Args: { p_kind: string }; Returns: string }
       _is_approved_service_agent: {
@@ -7157,6 +7159,11 @@ export type Database = {
       _promo_restore: {
         Args: { p_amount: number; p_driver: string }
         Returns: number
+      }
+      _ride_mission_type: { Args: { p_mode: string }; Returns: string }
+      _ride_payment_mode: {
+        Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
+        Returns: string
       }
       admin_adjust_agent_float: {
         Args: {
