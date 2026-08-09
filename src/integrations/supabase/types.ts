@@ -7848,132 +7848,69 @@ export type Database = {
         Args: { p_note?: string; p_provider_fee_to_finance_admin: boolean }
         Returns: Json
       }
-      admin_set_finance_policy:
-        | {
-            Args: {
-              p_cancel_after_dispatch_bps?: number
-              p_cancel_basis?: string
-              p_cancel_before_dispatch_bps?: number
-              p_cash_funding_max_gnf?: number
-              p_cash_funding_mode?: string
-              p_cash_funding_pct_bps?: number
-              p_collateral_basis?: string
-              p_collateral_fixed_gnf?: number
-              p_collateral_max_gnf?: number
-              p_collateral_min_gnf?: number
-              p_collateral_mode?: string
-              p_collateral_pct_bps?: number
-              p_commission_bps: number
-              p_effective_from?: string
-              p_fee_basis?: string
-              p_fixed_commission_gnf?: number
-              p_max_declared_value_gnf?: number
-              p_min_driver_balance_gnf?: number
-              p_mission_type: string
-              p_note?: string
-              p_require_collateral_before_offer?: boolean
-              p_transaction_fee_bps?: number
-            }
-            Returns: {
-              cancel_after_dispatch_bps: number
-              cancel_basis: string
-              cancel_before_dispatch_bps: number
-              cash_funding_max_gnf: number | null
-              cash_funding_mode: string
-              cash_funding_pct_bps: number
-              claims_exposure_max_gnf: number | null
-              collateral_basis: string
-              collateral_fixed_gnf: number
-              collateral_max_gnf: number | null
-              collateral_min_gnf: number
-              collateral_mode: string
-              collateral_pct_bps: number
-              commission_bps: number
-              created_at: string
-              created_by: string | null
-              effective_from: string
-              enabled: boolean
-              fee_basis: string
-              fixed_commission_gnf: number
-              id: string
-              max_declared_value_gnf: number | null
-              min_driver_balance_gnf: number
-              mission_type: string
-              note: string | null
-              require_collateral_before_offer: boolean
-              transaction_fee_bps: number
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "finance_policies"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_cancel_after_dispatch_bps?: number
-              p_cancel_basis?: string
-              p_cancel_before_dispatch_bps?: number
-              p_cash_funding_max_gnf?: number
-              p_cash_funding_mode?: string
-              p_cash_funding_pct_bps?: number
-              p_claims_exposure_max_gnf?: number
-              p_collateral_basis?: string
-              p_collateral_fixed_gnf?: number
-              p_collateral_max_gnf?: number
-              p_collateral_min_gnf?: number
-              p_collateral_mode?: string
-              p_collateral_pct_bps?: number
-              p_commission_bps: number
-              p_effective_from?: string
-              p_fee_basis?: string
-              p_fixed_commission_gnf?: number
-              p_max_declared_value_gnf?: number
-              p_min_driver_balance_gnf?: number
-              p_mission_type: string
-              p_note?: string
-              p_require_collateral_before_offer?: boolean
-              p_transaction_fee_bps?: number
-            }
-            Returns: {
-              cancel_after_dispatch_bps: number
-              cancel_basis: string
-              cancel_before_dispatch_bps: number
-              cash_funding_max_gnf: number | null
-              cash_funding_mode: string
-              cash_funding_pct_bps: number
-              claims_exposure_max_gnf: number | null
-              collateral_basis: string
-              collateral_fixed_gnf: number
-              collateral_max_gnf: number | null
-              collateral_min_gnf: number
-              collateral_mode: string
-              collateral_pct_bps: number
-              commission_bps: number
-              created_at: string
-              created_by: string | null
-              effective_from: string
-              enabled: boolean
-              fee_basis: string
-              fixed_commission_gnf: number
-              id: string
-              max_declared_value_gnf: number | null
-              min_driver_balance_gnf: number
-              mission_type: string
-              note: string | null
-              require_collateral_before_offer: boolean
-              transaction_fee_bps: number
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "finance_policies"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      admin_set_finance_policy: {
+        Args: {
+          p_cancel_after_dispatch_bps?: number
+          p_cancel_basis?: string
+          p_cancel_before_dispatch_bps?: number
+          p_cash_funding_max_gnf?: number
+          p_cash_funding_mode?: string
+          p_cash_funding_pct_bps?: number
+          p_claims_exposure_max_gnf?: number
+          p_collateral_basis?: string
+          p_collateral_fixed_gnf?: number
+          p_collateral_max_gnf?: number
+          p_collateral_min_gnf?: number
+          p_collateral_mode?: string
+          p_collateral_pct_bps?: number
+          p_commission_bps: number
+          p_effective_from?: string
+          p_fee_basis?: string
+          p_fixed_commission_gnf?: number
+          p_max_declared_value_gnf?: number
+          p_min_driver_balance_gnf?: number
+          p_mission_type: string
+          p_note?: string
+          p_require_collateral_before_offer?: boolean
+          p_transaction_fee_bps?: number
+        }
+        Returns: {
+          cancel_after_dispatch_bps: number
+          cancel_basis: string
+          cancel_before_dispatch_bps: number
+          cash_funding_max_gnf: number | null
+          cash_funding_mode: string
+          cash_funding_pct_bps: number
+          claims_exposure_max_gnf: number | null
+          collateral_basis: string
+          collateral_fixed_gnf: number
+          collateral_max_gnf: number | null
+          collateral_min_gnf: number
+          collateral_mode: string
+          collateral_pct_bps: number
+          commission_bps: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_basis: string
+          fixed_commission_gnf: number
+          id: string
+          max_declared_value_gnf: number | null
+          min_driver_balance_gnf: number
+          mission_type: string
+          note: string | null
+          require_collateral_before_offer: boolean
+          transaction_fee_bps: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "finance_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_merchant_location_status: {
         Args: { p_note?: string; p_status: string; p_store_id: string }
         Returns: undefined
