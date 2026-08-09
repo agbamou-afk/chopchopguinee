@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _qa_s2x_out: {
+        Row: {
+          created_at: string | null
+          id: number
+          txt: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          txt?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          txt?: string | null
+        }
+        Relationships: []
+      }
       account_bans: {
         Row: {
           banned_at: string
