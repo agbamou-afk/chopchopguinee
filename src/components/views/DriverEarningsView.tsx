@@ -13,6 +13,14 @@ import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { DriverCashoutSheet } from "@/components/wallet/DriverCashoutSheet";
 import { ReportIssueButton } from "@/components/support/ReportIssueButton";
 import { DriverOperatingBalanceCard } from "@/components/driver/DriverOperatingBalanceCard";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { TopUpOrangeMoney } from "@/components/wallet/TopUpOrangeMoney";
 
 export function DriverEarningsView() {
   const e = useDriverEarnings();
@@ -32,6 +40,7 @@ export function DriverEarningsView() {
   }, [driverFeed.loading]);
   const [_settling] = useState(false);
   void _settling;
+  const [driverTopUpOpen, setDriverTopUpOpen] = useState(false);
   const formatMoney = formatGNF;
   const maxAmount = Math.max(1, ...e.weeklyBuckets.map((d) => d.amount));
   const cashOverLimit = e.debtLimitGnf > 0 && e.cashDebtGnf >= e.debtLimitGnf;
@@ -58,12 +67,27 @@ export function DriverEarningsView() {
 
       <div className="px-4 mt-3">
         <DriverOperatingBalanceCard
-          onTopUp={() => {
-            try { sessionStorage.setItem("cc:open_topup", "1"); } catch { /* ignore */ }
-            window.location.assign("/?view=wallet");
-          }}
+          onTopUp={() => setDriverTopUpOpen(true)}
         />
       </div>
+
+      <Sheet open={driverTopUpOpen} onOpenChange={setDriverTopUpOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle>Recharger mon compte chauffeur</SheetTitle>
+            <SheetDescription>
+              Le paiement Orange Money confirmé crédite directement votre solde
+              d'exploitation chauffeur.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4">
+            <TopUpOrangeMoney
+              target="driver"
+              onClose={() => { setDriverTopUpOpen(false); refreshWallet(); }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {cashOverLimit && (
         <div className="px-4 mt-3">
