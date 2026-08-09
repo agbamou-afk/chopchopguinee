@@ -7158,6 +7158,7 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_s2x_run: { Args: never; Returns: string }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
