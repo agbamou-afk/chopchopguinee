@@ -8477,6 +8477,7 @@ export type Database = {
           p_is_sandbox?: boolean
           p_merchandise_subtotal_gnf?: number
           p_mission_type: string
+          p_policy_snapshot?: Json
           p_preparation_started?: boolean
           p_responsible_party?: string
           p_source_id: string
