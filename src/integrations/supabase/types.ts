@@ -6566,6 +6566,7 @@ export type Database = {
           receiving_account_id: string | null
           reference: string
           status: Database["public"]["Enums"]["topup_status"]
+          target_party_type: string
           transaction_id: string | null
           updated_at: string
           user_phone: string | null
@@ -6589,6 +6590,7 @@ export type Database = {
           receiving_account_id?: string | null
           reference: string
           status?: Database["public"]["Enums"]["topup_status"]
+          target_party_type?: string
           transaction_id?: string | null
           updated_at?: string
           user_phone?: string | null
@@ -6612,6 +6614,7 @@ export type Database = {
           receiving_account_id?: string | null
           reference?: string
           status?: Database["public"]["Enums"]["topup_status"]
+          target_party_type?: string
           transaction_id?: string | null
           updated_at?: string
           user_phone?: string | null
@@ -8984,6 +8987,39 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      driver_wallet_topup_om_create: {
+        Args: { p_amount_gnf: number; p_receiving_account_id?: string }
+        Returns: {
+          agent_user_id: string | null
+          amount_gnf: number
+          cancelled_reason: string | null
+          client_user_id: string
+          confirmation_code: string
+          confirmed_at: string | null
+          created_at: string
+          customer_om_code_normalized: string | null
+          customer_om_code_raw: string | null
+          customer_om_code_submitted_at: string | null
+          expires_at: string
+          id: string
+          matched_provider_transaction_id: string | null
+          notes: string | null
+          provider: string
+          receiving_account_id: string | null
+          reference: string
+          status: Database["public"]["Enums"]["topup_status"]
+          target_party_type: string
+          transaction_id: string | null
+          updated_at: string
+          user_phone: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "topup_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       email_get_health: { Args: never; Returns: Json }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
@@ -11326,6 +11362,7 @@ export type Database = {
           receiving_account_id: string | null
           reference: string
           status: Database["public"]["Enums"]["topup_status"]
+          target_party_type: string
           transaction_id: string | null
           updated_at: string
           user_phone: string | null
@@ -11358,6 +11395,7 @@ export type Database = {
           receiving_account_id: string | null
           reference: string
           status: Database["public"]["Enums"]["topup_status"]
+          target_party_type: string
           transaction_id: string | null
           updated_at: string
           user_phone: string | null
@@ -11390,6 +11428,7 @@ export type Database = {
           receiving_account_id: string | null
           reference: string
           status: Database["public"]["Enums"]["topup_status"]
+          target_party_type: string
           transaction_id: string | null
           updated_at: string
           user_phone: string | null
@@ -11446,6 +11485,7 @@ export type Database = {
           receiving_account_id: string | null
           reference: string
           status: Database["public"]["Enums"]["topup_status"]
+          target_party_type: string
           transaction_id: string | null
           updated_at: string
           user_phone: string | null
@@ -11478,6 +11518,7 @@ export type Database = {
           receiving_account_id: string | null
           reference: string
           status: Database["public"]["Enums"]["topup_status"]
+          target_party_type: string
           transaction_id: string | null
           updated_at: string
           user_phone: string | null
