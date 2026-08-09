@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { History, CalendarClock } from "lucide-react";
+import { History, CalendarClock, GitBranch } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { PolicyConfirmDialog } from "./PolicyConfirmDialog";
 import {
   BASIS_OPTIONS, BPS_FIELDS, EditableField, FIELD_LABELS, FinancePolicyRow, MissionType,
-  MISSION_LABELS, claimExposureBps, currentPolicy, diffPolicy, FIELDS_BY_SERVICE,
+  MISSION_LABELS, claimExposureBps, currentPolicy, diffPolicy, FIELDS_BY_SERVICE, predecessorPolicy,
   fmtDateTime, formatFieldValue, historyPolicies, scheduledPolicies,
 } from "@/lib/admin/financePolicy";
 
@@ -40,14 +40,22 @@ export function ServicePolicyEditor({ missionType, rows, canEdit, onSaved }: Pro
   const [saving, setSaving] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
+  // The new row inherits from the policy in force immediately before the chosen
+  // effective time — which may itself be a scheduled, not-yet-active policy.
+  const base = useMemo(
+    () => predecessorPolicy(rows, missionType, new Date(effectiveFrom)),
+    [rows, missionType, effectiveFrom],
+  );
+  const baseIsScheduled = !!base && (!current || base.id !== current.id);
+
   const valueOf = (f: EditableField) =>
     draft[f] !== undefined
       ? draft[f]
-      : current
-        ? (current as unknown as Record<string, unknown>)[f]
+      : base
+        ? (base as unknown as Record<string, unknown>)[f]
         : null;
 
-  const diff = useMemo(() => diffPolicy(current, draft, fields), [current, draft, fields]);
+  const diff = useMemo(() => diffPolicy(base, draft, fields), [base, draft, fields]);
 
   const exposureBps = claimExposureBps(Number(valueOf("collateral_pct_bps") ?? 0));
 
@@ -132,6 +140,22 @@ export function ServicePolicyEditor({ missionType, rows, canEdit, onSaved }: Pro
 
       <Card className="p-4 space-y-3">
         <p className="text-xs font-semibold">Programmer une nouvelle politique (transactions futures)</p>
+        <div className="flex items-start gap-1.5 text-[11px] rounded-md bg-muted p-2">
+          <GitBranch className="w-3.5 h-3.5 mt-px shrink-0" />
+          {base ? (
+            <span>
+              Base héritée :{" "}
+              <strong>
+                politique {baseIsScheduled ? "programmée" : "en vigueur"} du {fmtDateTime(base.effective_from)}
+              </strong>
+              {baseIsScheduled
+                ? " — la date d'effet choisie se situe après une politique déjà programmée ; les champs non modifiés héritent de celle-ci, pas de la politique active aujourd'hui."
+                : " — les champs non modifiés héritent de la politique active."}
+            </span>
+          ) : (
+            <span>Aucune politique antérieure : tous les champs doivent être renseignés explicitement.</span>
+          )}
+        </div>
         <div className="grid sm:grid-cols-2 gap-3">
           {fields.map((f) => {
             const options = BASIS_OPTIONS[f];

@@ -164,16 +164,47 @@ export const FIELDS_BY_SERVICE: Record<MissionType, EditableField[]> = {
   ],
 };
 
-export function formatFieldValue(field: EditableField, value: unknown): string {
+export function formatFieldValue(field: string, value: unknown): string {
   if (value === null || value === undefined || value === "") return "—";
-  if (BPS_FIELDS.includes(field)) return `${(Number(value) / 100).toFixed(2)} %`;
+  if (BPS_FIELDS.includes(field as EditableField)) return `${(Number(value) / 100).toFixed(2)} %`;
   const options = BASIS_OPTIONS[field];
   if (options) return options.find((o) => o.value === value)?.label ?? String(value);
+  if (typeof value === "boolean") return value ? "Oui" : "Non";
   if (field.endsWith("_gnf")) return `${Number(value).toLocaleString("fr-FR")} GNF`;
   return String(value);
 }
 
-export interface DiffEntry { field: EditableField; before: unknown; after: unknown }
+export interface DiffEntry {
+  field: string;
+  before: unknown;
+  after: unknown;
+  /** Optional override when the field is not part of the service policy model. */
+  label?: string;
+  format?: (v: unknown) => string;
+}
+
+/** Generic before/after diff for the control-plane forms (payout, settlement, fees…). */
+export interface DiffSpec {
+  key: string;
+  label: string;
+  format?: (v: unknown) => string;
+}
+
+export function diffRecords(
+  before: Record<string, unknown> | null | undefined,
+  draft: Record<string, unknown>,
+  specs: DiffSpec[],
+): DiffEntry[] {
+  const norm = (v: unknown) => (v === null || v === undefined || v === "" ? null : String(v));
+  const out: DiffEntry[] = [];
+  for (const s of specs) {
+    if (!(s.key in draft)) continue;
+    const b = before ? before[s.key] : null;
+    const a = draft[s.key];
+    if (norm(b) !== norm(a)) out.push({ field: s.key, before: b, after: a, label: s.label, format: s.format });
+  }
+  return out;
+}
 
 export function diffPolicy(
   current: FinancePolicyRow | undefined,
@@ -208,6 +239,25 @@ export async function loadPolicies(): Promise<FinancePolicyRow[]> {
 
 export function currentPolicy(rows: FinancePolicyRow[], t: MissionType, now = new Date()) {
   return rows.find((r) => r.mission_type === t && r.enabled && new Date(r.effective_from) <= now);
+}
+
+/**
+ * The row that will be in force immediately BEFORE `at` — mirrors
+ * `public.finance_policy_predecessor`. A policy scheduled after another
+ * scheduled policy must inherit from that predecessor, never from today's
+ * active policy.
+ */
+export function predecessorPolicy(rows: FinancePolicyRow[], t: MissionType, at: Date) {
+  return rows
+    .filter((r) => r.mission_type === t && r.enabled && new Date(r.effective_from) < at)
+    .sort((a, b) => +new Date(b.effective_from) - +new Date(a.effective_from))[0];
+}
+
+/** Same predecessor semantics for the single-row control-plane policy tables. */
+export function predecessorRow<T extends { effective_from: string }>(rows: T[], at: Date): T | undefined {
+  return rows
+    .filter((r) => new Date(r.effective_from) < at)
+    .sort((a, b) => +new Date(b.effective_from) - +new Date(a.effective_from))[0];
 }
 
 export function scheduledPolicies(rows: FinancePolicyRow[], t: MissionType, now = new Date()) {
