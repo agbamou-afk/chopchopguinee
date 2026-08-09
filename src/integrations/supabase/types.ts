@@ -7060,6 +7060,7 @@ export type Database = {
         Args: { _suspended_reason: string; _target: string }
         Returns: Json
       }
+      _as_user_claims: { Args: { p_user: string }; Returns: string }
       _capture_revenue_account: { Args: { p_kind: string }; Returns: string }
       _driver_finance_eligible: { Args: { p_driver: string }; Returns: boolean }
       _driver_group_stats: {
