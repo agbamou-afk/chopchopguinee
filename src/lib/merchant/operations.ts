@@ -60,11 +60,19 @@ export const RESTAURANT_NEXT_LABEL: Partial<Record<FoodOrderState, string>> = {
 export async function advanceRestaurantOrder(orderId: string, current: FoodOrderState): Promise<FoodOrderState> {
   const next = RESTAURANT_NEXT_STATE[current];
   if (!next) throw new Error("Aucune étape suivante");
-  // Slice 4 — cash orders are engine-owned. Direct state writes are rejected by
-  // `trg_cash_order_block_direct_state`, so route the merchant transitions
-  // through the audited cash-order RPCs instead of touching `food_orders`.
-  const cash = await getCashOrderRuntime("repas", orderId);
-  if (cash) {
+  // Slice 4 — cash orders are engine-owned. The authoritative signal is the
+  // order's explicit tender, not the presence of a runtime row: a cash order
+  // with no courier engaged yet must not fall back to a direct state write.
+  const { data: order } = await (supabase as any)
+    .from("food_orders")
+    .select("payment_method")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (order?.payment_method === "cash") {
+    const cash = await getCashOrderRuntime("repas", orderId);
+    if (!cash) {
+      throw new Error("Commande espèces : aucun coursier engagé pour l'instant.");
+    }
     if (next === "confirmed") {
       await merchantAcceptCashOrder("repas", orderId);
       return "confirmed";
