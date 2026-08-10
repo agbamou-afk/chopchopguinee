@@ -7371,6 +7371,11 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_s4_ok: {
+        Args: { p_cond: boolean; p_detail?: string; p_name: string }
+        Returns: Json
+      }
+      _qa_s4_run: { Args: never; Returns: Json }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
