@@ -4,6 +4,7 @@ import { listCustomerMissions } from "@/lib/missions/missions";
 import { customerConfirmDelivery } from "@/lib/missions/proof";
 import { isTerminalState, MISSION_STATE_LABEL, type Mission } from "@/lib/missions/types";
 import { Button } from "@/components/ui/button";
+import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { Loader2, ShieldCheck, KeyRound, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -80,6 +81,14 @@ export function CustomerMarketplaceDeliveries({ userId }: { userId: string | nul
             </div>
             {m.payload_summary && (
               <p className="text-sm text-foreground truncate">{m.payload_summary}</p>
+            )}
+            {m.ref_market_order_id && (
+              <CashOrderPanel
+                module="marche"
+                sourceId={m.ref_market_order_id}
+                role="customer"
+                onChanged={() => userId && reload(userId)}
+              />
             )}
             {showCode && (
               <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
