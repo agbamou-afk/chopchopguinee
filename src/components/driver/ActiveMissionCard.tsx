@@ -211,10 +211,6 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
           />
         </div>
       )}
-      {false && (
-        <div className="mb-2">
-        </div>
-      )}
 
       {showMap && initialView && (
         <div className="relative h-32 rounded-xl overflow-hidden border border-border/60 mb-3">
