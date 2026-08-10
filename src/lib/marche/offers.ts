@@ -39,11 +39,14 @@ export async function createOffer(input: {
   listingId: string;
   amountGnf: number;
   message?: string | null;
+  /** Explicit tender. Persisted atomically with the offer. Never inferred. */
+  paymentMethod: "cash" | "choppay";
 }): Promise<string> {
   const { data, error } = await (supabase as any).rpc("create_marketplace_offer", {
     p_listing_id: input.listingId,
     p_amount_gnf: input.amountGnf,
     p_message: input.message ?? null,
+    p_payment_method: input.paymentMethod,
   });
   if (error) throw new Error(translateOfferError(error.message));
   return data as string;
@@ -135,6 +138,7 @@ function translateOfferError(msg: string): string {
   if (m.includes("account blocked")) return "Compte bloqué.";
   if (m.includes("invalid amount")) return "Montant invalide.";
   if (m.includes("invalid counter")) return "Contre-offre invalide.";
+  if (m.includes("invalid_tender")) return "Mode de paiement invalide.";
   if (m.includes("forbidden")) return "Action non autorisée.";
   return "Action impossible.";
 }

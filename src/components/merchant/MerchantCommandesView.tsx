@@ -182,32 +182,35 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
             </div>
       )}
 
-      {!loading && tab === "prep" && (
-        prepInterests.length === 0
-          ? <p className="text-sm text-muted-foreground">Aucune commande à préparer.</p>
-          : <div className="space-y-2">
-              {prepInterests.map((i) => (
-                <InterestRow key={i.id} i={i} actions={
-                  <Button size="sm" variant="outline" className="mt-2 w-full"
-                    disabled={busy === i.id} onClick={() => respondInt(i.id, "fulfilled")}>
-                    Marquer terminé
-                  </Button>
-                } />
-              ))}
-              {/* Slice 4 — accepted cash offers are funded / prepared through the engine. */}
-              {offers
-                .filter((o) => o.status === "accepted")
-                .map((o) => (
-                  <CashOrderPanel
-                    key={`cash-${o.id}`}
-                    module="marche"
-                    sourceId={o.id}
-                    role="merchant"
-                    onChanged={refresh}
-                  />
-                ))}
-            </div>
-      )}
+      {!loading && tab === "prep" && (() => {
+        const acceptedOffers = offers.filter((o) => o.status === "accepted");
+        if (prepInterests.length === 0 && acceptedOffers.length === 0) {
+          return <p className="text-sm text-muted-foreground">Aucune commande à préparer.</p>;
+        }
+        return (
+          <div className="space-y-2">
+            {prepInterests.map((i) => (
+              <InterestRow key={i.id} i={i} actions={
+                <Button size="sm" variant="outline" className="mt-2 w-full"
+                  disabled={busy === i.id} onClick={() => respondInt(i.id, "fulfilled")}>
+                  Marquer terminé
+                </Button>
+              } />
+            ))}
+            {/* Slice 4 — accepted cash offers are funded / prepared through the engine,
+                independently of how many prep interests exist. */}
+            {acceptedOffers.map((o) => (
+              <CashOrderPanel
+                key={`cash-${o.id}`}
+                module="marche"
+                sourceId={o.id}
+                role="merchant"
+                onChanged={refresh}
+              />
+            ))}
+          </div>
+        );
+      })()}
 
       {!loading && tab === "history" && (
         (histInterests.length + histOffers.length) === 0

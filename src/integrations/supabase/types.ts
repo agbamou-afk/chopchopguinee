@@ -8708,7 +8708,12 @@ export type Database = {
         }
       }
       create_marketplace_offer: {
-        Args: { p_amount_gnf: number; p_listing_id: string; p_message?: string }
+        Args: {
+          p_amount_gnf: number
+          p_listing_id: string
+          p_message?: string
+          p_payment_method?: string
+        }
         Returns: string
       }
       current_admin_role: {

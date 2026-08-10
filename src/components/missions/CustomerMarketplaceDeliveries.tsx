@@ -12,6 +12,9 @@ import { toast } from "sonner";
  * Phase 5 — buyer surface for marketplace_delivery missions.
  * Shows the 6-digit handoff code the buyer must give the courier and
  * a "Confirmer la réception" button once the courier marks delivered.
+ *
+ * Slice 4 — also covers food_delivery missions so Repas customers get the
+ * same cash-order surface (cancel / dispute) as Marché buyers.
  */
 export function CustomerMarketplaceDeliveries({ userId }: { userId: string | null }) {
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -21,7 +24,9 @@ export function CustomerMarketplaceDeliveries({ userId }: { userId: string | nul
   const reload = useCallback(async (uid: string) => {
     try {
       const all = await listCustomerMissions(uid);
-      setMissions(all.filter((m) => m.type === "marketplace_delivery"));
+      setMissions(all.filter(
+        (m) => m.type === "marketplace_delivery" || m.type === "food_delivery",
+      ));
     } catch {
       setMissions([]);
     } finally {
@@ -64,16 +69,17 @@ export function CustomerMarketplaceDeliveries({ userId }: { userId: string | nul
   return (
     <section className="space-y-2 mb-4">
       <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground px-1">
-        Mes livraisons Marché
+        Mes livraisons
       </h3>
       {active.map((m) => {
         const awaitingConfirm = m.state === "delivered" && !m.customer_confirmed_at;
         const showCode = !awaitingConfirm && m.customer_handoff_code;
+        const isFood = m.type === "food_delivery";
         return (
           <div key={m.id} className="rounded-2xl border border-border/60 bg-card p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
-                <ShieldCheck className="w-3.5 h-3.5" /> Livraison Marché
+                <ShieldCheck className="w-3.5 h-3.5" /> {isFood ? "Livraison Repas" : "Livraison Marché"}
               </span>
               <span className="text-[10px] font-bold uppercase text-muted-foreground">
                 {MISSION_STATE_LABEL[m.state]}
@@ -82,10 +88,18 @@ export function CustomerMarketplaceDeliveries({ userId }: { userId: string | nul
             {m.payload_summary && (
               <p className="text-sm text-foreground truncate">{m.payload_summary}</p>
             )}
-            {m.ref_market_order_id && (
+            {!isFood && m.ref_market_order_id && (
               <CashOrderPanel
                 module="marche"
                 sourceId={m.ref_market_order_id}
+                role="customer"
+                onChanged={() => userId && reload(userId)}
+              />
+            )}
+            {isFood && m.ref_food_order_id && (
+              <CashOrderPanel
+                module="repas"
+                sourceId={m.ref_food_order_id}
                 role="customer"
                 onChanged={() => userId && reload(userId)}
               />
