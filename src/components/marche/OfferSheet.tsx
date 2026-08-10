@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { createOffer } from "@/lib/marche/offers";
-import { setMarcheOfferTender } from "@/lib/cash/cashOrders";
 import { formatGNF } from "@/lib/marche";
 
 interface Props {
@@ -21,8 +20,8 @@ interface Props {
 export function OfferSheet({ open, onOpenChange, listingId, askingPrice, onCreated }: Props) {
   const [amount, setAmount] = useState<string>("");
   const [message, setMessage] = useState("");
-  // Explicit tender only — Marché never infers cash from missing metadata.
-  const [tender, setTender] = useState<"cash" | "choppay">("cash");
+  // Explicit tender only — nothing preselected, Marché never infers cash.
+  const [tender, setTender] = useState<"cash" | "choppay" | null>(null);
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
@@ -31,12 +30,16 @@ export function OfferSheet({ open, onOpenChange, listingId, askingPrice, onCreat
       toast({ title: "Montant requis", description: "Indiquez votre offre en GNF." });
       return;
     }
+    if (!tender) {
+      toast({ title: "Mode de paiement requis", description: "Choisissez Espèces ou Chop Pay." });
+      return;
+    }
     setSaving(true);
     try {
-      const offerId = await createOffer({ listingId, amountGnf: n, message });
-      await setMarcheOfferTender(offerId, tender);
+      // Tender is persisted in the same server transaction as the offer.
+      await createOffer({ listingId, amountGnf: n, message, paymentMethod: tender });
       toast({ title: "Offre envoyée", description: "Le marchand sera notifié." });
-      setAmount(""); setMessage("");
+      setAmount(""); setMessage(""); setTender(null);
       onCreated?.();
       onOpenChange(false);
     } catch (e: any) {
@@ -89,7 +92,7 @@ export function OfferSheet({ open, onOpenChange, listingId, askingPrice, onCreat
           <p className="text-[11px] text-muted-foreground">
             Le marchand pourra accepter, refuser ou proposer un autre prix.
           </p>
-          <Button className="w-full" onClick={submit} disabled={saving}>
+          <Button className="w-full" onClick={submit} disabled={saving || !tender}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Envoyer l'offre"}
           </Button>
         </div>
