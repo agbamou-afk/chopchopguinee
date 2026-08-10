@@ -203,7 +203,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
                     module="marche"
                     sourceId={o.id}
                     role="merchant"
-                    onChanged={load}
+                    onChanged={refresh}
                   />
                 ))}
             </div>
