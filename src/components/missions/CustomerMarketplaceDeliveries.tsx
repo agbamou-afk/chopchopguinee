@@ -5,6 +5,7 @@ import { customerConfirmDelivery } from "@/lib/missions/proof";
 import { isTerminalState, MISSION_STATE_LABEL, type Mission } from "@/lib/missions/types";
 import { Button } from "@/components/ui/button";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
+import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { Loader2, ShieldCheck, KeyRound, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -96,8 +97,24 @@ export function CustomerMarketplaceDeliveries({ userId }: { userId: string | nul
                 onChanged={() => userId && reload(userId)}
               />
             )}
+            {!isFood && m.ref_market_order_id && (
+              <ChopPayOrderPanel
+                module="marche"
+                sourceId={m.ref_market_order_id}
+                role="customer"
+                onChanged={() => userId && reload(userId)}
+              />
+            )}
             {isFood && m.ref_food_order_id && (
               <CashOrderPanel
+                module="repas"
+                sourceId={m.ref_food_order_id}
+                role="customer"
+                onChanged={() => userId && reload(userId)}
+              />
+            )}
+            {isFood && m.ref_food_order_id && (
+              <ChopPayOrderPanel
                 module="repas"
                 sourceId={m.ref_food_order_id}
                 role="customer"
