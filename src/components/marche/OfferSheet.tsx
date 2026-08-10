@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { createOffer } from "@/lib/marche/offers";
+import { setMarcheOfferTender } from "@/lib/cash/cashOrders";
 import { formatGNF } from "@/lib/marche";
 
 interface Props {
@@ -20,6 +21,8 @@ interface Props {
 export function OfferSheet({ open, onOpenChange, listingId, askingPrice, onCreated }: Props) {
   const [amount, setAmount] = useState<string>("");
   const [message, setMessage] = useState("");
+  // Explicit tender only — Marché never infers cash from missing metadata.
+  const [tender, setTender] = useState<"cash" | "choppay">("cash");
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
@@ -30,7 +33,8 @@ export function OfferSheet({ open, onOpenChange, listingId, askingPrice, onCreat
     }
     setSaving(true);
     try {
-      await createOffer({ listingId, amountGnf: n, message });
+      const offerId = await createOffer({ listingId, amountGnf: n, message });
+      await setMarcheOfferTender(offerId, tender);
       toast({ title: "Offre envoyée", description: "Le marchand sera notifié." });
       setAmount(""); setMessage("");
       onCreated?.();
@@ -65,6 +69,22 @@ export function OfferSheet({ open, onOpenChange, listingId, askingPrice, onCreat
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Je peux payer aujourd'hui…"
             />
+          </div>
+          <div>
+            <Label>Mode de paiement</Label>
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              <Button type="button" variant={tender === "cash" ? "default" : "outline"}
+                onClick={() => setTender("cash")}>
+                Espèces à la livraison
+              </Button>
+              <Button type="button" variant={tender === "choppay" ? "default" : "outline"}
+                onClick={() => setTender("choppay")}>
+                Chop Pay
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Paiement mixte non pris en charge.
+            </p>
           </div>
           <p className="text-[11px] text-muted-foreground">
             Le marchand pourra accepter, refuser ou proposer un autre prix.

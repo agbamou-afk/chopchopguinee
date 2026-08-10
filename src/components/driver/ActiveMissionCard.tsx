@@ -24,6 +24,7 @@ import {
 } from "@/lib/missions/pipelines";
 import { MissionIssueSheet } from "./MissionIssueSheet";
 import { MarketplaceTrustSheet } from "@/components/missions/MarketplaceTrustSheet";
+import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { ChopMap, RoutePolyline, ChopPin, StraightLineFallback } from "@/components/map";
 import { DegradedMapPanel } from "@/components/map/DegradedMapPanel";
 import { bbox as bboxOf, type LatLng } from "@/lib/maps/geo";
@@ -197,6 +198,16 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
             mode="moto"
             activeJob={mission.courier_id ? { sourceModule: "mission", sourceId: mission.id, driverUserId: mission.courier_id } : null}
             compact
+          />
+        </div>
+      )}
+
+      {(mission.ref_food_order_id || mission.ref_market_order_id) && (
+        <div className="mb-2">
+          <CashOrderPanel
+            module={mission.ref_food_order_id ? "repas" : "marche"}
+            sourceId={(mission.ref_food_order_id ?? mission.ref_market_order_id) as string}
+            role="driver"
           />
         </div>
       )}

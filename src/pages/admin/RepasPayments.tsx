@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Navigate } from "react-router-dom";
 import { ModulePage } from "@/components/admin/ModulePage";
+import { CashOrderDisputeQueue } from "@/components/admin/CashOrderDisputeQueue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -178,6 +179,10 @@ export default function RepasPayments() {
 
   return (
     <ModulePage module="repas" title="Repas · Paiements & Règlements" subtitle="File de capture CHOPPay et liaison marchand">
+      <div className="mb-4">
+        <CashOrderDisputeQueue />
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
           {loading ? "Chargement…" : `${filteredRows.length} / ${rows.length} commande${rows.length > 1 ? "s" : ""} CHOP Wallet`}

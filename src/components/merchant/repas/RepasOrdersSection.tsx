@@ -27,6 +27,7 @@ import {
   type FoodOrderState,
 } from "@/lib/repas/types";
 import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
@@ -195,6 +196,14 @@ export function RepasOrdersSection({ restaurantId }: Props) {
                   {new Date(detail.created_at).toLocaleString("fr-FR")}
                 </span>
               </div>
+
+              {/* Slice 4 — engine-owned money transitions for cash orders. */}
+              <CashOrderPanel
+                module="repas"
+                sourceId={detail.id}
+                role="merchant"
+                onChanged={reload}
+              />
 
               <div className="rounded-xl bg-muted/40 border border-border/50 p-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase">Client</p>

@@ -7173,14 +7173,39 @@ export type Database = {
       }
       _as_user_claims: { Args: { p_user: string }; Returns: string }
       _capture_revenue_account: { Args: { p_kind: string }; Returns: string }
+      _cash_order_accept_internal: {
+        Args: { p_driver: string; p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
       _cash_order_capture_platform_fee: {
         Args: { p_actor?: string; p_source_id: string; p_source_module: string }
         Returns: Json
+      }
+      _cash_order_complete_internal: {
+        Args: {
+          p_actor: string
+          p_from_dispute?: boolean
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _cash_order_deactivate_source: {
+        Args: {
+          p_mission_id: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: undefined
       }
       _cash_order_economics: { Args: { p_facts: Json }; Returns: Json }
       _cash_order_facts: {
         Args: { p_source_id: string; p_source_module: string }
         Returns: Json
+      }
+      _cash_order_is_cash: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: boolean
       }
       _customer_cancellation_debt_create_internal: {
         Args: {
@@ -7296,6 +7321,21 @@ export type Database = {
           p_source_id: string
           p_source_module: string
         }
+        Returns: Json
+      }
+      _merchant_payable_reverse_internal: {
+        Args: {
+          p_actor?: string
+          p_beneficiary: string
+          p_merchant_store_id: string
+          p_reason: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _mission_cash_source: {
+        Args: { _m: Database["public"]["Tables"]["missions"]["Row"] }
         Returns: Json
       }
       _normalize_guinea_phone: { Args: { p_raw: string }; Returns: string }
@@ -9954,6 +9994,10 @@ export type Database = {
       marche_increment_listing_metric: {
         Args: { _kind: string; _listing_id: string }
         Returns: undefined
+      }
+      marche_offer_set_tender: {
+        Args: { p_method: string; p_offer_id: string }
+        Returns: Json
       }
       marche_toggle_listing_save: {
         Args: { _listing_id: string }

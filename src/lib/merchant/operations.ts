@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { FoodOrder, FoodOrderState } from "@/lib/repas/types";
+import {
+  getCashOrderRuntime,
+  merchantAcceptCashOrder,
+  merchantPrepareCashOrder,
+} from "@/lib/cash/cashOrders";
 
 /* ------------------------------------------------------------------ */
 /* Repas — restaurant operations                                      */
@@ -55,6 +60,25 @@ export const RESTAURANT_NEXT_LABEL: Partial<Record<FoodOrderState, string>> = {
 export async function advanceRestaurantOrder(orderId: string, current: FoodOrderState): Promise<FoodOrderState> {
   const next = RESTAURANT_NEXT_STATE[current];
   if (!next) throw new Error("Aucune étape suivante");
+  // Slice 4 — cash orders are engine-owned. Direct state writes are rejected by
+  // `trg_cash_order_block_direct_state`, so route the merchant transitions
+  // through the audited cash-order RPCs instead of touching `food_orders`.
+  const cash = await getCashOrderRuntime("repas", orderId);
+  if (cash) {
+    if (next === "confirmed") {
+      await merchantAcceptCashOrder("repas", orderId);
+      return "confirmed";
+    }
+    if (next === "preparing") {
+      await merchantPrepareCashOrder("repas", orderId);
+      return "preparing";
+    }
+    // 'ready' / 'out_for_delivery' / 'completed' are driven by the courier
+    // mission lifecycle, which finalises the cash economics server-side.
+    throw new Error(
+      "Commande espèces : la suite est pilotée par le coursier (retrait puis livraison).",
+    );
+  }
   // Trusted completion goes through the RPC so wallet capture + merchant settlement
   // run atomically. The completion trigger blocks direct UPDATE to 'completed' for
   // wallet-paid orders.
