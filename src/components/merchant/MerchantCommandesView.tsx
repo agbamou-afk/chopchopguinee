@@ -5,6 +5,7 @@ import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, L
 import { listSellerInterests, respondToInterest } from "@/lib/merchant/operations";
 import { listMerchantOffers, respondOffer, offerStatusLabel, type MarketplaceOffer } from "@/lib/marche/offers";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
+import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { formatGNF } from "@/lib/marche";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -202,6 +203,16 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
             {acceptedOffers.map((o) => (
               <CashOrderPanel
                 key={`cash-${o.id}`}
+                module="marche"
+                sourceId={o.id}
+                role="merchant"
+                onChanged={refresh}
+              />
+            ))}
+            {/* Slice 5 — accepted Chop Pay offers are captured / prepared through the engine. */}
+            {acceptedOffers.map((o) => (
+              <ChopPayOrderPanel
+                key={`choppay-${o.id}`}
                 module="marche"
                 sourceId={o.id}
                 role="merchant"
