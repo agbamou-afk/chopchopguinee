@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _qa_s4_results: {
+        Row: {
+          created_at: string
+          id: number
+          line: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          line: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          line?: string
+        }
+        Relationships: []
+      }
       account_bans: {
         Row: {
           banned_at: string
