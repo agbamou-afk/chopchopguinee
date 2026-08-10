@@ -785,6 +785,126 @@ export type Database = {
         }
         Relationships: []
       }
+      chop_pay_order_runtime: {
+        Row: {
+          accepted_at: string | null
+          authorized_at: string
+          cancellation_charge_gnf: number
+          cancelled_at: string | null
+          collateral_gnf: number
+          completed_at: string | null
+          created_at: string
+          customer_refunded_gnf: number
+          customer_user_id: string
+          delivery_fee_gnf: number
+          dispute_opened_by: string | null
+          dispute_reason: string | null
+          dispute_resolution: Json | null
+          disputed_at: string | null
+          driver_earning_gnf: number
+          driver_user_id: string | null
+          funded_at: string | null
+          id: string
+          is_sandbox: boolean
+          merchandise_subtotal_gnf: number
+          merchant_credited_gnf: number
+          merchant_store_id: string | null
+          merchant_user_id: string | null
+          mission_id: string | null
+          mission_type: string
+          order_key: string
+          order_total_gnf: number
+          platform_fee_gnf: number
+          platform_revenue_gnf: number
+          policy_snapshot: Json
+          prep_locked_at: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source_id: string
+          source_module: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          authorized_at?: string
+          cancellation_charge_gnf?: number
+          cancelled_at?: string | null
+          collateral_gnf?: number
+          completed_at?: string | null
+          created_at?: string
+          customer_refunded_gnf?: number
+          customer_user_id: string
+          delivery_fee_gnf?: number
+          dispute_opened_by?: string | null
+          dispute_reason?: string | null
+          dispute_resolution?: Json | null
+          disputed_at?: string | null
+          driver_earning_gnf?: number
+          driver_user_id?: string | null
+          funded_at?: string | null
+          id?: string
+          is_sandbox?: boolean
+          merchandise_subtotal_gnf: number
+          merchant_credited_gnf?: number
+          merchant_store_id?: string | null
+          merchant_user_id?: string | null
+          mission_id?: string | null
+          mission_type: string
+          order_key: string
+          order_total_gnf: number
+          platform_fee_gnf?: number
+          platform_revenue_gnf?: number
+          policy_snapshot?: Json
+          prep_locked_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id: string
+          source_module: string
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          authorized_at?: string
+          cancellation_charge_gnf?: number
+          cancelled_at?: string | null
+          collateral_gnf?: number
+          completed_at?: string | null
+          created_at?: string
+          customer_refunded_gnf?: number
+          customer_user_id?: string
+          delivery_fee_gnf?: number
+          dispute_opened_by?: string | null
+          dispute_reason?: string | null
+          dispute_resolution?: Json | null
+          disputed_at?: string | null
+          driver_earning_gnf?: number
+          driver_user_id?: string | null
+          funded_at?: string | null
+          id?: string
+          is_sandbox?: boolean
+          merchandise_subtotal_gnf?: number
+          merchant_credited_gnf?: number
+          merchant_store_id?: string | null
+          merchant_user_id?: string | null
+          mission_id?: string | null
+          mission_type?: string
+          order_key?: string
+          order_total_gnf?: number
+          platform_fee_gnf?: number
+          platform_revenue_gnf?: number
+          policy_snapshot?: Json
+          prep_locked_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id?: string
+          source_module?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       claims_reserves: {
         Row: {
           authorized_by: string
@@ -7207,6 +7327,78 @@ export type Database = {
         Args: { p_source_id: string; p_source_module: string }
         Returns: boolean
       }
+      _chop_pay_accept_internal: {
+        Args: { p_driver: string; p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      _chop_pay_cancel_internal: {
+        Args: {
+          p_actor: string
+          p_reason: string
+          p_responsible_party: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _chop_pay_complete_internal: {
+        Args: {
+          p_actor: string
+          p_from_dispute?: boolean
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _chop_pay_customer_capture_internal: {
+        Args: {
+          p_actor?: string
+          p_amount: number
+          p_purpose: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _chop_pay_customer_hold_internal: {
+        Args: { p_actor: string; p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      _chop_pay_customer_release_internal: {
+        Args: {
+          p_actor?: string
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _chop_pay_deactivate_source: {
+        Args: {
+          p_mission_id: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: undefined
+      }
+      _chop_pay_economics: { Args: { p_facts: Json }; Returns: Json }
+      _chop_pay_facts: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      _chop_pay_is_chop_pay: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: boolean
+      }
+      _chop_pay_merchant_capture_reverse_internal: {
+        Args: {
+          p_actor?: string
+          p_reason: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       _customer_cancellation_debt_create_internal: {
         Args: {
           p_actor?: string
@@ -7441,6 +7633,24 @@ export type Database = {
       }
       admin_check_email_reuse_blocker: {
         Args: { p_email: string }
+        Returns: Json
+      }
+      admin_chop_pay_cancel: {
+        Args: {
+          p_reason?: string
+          p_responsible_party: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      admin_chop_pay_dispute_resolve: {
+        Args: {
+          p_outcome: string
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
         Returns: Json
       }
       admin_clear_must_change_password: { Args: never; Returns: Json }
@@ -8451,6 +8661,18 @@ export type Database = {
         Args: { _email: string; _phone: string }
         Returns: Json
       }
+      chop_pay_authorize_order: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      chop_pay_customer_cancel: {
+        Args: {
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       chop_pay_customer_capture: {
         Args: {
           p_commission_gnf: number
@@ -8483,6 +8705,30 @@ export type Database = {
           p_source_id: string
           p_source_module: string
         }
+        Returns: Json
+      }
+      chop_pay_dispute_open: {
+        Args: { p_reason: string; p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      chop_pay_merchant_accept: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      chop_pay_merchant_prepare: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      chop_pay_merchant_reject: {
+        Args: {
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      chop_pay_quote: {
+        Args: { p_source_id: string; p_source_module: string }
         Returns: Json
       }
       choppay_cancel_payment_intent: {
