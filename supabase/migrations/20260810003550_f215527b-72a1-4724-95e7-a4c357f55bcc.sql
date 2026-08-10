@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public._qa_s4_run() TO authenticated, anon, service_role;
