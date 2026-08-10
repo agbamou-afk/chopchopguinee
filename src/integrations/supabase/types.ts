@@ -677,6 +677,114 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_order_runtime: {
+        Row: {
+          cancelled_at: string | null
+          cash_collected_gnf: number | null
+          cash_delivery_earning_gnf: number | null
+          cash_due_gnf: number
+          cash_fee_recovery_gnf: number | null
+          cash_principal_recovery_gnf: number | null
+          completed_at: string | null
+          created_at: string
+          customer_user_id: string
+          delivery_fee_gnf: number
+          dispute_opened_by: string | null
+          dispute_reason: string | null
+          dispute_resolution: Json | null
+          disputed_at: string | null
+          driver_user_id: string
+          funded_at: string | null
+          id: string
+          is_sandbox: boolean
+          merchandise_subtotal_gnf: number
+          merchant_store_id: string | null
+          merchant_user_id: string | null
+          mission_id: string | null
+          mission_type: string
+          order_key: string
+          platform_fee_gnf: number
+          policy_snapshot: Json
+          prep_locked_at: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source_id: string
+          source_module: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          cash_collected_gnf?: number | null
+          cash_delivery_earning_gnf?: number | null
+          cash_due_gnf: number
+          cash_fee_recovery_gnf?: number | null
+          cash_principal_recovery_gnf?: number | null
+          completed_at?: string | null
+          created_at?: string
+          customer_user_id: string
+          delivery_fee_gnf?: number
+          dispute_opened_by?: string | null
+          dispute_reason?: string | null
+          dispute_resolution?: Json | null
+          disputed_at?: string | null
+          driver_user_id: string
+          funded_at?: string | null
+          id?: string
+          is_sandbox?: boolean
+          merchandise_subtotal_gnf: number
+          merchant_store_id?: string | null
+          merchant_user_id?: string | null
+          mission_id?: string | null
+          mission_type: string
+          order_key: string
+          platform_fee_gnf?: number
+          policy_snapshot?: Json
+          prep_locked_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id: string
+          source_module: string
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          cash_collected_gnf?: number | null
+          cash_delivery_earning_gnf?: number | null
+          cash_due_gnf?: number
+          cash_fee_recovery_gnf?: number | null
+          cash_principal_recovery_gnf?: number | null
+          completed_at?: string | null
+          created_at?: string
+          customer_user_id?: string
+          delivery_fee_gnf?: number
+          dispute_opened_by?: string | null
+          dispute_reason?: string | null
+          dispute_resolution?: Json | null
+          disputed_at?: string | null
+          driver_user_id?: string
+          funded_at?: string | null
+          id?: string
+          is_sandbox?: boolean
+          merchandise_subtotal_gnf?: number
+          merchant_store_id?: string | null
+          merchant_user_id?: string | null
+          mission_id?: string | null
+          mission_type?: string
+          order_key?: string
+          platform_fee_gnf?: number
+          policy_snapshot?: Json
+          prep_locked_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id?: string
+          source_module?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       claims_reserves: {
         Row: {
           authorized_by: string
@@ -7065,6 +7173,33 @@ export type Database = {
       }
       _as_user_claims: { Args: { p_user: string }; Returns: string }
       _capture_revenue_account: { Args: { p_kind: string }; Returns: string }
+      _cash_order_capture_platform_fee: {
+        Args: { p_actor?: string; p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      _cash_order_economics: { Args: { p_facts: Json }; Returns: Json }
+      _cash_order_facts: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      _customer_cancellation_debt_create_internal: {
+        Args: {
+          p_actor?: string
+          p_customer: string
+          p_delivery_fee_gnf?: number
+          p_fare_gnf?: number
+          p_is_sandbox?: boolean
+          p_merchandise_subtotal_gnf?: number
+          p_mission_type: string
+          p_policy_snapshot?: Json
+          p_preparation_started?: boolean
+          p_responsible_party?: string
+          p_source_id: string
+          p_source_module: string
+          p_stage: string
+        }
+        Returns: Json
+      }
       _driver_finance_eligible: { Args: { p_driver: string }; Returns: boolean }
       _driver_group_stats: {
         Args: { p_from: string; p_group: string; p_to: string }
@@ -7078,6 +7213,16 @@ export type Database = {
           signup_bonus_eligible_count: number
           signup_bonus_paid_gnf: number
         }[]
+      }
+      _driver_mission_hold_release_internal: {
+        Args: {
+          p_actor?: string
+          p_kind?: string
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
       }
       _envoyer_enabled: { Args: never; Returns: boolean }
       _finance_evidence_claim: {
@@ -7129,6 +7274,29 @@ export type Database = {
       _map_distance_meters: {
         Args: { a_lat: number; a_lng: number; b_lat: number; b_lng: number }
         Returns: number
+      }
+      _merchant_payable_create_internal: {
+        Args: {
+          p_deduction_gnf?: number
+          p_is_sandbox?: boolean
+          p_merchant_store_id: string
+          p_mission_type?: string
+          p_snapshot?: Json
+          p_source_id: string
+          p_source_module: string
+          p_subtotal_gnf: number
+        }
+        Returns: Json
+      }
+      _merchant_payable_fund_internal: {
+        Args: {
+          p_actor?: string
+          p_funding_source: string
+          p_merchant_store_id: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
       }
       _normalize_guinea_phone: { Args: { p_raw: string }; Returns: string }
       _notify_account_event: {
@@ -7220,6 +7388,15 @@ export type Database = {
       }
       admin_ban_user: {
         Args: { _expires_at?: string; _reason: string; _target: string }
+        Returns: Json
+      }
+      admin_cash_order_dispute_resolve: {
+        Args: {
+          p_outcome: string
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
         Returns: Json
       }
       admin_check_email_reuse_blocker: {
@@ -8189,6 +8366,46 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      cash_order_accept: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      cash_order_complete_cash: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      cash_order_customer_cancel: {
+        Args: {
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      cash_order_dispute_open: {
+        Args: { p_reason: string; p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      cash_order_merchant_accept: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      cash_order_merchant_prepare: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      cash_order_merchant_reject: {
+        Args: {
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      cash_order_quote: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
       }
       check_signup_allowed: {
         Args: { _email: string; _phone: string }
