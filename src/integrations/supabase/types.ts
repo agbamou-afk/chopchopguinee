@@ -7331,6 +7331,7 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_s4_run: { Args: never; Returns: string[] }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
