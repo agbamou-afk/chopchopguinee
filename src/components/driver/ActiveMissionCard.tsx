@@ -202,6 +202,20 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         </div>
       )}
 
+      {(mission.ref_food_order_id || mission.ref_market_order_id) && (
+        <div className="mb-2">
+          <CashOrderPanel
+            module={mission.ref_food_order_id ? "repas" : "marche"}
+            sourceId={(mission.ref_food_order_id ?? mission.ref_market_order_id) as string}
+            role="driver"
+          />
+        </div>
+      )}
+      {false && (
+        <div className="mb-2">
+        </div>
+      )}
+
       {showMap && initialView && (
         <div className="relative h-32 rounded-xl overflow-hidden border border-border/60 mb-3">
           <ChopMap
