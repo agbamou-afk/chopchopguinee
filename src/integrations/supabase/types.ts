@@ -14,24 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _qa_s4_results: {
-        Row: {
-          created_at: string
-          id: number
-          line: string
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          line: string
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          line?: string
-        }
-        Relationships: []
-      }
       account_bans: {
         Row: {
           banned_at: string
@@ -7349,7 +7331,6 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
-      _qa_s4_run: { Args: never; Returns: string[] }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
