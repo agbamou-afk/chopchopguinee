@@ -4,6 +4,7 @@ import { toast } from "@/hooks/use-toast";
 import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, Loader2 } from "lucide-react";
 import { listSellerInterests, respondToInterest } from "@/lib/merchant/operations";
 import { listMerchantOffers, respondOffer, offerStatusLabel, type MarketplaceOffer } from "@/lib/marche/offers";
+import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { formatGNF } from "@/lib/marche";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -193,6 +194,18 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
                   </Button>
                 } />
               ))}
+              {/* Slice 4 — accepted cash offers are funded / prepared through the engine. */}
+              {offers
+                .filter((o) => o.status === "accepted")
+                .map((o) => (
+                  <CashOrderPanel
+                    key={`cash-${o.id}`}
+                    module="marche"
+                    sourceId={o.id}
+                    role="merchant"
+                    onChanged={load}
+                  />
+                ))}
             </div>
       )}
 

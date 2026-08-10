@@ -24,6 +24,7 @@ import {
 } from "@/lib/missions/pipelines";
 import { MissionIssueSheet } from "./MissionIssueSheet";
 import { MarketplaceTrustSheet } from "@/components/missions/MarketplaceTrustSheet";
+import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { ChopMap, RoutePolyline, ChopPin, StraightLineFallback } from "@/components/map";
 import { DegradedMapPanel } from "@/components/map/DegradedMapPanel";
 import { bbox as bboxOf, type LatLng } from "@/lib/maps/geo";
