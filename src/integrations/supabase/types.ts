@@ -7435,6 +7435,21 @@ export type Database = {
         }
         Returns: Json
       }
+      _driver_exact_hold_place_internal: {
+        Args: {
+          p_amount: number
+          p_basis_value_gnf?: number
+          p_driver: string
+          p_is_sandbox?: boolean
+          p_kind?: string
+          p_mission_type: string
+          p_policy_id?: string
+          p_snapshot?: Json
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       _driver_finance_eligible: { Args: { p_driver: string }; Returns: boolean }
       _driver_group_stats: {
         Args: { p_from: string; p_group: string; p_to: string }

@@ -4,6 +4,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Navigate } from "react-router-dom";
 import { ModulePage } from "@/components/admin/ModulePage";
 import { CashOrderDisputeQueue } from "@/components/admin/CashOrderDisputeQueue";
+import { ChopPayDisputeQueue } from "@/components/admin/ChopPayDisputeQueue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -181,6 +182,7 @@ export default function RepasPayments() {
     <ModulePage module="repas" title="Repas · Paiements & Règlements" subtitle="File de capture CHOPPay et liaison marchand">
       <div className="mb-4">
         <CashOrderDisputeQueue />
+        <ChopPayDisputeQueue />
       </div>
 
       <div className="flex items-center justify-between mb-4">

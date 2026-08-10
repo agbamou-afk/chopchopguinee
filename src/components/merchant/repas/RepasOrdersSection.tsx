@@ -28,6 +28,7 @@ import {
 } from "@/lib/repas/types";
 import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
+import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
@@ -199,6 +200,14 @@ export function RepasOrdersSection({ restaurantId }: Props) {
 
               {/* Slice 4 — engine-owned money transitions for cash orders. */}
               <CashOrderPanel
+                module="repas"
+                sourceId={detail.id}
+                role="merchant"
+                onChanged={reload}
+              />
+
+              {/* Slice 5 — engine-owned money transitions for Chop Pay orders. */}
+              <ChopPayOrderPanel
                 module="repas"
                 sourceId={detail.id}
                 role="merchant"
