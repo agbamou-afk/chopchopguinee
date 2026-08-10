@@ -95,3 +95,56 @@ Slice 4 QA audit rows **0** · enabled finance flags: **`om_topup_enabled` only*
 - Slice 3 Ride / Bonbonna + OM reconciliation visual QA — **YELLOW** (preview signed out).
 - DEF-FIN-001 master wallet `b6858980-43d2-425d-b12d-b02aac3de52d`, master/owner NULL, −100 435 GNF — **YELLOW**, finance reconciliation follow-up; never mutated as QA cleanup.
 - **NEW** Slice 4 Repas/Marché cash-order UI visual QA — **YELLOW** (preview signed out; no authenticated visual pass claimed). Owner: Platform/QA agent, next authenticated session.
+---
+
+# Part 3 — Product-integration hardening (P1-1 … P1-5)
+
+Run date: 2026-08-10. Scope: Slice 4 only. No finance capability flag enabled
+(`om_topup_enabled` remains the only ON canonical finance flag).
+
+## Defects closed
+
+| ID | Defect | Fix (evidence) |
+| --- | --- | --- |
+| P1-1 | Marché tender written in two steps (`createOffer` then `marche_offer_set_tender`): an offer could persist with no tender if the second call failed. | `create_marketplace_offer(uuid,bigint,text,text)` now takes `p_payment_method` and writes `metadata.payment_method` in the same transaction; the 3-arg signature was dropped, so no overload ambiguity remains. Client: `src/lib/marche/offers.ts`, `src/components/marche/OfferSheet.tsx` (no tender preselected, submit disabled until chosen, single RPC). |
+| P1-2 | `_cash_order_block_direct_state` only fired when a `cash_order_runtime` row existed, so a cash Repas order could be advanced by a direct write before a courier engaged. | Trigger now treats `food_orders.payment_method = 'cash'` as authoritative, independent of runtime existence. |
+| P1-3 | Marché merchant prep tab hid accepted cash offers when `prepInterests` was empty. | `MerchantCommandesView` renders the accepted-offer `CashOrderPanel` list independently of prep interests. |
+| P1-4 | Repas customers had no cash-order surface (cancel / dispute). | `CustomerMarketplaceDeliveries` now also lists `food_delivery` missions and renders `CashOrderPanel module="repas"` for `ref_food_order_id`. |
+| P1-5 | Marché missions could be claimed with unknown tender. | `mission_claim` raises `MARCHE_TENDER_REQUIRED` when `marketplace_offers.metadata->>'payment_method'` is NULL or not in (`cash`,`choppay`) — refusal happens before any funding/runtime work, so no half-assignment. |
+| P1-6 | `_merchant_payable_reverse_internal` accepted an arbitrary `p_beneficiary`. | Beneficiary is validated against `cash_order_runtime.driver_user_id`; mismatch raises `BENEFICIARY_MISMATCH`. Restoration remains unrestricted-only. |
+
+## Privilege matrix (live grants, verified read-only)
+
+| Function | anon | authenticated | service_role |
+| --- | --- | --- | --- |
+| `_cash_order_accept_internal` / `_complete_internal` / `_capture_platform_fee` / `_facts` / `_economics` / `_deactivate_source` | – | – | ✅ |
+| `_merchant_payable_reverse_internal` | – | – | ✅ |
+| `merchant_payable_create` / `merchant_payable_fund` / `driver_mission_hold_release` / `customer_cancellation_debt_create` | – | – | ✅ |
+| `cash_order_quote/accept/merchant_accept/reject/prepare/complete_cash/customer_cancel/dispute_open` | – | ✅ (self-scoped) | ✅ |
+| `admin_cash_order_dispute_resolve` | – | ✅ (`_finance_privileged` gated) | ✅ |
+| `create_marketplace_offer` | – | ✅ | ✅ |
+| `mission_claim` | – | ✅ | ✅ |
+
+`anon` was additionally revoked from `create_marketplace_offer`, `mission_claim`
+and `_cash_order_runtime_immutable` during this pass. Slice 3 inbound-OM guards
+untouched.
+
+## Build / test evidence
+
+- `tsgo --noEmit` — clean.
+- Vitest — 12/12 pass (2 files).
+- `vite build` — green, PWA precache 130 entries / 11 867.30 KiB (< 4 MiB per-file limit respected).
+
+## YELLOW register (carried forward)
+
+1. Slice 2 God Admin finance policy / control-plane visual QA — **YELLOW**.
+2. Slice 3 Ride / Bonbonna + OM reconciliation visual QA — **YELLOW**.
+3. DEF-FIN-001 master wallet −100 435 GNF — **YELLOW**, untouched.
+4. Slice 4 Repas / Marché cash-order visual QA — **YELLOW** (preview signed out).
+5. **NEW** Part 3 integration re-run of the 46-assertion economic harness was
+   **not** re-executed after these changes; the Part 1 evidence stands for the
+   engine internals, which Part 3 did not modify (offer tender, trigger scope,
+   claim guard, UI wiring, beneficiary validation only). A full harness re-run is
+   owed before lock. Owner: Finance/QA agent.
+
+Slice 4 remains **UNLOCKED**. Slice 5 **NOT STARTED**.
