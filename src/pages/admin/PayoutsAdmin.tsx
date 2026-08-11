@@ -258,6 +258,68 @@ function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!manualFor} onOpenChange={(o) => !o && setManualFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Virement Orange Money manuel (Stage 5)</DialogTitle>
+            <DialogDescription>
+              Effectuez d'abord le transfert Orange Money hors CHOPCHOP, du montant exact
+              affiché vers le numéro exact affiché. Saisissez ensuite la vraie référence de
+              transaction. Ceci est une attestation d'opérateur : aucune vérification par une
+              API Orange Money n'est effectuée. Tous les montants sont figés et recalculés
+              côté serveur.
+            </DialogDescription>
+          </DialogHeader>
+          {manualFor && (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-primary/40 bg-primary/5 p-3">
+                <p className="text-[11px] text-muted-foreground">Montant exact à transférer</p>
+                <p className="text-2xl font-bold tabular-nums text-foreground">
+                  {formatGNF(manualFor.expected_provider_transfer_gnf)}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  vers <span className="font-mono">{manualFor.destination_msisdn}</span> · Orange Money
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                {[
+                  ["Marchand", manualFor.store_name ?? manualFor.party_type],
+                  ["Principal demandé", formatGNF(manualFor.requested_principal_gnf)],
+                  ["Frais fournisseur", formatGNF(manualFor.provider_fee_gnf)],
+                  ["Frais à la charge de", manualFor.fee_borne_by === "platform" ? "plateforme" : "bénéficiaire"],
+                  ["Environnement", manualFor.environment],
+                  ["Référence dossier", manualFor.request_id ?? manualFor.payout_order_id],
+                ].map(([k, v]) => (
+                  <div key={k} className="rounded-lg bg-muted/40 p-2">
+                    <p className="text-muted-foreground">{k}</p>
+                    <p className="font-semibold break-all">{v}</p>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <Label>Référence de transaction Orange Money (réelle)</Label>
+                <Input value={manualRef} onChange={(e) => setManualRef(e.target.value)}
+                       placeholder="Ex. OM240812.1530.A12345" />
+              </div>
+              <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                <Checkbox checked={attested} onCheckedChange={(c) => setAttested(c === true)} />
+                <span>
+                  J'atteste avoir transféré exactement {formatGNF(manualFor.expected_provider_transfer_gnf)}{" "}
+                  au numéro {manualFor.destination_msisdn} via Orange Money, et que la référence
+                  saisie est la référence réelle de cette transaction.
+                </span>
+              </label>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={submitManual}
+                    disabled={busy || !attested || manualRef.trim().length < MANUAL_OM_REFERENCE_MIN_LENGTH}>
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmer et attester"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
