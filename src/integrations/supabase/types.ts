@@ -8288,12 +8288,26 @@ export type Database = {
         Returns: number
       }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
+      _qa_s13_driver: {
+        Args: { p_bal: number; p_tag: string; p_uid: string }
+        Returns: undefined
+      }
       _qa_s13_flag: {
         Args: { p_key: string; p_val: boolean }
         Returns: undefined
       }
       _qa_s13_ok: {
         Args: { p_detail?: string; p_label: string; p_ok: boolean }
+        Returns: Json
+      }
+      _qa_s13_rls_probe: {
+        Args: {
+          p_bucket: string
+          p_name: string
+          p_op: string
+          p_role: string
+          p_uid: string
+        }
         Returns: Json
       }
       _qa_s13_run1: { Args: never; Returns: Json }
@@ -11962,6 +11976,10 @@ export type Database = {
           p_package_id: string
           p_reason: string
         }
+        Returns: Json
+      }
+      package_courier_cancel: {
+        Args: { p_package_id: string; p_reason?: string }
         Returns: Json
       }
       package_delivery_cancel: {
