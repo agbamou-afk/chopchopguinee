@@ -38,3 +38,23 @@ Every part builds its own fixtures inside one transaction and rolls the whole bl
 - `_qa_s13*` helpers: anon/authenticated EXECUTE denied, service_role only.
 - `package_courier_cancel`: authenticated + service_role only, assigned-courier check,
   custody lock, idempotent replay.
+
+## Part 5 — Orange Money Inbound Reconciliation (IN PROGRESS — not stamped PASS)
+
+Harness: `public._qa_s13_run5()` (service_role only, self-rolling-back), results in `_qa_s13_results(part=5)`.
+
+Latest run: **69 / 71 PASS**, 2 open items (both in the D8 harness case, see below). Part 5 is therefore **NOT** stamped PASS.
+
+### Production defects found and fixed (canonical code)
+1. **P1 — admin-first reconciliation was broken for participants.** When the operator recorded the provider receipt *before* the customer/driver pasted their Orange Money code, `submit_customer_om_code` → `om_auto_match` → `wallet_topup_om_credit` aborted with `forbidden` (the credit primitive rejected the non-admin `auth.uid()`), rolling back the whole submission so the code was not even saved. Fixed with a one-shot, event-scoped transaction-local marker (`chopchop.om_credit_internal`) set by `submit_customer_om_code` immediately before delegating to the matcher. The marker authorises the *call only*; `wallet_topup_om_credit` still independently revalidates reference, amount, payer phone, receiving account, environment and target at credit time, and remains EXECUTE-denied to `anon`/`authenticated`.
+2. **P2 — `credit_failed` violated a CHECK constraint.** `admin_record_om_receipt` / `admin_retry_om_credit` and the reconciliation UI write `processing_status = 'credit_failed'`, which was not in `payment_provider_events_processing_chk`, turning a logged credit failure into a hard function abort. The state is now allowed.
+
+### Open (harness, not production)
+- `D8 one customer receipt cannot be redirected into another customer request` — no money moved (`delta=0`), but the forced call returned no error where the harness expected one; the assertion needs to be re-shaped around the actual canonical refusal path.
+- The abort immediately after D8 (`Cette demande n'est plus active`) is fixture-state leakage from D8, not a product failure.
+
+### Verified in the latest run (non-exhaustive)
+A1–A15 customer exact-match credit (liability, not revenue; zero-sum journal; terminal states; truthful requester history), B driver exact-match credit into unrestricted balance only, C required-evidence negative matrix (all 0 GNF), D credit-time revalidation / forced-match resistance, E idempotency + replay + advisory-lock concurrency, F cross-party/privilege matrix, G sandbox↔production isolation, I accounting truth, Z rollback posture (master exactly −100435 / held 0, global posting sum 0, zero imbalanced journals, feature flags byte-identical with `om_topup_enabled=true`, no fixture residue, `_qa_s13*` anon/auth EXECUTE denied).
+
+### YELLOW register
+- **YELLOW (not convertible to PASS): no actually observed live Orange Money receipt was used.** All Part 5 evidence is production-format *synthetic* receipt proof only. Live-provider receipt verification remains outstanding.
