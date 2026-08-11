@@ -53,6 +53,27 @@ export type Database = {
         }
         Relationships: []
       }
+      _qa_s7_results: {
+        Row: {
+          created_at: string
+          id: number
+          part: number
+          result: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          part: number
+          result: Json
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          part?: number
+          result?: Json
+        }
+        Relationships: []
+      }
       account_bans: {
         Row: {
           banned_at: string
@@ -4773,6 +4794,66 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_settlement_requests: {
+        Row: {
+          amount_gnf: number
+          channel: string
+          created_at: string
+          currency: string
+          eligible_snapshot_gnf: number
+          evidence_ref: string | null
+          id: string
+          merchant_store_id: string
+          merchant_user_id: string
+          note: string | null
+          reject_reason: string | null
+          request_key: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          settled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_gnf: number
+          channel?: string
+          created_at?: string
+          currency?: string
+          eligible_snapshot_gnf: number
+          evidence_ref?: string | null
+          id?: string
+          merchant_store_id: string
+          merchant_user_id: string
+          note?: string | null
+          reject_reason?: string | null
+          request_key: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          settled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_gnf?: number
+          channel?: string
+          created_at?: string
+          currency?: string
+          eligible_snapshot_gnf?: number
+          evidence_ref?: string | null
+          id?: string
+          merchant_store_id?: string
+          merchant_user_id?: string
+          note?: string | null
+          reject_reason?: string | null
+          request_key?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          settled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       merchant_stores: {
         Row: {
           address_label: string | null
@@ -7894,6 +7975,20 @@ export type Database = {
         Returns: string
       }
       _qa_s6_t2: { Args: { p_pkg: string }; Returns: number }
+      _qa_s7_run1: { Args: never; Returns: Json }
+      _qa_s7_run2: { Args: never; Returns: Json }
+      _qa_s7_run3: { Args: never; Returns: Json }
+      _qa_s7_run4: { Args: never; Returns: Json }
+      _qa_s7_user: { Args: { p_id: string; p_tag: string }; Returns: undefined }
+      _qa_s7_wallet: {
+        Args: {
+          p_bal: number
+          p_held: number
+          p_owner: string
+          p_party: Database["public"]["Enums"]["party_type"]
+        }
+        Returns: string
+      }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
@@ -9343,6 +9438,24 @@ export type Database = {
         Args: { p_debt_id: string; p_reason: string }
         Returns: Json
       }
+      customer_finance_history: {
+        Args: { p_limit?: number }
+        Returns: {
+          amount_gnf: number
+          counts_as_balance: boolean
+          direction: string
+          event_id: string
+          kind: string
+          label: string
+          module: string
+          occurred_at: string
+          reference: string
+          source: string
+          status: string
+        }[]
+      }
+      customer_finance_overview: { Args: never; Returns: Json }
+      customer_receipt: { Args: { p_transaction_id: string }; Returns: Json }
       debug_create_offer_for_current_driver: { Args: never; Returns: Json }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -9801,6 +9914,23 @@ export type Database = {
       driver_starter_credit_grant: {
         Args: { p_driver?: string }
         Returns: Json
+      }
+      driver_topup_history: {
+        Args: { p_limit?: number }
+        Returns: {
+          amount_gnf: number
+          cancelled_reason: string
+          confirmed_at: string
+          created_at: string
+          credited: boolean
+          credited_transaction_id: string
+          id: string
+          provider: string
+          receiving_label: string
+          receiving_phone: string
+          reference: string
+          status: string
+        }[]
       }
       driver_update_location_signal: {
         Args: {
@@ -10653,6 +10783,10 @@ export type Database = {
         Args: { p_merchant_id: string }
         Returns: string
       }
+      merchant_finance_overview: {
+        Args: { p_store_id?: string }
+        Returns: Json
+      }
       merchant_payable_create: {
         Args: {
           p_deduction_gnf?: number
@@ -10720,6 +10854,31 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      merchant_settlement_request_create: {
+        Args: {
+          p_amount_gnf: number
+          p_idempotency_key: string
+          p_note?: string
+          p_store_id?: string
+        }
+        Returns: Json
+      }
+      merchant_settlement_requests_list: {
+        Args: { p_limit?: number; p_store_id?: string }
+        Returns: {
+          amount_gnf: number
+          channel: string
+          created_at: string
+          evidence_ref: string
+          id: string
+          note: string
+          reject_reason: string
+          request_key: string
+          reviewed_at: string
+          settled_at: string
+          status: string
+        }[]
       }
       merchant_submit_location: {
         Args: {
