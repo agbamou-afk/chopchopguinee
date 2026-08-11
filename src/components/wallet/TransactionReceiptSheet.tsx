@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -5,55 +6,80 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { ShieldCheck, Receipt, MapPin, Store } from "lucide-react";
+import { ShieldCheck, Receipt, AlertTriangle, Loader2 } from "lucide-react";
 import { formatGNF } from "@/lib/format";
-import type { WalletTransaction } from "@/hooks/useWallet";
 import { ReportIssueButton } from "@/components/support/ReportIssueButton";
-import {
-  txLabel,
-  txContext,
-  payoutAvailabilityCopy,
-  MISSION_KIND_LABEL,
-  type TxDirection,
-} from "@/lib/wallet/labels";
+import { fetchCustomerReceipt, type CustomerReceipt } from "@/lib/finance/readModels";
 import {
   mapTxnStatus,
   stateLabel,
   statePhrase,
   stateTone,
-  providerLabel,
   isWongoReference,
 } from "@/lib/payments";
 
 interface Props {
-  tx: WalletTransaction | null;
-  direction: TxDirection;
+  /** Canonical wallet transaction id. The sheet fetches its own truth. */
+  transactionId: string | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }
 
 /**
- * Calm, lightweight payment receipt. Mirrors physical receipt mental model
- * without banking jargon. Linked-entity CTA appears only when meaningful.
+ * Slice 7 — receipt truth comes from `customer_receipt`. Nothing financial is
+ * read from a client-held transaction row, and there is no fallback to raw
+ * values when the read model is unavailable.
  */
-export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: Props) {
-  if (!tx) return null;
-  const paymentState = mapTxnStatus(tx.status);
-  const stateText  = stateLabel(paymentState);
-  const statePhrs  = statePhrase(paymentState);
-  const toneKey    = stateTone(paymentState);
-  const provider   = providerLabel(
-    ((tx as unknown as { metadata?: Record<string, unknown> | null }).metadata ?? null)?.provider as string | undefined,
-  );
-  const refIsWongo = isWongoReference(tx.reference);
-  const ref = tx.related_entity ?? null;
-  const linkedCta = ref ? linkedCtaFor(ref) : null;
-  const ctx = txContext(tx);
-  const availability = payoutAvailabilityCopy(tx, direction);
-  const dateStr = new Date(tx.created_at).toLocaleString("fr-FR", {
-    day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
-  });
+export function TransactionReceiptSheet({ transactionId, open, onOpenChange }: Props) {
+  const [receipt, setReceipt] = useState<CustomerReceipt | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!open || !transactionId) { setReceipt(null); setFailed(false); return; }
+    setLoading(true); setFailed(false); setReceipt(null);
+    void fetchCustomerReceipt(transactionId).then((r) => {
+      if (cancelled) return;
+      setReceipt(r);
+      setFailed(!r);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [open, transactionId]);
+
+  if (!transactionId) return null;
+
+  const body = (() => {
+    if (loading) {
+      return (
+        <div className="mt-10 flex flex-col items-center gap-2 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <p className="text-xs">Chargement du reçu…</p>
+        </div>
+      );
+    }
+    if (failed || !receipt) {
+      return (
+        <div className="mt-8 text-center space-y-3">
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-muted flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold text-foreground">Reçu indisponible</p>
+          <p className="text-xs text-muted-foreground max-w-[18rem] mx-auto">
+            Nous n'avons pas pu récupérer le reçu officiel de cette opération. Réessayez
+            plus tard ou signalez le problème.
+          </p>
+          <ReportIssueButton
+            className="w-full"
+            issueTypes={["payment_pending", "payment_failed", "other"]}
+            context={{ metadata: { transaction_id: transactionId, surface: "receipt_unavailable" } }}
+          />
+        </div>
+      );
+    }
+    return <ReceiptBody receipt={receipt} />;
+  })();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -69,53 +95,52 @@ export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: P
             </div>
           </div>
         </SheetHeader>
+        {body}
+      </SheetContent>
+    </Sheet>
+  );
+}
 
+function ReceiptBody({ receipt }: { receipt: CustomerReceipt }) {
+  const direction = receipt.direction;
+  const paymentState = mapTxnStatus(receipt.status);
+  const stateText = stateLabel(paymentState);
+  const statePhrs = statePhrase(paymentState);
+  const toneKey = stateTone(paymentState);
+  const refIsWongo = isWongoReference(receipt.reference);
+  const dateStr = new Date(receipt.created_at).toLocaleString("fr-FR", {
+    day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+  const completedStr = receipt.completed_at
+    ? new Date(receipt.completed_at).toLocaleString("fr-FR", {
+        day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+      })
+    : null;
+
+  return (
         <div className="mt-5 space-y-4">
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">{txLabel(tx, direction)}</p>
+            <p className="text-xs text-muted-foreground">{receipt.module}</p>
             <p className={`text-3xl font-extrabold tabular-nums mt-1 ${direction === "in" ? "text-[hsl(160_55%_28%)]" : "text-foreground"}`}>
-              {direction === "in" ? "+" : "-"}{formatGNF(Math.abs(tx.amount_gnf))}
+              {direction === "in" ? "+" : "-"}{formatGNF(Math.abs(receipt.amount_gnf))}
             </p>
             <span className={`inline-block mt-2 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusTone(toneKey)}`}>
               {stateText}
             </span>
             <p className="mt-1 text-[11px] text-muted-foreground">{statePhrs}</p>
-            <p className={`mt-2 text-[11px] ${availabilityTone(availability.tone)}`}>
-              {availability.label}
-            </p>
           </div>
-
-          {(ctx.missionKind || ctx.pickupArea || ctx.merchantName) && (
-            <div className="bg-muted/40 rounded-2xl p-3 space-y-1.5">
-              {ctx.missionKind && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold text-[10px]">
-                    {MISSION_KIND_LABEL[ctx.missionKind]}
-                  </span>
-                </div>
-              )}
-              {ctx.pickupArea && ctx.dropoffArea && (
-                <div className="flex items-center gap-1.5 text-xs text-foreground">
-                  <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>{ctx.pickupArea}</span>
-                  <span className="text-muted-foreground">→</span>
-                  <span>{ctx.dropoffArea}</span>
-                </div>
-              )}
-              {ctx.merchantName && !ctx.pickupArea && (
-                <div className="flex items-center gap-1.5 text-xs text-foreground">
-                  <Store className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="truncate">{ctx.merchantName}</span>
-                </div>
-              )}
-            </div>
-          )}
 
           <div className="bg-card rounded-2xl border border-border/60 p-4 space-y-2.5 shadow-card">
             <Row label="Date" value={dateStr} />
-            <Row label="Méthode" value={provider} />
-            {tx.description && <Row label="Détail" value={tx.description} />}
-            <Row label={refIsWongo ? "Référence CHOP" : "Référence"} value={tx.reference} mono />
+            {completedStr && <Row label="Confirmé le" value={completedStr} />}
+            <Row label="Type" value={receipt.kind} />
+            {receipt.description && <Row label="Détail" value={receipt.description} />}
+            <Row label={refIsWongo ? "Référence CHOP" : "Référence"} value={receipt.reference} mono />
+            <Row label="Transaction" value={receipt.transaction_id} mono />
+            <Row
+              label="Provenance comptable"
+              value={receipt.has_journal_provenance ? "Écriture comptable vérifiée" : "Non rattachée à une écriture"}
+            />
           </div>
 
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground justify-center">
@@ -123,29 +148,19 @@ export function TransactionReceiptSheet({ tx, direction, open, onOpenChange }: P
             Transaction sécurisée par ChopPay
           </div>
 
-          {linkedCta && (
-            <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
-              {linkedCta}
-            </Button>
-          )}
-
           <ReportIssueButton
             className="w-full"
             issueTypes={["payment_pending", "payment_failed", "other"]}
             context={{
-              relatedPaymentIntentId:
-                (tx as unknown as { payment_intent_id?: string | null }).payment_intent_id ?? null,
               metadata: {
-                transaction_id: tx.id,
-                reference: tx.reference,
-                status: tx.status,
-                amount_gnf: tx.amount_gnf,
+                transaction_id: receipt.transaction_id,
+                reference: receipt.reference,
+                status: receipt.status,
+                amount_gnf: receipt.amount_gnf,
               },
             }}
           />
         </div>
-      </SheetContent>
-    </Sheet>
   );
 }
 
@@ -165,20 +180,4 @@ function statusTone(tone: import("@/lib/payments").StateTone) {
   if (tone === "cancelled") return "bg-muted text-muted-foreground border-border";
   if (tone === "ok") return "bg-primary/10 text-primary border-primary/30";
   return "bg-muted text-muted-foreground border-border";
-}
-
-function availabilityTone(tone: "ok" | "pending" | "muted") {
-  if (tone === "ok") return "text-[hsl(160_55%_28%)] font-medium";
-  if (tone === "pending") return "text-secondary-foreground font-medium";
-  return "text-muted-foreground";
-}
-
-function linkedCtaFor(ref: string): string | null {
-  const r = ref.toLowerCase();
-  if (r.startsWith("food_") || r.includes("repas")) return "Voir la commande";
-  if (r.startsWith("listing:") || r.includes("marketplace") || r.includes("marche")) return "Voir l'article";
-  if (r.startsWith("store:") || r.includes("boutique")) return "Voir la boutique";
-  if (r.startsWith("mission:") || r.includes("mission")) return "Voir la mission";
-  if (r.startsWith("ride:") || r.includes("ride")) return "Voir la course";
-  return null;
 }

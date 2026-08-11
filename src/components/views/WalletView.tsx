@@ -40,12 +40,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { ChopPayLauncher } from "@/components/pay/ChopPayLauncher";
 import { TransactionReceiptSheet } from "@/components/wallet/TransactionReceiptSheet";
-import { groupTransactions, txLabel, txStatusCopy } from "@/lib/wallet/labels";
+import { groupTransactions, txStatusCopy } from "@/lib/wallet/labels";
 import { SendMoneySheet } from "@/components/wallet/SendMoneySheet";
 import { Send } from "lucide-react";
 import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
 import { WalletArchivedPanel } from "@/components/wallet/WalletArchivedPanel";
-import { useCustomerFinanceOverview } from "@/lib/finance/readModels";
+import {
+  useCustomerFinanceOverview,
+  useCustomerFinanceHistory,
+  type CustomerFinanceEvent,
+} from "@/lib/finance/readModels";
 
 type ActionId = "pay" | "receive" | "scan" | "add" | "send";
 
@@ -95,16 +99,19 @@ export function WalletView() {
   // Slice 7 — every KPI below comes from the server read model. The client
   // never derives a balance, an available amount or a spend aggregate.
   const { overview, refresh: refreshOverview } = useCustomerFinanceOverview();
+  // Slice 7 — displayed history is the server-authored event feed. Raw wallet
+  // transactions stay only for non-financial decoration (merchant names).
+  const { events, refresh: refreshHistory } = useCustomerFinanceHistory(50);
   const [qrOpen, setQrOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterRange, setFilterRange] = useState<"all" | "7d" | "30d">("all");
-  const [receiptTx, setReceiptTx] = useState<WalletTransaction | null>(null);
+  const [receiptTxId, setReceiptTxId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (userId) Analytics.track("wallet.history.viewed", { metadata: { count: transactions.length } });
+    if (userId) Analytics.track("wallet.history.viewed", { metadata: { count: events.length } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
@@ -124,17 +131,19 @@ export function WalletView() {
   // (`useSyncExternalStore`), so flipping `wallet_public_enabled` — including a
   // rollback — changes the hook count between renders and crashes this view
   // with "Rendered more hooks than during the previous render".
-  const filteredTransactions = useMemo(() => {
+  const historyItems = useMemo(() => {
     const now = Date.now();
-    return transactions.filter((tx) => {
-      if (filterType !== "all" && tx.type !== filterType) return false;
-      if (filterRange !== "all") {
-        const cutoff = filterRange === "7d" ? 7 : 30;
-        if (now - new Date(tx.created_at).getTime() > cutoff * 86400000) return false;
-      }
-      return true;
-    });
-  }, [transactions, filterType, filterRange]);
+    return events
+      .filter((ev) => {
+        if (filterType !== "all" && ev.kind !== filterType) return false;
+        if (filterRange !== "all") {
+          const cutoff = filterRange === "7d" ? 7 : 30;
+          if (now - new Date(ev.occurred_at).getTime() > cutoff * 86400000) return false;
+        }
+        return true;
+      })
+      .map((ev) => ({ ...ev, created_at: ev.occurred_at }));
+  }, [events, filterType, filterRange]);
 
   // Lightweight "marchands récents" strip — derived from ChopPay merchant
   // payments in history. Tapping prompts a fresh scan (calm retention loop,
@@ -477,31 +486,33 @@ export function WalletView() {
           ))}
         </div>
 
-        {filteredTransactions.length === 0 ? (
+        {historyItems.length === 0 ? (
           <EmptyHistory
-            empty={transactions.length === 0}
+            empty={events.length === 0}
             onTopUp={() => setTopUpOpen(true)}
           />
         ) : (
           <div className="space-y-5">
-            {groupTransactions(filteredTransactions).map((group) => (
+            {groupTransactions(historyItems).map((group) => (
               <section key={group.key} className="space-y-2">
                 <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground px-1">
                   {group.label}
                 </h3>
                 <div className="space-y-2">
-                  {group.items.map((tx, index) => {
-                    const dir = wallet ? txDirection(tx, wallet.id) : "out";
-                    const statusTone = tx.status ? TX_STATUS_TONE[tx.status] : null;
-                    const statusInfo = txStatusCopy(tx.status);
-                    const dimmed = tx.status === "failed" || tx.status === "cancelled" || tx.status === "reversed";
+                  {group.items.map((ev, index) => {
+                    const dir = ev.direction;
+                    const statusTone = ev.status ? TX_STATUS_TONE[ev.status] : null;
+                    const statusInfo = txStatusCopy(ev.status);
+                    const dimmed = ev.status === "failed" || ev.status === "cancelled" || ev.status === "reversed";
+                    const openable = ev.source === "wallet_transaction";
                     return (
                       <motion.button
-                        key={tx.id}
+                        key={ev.event_id}
                         initial={{ opacity: 0, x: -16 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.02 }}
-                        onClick={() => setReceiptTx(tx)}
+                        disabled={!openable}
+                        onClick={() => { if (openable) setReceiptTxId(ev.event_id); }}
                         className={`w-full text-left bg-card rounded-2xl p-4 shadow-card flex items-center gap-3 hover:bg-muted/30 transition ${dimmed ? "opacity-70" : ""}`}
                       >
                         <div className={`p-2 rounded-xl ${dir === "in" ? "tx-halo-in" : "tx-halo-out"}`}>
@@ -510,7 +521,7 @@ export function WalletView() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="font-medium text-foreground text-sm truncate">
-                              {txLabel(tx, dir)}
+                              {ev.label}
                             </p>
                             {statusInfo && statusTone && (
                               <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${statusTone.tone}`}>
@@ -518,18 +529,23 @@ export function WalletView() {
                                 {statusInfo.label}
                               </span>
                             )}
+                            {!ev.counts_as_balance && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border border-border text-muted-foreground">
+                                Non compté
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs text-muted-foreground truncate">
-                            {tx.description ?? tx.reference}
+                            {ev.module} · {ev.reference}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className={`font-semibold text-sm ${
                             dimmed ? "text-muted-foreground line-through" : dir === "in" ? "text-[hsl(160_55%_28%)]" : "text-foreground"
                           } tabular-nums`}>
-                            {dir === "in" ? "+" : "-"}{formatMoney(tx.amount_gnf)}
+                            {dir === "in" ? "+" : "-"}{formatMoney(ev.amount_gnf)}
                           </p>
-                          <p className="text-xs text-muted-foreground">{formatDate(tx.created_at)}</p>
+                          <p className="text-xs text-muted-foreground">{formatDate(ev.occurred_at)}</p>
                         </div>
                       </motion.button>
                     );
@@ -551,10 +567,9 @@ export function WalletView() {
       <ChopPayLauncher open={payOpen} onClose={() => setPayOpen(false)} />
 
       <TransactionReceiptSheet
-        tx={receiptTx}
-        direction={receiptTx && wallet ? txDirection(receiptTx, wallet.id) : "out"}
-        open={!!receiptTx}
-        onOpenChange={(v) => { if (!v) setReceiptTx(null); }}
+        transactionId={receiptTxId}
+        open={!!receiptTxId}
+        onOpenChange={(v) => { if (!v) setReceiptTxId(null); }}
       />
 
       <Sheet open={topUpOpen} onOpenChange={setTopUpOpen}>
@@ -574,8 +589,8 @@ export function WalletView() {
       <SendMoneySheet
         open={sendOpen}
         onOpenChange={setSendOpen}
-        available={wallet ? wallet.balance_gnf - wallet.held_gnf : 0}
-        onSent={() => { refresh(); void refreshOverview(); }}
+        available={available}
+        onSent={() => { refresh(); void refreshOverview(); void refreshHistory(); }}
       />
     </div>
   );

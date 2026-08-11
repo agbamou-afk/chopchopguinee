@@ -88,6 +88,25 @@ export function useCustomerFinanceOverview() {
   return { overview, loading, refresh };
 }
 
+/**
+ * Customer financial history — server-authored event feed. The client may
+ * filter/sort already-returned rows for presentation but never recomputes
+ * amounts, direction or status.
+ */
+export function useCustomerFinanceHistory(limit = 50) {
+  const [events, setEvents] = useState<CustomerFinanceEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setEvents(await fetchCustomerFinanceHistory(limit));
+    setLoading(false);
+  }, [limit]);
+
+  useEffect(() => { void refresh(); }, [refresh]);
+  return { events, loading, refresh };
+}
+
 /* -------------------------------- DRIVER -------------------------------- */
 
 export type DriverTopupRow = {

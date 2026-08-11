@@ -108,3 +108,46 @@ grants, giving `anon`/`authenticated` INSERT/UPDATE/DELETE. Revoked; `authentica
 - PWA chunk-size / precache weight — open.
 
 **Slice 7 exit gate: PASS.**
+
+---
+
+## 9. Final UI-truth closeout (product wiring proof)
+
+DB/read-model proof (78/78) and product wiring proof are **separate**:
+
+| Layer | Proof | Status |
+|---|---|---|
+| DB read models | `_qa_s7_results` parts 1–4 = 21+20+22+15 = **78/78** | PASS (re-verified after code changes, no rerun needed) |
+| Product wiring | source-level guards in `src/test/slice7-ui-truth.test.ts` (3 tests) | PASS |
+
+Three product-layer gaps closed:
+
+1. `WalletView` → `SendMoneySheet` now receives `overview.available_gnf`
+   (`available`), not `balance_gnf - held_gnf`. No client arithmetic in the send path.
+2. Customer history now renders `customer_finance_history(p_limit)` events —
+   amount/direction/status/kind/reference/label/module come verbatim from the
+   server. Pending top-up rows (`counts_as_balance=false`) are badged "Non compté"
+   and are not receipt-openable. Raw `useWallet().transactions` is retained only
+   for the non-financial "Marchands récents" strip.
+3. `TransactionReceiptSheet` now takes `transactionId` and fetches
+   `customer_receipt(p_transaction_id)`. Amount, direction, status, reference,
+   transaction identity, completion timestamp and journal-provenance indicator all
+   come from the RPC. On fetch failure it renders a calm "Reçu indisponible"
+   state — **no fallback to raw transaction values**.
+
+Surface audit (post-fix) — no client-side financial reconstruction found in
+`WalletView`/`SendMoneySheet` handoff, `TransactionReceiptSheet`,
+`DriverOperatingBalanceCard`, `MerchantWalletSection`, or any
+`src/lib/finance/readModels.ts` consumer.
+
+Live posture re-verified: master wallet **−100 435 GNF / held 0**,
+`merchant_settlement_requests` rows = 0, `merchant_om_settlement_enabled=false`,
+no finance flag activation.
+
+Build evidence: `tsgo --noEmit -p tsconfig.app.json` clean · Vitest **15/15** (3 files) ·
+`vite build` green (19.7s) · PWA precache 130 entries / ~11.9 MiB, chunk-size warning
+(`index` 2.16 MB, `mapbox-gl` 1.78 MB) **still open, unchanged**.
+
+Slice 7 visual QA remains **YELLOW** (preview signed out — no authenticated session).
+
+**Slice 7 final UI-truth closeout: PASS.** No new defects found.
