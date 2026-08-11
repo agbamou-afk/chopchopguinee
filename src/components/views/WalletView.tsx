@@ -45,6 +45,7 @@ import { SendMoneySheet } from "@/components/wallet/SendMoneySheet";
 import { Send } from "lucide-react";
 import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
 import { WalletArchivedPanel } from "@/components/wallet/WalletArchivedPanel";
+import { useCustomerFinanceOverview } from "@/lib/finance/readModels";
 
 type ActionId = "pay" | "receive" | "scan" | "add" | "send";
 
@@ -91,6 +92,9 @@ function txDirection(tx: WalletTransaction, walletId: string): "in" | "out" {
 export function WalletView() {
   const publicWalletEnabled = usePublicWalletEnabled();
   const { userId, wallet, transactions, profile, loading, refresh } = useWallet();
+  // Slice 7 — every KPI below comes from the server read model. The client
+  // never derives a balance, an available amount or a spend aggregate.
+  const { overview, refresh: refreshOverview } = useCustomerFinanceOverview();
   const [qrOpen, setQrOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
@@ -131,19 +135,6 @@ export function WalletView() {
       return true;
     });
   }, [transactions, filterType, filterRange]);
-
-  // Lightweight retention metric — total inflow over the last 30 days
-  // surfaced as "Vous économisez avec ChopWallet". No casino mechanics.
-  const inflowLast30 = useMemo(() => {
-    if (!wallet) return 0;
-    const cutoff = Date.now() - 30 * 86400000;
-    return transactions.reduce((sum, tx) => {
-      if (tx.status !== "completed" && tx.status !== "captured") return sum;
-      if (new Date(tx.created_at).getTime() < cutoff) return sum;
-      if (txDirection(tx, wallet.id) !== "in") return sum;
-      return sum + Math.abs(tx.amount_gnf);
-    }, 0);
-  }, [transactions, wallet]);
 
   // Lightweight "marchands récents" strip — derived from ChopPay merchant
   // payments in history. Tapping prompts a fresh scan (calm retention loop,
