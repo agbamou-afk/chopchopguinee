@@ -5480,7 +5480,9 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           category: string
+          claim_state: string
           created_at: string
+          declared_value_gnf: number
           delivered_at: string | null
           description: string | null
           destination_label: string | null
@@ -5489,6 +5491,7 @@ export type Database = {
           distance_meters: number | null
           duration_seconds: number | null
           environment: string
+          finance_snapshot: Json
           handling_notes: string | null
           id: string
           idempotency_key: string
@@ -5512,15 +5515,22 @@ export type Database = {
           sender_phone: string | null
           sender_user_id: string
           support_issue_id: string | null
+          tender: string | null
           test_run_id: string | null
           updated_at: string
+          value_attestation_statement: string | null
+          value_attestation_version: string | null
+          value_attested_at: string | null
+          value_attested_by: string | null
         }
         Insert: {
           cancellation_fee_gnf?: number
           cancellation_reason?: string | null
           cancelled_at?: string | null
           category: string
+          claim_state?: string
           created_at?: string
+          declared_value_gnf?: number
           delivered_at?: string | null
           description?: string | null
           destination_label?: string | null
@@ -5529,6 +5539,7 @@ export type Database = {
           distance_meters?: number | null
           duration_seconds?: number | null
           environment?: string
+          finance_snapshot?: Json
           handling_notes?: string | null
           id?: string
           idempotency_key: string
@@ -5552,15 +5563,22 @@ export type Database = {
           sender_phone?: string | null
           sender_user_id: string
           support_issue_id?: string | null
+          tender?: string | null
           test_run_id?: string | null
           updated_at?: string
+          value_attestation_statement?: string | null
+          value_attestation_version?: string | null
+          value_attested_at?: string | null
+          value_attested_by?: string | null
         }
         Update: {
           cancellation_fee_gnf?: number
           cancellation_reason?: string | null
           cancelled_at?: string | null
           category?: string
+          claim_state?: string
           created_at?: string
+          declared_value_gnf?: number
           delivered_at?: string | null
           description?: string | null
           destination_label?: string | null
@@ -5569,6 +5587,7 @@ export type Database = {
           distance_meters?: number | null
           duration_seconds?: number | null
           environment?: string
+          finance_snapshot?: Json
           handling_notes?: string | null
           id?: string
           idempotency_key?: string
@@ -5592,8 +5611,13 @@ export type Database = {
           sender_phone?: string | null
           sender_user_id?: string
           support_issue_id?: string | null
+          tender?: string | null
           test_run_id?: string | null
           updated_at?: string
+          value_attestation_statement?: string | null
+          value_attestation_version?: string | null
+          value_attested_at?: string | null
+          value_attested_by?: string | null
         }
         Relationships: [
           {
@@ -5696,6 +5720,166 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "package_delivery_secrets_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: true
+            referencedRelation: "package_deliveries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_evidence_photos: {
+        Row: {
+          byte_size: number | null
+          content_type: string | null
+          created_at: string
+          id: string
+          kind: string
+          owner_user_id: string
+          package_id: string | null
+          quote_id: string
+          storage_bucket: string
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          byte_size?: number | null
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_user_id: string
+          package_id?: string | null
+          quote_id: string
+          storage_bucket?: string
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          byte_size?: number | null
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_user_id?: string
+          package_id?: string | null
+          quote_id?: string
+          storage_bucket?: string
+          storage_path?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_evidence_photos_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "package_deliveries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_runtime: {
+        Row: {
+          accepted_at: string | null
+          cancelled_at: string | null
+          cash_due_gnf: number
+          claim_opened_at: string | null
+          claim_paid_gnf: number
+          claim_state: string
+          claims_exposure_gnf: number
+          collateral_gnf: number
+          completed_at: string | null
+          created_at: string
+          customer_hold_gnf: number
+          customer_user_id: string
+          declared_value_gnf: number
+          delivery_fee_gnf: number
+          driver_earning_gnf: number
+          driver_user_id: string | null
+          id: string
+          is_sandbox: boolean
+          mission_id: string | null
+          mission_type: string
+          order_key: string
+          package_id: string
+          picked_up_at: string | null
+          platform_fee_gnf: number
+          platform_revenue_gnf: number
+          policy_snapshot: Json
+          resolved_at: string | null
+          source_module: string
+          state: string
+          tender: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          cancelled_at?: string | null
+          cash_due_gnf?: number
+          claim_opened_at?: string | null
+          claim_paid_gnf?: number
+          claim_state?: string
+          claims_exposure_gnf?: number
+          collateral_gnf?: number
+          completed_at?: string | null
+          created_at?: string
+          customer_hold_gnf?: number
+          customer_user_id: string
+          declared_value_gnf: number
+          delivery_fee_gnf: number
+          driver_earning_gnf?: number
+          driver_user_id?: string | null
+          id?: string
+          is_sandbox?: boolean
+          mission_id?: string | null
+          mission_type?: string
+          order_key: string
+          package_id: string
+          picked_up_at?: string | null
+          platform_fee_gnf?: number
+          platform_revenue_gnf?: number
+          policy_snapshot?: Json
+          resolved_at?: string | null
+          source_module?: string
+          state?: string
+          tender: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          cancelled_at?: string | null
+          cash_due_gnf?: number
+          claim_opened_at?: string | null
+          claim_paid_gnf?: number
+          claim_state?: string
+          claims_exposure_gnf?: number
+          collateral_gnf?: number
+          completed_at?: string | null
+          created_at?: string
+          customer_hold_gnf?: number
+          customer_user_id?: string
+          declared_value_gnf?: number
+          delivery_fee_gnf?: number
+          driver_earning_gnf?: number
+          driver_user_id?: string | null
+          id?: string
+          is_sandbox?: boolean
+          mission_id?: string | null
+          mission_type?: string
+          order_key?: string
+          package_id?: string
+          picked_up_at?: string | null
+          platform_fee_gnf?: number
+          platform_revenue_gnf?: number
+          policy_snapshot?: Json
+          resolved_at?: string | null
+          source_module?: string
+          state?: string
+          tender?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_runtime_package_id_fkey"
             columns: ["package_id"]
             isOneToOne: true
             referencedRelation: "package_deliveries"
@@ -7578,6 +7762,66 @@ export type Database = {
         Returns: undefined
       }
       _om_sandbox_require_active: { Args: never; Returns: undefined }
+      _package_accept_internal: {
+        Args: { p_driver: string; p_package_id: string }
+        Returns: Json
+      }
+      _package_authorize_internal: {
+        Args: { p_actor?: string; p_package_id: string }
+        Returns: Json
+      }
+      _package_cancel_release_internal: {
+        Args: { p_actor?: string; p_package_id: string; p_reason?: string }
+        Returns: Json
+      }
+      _package_choppay_capture_internal: {
+        Args: {
+          p_actor?: string
+          p_amount: number
+          p_package_id: string
+          p_purpose: string
+        }
+        Returns: Json
+      }
+      _package_choppay_hold_internal: {
+        Args: { p_actor?: string; p_package_id: string }
+        Returns: Json
+      }
+      _package_choppay_release_internal: {
+        Args: { p_actor?: string; p_package_id: string; p_reason?: string }
+        Returns: Json
+      }
+      _package_claim_freeze_internal: {
+        Args: { p_actor?: string; p_package_id: string; p_reason: string }
+        Returns: Json
+      }
+      _package_collateral_capture_internal: {
+        Args: {
+          p_actor: string
+          p_amount: number
+          p_evidence_ref: string
+          p_package_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      _package_complete_internal: {
+        Args: { p_actor?: string; p_package_id: string }
+        Returns: Json
+      }
+      _package_dispatch_internal: {
+        Args: { p_package_id: string }
+        Returns: Json
+      }
+      _package_economics: {
+        Args: {
+          p_declared_value_gnf: number
+          p_delivery_fee_gnf: number
+          p_is_sandbox?: boolean
+          p_tender: string
+        }
+        Returns: Json
+      }
       _package_new_code: { Args: never; Returns: string }
       _package_notify: {
         Args: {
