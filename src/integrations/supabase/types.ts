@@ -14,46 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      _qa_s5_results: {
-        Row: {
-          created_at: string | null
-          id: number
-          report: Json | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          report?: Json | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          report?: Json | null
-        }
-        Relationships: []
-      }
-      _qa_s6_results: {
-        Row: {
-          created_at: string | null
-          id: number
-          part: number | null
-          report: Json | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          part?: number | null
-          report?: Json | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          part?: number | null
-          report?: Json | null
-        }
-        Relationships: []
-      }
-      _qa_s7_results: {
+      _qa_s13_results: {
         Row: {
           created_at: string
           id: number
@@ -71,27 +32,6 @@ export type Database = {
           id?: number
           part?: number
           result?: Json
-        }
-        Relationships: []
-      }
-      _qa_s8_results: {
-        Row: {
-          created_at: string
-          id: number
-          payload: Json
-          section: string
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          payload: Json
-          section: string
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          payload?: Json
-          section?: string
         }
         Relationships: []
       }
@@ -8347,45 +8287,23 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
-      _qa_s5_ok: {
+      _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
+      _qa_s13_flag: {
+        Args: { p_key: string; p_val: boolean }
+        Returns: undefined
+      }
+      _qa_s13_ok: {
         Args: { p_detail?: string; p_label: string; p_ok: boolean }
         Returns: Json
       }
-      _qa_s5_run: { Args: never; Returns: Json }
-      _qa_s5_run2: { Args: never; Returns: Json }
-      _qa_s5_run3: { Args: never; Returns: Json }
-      _qa_s5_run4: { Args: never; Returns: Json }
-      _qa_s6_g4: { Args: { p_drv: string }; Returns: boolean }
-      _qa_s6_l4: { Args: never; Returns: string }
-      _qa_s6_quote: {
-        Args: { p_amount?: number; p_user: string }
-        Returns: string
-      }
-      _qa_s6_run1: { Args: never; Returns: Json }
-      _qa_s6_run2: { Args: never; Returns: Json }
-      _qa_s6_run3: { Args: never; Returns: Json }
-      _qa_s6_run4: { Args: never; Returns: Json }
-      _qa_s6_run5: { Args: never; Returns: Json }
-      _qa_s6_setup: {
-        Args: { p_drv: string; p_god: string; p_send: string }
+      _qa_s13_run1: { Args: never; Returns: Json }
+      _qa_s13_run2: { Args: never; Returns: Json }
+      _qa_s13_summary: { Args: { p_part: number; r: Json }; Returns: Json }
+      _qa_s13_user: {
+        Args: { p_id: string; p_tag: string }
         Returns: undefined
       }
-      _qa_s6_ship: {
-        Args: {
-          p_declared: number
-          p_key: string
-          p_send: string
-          p_tender: string
-        }
-        Returns: string
-      }
-      _qa_s6_t2: { Args: { p_pkg: string }; Returns: number }
-      _qa_s7_run1: { Args: never; Returns: Json }
-      _qa_s7_run2: { Args: never; Returns: Json }
-      _qa_s7_run3: { Args: never; Returns: Json }
-      _qa_s7_run4: { Args: never; Returns: Json }
-      _qa_s7_user: { Args: { p_id: string; p_tag: string }; Returns: undefined }
-      _qa_s7_wallet: {
+      _qa_s13_wallet: {
         Args: {
           p_bal: number
           p_held: number
