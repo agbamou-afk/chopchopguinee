@@ -78,6 +78,11 @@ export interface PackageDelivery {
   support_issue_id: string | null;
   is_sandbox: boolean;
   created_at: string;
+  /** Slice 6 — declared value engine (null when the engine is OFF). */
+  declared_value_gnf?: number | null;
+  tender?: string | null;
+  value_attested_at?: string | null;
+  claim_state?: string | null;
 }
 
 export interface PackageSecrets {
