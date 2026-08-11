@@ -1,0 +1,1 @@
+GRANT SELECT, INSERT, DELETE ON public._qa_patch_buffer TO sandbox_exec;

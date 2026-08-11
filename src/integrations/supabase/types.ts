@@ -934,6 +934,7 @@ export type Database = {
           created_at: string
           customer_user_id: string | null
           declared_value_gnf: number
+          documented_actual_value_gnf: number | null
           driver_user_id: string | null
           evidence_ref: string
           id: string
@@ -956,6 +957,7 @@ export type Database = {
           created_at?: string
           customer_user_id?: string | null
           declared_value_gnf?: number
+          documented_actual_value_gnf?: number | null
           driver_user_id?: string | null
           evidence_ref: string
           id?: string
@@ -978,6 +980,7 @@ export type Database = {
           created_at?: string
           customer_user_id?: string | null
           declared_value_gnf?: number
+          documented_actual_value_gnf?: number | null
           driver_user_id?: string | null
           evidence_ref?: string
           id?: string
@@ -5889,6 +5892,10 @@ export type Database = {
           customer_user_id: string
           declared_value_gnf: number
           delivery_fee_gnf: number
+          documented_actual_value_gnf: number | null
+          documented_value_at: string | null
+          documented_value_by: string | null
+          documented_value_evidence_ref: string | null
           driver_earning_gnf: number
           driver_user_id: string | null
           id: string
@@ -5922,6 +5929,10 @@ export type Database = {
           customer_user_id: string
           declared_value_gnf: number
           delivery_fee_gnf: number
+          documented_actual_value_gnf?: number | null
+          documented_value_at?: string | null
+          documented_value_by?: string | null
+          documented_value_evidence_ref?: string | null
           driver_earning_gnf?: number
           driver_user_id?: string | null
           id?: string
@@ -5955,6 +5966,10 @@ export type Database = {
           customer_user_id?: string
           declared_value_gnf?: number
           delivery_fee_gnf?: number
+          documented_actual_value_gnf?: number | null
+          documented_value_at?: string | null
+          documented_value_by?: string | null
+          documented_value_evidence_ref?: string | null
           driver_earning_gnf?: number
           driver_user_id?: string | null
           id?: string
@@ -8758,6 +8773,15 @@ export type Database = {
           p_outcome: string
           p_package_id: string
           p_pay_customer_gnf?: number
+          p_reason: string
+        }
+        Returns: Json
+      }
+      admin_package_claim_set_documented_value: {
+        Args: {
+          p_documented_actual_value_gnf: number
+          p_evidence_ref: string
+          p_package_id: string
           p_reason: string
         }
         Returns: Json
