@@ -210,6 +210,16 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
           )}
         </div>
       </div>
+
+      <CancellationConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        service="ride"
+        sourceId={rideId}
+        title="Annuler cette course ?"
+        busy={cancelBusy}
+        onConfirm={handleCancelConfirmed}
+      />
     </motion.div>
   );
 }
