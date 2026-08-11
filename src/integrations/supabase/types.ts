@@ -74,6 +74,27 @@ export type Database = {
         }
         Relationships: []
       }
+      _qa_s8_results: {
+        Row: {
+          created_at: string
+          id: number
+          payload: Json
+          section: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          payload: Json
+          section: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          payload?: Json
+          section?: string
+        }
+        Relationships: []
+      }
       account_bans: {
         Row: {
           banned_at: string
