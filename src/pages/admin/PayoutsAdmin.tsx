@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -14,7 +15,8 @@ import { toast } from "sonner";
 import { formatGNF } from "@/lib/format";
 import {
   usePayoutQueue, recordPayoutEvidence, reconcilePayoutEvidence, rejectPayoutOrder,
-  generateSettlementSchedule, type PayoutQueueBucket, type PayoutQueueItem,
+  generateSettlementSchedule, confirmManualOmPayout, isManualOmMerchantPayout,
+  MANUAL_OM_REFERENCE_MIN_LENGTH, type PayoutQueueBucket, type PayoutQueueItem,
 } from "@/lib/finance/payouts";
 
 const BUCKETS: { key: PayoutQueueBucket; label: string }[] = [
@@ -43,6 +45,9 @@ const EVIDENCE_TONE: Record<string, string> = {
 function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
   const { items, loading, error, refresh } = usePayoutQueue(bucket);
   const [evidenceFor, setEvidenceFor] = useState<PayoutQueueItem | null>(null);
+  const [manualFor, setManualFor] = useState<PayoutQueueItem | null>(null);
+  const [manualRef, setManualRef] = useState("");
+  const [attested, setAttested] = useState(false);
   const [rejectFor, setRejectFor] = useState<PayoutQueueItem | null>(null);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ reference: "", msisdn: "", amount: "", status: "success" });
@@ -72,6 +77,29 @@ function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
     if (status === "settled") toast.success("Règlement réconcilié et comptabilisé.");
     else toast.warning(`Preuve enregistrée sans mouvement : ${status}`);
     setEvidenceFor(null);
+    void refresh();
+  };
+
+  const openManual = (it: PayoutQueueItem) => {
+    setManualRef(""); setAttested(false); setManualFor(it);
+  };
+
+  const submitManual = async () => {
+    if (!manualFor) return;
+    setBusy(true);
+    const res = await confirmManualOmPayout({
+      payoutOrderId: manualFor.payout_order_id,
+      providerReference: manualRef.trim(),
+      attestation: attested,
+      transferredAt: new Date().toISOString(),
+    });
+    setBusy(false);
+    if (!res.ok) { toast.error(res.error); return; }
+    const status = String((res.result as { status?: string }).status ?? "");
+    if (status === "settled") toast.success("Virement Orange Money attesté et règlement comptabilisé.");
+    else if (status === "already_settled") toast.info("Ce versement était déjà réglé. Aucun mouvement.");
+    else toast.warning(`Preuve attestée sans règlement : ${status}`);
+    setManualFor(null); setManualRef(""); setAttested(false);
     void refresh();
   };
 
