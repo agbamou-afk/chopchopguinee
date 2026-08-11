@@ -224,3 +224,99 @@ Harness: `public._qa_s13_run7()` (service_role only, self-rolling-back), results
   evidence is production-format **synthetic** proof.
 - No authenticated Finance-operator visual QA session was performed against `/admin/wallet/payouts` or
   `/admin/treasury`.
+
+## Final closeout — `sandbox_exec` disposition + single atomic 1→7 sweep (2026-08-11)
+
+### Phase A — `sandbox_exec` disposition
+
+**What it is.** `sandbox_exec` is the platform-managed maintenance/debug database login used by the
+shell `psql` access path — not a project-authored role and not an application role. Attributes:
+`LOGIN`, `INHERIT`, `BYPASSRLS`, **not** superuser, **not** createrole/createdb, **not** replication.
+It is a member of nothing; only `postgres` may `SET ROLE` to it. No PostgREST/API role
+(`anon`, `authenticated`, `service_role`) can reach it, and no application code path uses it.
+
+**Privileges found.** Uniform `SELECT, INSERT` on all 278 `public` tables (plus `SELECT` on `auth.*`),
+i.e. the finance grants on `provider_fee_schedules` and `payment_provider_events` were not a
+finance-specific decision — they were the blanket exec grant. No `UPDATE`, no `DELETE`, and **no
+`EXECUTE` on any function** (including every `_qa_s13_*` helper — the harness runs as `postgres`
+/ `service_role`, never as `sandbox_exec`).
+
+**RLS.** `provider_fee_schedules` and `payment_provider_events` both have RLS enabled, policies scoped
+to `authenticated` admins only. `sandbox_exec` holds `BYPASSRLS`, so RLS is *not* a constraint on it —
+table grants are the only boundary. That is why the grant, not a policy, is the correct control.
+
+**Pre-fix probe (rolled back).** `sandbox_exec` could `INSERT` a `environment='production'`,
+`is_sandbox=false` row into `payment_provider_events` and into `provider_fee_schedules`. It could not
+update or delete any wallet, ledger, evidence or flag row, and could not execute
+`finance_treasury_overview`, `_ledger_*`, `wallet_topup_om_credit` or any `_qa_s13_run*`. So it could
+fabricate an uncredited provider *fact* an operator might act on, but could not move money itself.
+
+**Disposition applied (posture only, no financial semantics changed).** `INSERT` revoked from
+`sandbox_exec` on all 38 money-bearing tables: `wallets`, `wallet_transactions`, `ledger_accounts`,
+`ledger_journals`, `ledger_postings`, `ledger_account_totals`, `payment_intents`,
+`payment_provider_events`, `payment_reconciliation_events`, `payment_refund_requests`,
+`payment_receiving_accounts`, `payout_orders`, `payout_provider_evidence`,
+`payout_settlement_allocations`, `provider_fee_schedules`, `merchant_payables`,
+`merchant_settlement_requests/policies/schedule_runs`, `finance_policies`, `finance_evidence_refs`,
+`claims_reserves`, `customer_cancellation_debts`, `driver_cash_ledger`, `driver_cashout_requests`,
+`driver_payout_policies`, `driver_promo_credits`, `driver_starter_credit_policies`,
+`driver_group_commissions`, `driver_group_payout_statements(_items)`, `mission_financial_holds`,
+`cash_order_runtime`, `chop_pay_order_runtime`, `package_runtime`, `topup_requests`,
+`agent_topup_requests`, `feature_flags`. `SELECT` retained for read-only troubleshooting.
+
+No product RLS policy, no `service_role` boundary and no `anon`/`authenticated` grant was touched.
+
+**Post-fix proof (rolled back probes).** Production-mode inserts into `payment_provider_events`,
+`provider_fee_schedules`, `ledger_postings` and `wallets` all fail with `permission denied for table`.
+`sandbox_exec` finance-table `INSERT` count = **0**; `payment_provider_events` grant set is now
+`SELECT` only. It still holds `SELECT, INSERT` on non-financial operational tables (unchanged
+platform behaviour).
+
+**Residual, stated honestly:** `sandbox_exec` retains `BYPASSRLS` and blanket `SELECT` (including
+`auth.users` and finance tables) — it is a platform maintenance login, credentials held outside the
+app, unreachable from any application path. It is *not* an app-surface exposure.
+
+### Phase B — single untouched atomic sweep
+
+Run once, in one transaction, after the last edit: `_qa_s13_run1() … _qa_s13_run7()`.
+All seven result rows carry the identical transaction timestamp **2026-08-11 23:43:16.779052+00**
+(prior historical batch max was 23:19:26), which is the final-batch identifier.
+
+| Part | Result |
+| --- | --- |
+| 1 | **18 / 18** |
+| 2 | **32 / 32** |
+| 3 | **54 / 54** |
+| 4 | **98 / 98** |
+| 5 | **115 / 115** |
+| 6 | **87 / 87** |
+| 7 | **99 / 99** |
+| **Total** | **503 / 503 PASS, 0 failures** |
+
+Stale historical `_qa_s13_results` rows (including the `part=55` experiment rows) are **excluded** from
+this board and were deliberately not deleted — they are historical, not release evidence.
+
+### Post-sweep live posture (re-verified)
+- Master wallet **-100435 GNF / held 0** (unchanged; deliberately not normalised — DEF-FIN-001 stands).
+- `ledger_postings` sum **0** over **0 rows**, imbalanced journals **0**. Honest reading: production
+  ledger tables are *empty*, so this is **rollback cleanliness** (the harness left nothing behind),
+  not a proof of balanced live volume.
+- Feature flags byte-identical; among finance rails only `om_topup_enabled` is **ON**. Stage 1–7 rails
+  (`chop_pay_*`, `cash_order_funding_enabled`, `envoyer_enabled`, `merchant_om_settlement_enabled`,
+  `driver_cashout_enabled`, `driver_balance_gate_enabled`, `driver_starter_credit_enabled`) all OFF.
+- No financial fixture residue: 0 sandbox payment intents, 0 QA packages, 0 sandbox provider events.
+- `_qa_s13_run1..run7`: `anon`/`authenticated` EXECUTE **denied**, `service_role` only.
+- Internal money-moving primitives exposed to `anon`/`authenticated`: **0**.
+
+### App regression (same final head)
+- `tsgo -p tsconfig.app.json`: **PASS, 0 errors**
+- `vitest run`: **PASS, 20/20**
+- `vite build`: **PASS**, PWA service worker generated (134 precache entries).
+  YELLOW: pre-existing chunk-size advisory (`mapbox-gl`, `index`) — unchanged, unrelated.
+
+### YELLOW register (carried, unchanged)
+- No live Orange Money provider receipt has ever been exercised — all inbound and outbound provider
+  evidence remains production-format **synthetic**.
+- No authenticated Finance-operator visual QA of `/admin/wallet/payouts` or `/admin/treasury`.
+
+**No feature flag was activated. Slice 13 is closed.**
