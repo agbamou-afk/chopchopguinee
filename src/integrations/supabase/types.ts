@@ -7874,9 +7874,19 @@ export type Database = {
         Returns: string
       }
       _qa_s6_run1: { Args: never; Returns: Json }
+      _qa_s6_run2: { Args: never; Returns: Json }
       _qa_s6_setup: {
         Args: { p_drv: string; p_god: string; p_send: string }
         Returns: undefined
+      }
+      _qa_s6_ship: {
+        Args: {
+          p_declared: number
+          p_key: string
+          p_send: string
+          p_tender: string
+        }
+        Returns: string
       }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
