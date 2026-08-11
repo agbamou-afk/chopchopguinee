@@ -7,10 +7,13 @@ import {
   cancelPackageDelivery,
   getPackageSecrets,
   listMyPackageDeliveries,
+  openPackageClaim,
   previewPackageCancel,
 } from "@/lib/packages/api";
+import { useEnvoyerClaimsEnabled } from "@/lib/flags/useFeatureFlag";
 import {
   PACKAGE_CATEGORY_LABEL,
+  PACKAGE_CLAIM_STATE_LABEL,
   PACKAGE_STATUS_LABEL,
   maskPhone,
   type PackageDelivery,
@@ -27,6 +30,7 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
   const [secrets, setSecrets] = useState<Record<string, PackageSecrets | null>>({});
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const claimsEnabled = useEnvoyerClaimsEnabled();
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -67,6 +71,30 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
         toast.success("Détails copiés");
       }
     } catch { /* user dismissed */ }
+  };
+
+  const doClaim = async (d: PackageDelivery) => {
+    const reason = window.prompt(
+      "Décrivez le problème (colis perdu, endommagé, contenu manquant). Minimum 5 caractères :",
+    );
+    if (!reason || reason.trim().length < 5) return;
+    setBusyId(d.id);
+    try {
+      await openPackageClaim(d.id, reason.trim());
+      toast.success("Réclamation ouverte. Le règlement du colis est gelé pendant l’examen.");
+      await load();
+    } catch (e) {
+      const msg = (e as { message?: string })?.message ?? "";
+      toast.error(
+        msg.includes("CUSTODY_NOT_ESTABLISHED")
+          ? "Le coursier n’a pas encore pris le colis en charge."
+          : msg.includes("ENVOYER_CLAIMS_DISABLED")
+            ? "Les réclamations ne sont pas encore ouvertes."
+            : "Réclamation impossible pour le moment.",
+      );
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const doCancel = async (d: PackageDelivery) => {
