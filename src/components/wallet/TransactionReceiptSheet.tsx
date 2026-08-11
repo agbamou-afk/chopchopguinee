@@ -181,9 +181,3 @@ function statusTone(tone: import("@/lib/payments").StateTone) {
   if (tone === "ok") return "bg-primary/10 text-primary border-primary/30";
   return "bg-muted text-muted-foreground border-border";
 }
-
-function availabilityTone(tone: "ok" | "pending" | "muted") {
-  if (tone === "ok") return "text-[hsl(160_55%_28%)] font-medium";
-  if (tone === "pending") return "text-secondary-foreground font-medium";
-  return "text-muted-foreground";
-}
