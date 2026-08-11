@@ -131,6 +131,36 @@ export async function reconcilePayoutEvidence(evidenceId: string) {
   return { ok: true as const, result: (data as Record<string, unknown>) ?? {} };
 }
 
+/** Minimum length enforced server-side by finance_confirm_manual_om_payout. */
+export const MANUAL_OM_REFERENCE_MIN_LENGTH = 6;
+
+/**
+ * Stage 5 launch action: operator-attested manual Orange Money merchant payout.
+ * Only the real provider reference and the attestation travel from the client;
+ * every financial fact is re-derived server-side from the frozen payout order.
+ */
+export async function confirmManualOmPayout(args: {
+  payoutOrderId: string;
+  providerReference: string;
+  attestation: boolean;
+  transferredAt?: string | null;
+}) {
+  const { data, error } = await supabase.rpc("finance_confirm_manual_om_payout" as never, {
+    p_payout_order_id: args.payoutOrderId,
+    p_provider_reference: args.providerReference,
+    p_attestation: args.attestation,
+    p_transferred_at: args.transferredAt ?? null,
+  } as never);
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const, result: (data as Record<string, unknown>) ?? {} };
+}
+
+export function isManualOmMerchantPayout(it: {
+  source_kind: string | null; provider: string;
+}) {
+  return it.source_kind === "merchant_settlement" && it.provider === "orange_money";
+}
+
 export async function rejectPayoutOrder(payoutOrderId: string, reason: string) {
   const { data, error } = await supabase.rpc("payout_reject_release" as never, {
     p_payout_order_id: payoutOrderId, p_reason: reason,
