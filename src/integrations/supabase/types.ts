@@ -7980,6 +7980,15 @@ export type Database = {
       _qa_s7_run3: { Args: never; Returns: Json }
       _qa_s7_run4: { Args: never; Returns: Json }
       _qa_s7_user: { Args: { p_id: string; p_tag: string }; Returns: undefined }
+      _qa_s7_wallet: {
+        Args: {
+          p_bal: number
+          p_held: number
+          p_owner: string
+          p_party: Database["public"]["Enums"]["party_type"]
+        }
+        Returns: string
+      }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
