@@ -7596,6 +7596,17 @@ export type Database = {
         Returns: Json
       }
       _as_user_claims: { Args: { p_user: string }; Returns: string }
+      _cancellation_compute: {
+        Args: {
+          p_delivery_fee_gnf?: number
+          p_fare_gnf?: number
+          p_merchandise_subtotal_gnf?: number
+          p_responsible_party?: string
+          p_snapshot: Json
+          p_stage: string
+        }
+        Returns: Json
+      }
       _capture_revenue_account: { Args: { p_kind: string }; Returns: string }
       _cash_order_accept_internal: {
         Args: { p_driver: string; p_source_id: string; p_source_module: string }
@@ -7721,6 +7732,11 @@ export type Database = {
         }
         Returns: Json
       }
+      _customer_cancellation_debt_settle_internal: {
+        Args: { p_actor: string; p_amount_gnf: number; p_debt_id: string }
+        Returns: Json
+      }
+      _customer_cash_restricted: { Args: { p_user: string }; Returns: boolean }
       _driver_exact_hold_place_internal: {
         Args: {
           p_amount: number
@@ -7872,10 +7888,20 @@ export type Database = {
         Args: { p_actor?: string; p_package_id: string }
         Returns: Json
       }
-      _package_cancel_release_internal: {
-        Args: { p_actor?: string; p_package_id: string; p_reason?: string }
-        Returns: Json
-      }
+      _package_cancel_release_internal:
+        | {
+            Args: { p_actor?: string; p_package_id: string; p_reason?: string }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_actor?: string
+              p_package_id: string
+              p_reason?: string
+              p_responsible_party?: string
+            }
+            Returns: Json
+          }
       _package_choppay_capture_internal: {
         Args: {
           p_actor?: string
@@ -9053,6 +9079,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cancellation_quote: {
+        Args: {
+          p_service: string
+          p_source_id: string
+          p_source_module?: string
+        }
+        Returns: Json
+      }
       cash_order_accept: {
         Args: { p_source_id: string; p_source_module: string }
         Returns: Json
@@ -9434,10 +9468,16 @@ export type Database = {
         }
         Returns: Json
       }
+      customer_cancellation_debt_repay: {
+        Args: { p_amount_gnf?: number; p_debt_id: string }
+        Returns: Json
+      }
       customer_cancellation_debt_waive: {
         Args: { p_debt_id: string; p_reason: string }
         Returns: Json
       }
+      customer_cancellation_debts_overview: { Args: never; Returns: Json }
+      customer_cash_eligibility: { Args: never; Returns: Json }
       customer_finance_history: {
         Args: { p_limit?: number }
         Returns: {
