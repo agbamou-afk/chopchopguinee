@@ -217,7 +217,9 @@ export function WalletView() {
     );
   }
 
-  const available = wallet ? wallet.balance_gnf - wallet.held_gnf : 0;
+  // Server-computed only — never `balance - held` on the client.
+  const available = overview?.available_gnf ?? 0;
+  const heldGnf = overview?.held_gnf ?? 0;
   const needsPin = !profile?.has_pin;
   const lowBalance = wallet !== null && available < 50000;
 
@@ -242,18 +244,43 @@ export function WalletView() {
           onSend={() => onAction("pay")}
           onReceive={() => onAction("receive")}
         />
-        {wallet && wallet.held_gnf > 0 && (
+        {heldGnf > 0 && (
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            {formatMoney(wallet.held_gnf)} en attente
+            {formatMoney(heldGnf)} bloqué (opérations en cours)
           </p>
         )}
-        {inflowLast30 > 0 && (
-          <div className="mt-3 mx-auto max-w-[22rem] flex items-center gap-2 rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-            <p className="text-[11px] text-foreground/80">
-              <span className="font-semibold">{formatMoney(inflowLast30)}</span> reçus sur 30 jours via ChopWallet
-            </p>
-          </div>
+        {overview && (
+          <>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="rounded-2xl border border-border/60 bg-card p-2 text-center">
+                <p className="text-[10px] text-muted-foreground">Dépenses écosystème</p>
+                <p className="text-xs font-bold text-foreground tabular-nums">
+                  {formatMoney(overview.ecosystem_spend_gnf)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-card p-2 text-center">
+                <p className="text-[10px] text-muted-foreground">Recharges créditées</p>
+                <p className="text-xs font-bold text-foreground tabular-nums">
+                  {formatMoney(overview.topup_credited_gnf)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-card p-2 text-center">
+                <p className="text-[10px] text-muted-foreground">Remboursements</p>
+                <p className="text-xs font-bold text-foreground tabular-nums">
+                  {formatMoney(overview.refund_total_gnf)}
+                </p>
+              </div>
+            </div>
+            {overview.topup_pending_count > 0 && (
+              <div className="mt-2 mx-auto max-w-[22rem] flex items-center gap-2 rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                <p className="text-[11px] text-foreground/80">
+                  <span className="font-semibold">{formatMoney(overview.topup_pending_gnf)}</span> en recharge
+                  à vérifier — non compté dans votre solde
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
