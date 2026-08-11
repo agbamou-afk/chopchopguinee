@@ -14,24 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _qa_s10_results: {
-        Row: {
-          detail: string | null
-          id: string
-          ok: boolean | null
-        }
-        Insert: {
-          detail?: string | null
-          id: string
-          ok?: boolean | null
-        }
-        Update: {
-          detail?: string | null
-          id?: string
-          ok?: boolean | null
-        }
-        Relationships: []
-      }
       _qa_s5_results: {
         Row: {
           created_at: string | null
@@ -8022,14 +8004,6 @@ export type Database = {
       _promo_restore: {
         Args: { p_amount: number; p_driver: string }
         Returns: number
-      }
-      _qa_s10_run: {
-        Args: never
-        Returns: {
-          detail: string
-          id: string
-          ok: boolean
-        }[]
       }
       _qa_s5_ok: {
         Args: { p_detail?: string; p_label: string; p_ok: boolean }
