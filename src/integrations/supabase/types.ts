@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      _qa_s11_results: {
+        Row: {
+          detail: string | null
+          id: number
+          name: string
+          ok: boolean
+          run_at: string
+        }
+        Insert: {
+          detail?: string | null
+          id?: number
+          name: string
+          ok: boolean
+          run_at?: string
+        }
+        Update: {
+          detail?: string | null
+          id?: number
+          name?: string
+          ok?: boolean
+          run_at?: string
+        }
+        Relationships: []
+      }
       _qa_s5_results: {
         Row: {
           created_at: string | null
@@ -4875,6 +4899,39 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_settlement_schedule_runs: {
+        Row: {
+          as_of: string
+          candidate_amount_gnf: number
+          created_at: string
+          id: string
+          merchant_store_id: string
+          period_key: string
+          policy_snapshot: Json
+          request_id: string | null
+        }
+        Insert: {
+          as_of?: string
+          candidate_amount_gnf?: number
+          created_at?: string
+          id?: string
+          merchant_store_id: string
+          period_key: string
+          policy_snapshot?: Json
+          request_id?: string | null
+        }
+        Update: {
+          as_of?: string
+          candidate_amount_gnf?: number
+          created_at?: string
+          id?: string
+          merchant_store_id?: string
+          period_key?: string
+          policy_snapshot?: Json
+          request_id?: string | null
+        }
+        Relationships: []
+      }
       merchant_stores: {
         Row: {
           address_label: string | null
@@ -6432,6 +6489,206 @@ export type Database = {
           },
         ]
       }
+      payout_orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          destination_msisdn: string
+          environment: string
+          evidence_id: string | null
+          fee_borne_by: string
+          id: string
+          merchant_liability_debit_gnf: number
+          merchant_store_id: string | null
+          order_key: string
+          party_type: Database["public"]["Enums"]["party_type"]
+          party_user_id: string
+          policy_snapshot: Json
+          provider: string
+          provider_fee_gnf: number
+          recipient_net_gnf: number
+          reject_reason: string | null
+          released_at: string | null
+          requested_principal_gnf: number
+          reservation_gnf: number
+          settled_at: string | null
+          settled_gnf: number
+          source_kind: string
+          source_request_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          destination_msisdn: string
+          environment: string
+          evidence_id?: string | null
+          fee_borne_by?: string
+          id?: string
+          merchant_liability_debit_gnf: number
+          merchant_store_id?: string | null
+          order_key: string
+          party_type: Database["public"]["Enums"]["party_type"]
+          party_user_id: string
+          policy_snapshot?: Json
+          provider?: string
+          provider_fee_gnf?: number
+          recipient_net_gnf: number
+          reject_reason?: string | null
+          released_at?: string | null
+          requested_principal_gnf: number
+          reservation_gnf: number
+          settled_at?: string | null
+          settled_gnf?: number
+          source_kind: string
+          source_request_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          destination_msisdn?: string
+          environment?: string
+          evidence_id?: string | null
+          fee_borne_by?: string
+          id?: string
+          merchant_liability_debit_gnf?: number
+          merchant_store_id?: string | null
+          order_key?: string
+          party_type?: Database["public"]["Enums"]["party_type"]
+          party_user_id?: string
+          policy_snapshot?: Json
+          provider?: string
+          provider_fee_gnf?: number
+          recipient_net_gnf?: number
+          reject_reason?: string | null
+          released_at?: string | null
+          requested_principal_gnf?: number
+          reservation_gnf?: number
+          settled_at?: string | null
+          settled_gnf?: number
+          source_kind?: string
+          source_request_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payout_provider_evidence: {
+        Row: {
+          amount_gnf: number | null
+          created_at: string
+          environment: string | null
+          fee_gnf: number | null
+          id: string
+          mismatch_reason: string | null
+          net_gnf: number | null
+          normalized_reference: string | null
+          payout_order_id: string | null
+          provider: string
+          provider_reference: string
+          provider_status: string | null
+          raw: Json
+          recipient_msisdn: string | null
+          reconciled_at: string | null
+          reconciliation_state: string
+          recorded_by: string | null
+          transferred_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_gnf?: number | null
+          created_at?: string
+          environment?: string | null
+          fee_gnf?: number | null
+          id?: string
+          mismatch_reason?: string | null
+          net_gnf?: number | null
+          normalized_reference?: string | null
+          payout_order_id?: string | null
+          provider: string
+          provider_reference: string
+          provider_status?: string | null
+          raw?: Json
+          recipient_msisdn?: string | null
+          reconciled_at?: string | null
+          reconciliation_state?: string
+          recorded_by?: string | null
+          transferred_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_gnf?: number | null
+          created_at?: string
+          environment?: string | null
+          fee_gnf?: number | null
+          id?: string
+          mismatch_reason?: string | null
+          net_gnf?: number | null
+          normalized_reference?: string | null
+          payout_order_id?: string | null
+          provider?: string
+          provider_reference?: string
+          provider_status?: string | null
+          raw?: Json
+          recipient_msisdn?: string | null
+          reconciled_at?: string | null
+          reconciliation_state?: string
+          recorded_by?: string | null
+          transferred_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_provider_evidence_payout_order_id_fkey"
+            columns: ["payout_order_id"]
+            isOneToOne: false
+            referencedRelation: "payout_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_settlement_allocations: {
+        Row: {
+          amount_gnf: number
+          created_at: string
+          id: string
+          merchant_payable_id: string
+          payout_order_id: string
+        }
+        Insert: {
+          amount_gnf: number
+          created_at?: string
+          id?: string
+          merchant_payable_id: string
+          payout_order_id: string
+        }
+        Update: {
+          amount_gnf?: number
+          created_at?: string
+          id?: string
+          merchant_payable_id?: string
+          payout_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_settlement_allocations_merchant_payable_id_fkey"
+            columns: ["merchant_payable_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_payables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_settlement_allocations_payout_order_id_fkey"
+            columns: ["payout_order_id"]
+            isOneToOne: false
+            referencedRelation: "payout_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       physical_markets: {
         Row: {
           address: string | null
@@ -7898,6 +8155,39 @@ export type Database = {
         }
         Returns: Json
       }
+      _merchant_settlement_request_queue_internal: {
+        Args: {
+          p_amount_gnf: number
+          p_note: string
+          p_request_key: string
+          p_store_id: string
+        }
+        Returns: {
+          amount_gnf: number
+          channel: string
+          created_at: string
+          currency: string
+          eligible_snapshot_gnf: number
+          evidence_ref: string | null
+          id: string
+          merchant_store_id: string
+          merchant_user_id: string
+          note: string | null
+          reject_reason: string | null
+          request_key: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          settled_at: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "merchant_settlement_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _mission_cash_source: {
         Args: { _m: Database["public"]["Tables"]["missions"]["Row"] }
         Returns: Json
@@ -7997,6 +8287,63 @@ export type Database = {
         }
         Returns: undefined
       }
+      _payout_env: { Args: never; Returns: string }
+      _payout_fee_snapshot: {
+        Args: { p_principal: number; p_provider: string }
+        Returns: Json
+      }
+      _payout_order_create_internal: {
+        Args: {
+          p_actor: string
+          p_msisdn: string
+          p_order_key: string
+          p_party_type: Database["public"]["Enums"]["party_type"]
+          p_party_user_id: string
+          p_principal: number
+          p_provider: string
+          p_source_kind: string
+          p_source_request_id: string
+          p_store_id: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          destination_msisdn: string
+          environment: string
+          evidence_id: string | null
+          fee_borne_by: string
+          id: string
+          merchant_liability_debit_gnf: number
+          merchant_store_id: string | null
+          order_key: string
+          party_type: Database["public"]["Enums"]["party_type"]
+          party_user_id: string
+          policy_snapshot: Json
+          provider: string
+          provider_fee_gnf: number
+          recipient_net_gnf: number
+          reject_reason: string | null
+          released_at: string | null
+          requested_principal_gnf: number
+          reservation_gnf: number
+          settled_at: string | null
+          settled_gnf: number
+          source_kind: string
+          source_request_id: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payout_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _payout_settle_internal: {
+        Args: { p_actor: string; p_evidence_id: string; p_order_id: string }
+        Returns: Json
+      }
       _promo_consume: {
         Args: { p_amount: number; p_driver: string }
         Returns: number
@@ -8005,6 +8352,7 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_s11_run: { Args: never; Returns: Json }
       _qa_s5_ok: {
         Args: { p_detail?: string; p_label: string; p_ok: boolean }
         Returns: Json
@@ -9926,6 +10274,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      driver_payout_request_create: {
+        Args: {
+          p_amount_gnf: number
+          p_idempotency_key: string
+          p_payout_phone: string
+        }
+        Returns: Json
+      }
       driver_promo_balance: { Args: { p_driver: string }; Returns: Json }
       driver_set_capabilities: {
         Args: { _caps: string[] }
@@ -10175,6 +10531,10 @@ export type Database = {
           p_mission_type: string
           p_payment_mode?: string
         }
+        Returns: Json
+      }
+      finance_payout_queue: {
+        Args: { p_bucket?: string; p_limit?: number }
         Returns: Json
       }
       finance_policy_at: {
@@ -10951,6 +11311,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      merchant_settlement_receipt: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
       merchant_settlement_request_create: {
         Args: {
           p_amount_gnf: number
@@ -10975,6 +11339,10 @@ export type Database = {
           settled_at: string
           status: string
         }[]
+      }
+      merchant_settlement_schedule_generate: {
+        Args: { p_as_of?: string }
+        Returns: Json
       }
       merchant_submit_location: {
         Args: {
@@ -11722,6 +12090,29 @@ export type Database = {
       }
       package_verify_pickup: {
         Args: { p_code: string; p_package_id: string }
+        Returns: Json
+      }
+      payout_reconcile_evidence: {
+        Args: { p_evidence_id: string }
+        Returns: Json
+      }
+      payout_record_provider_evidence: {
+        Args: {
+          p_amount_gnf: number
+          p_environment: string
+          p_fee_gnf?: number
+          p_payout_order_id: string
+          p_provider: string
+          p_provider_reference: string
+          p_provider_status: string
+          p_raw?: Json
+          p_recipient_msisdn: string
+          p_transferred_at?: string
+        }
+        Returns: Json
+      }
+      payout_reject_release: {
+        Args: { p_payout_order_id: string; p_reason: string }
         Returns: Json
       }
       process_driver_referral_milestone_jobs: {
