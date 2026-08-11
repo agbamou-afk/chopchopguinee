@@ -204,6 +204,12 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
               </p>
             )}
 
+            {claimsEnabled && d.claim_state && d.claim_state !== "none" && (
+              <p className="text-[11.5px] text-muted-foreground">
+                {PACKAGE_CLAIM_STATE_LABEL[d.claim_state] ?? d.claim_state}
+              </p>
+            )}
+
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="flex-1 h-11" onClick={() => share(d, s)}>
                 <Share2 className="w-3.5 h-3.5" /> Partager
@@ -221,6 +227,19 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
                 </Button>
               )}
             </div>
+
+            {claimsEnabled && !!s?.pickup_verified_at &&
+              (!d.claim_state || d.claim_state === "none") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-11"
+                  disabled={busyId === d.id}
+                  onClick={() => void doClaim(d)}
+                >
+                  Ouvrir une réclamation
+                </Button>
+              )}
           </article>
         );
       })}
