@@ -60,6 +60,7 @@ const VendorsAdmin = lazy(() => import("./pages/admin/VendorsAdmin"));
 const WalletAdmin = lazy(() => import("./pages/admin/WalletAdmin"));
 const WalletReconciliation = lazy(() => import("./pages/admin/WalletReconciliation"));
 const PayoutsAdmin = lazy(() => import("./pages/admin/PayoutsAdmin"));
+const TreasuryAdmin = lazy(() => import("./pages/admin/TreasuryAdmin"));
 const DriverCashouts = lazy(() => import("./pages/admin/DriverCashouts"));
 const PricingAdmin = lazy(() => import("./pages/admin/PricingAdmin"));
 const OrdersAdmin = lazy(() => import("./pages/admin/OrdersAdmin"));
@@ -195,6 +196,7 @@ const App = () => {
             <Route path="wallet/reconciliation" element={<WalletReconciliation />} />
             <Route path="wallet/driver-cashouts" element={<DriverCashouts />} />
             <Route path="wallet/payouts" element={<PayoutsAdmin />} />
+            <Route path="treasury" element={<TreasuryAdmin />} />
             <Route path="pricing" element={<PricingAdmin />} />
             <Route path="orders" element={<OrdersAdmin />} />
             <Route path="repas" element={<RepasAdmin />} />

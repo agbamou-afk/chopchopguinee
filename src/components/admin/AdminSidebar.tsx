@@ -47,6 +47,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
       { title: "Réconciliation OM", url: "/admin/wallet/reconciliation", icon: Scale, module: "wallet" },
       { title: "Comptes OM", url: "/admin/wallet/reconciliation?tab=accounts", icon: Smartphone, module: "wallet" },
       { title: "Règlements & versements", url: "/admin/wallet/payouts", icon: Send, module: "payments" },
+      { title: "Trésorerie", url: "/admin/treasury", icon: Scale, module: "wallet" },
       { title: "Paiements (intents)", url: "/admin/payments", icon: Coins, module: "payments" },
       { title: "Sandbox OM", url: "/admin/payments/sandbox", icon: Sparkles, module: "payments" },
       { title: "Tarification", url: "/admin/pricing", icon: Tag, module: "pricing" },
