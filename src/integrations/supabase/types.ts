@@ -8263,6 +8263,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_package_claim_resolve: {
+        Args: {
+          p_evidence_ref: string
+          p_outcome: string
+          p_package_id: string
+          p_pay_customer_gnf?: number
+          p_reason: string
+        }
+        Returns: Json
+      }
       admin_pre_purge_test_user: { Args: { _target: string }; Returns: Json }
       admin_preview_marche_payment_intents:
         | {
@@ -11332,6 +11342,14 @@ export type Database = {
         }
         Returns: string
       }
+      package_claim_open: {
+        Args: {
+          p_evidence_ref?: string
+          p_package_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
       package_delivery_cancel: {
         Args: { p_package_id: string; p_reason?: string }
         Returns: Json
@@ -11344,21 +11362,41 @@ export type Database = {
         Args: { p_mission_id: string }
         Returns: Json
       }
-      package_delivery_create_checkout: {
-        Args: {
-          p_description?: string
-          p_idempotency_key?: string
-          p_instructions?: string
-          p_provider?: string
-          p_quote_id: string
-          p_recipient_name: string
-          p_recipient_phone: string
-          p_sandbox?: boolean
-          p_sender_phone?: string
-          p_test_run_id?: string
-        }
-        Returns: Json
-      }
+      package_delivery_create_checkout:
+        | {
+            Args: {
+              p_description?: string
+              p_idempotency_key?: string
+              p_instructions?: string
+              p_provider?: string
+              p_quote_id: string
+              p_recipient_name: string
+              p_recipient_phone: string
+              p_sandbox?: boolean
+              p_sender_phone?: string
+              p_test_run_id?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_attestation_statement?: string
+              p_declared_value_gnf?: number
+              p_description?: string
+              p_idempotency_key?: string
+              p_instructions?: string
+              p_provider?: string
+              p_quote_id: string
+              p_recipient_name: string
+              p_recipient_phone: string
+              p_sandbox?: boolean
+              p_sender_phone?: string
+              p_tender?: string
+              p_test_run_id?: string
+              p_value_attested?: boolean
+            }
+            Returns: Json
+          }
       package_delivery_finalize_from_intent: {
         Args: { p_intent_id: string }
         Returns: Json
@@ -11372,6 +11410,16 @@ export type Database = {
           p_pickup_label?: string
           p_pickup_lat: number
           p_pickup_lng: number
+        }
+        Returns: Json
+      }
+      package_evidence_register: {
+        Args: {
+          p_byte_size?: number
+          p_content_type?: string
+          p_kind?: string
+          p_quote_id: string
+          p_storage_path: string
         }
         Returns: Json
       }
