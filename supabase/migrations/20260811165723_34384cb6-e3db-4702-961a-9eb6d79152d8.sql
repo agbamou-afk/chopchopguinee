@@ -1,0 +1,1 @@
+INSERT INTO public._qa_s13_results(part, result) SELECT 3, public._qa_s13_run3();
