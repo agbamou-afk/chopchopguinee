@@ -236,6 +236,18 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
           </article>
         );
       })}
+
+      <CancellationConfirmDialog
+        open={cancelTarget !== null}
+        onOpenChange={(o) => { if (!o) setCancelTarget(null); }}
+        service="package"
+        sourceId={cancelTarget?.id ?? null}
+        title={cancelTarget ? `Annuler ${cancelTarget.reference} ?` : "Annuler cet envoi ?"}
+        busy={busyId === cancelTarget?.id}
+        onConfirm={() => (cancelTarget ? doCancel(cancelTarget) : Promise.resolve())}
+        disputeLabel="Ouvrir un dossier support"
+        onDispute={() => { if (cancelTarget) void doCancel(cancelTarget); }}
+      />
     </section>
   );
 }
