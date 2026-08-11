@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -14,7 +15,8 @@ import { toast } from "sonner";
 import { formatGNF } from "@/lib/format";
 import {
   usePayoutQueue, recordPayoutEvidence, reconcilePayoutEvidence, rejectPayoutOrder,
-  generateSettlementSchedule, type PayoutQueueBucket, type PayoutQueueItem,
+  generateSettlementSchedule, confirmManualOmPayout, isManualOmMerchantPayout,
+  MANUAL_OM_REFERENCE_MIN_LENGTH, type PayoutQueueBucket, type PayoutQueueItem,
 } from "@/lib/finance/payouts";
 
 const BUCKETS: { key: PayoutQueueBucket; label: string }[] = [
@@ -43,6 +45,9 @@ const EVIDENCE_TONE: Record<string, string> = {
 function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
   const { items, loading, error, refresh } = usePayoutQueue(bucket);
   const [evidenceFor, setEvidenceFor] = useState<PayoutQueueItem | null>(null);
+  const [manualFor, setManualFor] = useState<PayoutQueueItem | null>(null);
+  const [manualRef, setManualRef] = useState("");
+  const [attested, setAttested] = useState(false);
   const [rejectFor, setRejectFor] = useState<PayoutQueueItem | null>(null);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ reference: "", msisdn: "", amount: "", status: "success" });
@@ -72,6 +77,29 @@ function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
     if (status === "settled") toast.success("Règlement réconcilié et comptabilisé.");
     else toast.warning(`Preuve enregistrée sans mouvement : ${status}`);
     setEvidenceFor(null);
+    void refresh();
+  };
+
+  const openManual = (it: PayoutQueueItem) => {
+    setManualRef(""); setAttested(false); setManualFor(it);
+  };
+
+  const submitManual = async () => {
+    if (!manualFor) return;
+    setBusy(true);
+    const res = await confirmManualOmPayout({
+      payoutOrderId: manualFor.payout_order_id,
+      providerReference: manualRef.trim(),
+      attestation: attested,
+      transferredAt: new Date().toISOString(),
+    });
+    setBusy(false);
+    if (!res.ok) { toast.error(res.error); return; }
+    const status = String((res.result as { status?: string }).status ?? "");
+    if (status === "settled") toast.success("Virement Orange Money attesté et règlement comptabilisé.");
+    else if (status === "already_settled") toast.info("Ce versement était déjà réglé. Aucun mouvement.");
+    else toast.warning(`Preuve attestée sans règlement : ${status}`);
+    setManualFor(null); setManualRef(""); setAttested(false);
     void refresh();
   };
 
@@ -138,7 +166,14 @@ function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
             <div className="space-y-1">
               {it.evidence.map((e) => (
                 <div key={e.evidence_id} className="flex items-center justify-between gap-2 text-[11px]">
-                  <span className="font-mono truncate">{e.provider_reference}</span>
+                  <span className="font-mono truncate">
+                    {e.provider_reference}
+                    {e.evidence_kind === "manual_operator_attested" && (
+                      <span className="ml-2 font-sans text-muted-foreground">
+                        attesté par opérateur · non vérifié par Orange Money
+                      </span>
+                    )}
+                  </span>
                   <span className="flex items-center gap-2">
                     <span className={`px-2 py-0.5 rounded-full ${EVIDENCE_TONE[e.state] ?? "bg-muted"}`}>
                       {e.state}{e.reason ? ` · ${e.reason}` : ""}
@@ -159,9 +194,15 @@ function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
 
           {it.status !== "settled" && it.status !== "rejected" && it.status !== "released" && (
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => openEvidence(it)}>
-                <Send className="w-4 h-4 mr-1" /> Enregistrer la preuve
-              </Button>
+              {isManualOmMerchantPayout(it) ? (
+                <Button size="sm" onClick={() => openManual(it)}>
+                  <Send className="w-4 h-4 mr-1" /> Confirmer le virement Orange Money
+                </Button>
+              ) : (
+                <Button size="sm" onClick={() => openEvidence(it)}>
+                  <Send className="w-4 h-4 mr-1" /> Enregistrer la preuve
+                </Button>
+              )}
               <Button size="sm" variant="outline" onClick={() => setRejectFor(it)}>
                 <XCircle className="w-4 h-4 mr-1" /> Rejeter / libérer
               </Button>
@@ -213,6 +254,68 @@ function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
           <DialogFooter>
             <Button variant="destructive" onClick={submitReject} disabled={busy || reason.trim().length < 5}>
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Rejeter"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!manualFor} onOpenChange={(o) => !o && setManualFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Virement Orange Money manuel (Stage 5)</DialogTitle>
+            <DialogDescription>
+              Effectuez d'abord le transfert Orange Money hors CHOPCHOP, du montant exact
+              affiché vers le numéro exact affiché. Saisissez ensuite la vraie référence de
+              transaction. Ceci est une attestation d'opérateur : aucune vérification par une
+              API Orange Money n'est effectuée. Tous les montants sont figés et recalculés
+              côté serveur.
+            </DialogDescription>
+          </DialogHeader>
+          {manualFor && (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-primary/40 bg-primary/5 p-3">
+                <p className="text-[11px] text-muted-foreground">Montant exact à transférer</p>
+                <p className="text-2xl font-bold tabular-nums text-foreground">
+                  {formatGNF(manualFor.expected_provider_transfer_gnf)}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  vers <span className="font-mono">{manualFor.destination_msisdn}</span> · Orange Money
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                {[
+                  ["Marchand", manualFor.store_name ?? manualFor.party_type],
+                  ["Principal demandé", formatGNF(manualFor.requested_principal_gnf)],
+                  ["Frais fournisseur", formatGNF(manualFor.provider_fee_gnf)],
+                  ["Frais à la charge de", manualFor.fee_borne_by === "platform" ? "plateforme" : "bénéficiaire"],
+                  ["Environnement", manualFor.environment],
+                  ["Référence dossier", manualFor.request_id ?? manualFor.payout_order_id],
+                ].map(([k, v]) => (
+                  <div key={k} className="rounded-lg bg-muted/40 p-2">
+                    <p className="text-muted-foreground">{k}</p>
+                    <p className="font-semibold break-all">{v}</p>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <Label>Référence de transaction Orange Money (réelle)</Label>
+                <Input value={manualRef} onChange={(e) => setManualRef(e.target.value)}
+                       placeholder="Ex. OM240812.1530.A12345" />
+              </div>
+              <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                <Checkbox checked={attested} onCheckedChange={(c) => setAttested(c === true)} />
+                <span>
+                  J'atteste avoir transféré exactement {formatGNF(manualFor.expected_provider_transfer_gnf)}{" "}
+                  au numéro {manualFor.destination_msisdn} via Orange Money, et que la référence
+                  saisie est la référence réelle de cette transaction.
+                </span>
+              </label>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={submitManual}
+                    disabled={busy || !attested || manualRef.trim().length < MANUAL_OM_REFERENCE_MIN_LENGTH}>
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmer et attester"}
             </Button>
           </DialogFooter>
         </DialogContent>

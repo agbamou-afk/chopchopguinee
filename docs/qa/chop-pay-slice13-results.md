@@ -108,3 +108,30 @@ Final rerun after fixture corrections: **87 / 87 PASS, 0 failures.**
    that reaches the recipient.
 2. Added `finance_confirm_manual_om_payout` as the only manual Stage 5 rail: staff-only, Stage-5 gated,
    attestation-required, with every financial fact derived server-side from the frozen payout order.
+
+## Part 6 — Hardening Addendum (UI/client seam)
+
+**DEF-FIN-S13-P6-001 — CLOSED.**
+`/admin/wallet/payouts` still exposed the generic editable evidence form (recipient MSISDN,
+amount, provider status) for merchant settlement orders and called
+`payout_record_provider_evidence` directly.
+
+Closure (UI/client only, no backend change):
+- `src/lib/finance/payouts.ts`: queue type now carries `source_kind`,
+  `expected_provider_transfer_gnf`, and evidence provenance
+  (`evidence_source`, `evidence_kind`, `provider_verified`). Added
+  `confirmManualOmPayout()` binding + `isManualOmMerchantPayout()` guard.
+- `src/pages/admin/PayoutsAdmin.tsx`: for `source_kind = 'merchant_settlement'` and
+  provider `orange_money`, the launch action is now "Confirmer le virement Orange Money":
+  all financial facts read-only (store, provider, MSISDN, principal, fee, fee bearer,
+  exact `expected_provider_transfer_gnf`, environment, request reference), ONE editable
+  field (real OM transaction reference), explicit attestation checkbox, submit gated on
+  both, calling ONLY `finance_confirm_manual_om_payout`.
+- Generic evidence/reconcile/reject bindings retained for non-merchant/engine review only.
+- Evidence rows with `evidence_kind = manual_operator_attested` are labelled as operator
+  attested / not verified by Orange Money.
+
+Backend harness result unchanged: `_qa_s13_run6()` **87/87 PASS**.
+Frontend verification: typecheck (`tsgo -p tsconfig.app.json`) **PASS, 0 errors**.
+No authenticated Finance visual QA performed (no Finance session) — YELLOW.
+Stage 5/6/7 production flags untouched. Part 7 NOT STARTED.

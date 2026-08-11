@@ -26,12 +26,16 @@ export type PayoutEvidence = {
   provider_status: string | null;
   environment: string | null;
   transferred_at: string | null;
+  evidence_source?: string | null;
+  evidence_kind?: string | null;
+  provider_verified?: boolean;
 };
 
 export type PayoutQueueItem = {
   payout_order_id: string;
   status: "reserved" | "needs_review" | "mismatch" | "rejected" | "released" | "settled";
   party_type: string;
+  source_kind: string | null;
   merchant_store_id: string | null;
   store_name: string | null;
   destination_msisdn: string;
@@ -42,6 +46,7 @@ export type PayoutQueueItem = {
   fee_borne_by: "recipient" | "platform";
   merchant_liability_debit_gnf: number;
   recipient_net_gnf: number;
+  expected_provider_transfer_gnf: number;
   reservation_gnf: number;
   settled_gnf: number;
   request_id: string | null;
@@ -124,6 +129,36 @@ export async function reconcilePayoutEvidence(evidenceId: string) {
   } as never);
   if (error) return { ok: false as const, error: error.message };
   return { ok: true as const, result: (data as Record<string, unknown>) ?? {} };
+}
+
+/** Minimum length enforced server-side by finance_confirm_manual_om_payout. */
+export const MANUAL_OM_REFERENCE_MIN_LENGTH = 6;
+
+/**
+ * Stage 5 launch action: operator-attested manual Orange Money merchant payout.
+ * Only the real provider reference and the attestation travel from the client;
+ * every financial fact is re-derived server-side from the frozen payout order.
+ */
+export async function confirmManualOmPayout(args: {
+  payoutOrderId: string;
+  providerReference: string;
+  attestation: boolean;
+  transferredAt?: string | null;
+}) {
+  const { data, error } = await supabase.rpc("finance_confirm_manual_om_payout" as never, {
+    p_payout_order_id: args.payoutOrderId,
+    p_provider_reference: args.providerReference,
+    p_attestation: args.attestation,
+    p_transferred_at: args.transferredAt ?? null,
+  } as never);
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const, result: (data as Record<string, unknown>) ?? {} };
+}
+
+export function isManualOmMerchantPayout(it: {
+  source_kind: string | null; provider: string;
+}) {
+  return it.source_kind === "merchant_settlement" && it.provider === "orange_money";
 }
 
 export async function rejectPayoutOrder(payoutOrderId: string, reason: string) {
