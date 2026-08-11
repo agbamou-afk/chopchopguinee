@@ -8365,6 +8365,7 @@ export type Database = {
       _qa_s13_run3: { Args: never; Returns: Json }
       _qa_s13_run4: { Args: never; Returns: Json }
       _qa_s13_run5: { Args: never; Returns: Json }
+      _qa_s13_run6: { Args: never; Returns: Json }
       _qa_s13_summary: { Args: { p_part: number; r: Json }; Returns: Json }
       _qa_s13_user: {
         Args: { p_id: string; p_tag: string }
@@ -10505,6 +10506,15 @@ export type Database = {
           p_zone_id?: string
         }
         Returns: string
+      }
+      finance_confirm_manual_om_payout: {
+        Args: {
+          p_attestation?: boolean
+          p_payout_order_id: string
+          p_provider_reference: string
+          p_transferred_at?: string
+        }
+        Returns: Json
       }
       finance_mission_requirement: {
         Args: { p_mission_type: string; p_value_gnf?: number }
