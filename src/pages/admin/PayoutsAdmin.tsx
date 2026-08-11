@@ -166,7 +166,14 @@ function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
             <div className="space-y-1">
               {it.evidence.map((e) => (
                 <div key={e.evidence_id} className="flex items-center justify-between gap-2 text-[11px]">
-                  <span className="font-mono truncate">{e.provider_reference}</span>
+                  <span className="font-mono truncate">
+                    {e.provider_reference}
+                    {e.evidence_kind === "manual_operator_attested" && (
+                      <span className="ml-2 font-sans text-muted-foreground">
+                        attesté par opérateur · non vérifié par Orange Money
+                      </span>
+                    )}
+                  </span>
                   <span className="flex items-center gap-2">
                     <span className={`px-2 py-0.5 rounded-full ${EVIDENCE_TONE[e.state] ?? "bg-muted"}`}>
                       {e.state}{e.reason ? ` · ${e.reason}` : ""}
@@ -187,9 +194,15 @@ function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
 
           {it.status !== "settled" && it.status !== "rejected" && it.status !== "released" && (
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => openEvidence(it)}>
-                <Send className="w-4 h-4 mr-1" /> Enregistrer la preuve
-              </Button>
+              {isManualOmMerchantPayout(it) ? (
+                <Button size="sm" onClick={() => openManual(it)}>
+                  <Send className="w-4 h-4 mr-1" /> Confirmer le virement Orange Money
+                </Button>
+              ) : (
+                <Button size="sm" onClick={() => openEvidence(it)}>
+                  <Send className="w-4 h-4 mr-1" /> Enregistrer la preuve
+                </Button>
+              )}
               <Button size="sm" variant="outline" onClick={() => setRejectFor(it)}>
                 <XCircle className="w-4 h-4 mr-1" /> Rejeter / libérer
               </Button>
