@@ -33,12 +33,32 @@ settled mission cannot be re-claimed.
 N1–N3 every Envoyer journal balanced with >= 2 postings, no hold over-captures or
 over-releases, every journal traceable to its shipment.
 
+## Part 3 — Chop Pay tender lifecycle — PASS(DB)
+Full-order customer hold, 1 % fee on the delivery fee only, digital courier earning,
+balanced journals.
+
+## Part 4 — Claims lifecycle — PASS(DB)
+Custody boundary, settlement freeze on claim, God-Admin upheld split (collateral first,
+then platform exposure), exonerated release, reconciliation_required with no money moved.
+DEF-FIN-S6-001 (customer hold wrongly matched by the driver release routine) closed.
+
+## Part 5 — Privilege matrix & posture — PASS(DB)
+Internals `service_role`-only, participant wrappers `authenticated`-only
+(DEF-FIN-S6-002 closed), runtime/evidence tables read-only to clients, private
+`package-evidence` bucket with participant + ops read policies.
+
+**Total: 121/121 assertions PASS.**
+
+## Product surfaces (Slice 6, behind `envoyer_declared_value_enabled` / `envoyer_claims_enabled`)
+- Customer creation: declared value with policy-read ceiling, honour attestation,
+  mandatory private photo evidence, explicit cash / Chop Pay tender choice.
+- Customer tracking: claim state and "Ouvrir une réclamation" (custody required).
+- Courier hand-off: frozen declared value, blocked collateral, tender, cash to collect,
+  custody warning.
+- Admin: God-Admin claims queue in Support (`/admin/support`).
+
 ## Not yet executed (OPEN)
-- Chop Pay tender lifecycle assertions (H-series full-order hold path).
-- Claims lifecycle assertions (I/J): freeze, upheld split collateral/platform,
-  exonerated, reconciliation_required.
-- Privilege matrix (M) and evidence-photo RLS probe (L).
-- Product surfaces for declared value, attestation, photos and claims.
+- Authenticated visual QA of the Slice 6 surfaces (preview signed out).
 
 ## YELLOW (carried forward, not closed)
 Slice 2/3/4/5 authenticated visual QA; DEF-FIN-001 master wallet -100 435 GNF;
