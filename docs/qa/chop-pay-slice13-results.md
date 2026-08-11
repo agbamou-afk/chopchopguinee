@@ -39,11 +39,11 @@ Every part builds its own fixtures inside one transaction and rolls the whole bl
 - `package_courier_cancel`: authenticated + service_role only, assigned-courier check,
   custody lock, idempotent replay.
 
-## Part 5 — Orange Money Inbound Reconciliation (IN PROGRESS — not stamped PASS)
+## Part 5 — Orange Money Inbound Reconciliation — **PASS 115/115**
 
 Harness: `public._qa_s13_run5()` (service_role only, self-rolling-back), results in `_qa_s13_results(part=5)`.
 
-Latest run: **69 / 71 PASS**, 2 open items (both in the D8 harness case, see below). Part 5 is therefore **NOT** stamped PASS.
+Full matrix rerun from the beginning after the D8 closeout: **115 / 115 PASS, 0 failures.**
 
 ### Production defects found and fixed (canonical code)
 1. **P1 — admin-first reconciliation was broken for participants.** When the operator recorded the provider receipt *before* the customer/driver pasted their Orange Money code, `submit_customer_om_code` → `om_auto_match` → `wallet_topup_om_credit` aborted with `forbidden` (the credit primitive rejected the non-admin `auth.uid()`), rolling back the whole submission so the code was not even saved. Fixed with a one-shot, event-scoped transaction-local marker (`chopchop.om_credit_internal`) set by `submit_customer_om_code` immediately before delegating to the matcher. The marker authorises the *call only*; `wallet_topup_om_credit` still independently revalidates reference, amount, payer phone, receiving account, environment and target at credit time, and remains EXECUTE-denied to `anon`/`authenticated`.
