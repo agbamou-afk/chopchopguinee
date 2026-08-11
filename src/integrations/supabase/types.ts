@@ -8077,6 +8077,7 @@ export type Database = {
         Returns: string
       }
       _qa_s9_run: { Args: never; Returns: Json }
+      _qa_s9f_run: { Args: never; Returns: Json }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
