@@ -16,6 +16,7 @@ import {
   type ChopPayModule,
   type ChopPayOrderRuntime,
 } from "@/lib/chopPay/chopPayOrders";
+import { CancellationConfirmDialog } from "@/components/finance/CancellationConfirmDialog";
 
 type Role = "merchant" | "customer" | "driver";
 
@@ -187,7 +188,7 @@ export function ChopPayOrderPanel({
         )}
         {canCustomerCancel && (
           <Button size="sm" variant="outline" disabled={busy}
-            onClick={() => run(() => customerCancelChopPayOrder(module, sourceId, "customer_cancelled"), "Commande annulée")}>
+            onClick={() => setCancelOpen(true)}>
             Annuler
           </Button>
         )}
@@ -212,6 +213,24 @@ export function ChopPayOrderPanel({
           </Button>
         </div>
       )}
+
+      <CancellationConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        service="chop_pay_order"
+        sourceId={sourceId}
+        sourceModule={module}
+        busy={busy}
+        onConfirm={async () => {
+          await run(
+            () => customerCancelChopPayOrder(module, sourceId, "customer_cancelled"),
+            "Commande annulée",
+          );
+          setCancelOpen(false);
+        }}
+        onDispute={() => { setCancelOpen(false); setDisputeOpen(true); }}
+        disputeLabel="Signaler un litige"
+      />
     </div>
   );
 }
