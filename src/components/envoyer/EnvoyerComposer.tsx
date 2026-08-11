@@ -98,6 +98,12 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
   const [handling, setHandling] = useState("");
   const [acceptedRules, setAcceptedRules] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  // Slice 6 — declared value, attestation, evidence photos, tender.
+  const [declaredValue, setDeclaredValue] = useState("");
+  const [attested, setAttested] = useState(false);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [tender, setTender] = useState<PackageTender>("cash");
+  const [ceiling, setCeiling] = useState<number>(PACKAGE_DECLARED_VALUE_FALLBACK_MAX);
 
   const [quote, setQuote] = useState<PackageQuote | null>(null);
   const [quoting, setQuoting] = useState(false);
@@ -111,6 +117,19 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
       ? crypto.randomUUID()
       : `pkg-${Date.now()}-${Math.random().toString(16).slice(2)}`,
   );
+
+  const declaredEngine = useEnvoyerDeclaredValueEnabled();
+  const declaredValueGnf = Number(declaredValue.replace(/\D/g, "")) || 0;
+
+  // The ceiling is policy-owned: never hardcode it in a submitted value.
+  useEffect(() => {
+    if (!open || !declaredEngine) return;
+    let alive = true;
+    void getEnvoyerPolicy().then((p) => {
+      if (alive && p?.max_declared_value_gnf) setCeiling(Number(p.max_declared_value_gnf));
+    });
+    return () => { alive = false; };
+  }, [open, declaredEngine]);
 
   // Recoverable errors keep every entered value — we only reset on close.
   useEffect(() => {
@@ -174,6 +193,9 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
     setSubmitting(true);
     setError(null);
     try {
+      if (declaredEngine && photos.length > 0) {
+        await uploadPackageEvidence(quote.quote_id, photos);
+      }
       const res = await createPackageCheckout({
         quoteId: quote.quote_id,
         recipientName: recipientName.trim(),
@@ -181,6 +203,10 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
         description: description.trim() || null,
         instructions: [instructions.trim(), handling.trim()].filter(Boolean).join(" · ") || null,
         idempotencyKey,
+        declaredValueGnf: declaredEngine ? declaredValueGnf : null,
+        tender: declaredEngine ? tender : null,
+        valueAttested: declaredEngine ? attested : false,
+        attestationStatement: declaredEngine ? PACKAGE_ATTESTATION_STATEMENT : null,
       });
       setResult(res);
       setStep(5);
@@ -194,8 +220,17 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
 
   const canStep1 = !!pickup && !!destination;
   const canStep2 = recipientName.trim().length >= 2 && isValidGuineaLocal(extractGuineaLocal(recipientLocal));
-  const canStep3 = acceptedRules;
-  const canSubmit = !!quote && !quoteExpired && acceptedTerms && !submitting;
+  const declaredOk =
+    !declaredEngine ||
+    (declaredValueGnf > 0 && declaredValueGnf <= ceiling && attested);
+  const canStep3 = acceptedRules && declaredOk;
+  const canSubmit =
+    !!quote &&
+    !quoteExpired &&
+    acceptedTerms &&
+    !submitting &&
+    declaredOk &&
+    (!declaredEngine || photos.length > 0);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
