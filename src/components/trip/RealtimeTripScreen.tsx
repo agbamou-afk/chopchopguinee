@@ -15,6 +15,7 @@ import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { rideQaDebug } from "@/lib/rides/debug";
 import { rideModeLabel } from "@/lib/rides/rideModeLabel";
+import { CancellationConfirmDialog } from "@/components/finance/CancellationConfirmDialog";
 
 interface Props {
   rideId: string;
@@ -47,6 +48,8 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
   useConnectionRestored({ context: `client-trip:${mode}` });
   const [driverName, setDriverName] = useState<string | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
 
   const meta = (ride?.metadata ?? {}) as Record<string, unknown>;
   const phase = (meta.phase as string | undefined) ?? null;
@@ -117,10 +120,27 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
     }
   };
 
-  const handleCancel = async () => {
-    await releaseHold("Course annulée par le client");
-    toast({ title: "Course annulée", description: "Vos fonds réservés ont été libérés." });
-    (onCancel ?? onClose)();
+  /**
+   * Slice 8: cancellation goes through the canonical server calculator.
+   * The dialog shows the quoted fee; `ride_cancel` re-derives the very same
+   * amount from the frozen policy snapshot. Nothing is computed client-side.
+   */
+  const handleCancelConfirmed = async () => {
+    setCancelBusy(true);
+    try {
+      await supabase.rpc("ride_cancel", {
+        p_ride_id: rideId,
+        p_reason: "Course annulée par le client",
+      });
+      await releaseHold("Course annulée par le client");
+      toast({ title: "Course annulée", description: "Vos fonds réservés ont été libérés." });
+      setCancelOpen(false);
+      (onCancel ?? onClose)();
+    } catch {
+      toast({ title: "Annulation impossible", description: "Réessayez dans un instant.", variant: "destructive" });
+    } finally {
+      setCancelBusy(false);
+    }
   };
 
   return (
@@ -175,7 +195,7 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
             rideId={rideId}
             driverName={driverName}
             onCallDriver={handleCallDriver}
-            onCancel={handleCancel}
+            onCancel={() => setCancelOpen(true)}
             onClose={onClose}
             hideBottomSheet={showPickupConfirm}
           />
@@ -190,6 +210,16 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
           )}
         </div>
       </div>
+
+      <CancellationConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        service="ride"
+        sourceId={rideId}
+        title="Annuler cette course ?"
+        busy={cancelBusy}
+        onConfirm={handleCancelConfirmed}
+      />
     </motion.div>
   );
 }

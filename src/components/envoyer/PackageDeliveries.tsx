@@ -8,8 +8,8 @@ import {
   getPackageSecrets,
   listMyPackageDeliveries,
   openPackageClaim,
-  previewPackageCancel,
 } from "@/lib/packages/api";
+import { CancellationConfirmDialog } from "@/components/finance/CancellationConfirmDialog";
 import { useEnvoyerClaimsEnabled } from "@/lib/flags/useFeatureFlag";
 import {
   PACKAGE_CATEGORY_LABEL,
@@ -30,6 +30,7 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
   const [secrets, setSecrets] = useState<Record<string, PackageSecrets | null>>({});
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<PackageDelivery | null>(null);
   const claimsEnabled = useEnvoyerClaimsEnabled();
 
   const load = useCallback(async () => {
@@ -97,22 +98,13 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
     }
   };
 
+  /**
+   * Slice 8: the confirmation amounts come from the canonical server quote
+   * rendered by CancellationConfirmDialog. Nothing is computed here.
+   */
   const doCancel = async (d: PackageDelivery) => {
     setBusyId(d.id);
     try {
-      // Read-only preview first: the sender confirms the exact fee/refund.
-      const p = await previewPackageCancel(d.id);
-      if (!p.already_cancelled) {
-        const message = p.self_service
-          ? `Annuler ${d.reference} ?\n\nFrais d’annulation : ${formatGNF(p.fee_gnf)}\nRemboursement demandé : ${formatGNF(p.refund_gnf)}${
-              p.courier_assigned ? "\n\nUn coursier est déjà assigné." : ""
-            }`
-          : `Ce colis est déjà récupéré par le coursier.\n\nAucun remboursement automatique n’est possible : un dossier support sera ouvert.\n\nContinuer ?`;
-        if (!window.confirm(message)) {
-          setBusyId(null);
-          return;
-        }
-      }
       const res = await cancelPackageDelivery(d.id, "client_cancelled");
       if (res.self_service === false) {
         toast.info("Colis déjà récupéré — un dossier support a été ouvert.");
@@ -126,6 +118,7 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
       toast.error("Annulation impossible pour le moment.");
     } finally {
       setBusyId(null);
+      setCancelTarget(null);
     }
   };
 
@@ -220,7 +213,7 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
                   size="sm"
                   className="flex-1 h-11"
                   disabled={busyId === d.id}
-                  onClick={() => void doCancel(d)}
+                  onClick={() => setCancelTarget(d)}
                 >
                   {busyId === d.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                   {canSelfCancel ? "Annuler" : "Signaler un problème"}
@@ -243,6 +236,18 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
           </article>
         );
       })}
+
+      <CancellationConfirmDialog
+        open={cancelTarget !== null}
+        onOpenChange={(o) => { if (!o) setCancelTarget(null); }}
+        service="package"
+        sourceId={cancelTarget?.id ?? null}
+        title={cancelTarget ? `Annuler ${cancelTarget.reference} ?` : "Annuler cet envoi ?"}
+        busy={busyId === cancelTarget?.id}
+        onConfirm={() => (cancelTarget ? doCancel(cancelTarget) : Promise.resolve())}
+        disputeLabel="Ouvrir un dossier support"
+        onDispute={() => { if (cancelTarget) void doCancel(cancelTarget); }}
+      />
     </section>
   );
 }
