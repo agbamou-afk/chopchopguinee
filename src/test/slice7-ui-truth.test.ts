@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 
-const read = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url), "utf8");
+const read = (p: string) => readFileSync(`${process.cwd()}/${p}`, "utf8");
 
 /**
  * Slice 7 hard rule: no product surface may reconstruct a financial amount.
