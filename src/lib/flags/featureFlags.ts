@@ -18,6 +18,8 @@ export type FlagKey =
   | "om_direct_checkout_enabled"
   | "driver_balance_gate_enabled"
   | "envoyer_enabled"
+  | "envoyer_declared_value_enabled"
+  | "envoyer_claims_enabled"
   | "om_checkout_enabled"
   | "om_provider_mode"
   | "om_ride_checkout_enabled"
@@ -43,6 +45,10 @@ const DEFAULTS: Record<FlagKey, boolean> = {
   // Envoyer v1 — parcel/document delivery. Server RPCs enforce this same
   // flag; the client value is only used to pick the honest UI state.
   envoyer_enabled: false,
+  // Slice 6 — Envoyer declared value / attestation / evidence engine.
+  envoyer_declared_value_enabled: false,
+  // Slice 6 — Envoyer claims (custody dispute) lifecycle.
+  envoyer_claims_enabled: false,
   // Orange Money Checkout Orchestration — all off by default. Each slice
   // is landable behind its own flag; downstream code stays on legacy paths
   // until the flag is flipped in /admin/flags.
@@ -65,6 +71,8 @@ const KNOWN_FLAGS: FlagKey[] = [
   "om_direct_checkout_enabled",
   "driver_balance_gate_enabled",
   "envoyer_enabled",
+  "envoyer_declared_value_enabled",
+  "envoyer_claims_enabled",
   "om_checkout_enabled",
   "om_provider_mode",
   "om_ride_checkout_enabled",

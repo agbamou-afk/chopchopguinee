@@ -2,9 +2,12 @@ import { supabase } from "@/integrations/supabase/client";
 import type {
   PackageCategory,
   PackageCheckoutResult,
+  PackageClaimOutcome,
   PackageDelivery,
   PackageQuote,
+  PackageRuntime,
   PackageSecrets,
+  PackageTender,
 } from "./types";
 
 /**
@@ -40,6 +43,11 @@ export async function createPackageCheckout(input: {
   idempotencyKey: string;
   sandbox?: boolean;
   testRunId?: string | null;
+  /** Slice 6 — required once `envoyer_declared_value_enabled` is ON. */
+  declaredValueGnf?: number | null;
+  tender?: PackageTender | null;
+  valueAttested?: boolean;
+  attestationStatement?: string | null;
 }): Promise<PackageCheckoutResult> {
   const { data, error } = await (supabase as any).rpc("package_delivery_create_checkout", {
     p_quote_id: input.quoteId,
@@ -52,9 +60,140 @@ export async function createPackageCheckout(input: {
     p_provider: "orange_money",
     p_sandbox: input.sandbox ?? false,
     p_test_run_id: input.testRunId ?? null,
+    p_declared_value_gnf: input.declaredValueGnf ?? null,
+    p_tender: input.tender ?? null,
+    p_value_attested: input.valueAttested ?? false,
+    p_attestation_statement: input.attestationStatement ?? null,
   });
   if (error) throw error;
   return data as PackageCheckoutResult;
+}
+
+/* ── Slice 6 — declared value, evidence and claims ───────────────────── */
+
+export interface EnvoyerPolicy {
+  max_declared_value_gnf: number | null;
+  claims_exposure_max_gnf: number | null;
+  collateral_pct_bps: number | null;
+  transaction_fee_bps: number | null;
+}
+
+/** Authoritative Envoyer policy in force now (ceiling, collateral, fee). */
+export async function getEnvoyerPolicy(): Promise<EnvoyerPolicy | null> {
+  const { data, error } = await (supabase as any).rpc("finance_policy_at", {
+    p_mission_type: "envoyer",
+  });
+  if (error) return null;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row ?? null) as EnvoyerPolicy | null;
+}
+
+/**
+ * Uploads shipment photos to the private `package-evidence` bucket and
+ * registers them against the quote. The storage path shape is enforced
+ * server-side: `<uid>/<quote_id>/<file>`.
+ */
+export async function uploadPackageEvidence(
+  quoteId: string,
+  files: File[],
+  kind: "item" | "packaging" | "label" | "condition" = "item",
+): Promise<number> {
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth?.user?.id;
+  if (!uid) throw new Error("not_authenticated");
+  let count = 0;
+  for (const file of files) {
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
+    const name =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? `${crypto.randomUUID()}.${ext}`
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}.${ext}`;
+    const path = `${uid}/${quoteId}/${name}`;
+    const up = await supabase.storage
+      .from("package-evidence")
+      .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
+    if (up.error) throw up.error;
+    const { error } = await (supabase as any).rpc("package_evidence_register", {
+      p_quote_id: quoteId,
+      p_storage_path: path,
+      p_kind: kind,
+      p_content_type: file.type || null,
+      p_byte_size: file.size ?? null,
+    });
+    if (error) throw error;
+    count += 1;
+  }
+  return count;
+}
+
+/** Runtime economics of one package (participants + admins, via RLS). */
+export async function getPackageRuntime(packageId: string): Promise<PackageRuntime | null> {
+  const { data, error } = await (supabase as any)
+    .from("package_runtime")
+    .select("*")
+    .eq("package_id", packageId)
+    .maybeSingle();
+  if (error) return null;
+  return (data ?? null) as PackageRuntime | null;
+}
+
+/** Runtime for the courier's current mission (driver_user_id = auth.uid()). */
+export async function getPackageRuntimeByMission(missionId: string): Promise<PackageRuntime | null> {
+  const { data, error } = await (supabase as any)
+    .from("package_runtime")
+    .select("*")
+    .eq("mission_id", missionId)
+    .maybeSingle();
+  if (error) return null;
+  return (data ?? null) as PackageRuntime | null;
+}
+
+/** Sender-only. Requires established custody (verified pickup). */
+export async function openPackageClaim(
+  packageId: string,
+  reason: string,
+  evidenceRef?: string | null,
+) {
+  const { data, error } = await (supabase as any).rpc("package_claim_open", {
+    p_package_id: packageId,
+    p_reason: reason,
+    p_evidence_ref: evidenceRef ?? null,
+  });
+  if (error) throw error;
+  return data as Record<string, unknown>;
+}
+
+/** Admin queue: every package with an active or resolved claim. */
+export async function listPackageClaims(openOnly = true): Promise<PackageRuntime[]> {
+  let q = (supabase as any)
+    .from("package_runtime")
+    .select("*")
+    .neq("claim_state", "none")
+    .order("claim_opened_at", { ascending: true })
+    .limit(100);
+  if (openOnly) q = q.eq("claim_state", "open");
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as PackageRuntime[];
+}
+
+/** God-Admin only — enforced server-side by `is_god_admin`. */
+export async function resolvePackageClaim(input: {
+  packageId: string;
+  outcome: PackageClaimOutcome;
+  reason: string;
+  evidenceRef: string;
+  payCustomerGnf?: number;
+}) {
+  const { data, error } = await (supabase as any).rpc("admin_package_claim_resolve", {
+    p_package_id: input.packageId,
+    p_outcome: input.outcome,
+    p_reason: input.reason,
+    p_evidence_ref: input.evidenceRef,
+    p_pay_customer_gnf: input.payCustomerGnf ?? 0,
+  });
+  if (error) throw error;
+  return data as Record<string, unknown>;
 }
 
 export async function listMyPackageDeliveries(limit = 20): Promise<PackageDelivery[]> {

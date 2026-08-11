@@ -7,10 +7,13 @@ import {
   cancelPackageDelivery,
   getPackageSecrets,
   listMyPackageDeliveries,
+  openPackageClaim,
   previewPackageCancel,
 } from "@/lib/packages/api";
+import { useEnvoyerClaimsEnabled } from "@/lib/flags/useFeatureFlag";
 import {
   PACKAGE_CATEGORY_LABEL,
+  PACKAGE_CLAIM_STATE_LABEL,
   PACKAGE_STATUS_LABEL,
   maskPhone,
   type PackageDelivery,
@@ -27,6 +30,7 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
   const [secrets, setSecrets] = useState<Record<string, PackageSecrets | null>>({});
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const claimsEnabled = useEnvoyerClaimsEnabled();
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -67,6 +71,30 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
         toast.success("Détails copiés");
       }
     } catch { /* user dismissed */ }
+  };
+
+  const doClaim = async (d: PackageDelivery) => {
+    const reason = window.prompt(
+      "Décrivez le problème (colis perdu, endommagé, contenu manquant). Minimum 5 caractères :",
+    );
+    if (!reason || reason.trim().length < 5) return;
+    setBusyId(d.id);
+    try {
+      await openPackageClaim(d.id, reason.trim());
+      toast.success("Réclamation ouverte. Le règlement du colis est gelé pendant l’examen.");
+      await load();
+    } catch (e) {
+      const msg = (e as { message?: string })?.message ?? "";
+      toast.error(
+        msg.includes("CUSTODY_NOT_ESTABLISHED")
+          ? "Le coursier n’a pas encore pris le colis en charge."
+          : msg.includes("ENVOYER_CLAIMS_DISABLED")
+            ? "Les réclamations ne sont pas encore ouvertes."
+            : "Réclamation impossible pour le moment.",
+      );
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const doCancel = async (d: PackageDelivery) => {
@@ -176,6 +204,12 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
               </p>
             )}
 
+            {claimsEnabled && d.claim_state && d.claim_state !== "none" && (
+              <p className="text-[11.5px] text-muted-foreground">
+                {PACKAGE_CLAIM_STATE_LABEL[d.claim_state] ?? d.claim_state}
+              </p>
+            )}
+
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="flex-1 h-11" onClick={() => share(d, s)}>
                 <Share2 className="w-3.5 h-3.5" /> Partager
@@ -193,6 +227,19 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
                 </Button>
               )}
             </div>
+
+            {claimsEnabled && !!s?.pickup_verified_at &&
+              (!d.claim_state || d.claim_state === "none") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-11"
+                  disabled={busyId === d.id}
+                  onClick={() => void doClaim(d)}
+                >
+                  Ouvrir une réclamation
+                </Button>
+              )}
           </article>
         );
       })}

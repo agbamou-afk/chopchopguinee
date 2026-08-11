@@ -17,22 +17,29 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { formatGNF } from "@/lib/format";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEnvoyerEnabled } from "@/lib/flags/useFeatureFlag";
+import { useEnvoyerDeclaredValueEnabled, useEnvoyerEnabled } from "@/lib/flags/useFeatureFlag";
 import { LocationField, type PickedLocation } from "./LocationField";
 import {
   createPackageCheckout,
   getPackageDelivery,
+  getEnvoyerPolicy,
   listReceivingAccounts,
   requestPackageQuote,
+  uploadPackageEvidence,
   type ReceivingAccount,
 } from "@/lib/packages/api";
 import {
+  PACKAGE_ATTESTATION_STATEMENT,
   PACKAGE_CATEGORY_HINT,
   PACKAGE_CATEGORY_LABEL,
+  PACKAGE_DECLARED_VALUE_FALLBACK_MAX,
   PACKAGE_PROHIBITED,
+  PACKAGE_TENDER_HINT,
+  PACKAGE_TENDER_LABEL,
   type PackageCategory,
   type PackageCheckoutResult,
   type PackageQuote,
+  type PackageTender,
 } from "@/lib/packages/types";
 import {
   GUINEA_PHONE_INVALID_MESSAGE,
@@ -98,6 +105,12 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
   const [handling, setHandling] = useState("");
   const [acceptedRules, setAcceptedRules] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  // Slice 6 — declared value, attestation, evidence photos, tender.
+  const [declaredValue, setDeclaredValue] = useState("");
+  const [attested, setAttested] = useState(false);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [tender, setTender] = useState<PackageTender>("cash");
+  const [ceiling, setCeiling] = useState<number>(PACKAGE_DECLARED_VALUE_FALLBACK_MAX);
 
   const [quote, setQuote] = useState<PackageQuote | null>(null);
   const [quoting, setQuoting] = useState(false);
@@ -111,6 +124,19 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
       ? crypto.randomUUID()
       : `pkg-${Date.now()}-${Math.random().toString(16).slice(2)}`,
   );
+
+  const declaredEngine = useEnvoyerDeclaredValueEnabled();
+  const declaredValueGnf = Number(declaredValue.replace(/\D/g, "")) || 0;
+
+  // The ceiling is policy-owned: never hardcode it in a submitted value.
+  useEffect(() => {
+    if (!open || !declaredEngine) return;
+    let alive = true;
+    void getEnvoyerPolicy().then((p) => {
+      if (alive && p?.max_declared_value_gnf) setCeiling(Number(p.max_declared_value_gnf));
+    });
+    return () => { alive = false; };
+  }, [open, declaredEngine]);
 
   // Recoverable errors keep every entered value — we only reset on close.
   useEffect(() => {
@@ -174,6 +200,9 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
     setSubmitting(true);
     setError(null);
     try {
+      if (declaredEngine && photos.length > 0) {
+        await uploadPackageEvidence(quote.quote_id, photos);
+      }
       const res = await createPackageCheckout({
         quoteId: quote.quote_id,
         recipientName: recipientName.trim(),
@@ -181,6 +210,10 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
         description: description.trim() || null,
         instructions: [instructions.trim(), handling.trim()].filter(Boolean).join(" · ") || null,
         idempotencyKey,
+        declaredValueGnf: declaredEngine ? declaredValueGnf : null,
+        tender: declaredEngine ? tender : null,
+        valueAttested: declaredEngine ? attested : false,
+        attestationStatement: declaredEngine ? PACKAGE_ATTESTATION_STATEMENT : null,
       });
       setResult(res);
       setStep(5);
@@ -194,8 +227,17 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
 
   const canStep1 = !!pickup && !!destination;
   const canStep2 = recipientName.trim().length >= 2 && isValidGuineaLocal(extractGuineaLocal(recipientLocal));
-  const canStep3 = acceptedRules;
-  const canSubmit = !!quote && !quoteExpired && acceptedTerms && !submitting;
+  const declaredOk =
+    !declaredEngine ||
+    (declaredValueGnf > 0 && declaredValueGnf <= ceiling && attested);
+  const canStep3 = acceptedRules && declaredOk;
+  const canSubmit =
+    !!quote &&
+    !quoteExpired &&
+    acceptedTerms &&
+    !submitting &&
+    declaredOk &&
+    (!declaredEngine || photos.length > 0);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -414,6 +456,44 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
                   </span>
                 </label>
               </div>
+
+              {declaredEngine && (
+                <div className="rounded-xl border border-border p-3 space-y-2.5">
+                  <label htmlFor="pkg-value" className="text-[13px] font-semibold text-foreground">
+                    Valeur déclarée du contenu
+                  </label>
+                  <Input
+                    id="pkg-value"
+                    value={declaredValue}
+                    onChange={(e) => setDeclaredValue(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                    placeholder="Ex. 250000"
+                    inputMode="numeric"
+                    className="h-12"
+                    aria-describedby="pkg-value-help"
+                  />
+                  <p id="pkg-value-help" className="text-[11.5px] text-muted-foreground leading-snug">
+                    Valeur maximale acceptée : {formatGNF(ceiling)}. Au-delà, l’envoi est refusé —
+                    CHOPCHOP ne transporte pas d’objets de très grande valeur.
+                  </p>
+                  {declaredValueGnf > ceiling && (
+                    <p className="text-[12px] text-destructive">
+                      Valeur au-dessus du plafond autorisé.
+                    </p>
+                  )}
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={attested}
+                      onCheckedChange={(v) => setAttested(v === true)}
+                      className="mt-0.5"
+                      aria-label="Attestation de valeur"
+                    />
+                    <span className="text-[12.5px] text-foreground leading-snug">
+                      {PACKAGE_ATTESTATION_STATEMENT} Une fausse déclaration annule toute
+                      indemnisation.
+                    </span>
+                  </label>
+                </div>
+              )}
             </>
           )}
 
@@ -468,13 +548,68 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
                 </div>
               )}
 
-              <div className="rounded-xl border border-border p-3 space-y-1.5">
-                <p className="text-[13px] font-semibold text-foreground">Paiement</p>
-                <p className="text-[12.5px] text-muted-foreground leading-snug">
-                  Paiement Orange Money avant l’enlèvement. Aucun solde interne n’est utilisé, et
-                  aucun paiement en espèces n’est collecté à la remise.
-                </p>
-              </div>
+              {declaredEngine ? (
+                <>
+                  <div className="rounded-xl border border-border p-3 space-y-2">
+                    <p className="text-[13px] font-semibold text-foreground">
+                      Photos du colis (obligatoire)
+                    </p>
+                    <p className="text-[11.5px] text-muted-foreground leading-snug">
+                      Au moins une photo du contenu ou de l’emballage. Ces photos sont privées :
+                      seuls vous, le coursier assigné et l’équipe CHOPCHOP pouvez les consulter.
+                    </p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      aria-label="Photos du colis"
+                      onChange={(e) => setPhotos(Array.from(e.target.files ?? []).slice(0, 4))}
+                      className="block w-full text-[12.5px] file:mr-3 file:h-10 file:rounded-xl file:border-0 file:bg-primary file:px-3 file:text-primary-foreground"
+                    />
+                    <p className="text-[11.5px] text-muted-foreground">
+                      {photos.length > 0
+                        ? `${photos.length} photo(s) prête(s) à être envoyée(s).`
+                        : "Aucune photo sélectionnée."}
+                    </p>
+                  </div>
+
+                  <fieldset className="rounded-xl border border-border p-3 space-y-2">
+                    <legend className="text-[13px] font-semibold text-foreground px-1">
+                      Mode de paiement de la livraison
+                    </legend>
+                    {(["cash", "chop_pay"] as PackageTender[]).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setTender(t)}
+                        aria-pressed={tender === t}
+                        className={`w-full text-left rounded-xl border p-3 min-h-[56px] transition-colors ${
+                          tender === t ? "border-primary bg-primary/5" : "border-border active:bg-muted"
+                        }`}
+                      >
+                        <p className="text-[13px] font-semibold text-foreground">
+                          {PACKAGE_TENDER_LABEL[t]}
+                        </p>
+                        <p className="text-[11.5px] text-muted-foreground leading-snug">
+                          {PACKAGE_TENDER_HINT[t]}
+                        </p>
+                      </button>
+                    ))}
+                    <p className="text-[11.5px] text-muted-foreground leading-snug">
+                      Valeur déclarée : {formatGNF(declaredValueGnf)}. Les frais de service sont
+                      calculés sur la livraison uniquement, jamais sur la valeur déclarée.
+                    </p>
+                  </fieldset>
+                </>
+              ) : (
+                <div className="rounded-xl border border-border p-3 space-y-1.5">
+                  <p className="text-[13px] font-semibold text-foreground">Paiement</p>
+                  <p className="text-[12.5px] text-muted-foreground leading-snug">
+                    Paiement Orange Money avant l’enlèvement. Aucun solde interne n’est utilisé, et
+                    aucun paiement en espèces n’est collecté à la remise.
+                  </p>
+                </div>
+              )}
 
               <label className="flex items-start gap-2 cursor-pointer">
                 <Checkbox
