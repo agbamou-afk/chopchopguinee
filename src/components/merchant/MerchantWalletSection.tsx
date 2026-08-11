@@ -1,80 +1,181 @@
-import { useWallet } from "@/hooks/useWallet";
-import { Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, Clock, Info } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  Wallet as WalletIcon, Clock, Info, Loader2, Send, ShieldAlert, CheckCircle2, XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { formatGNF } from "@/lib/format";
+import {
+  useMerchantFinance, createMerchantSettlementRequest, type MerchantSettlementRequest,
+} from "@/lib/finance/readModels";
 
-const fmt = (n: number) => `${(n ?? 0).toLocaleString("fr-FR")} GNF`;
+const STATUS_COPY: Record<MerchantSettlementRequest["status"], { label: string; tone: string }> = {
+  requested: { label: "Demandé", tone: "bg-secondary/20 text-secondary-foreground border-secondary/40" },
+  pending_review: { label: "En vérification", tone: "bg-secondary/20 text-secondary-foreground border-secondary/40" },
+  rejected: { label: "Refusé", tone: "bg-destructive/10 text-destructive border-destructive/30" },
+  cancelled: { label: "Annulé", tone: "bg-muted text-muted-foreground border-border" },
+  settled: { label: "Réglé", tone: "bg-success/10 text-success border-success/30" },
+};
 
+/**
+ * Slice 7 — merchant ledger-truth surface.
+ *
+ * Every amount below is returned by `merchant_finance_overview` /
+ * `merchant_settlement_requests_list`. No client-side arithmetic.
+ * Settlement is REQUEST-ONLY: no Orange Money is sent, no merchant funds
+ * are debited, and nothing shows as "Réglé" without canonical evidence.
+ */
 export function MerchantWalletSection() {
-  // Bound to the MERCHANT wallet (party_type='merchant'), never the
-  // owner's personal client wallet. Until merchant sale settlement is
-  // wired (Phase 2+), this stays at 0 with an honest empty state.
-  const { wallet, balance, held, available, transactions, loading } = useWallet("merchant");
+  const { overview, requests, loading, refresh } = useMerchantFinance();
+  const [amount, setAmount] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const todayRevenue = transactions
-    .filter((t) => t.status === "completed" && t.to_wallet_id === wallet?.id && new Date(t.created_at) >= today)
-    .reduce((s, t) => s + (t.amount_gnf ?? 0), 0);
+  const eligible = overview?.eligible_settlement_gnf ?? 0;
+  const parsedAmount = useMemo(() => {
+    const n = Number((amount || "").replace(/\s/g, ""));
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  }, [amount]);
+
+  const submit = async () => {
+    if (parsedAmount <= 0) return;
+    setSubmitting(true);
+    const res = await createMerchantSettlementRequest({
+      amountGnf: parsedAmount,
+      idempotencyKey: `msr-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      note: "Demande de règlement marchand",
+    });
+    setSubmitting(false);
+    if (!res.ok) {
+      toast.error(
+        res.error.includes("AMOUNT_EXCEEDS_ELIGIBLE")
+          ? "Montant supérieur au montant éligible confirmé par le serveur."
+          : "Demande impossible pour le moment.",
+      );
+      return;
+    }
+    toast.success(res.duplicate ? "Demande déjà enregistrée." : "Demande de règlement enregistrée.");
+    setAmount("");
+    void refresh();
+  };
 
   return (
     <div className="space-y-3">
+      {/* Sales balance */}
       <div className="bg-card rounded-2xl border border-border/60 p-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl gradient-wallet flex items-center justify-center">
             <WalletIcon className="w-5 h-5 text-primary-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground">CHOP Wallet Marchand · Solde disponible</p>
-            <p className="text-xl font-extrabold text-foreground">{loading ? "…" : fmt(balance)}</p>
+            <p className="text-xs text-muted-foreground">Solde des ventes · CHOP Wallet marchand</p>
+            <p className="text-xl font-extrabold text-foreground tabular-nums">
+              {loading ? "…" : formatGNF(overview?.sales_balance_gnf ?? 0)}
+            </p>
+            <p className="text-[11px] text-muted-foreground tabular-nums">
+              Disponible {formatGNF(overview?.available_gnf ?? 0)} · Bloqué {formatGNF(overview?.held_gnf ?? 0)}
+            </p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          <div className="rounded-lg bg-muted/40 p-2 text-center">
-            <p className="text-[10px] text-muted-foreground">Disponible</p>
-            <p className="text-xs font-bold text-foreground">{fmt(available)}</p>
+
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <div className="rounded-lg bg-muted/40 p-2">
+            <p className="text-[10px] text-muted-foreground">À régler (en attente)</p>
+            <p className="text-xs font-bold text-foreground tabular-nums">
+              {formatGNF(overview?.pending_payable_gnf ?? 0)}
+            </p>
           </div>
-          <div className="rounded-lg bg-muted/40 p-2 text-center">
-            <p className="text-[10px] text-muted-foreground">En attente règlement</p>
-            <p className="text-xs font-bold text-foreground">{fmt(held)}</p>
+          <div className="rounded-lg bg-muted/40 p-2">
+            <p className="text-[10px] text-muted-foreground">Financé, non réglé</p>
+            <p className="text-xs font-bold text-foreground tabular-nums">
+              {formatGNF(overview?.funded_unsettled_gnf ?? 0)}
+            </p>
           </div>
-          <div className="rounded-lg bg-muted/40 p-2 text-center">
-            <p className="text-[10px] text-muted-foreground">Ventes aujourd'hui</p>
-            <p className="text-xs font-bold text-foreground">{fmt(todayRevenue)}</p>
+          <div className="rounded-lg bg-muted/40 p-2">
+            <p className="text-[10px] text-muted-foreground">Déjà réglé</p>
+            <p className="text-xs font-bold text-foreground tabular-nums">
+              {formatGNF(overview?.settled_total_gnf ?? 0)}
+            </p>
           </div>
-        </div>
-        <div className="flex gap-2 mt-3">
-          <Button size="sm" variant="outline" className="flex-1" disabled title="Disponible après la mise en place du règlement marchand">
-            <Clock className="w-3 h-3 mr-1" /> Retrait bientôt disponible
-          </Button>
+          <div className="rounded-lg bg-muted/40 p-2">
+            <p className="text-[10px] text-muted-foreground">Remboursé / annulé</p>
+            <p className="text-xs font-bold text-foreground tabular-nums">
+              {formatGNF(overview?.reversed_total_gnf ?? 0)}
+            </p>
+          </div>
         </div>
       </div>
 
+      {/* Settlement request — request only */}
       <div className="bg-card rounded-2xl border border-border/60 p-4">
-        <h3 className="font-bold text-foreground mb-2">Dernières transactions</h3>
-        {transactions.length === 0 ? (
+        <h3 className="font-bold text-foreground mb-1">Demande de règlement</h3>
+        <p className="text-[11px] text-muted-foreground">
+          Montant éligible confirmé par le serveur :{" "}
+          <span className="font-semibold text-foreground tabular-nums">{formatGNF(eligible)}</span>
+          {(overview?.open_request_gnf ?? 0) > 0 && (
+            <> · déjà demandé : <span className="tabular-nums">{formatGNF(overview!.open_request_gnf)}</span></>
+          )}
+        </p>
+
+        <div className="mt-3 flex gap-2">
+          <Input
+            inputMode="numeric"
+            placeholder="Montant en GNF"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))}
+            disabled={eligible <= 0 || submitting}
+          />
+          <Button onClick={submit} disabled={eligible <= 0 || parsedAmount <= 0 || submitting}>
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            <span className="ml-1">Demander</span>
+          </Button>
+        </div>
+
+        <div className="mt-3 rounded-xl bg-muted/40 border border-border/60 p-3 flex items-start gap-2">
+          <ShieldAlert className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+          <p className="text-[11px] text-muted-foreground">
+            Le versement externe Orange Money n'est pas encore activé. Une demande est
+            <span className="font-semibold text-foreground"> enregistrée pour vérification manuelle</span> :
+            aucun argent n'est envoyé et votre solde n'est pas débité tant qu'un règlement réel n'est pas prouvé.
+          </p>
+        </div>
+      </div>
+
+      {/* Settlement history */}
+      <div className="bg-card rounded-2xl border border-border/60 p-4">
+        <h3 className="font-bold text-foreground mb-2">Historique des règlements</h3>
+        {loading ? (
+          <p className="text-xs text-muted-foreground">Chargement…</p>
+        ) : requests.length === 0 ? (
           <div className="rounded-xl bg-muted/40 border border-border/60 p-3 flex items-start gap-2">
             <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
             <div className="text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground">Aucun paiement CHOP reçu pour l'instant.</p>
-              <p className="mt-0.5">Les ventes payées via CHOP seront affichées ici après validation.</p>
+              <p className="font-semibold text-foreground">Aucune demande de règlement.</p>
+              <p className="mt-0.5">Vos demandes et règlements confirmés apparaîtront ici.</p>
             </div>
           </div>
         ) : (
           <div className="space-y-2">
-            {transactions.slice(0, 8).map((t) => {
-              const incoming = t.to_wallet_id === wallet?.id;
-              const Icon = incoming ? ArrowDownLeft : ArrowUpRight;
+            {requests.map((r) => {
+              const copy = STATUS_COPY[r.status];
+              const Icon = r.status === "settled" ? CheckCircle2 : r.status === "rejected" ? XCircle : Clock;
               return (
-                <div key={t.id} className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${incoming ? "bg-emerald-500/15 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
+                <div key={r.id} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
                     <Icon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{t.description ?? t.type}</p>
-                    <p className="text-[11px] text-muted-foreground">{new Date(t.created_at).toLocaleString("fr-FR")}</p>
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {formatGNF(r.amount_gnf)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {new Date(r.created_at).toLocaleString("fr-FR")}
+                      {r.reject_reason ? ` · ${r.reject_reason}` : ""}
+                    </p>
                   </div>
-                  <p className={`text-sm font-bold ${incoming ? "text-emerald-600" : "text-foreground"}`}>
-                    {incoming ? "+" : "-"}{fmt(t.amount_gnf)}
-                  </p>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${copy.tone}`}>
+                    {copy.label}
+                  </span>
                 </div>
               );
             })}
