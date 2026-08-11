@@ -1,81 +1,106 @@
-# Slice 9 — Orange Money Inbound Reconciliation — QA Results
+# Slice 9 — Orange Money Inbound Reconciliation — QA Results (FINAL)
 
-Harness: `public._qa_s9_run()` (SECURITY DEFINER, self-rolling-back).
-Result: **72 / 72 PASS, 0 FAIL.**
+Harnesses: `_qa_s9_run()` + `_qa_s9f_run()` (exactness closeout) + `_qa_s9b_run()`
+(driver / receiving-account re-test with complete evidence). All SECURITY DEFINER,
+all self-rolling-back, all dropped after this record was written.
 
-All test rows (top-up requests, provider events, ledger journals, wallet
-balances, master wallet) are rolled back inside the harness; the closing
-G9–G12 assertions verify the database is left byte-identical.
+Result: **105 / 105 PASS, 0 FAIL.**
 
-## A. Customer inbound queue (16)
-| ID | Assertion | Result |
-| --- | --- | --- |
-| A1 | Pending request moves no balance | PASS |
-| A2 | Exact production event credits once | PASS (credited) |
-| A3 | Customer wallet +250 000 | PASS |
-| A4 | Driver wallet untouched | PASS |
-| A5 | Request marked `credited` | PASS |
-| A6 | Customer-visible stage = `credited` | PASS |
-| A7 | `matched_event_id` linked | PASS |
-| A8 | Auto-match replay is inert | PASS |
-| A9 | Exactly one top-up transaction per event | PASS |
-| A10 | Replay moves zero value | PASS |
-| A11 | Direct re-credit returns the same transaction | PASS |
-| A12 | Still one transaction after direct re-credit | PASS |
-| A13 | Ledger journal posted | PASS |
-| A14 | Journal is zero-sum | PASS |
-| A15 | Customer liability increased (`L_CUSTOMER_CHOPPAY`) | PASS |
-| A16 | Top-up is never platform revenue | PASS |
+Every fixture (top-up requests, provider events, ledger journals, wallet
+balances, master wallet) is rolled back inside the harness; closing assertions
+verify zero residue.
 
-## B. Driver inbound queue (6)
-| B1 | Driver request credited | PASS |
-| B2 | Driver wallet +300 000 | PASS |
-| B3 | Driver's client wallet untouched | PASS |
-| B4 | Routed to `L_DRIVER_UNRESTRICTED` | PASS |
-| B5 | Driver top-up never surfaces in customer queue | PASS |
-| B6 | Driver eligibility reflects real balance | PASS |
+## Frozen contract enforced
 
-## C. Mismatch handling — no silent credit (16)
-| C1–C3 | Amount mismatch → `needs_review`, zero credit, machine reason stored | PASS |
-| C4–C6 | Payer-phone mismatch → `needs_review`; forced credit denied | PASS |
-| C7–C8 | Receiving-account mismatch → `needs_review`; forced credit denied | PASS |
-| C9–C10 | Multiple candidates → no credit, zero value moved | PASS |
-| C11–C13 | Expired request never matched; forced credit denied (`topup_expired`); honest expired stage | PASS |
-| C14–C15 | Unmatched receipt parks as `awaiting_customer_code`, never rejected outright | PASS |
-| C16 | Unsuccessful provider status rejected | PASS |
+An automatic production credit requires **all** of:
+exact normalized provider reference, exact amount, canonical payer phone present
+and equal on **both** the provider event and the top-up request, and
+`receiving_account_id` present and equal on **both** sides, plus matching
+`environment` and a non-expired request. Anything missing or differing parks the
+request in `needs_review` with a machine reason — never a silent credit, and
+never a value silently borrowed from the customer side to patch missing provider
+evidence.
 
-## D. Global reference uniqueness (4)
-| D1 | Duplicate provider reference rejected at index level | PASS |
-| D2 | Credited event cannot serve a second customer | PASS |
-| D3 | Second customer wallet +0 | PASS |
-| D4 | Consumed event returns the original credit, never a second one | PASS |
+Machine reasons: `payer_phone_missing`, `payer_phone_mismatch`,
+`receiving_account_missing`, `receiving_account_mismatch`, `amount_mismatch`,
+`environment_mismatch`, `topup_expired`, `missing_provider_reference`,
+`multiple_candidates`, `awaiting_customer_code`.
 
-## E. Sandbox / production isolation (6)
-| E1–E2 | Sandbox event cannot match a production request; credits nothing | PASS |
-| E3 | Forced sandbox → production credit denied (`environment_mismatch`) | PASS |
-| E4 | Production event cannot consume a sandbox request | PASS |
-| E5 | Forced production → sandbox credit denied (`environment_mismatch`) | PASS |
-| E6 | Provider-reference uniqueness is global | PASS |
+## A. Customer inbound queue (16) — A1–A16 PASS
+Pending moves nothing; exact production event credits once; customer wallet
++250 000; driver wallet untouched; request `credited`; honest customer stage;
+`matched_event_id` linked; replay inert; exactly one transaction; direct
+re-credit returns the same transaction; journal posted, zero-sum, customer
+liability increased, never platform revenue.
 
-## F. Privilege posture (12)
-`anon` and `authenticated` cannot execute `om_auto_match`,
-`wallet_topup_om_credit`, `om_pending_topups_for_event`,
-`admin_record_om_receipt`, `admin_retry_om_credit`,
-`wallet_topup_om_create`, `submit_customer_om_code`,
-`list_my_topup_requests`, `driver_topup_history`. `topup_requests` has no
-`anon` RLS policy. All PASS.
+## B. Driver inbound queue (6+3) — PASS
+Driver request with complete exact evidence credits; driver wallet +300 000;
+driver's client wallet untouched; routed to `L_DRIVER_UNRESTRICTED`; never
+surfaces in the customer queue; driver eligibility reflects real balance.
+Master unchanged, zero QA rows/events remaining.
 
-## G. Structural invariants (12)
-Unique indexes present (`wallet_transactions_om_event_uidx`,
-`ppe_credited_topup_uidx`, `topup_requests_credited_provider_tx_uidx`),
-all top-up journals zero-sum, no fuzzy `ILIKE` matching left in the
-matcher, matcher requires a provider reference, `om_topup_enabled` ON,
-all gated rails still OFF, master wallet back to baseline, no QA residue.
+## C. Mismatch handling — no silent credit (PASS)
+Amount mismatch, payer-phone mismatch, receiving-account mismatch (C7/C7b/C8),
+multiple candidates, expired request, unmatched receipt parked as
+`awaiting_customer_code`, unsuccessful provider status rejected. In every case
+zero value moves and forced admin credit is refused.
 
-## Defects found and fixed during this slice
-1. `om_pending_topups_for_event` exposed customer PII to any authenticated
-   user — now role-gated to finance/ops staff.
-2. `topup_requests` had no environment marker — sandbox and production
-   receipts could cross-credit. `environment` added and enforced end to end.
-3. `om_auto_match` fell back to fuzzy payload containment and phone-only
-   matching — removed; exact provider reference is now mandatory.
+## D. Global reference uniqueness (4) — PASS
+Duplicate provider reference rejected at index level; a credited event cannot
+serve a second customer; second wallet +0; consumed event returns the original
+credit only.
+
+## E. Sandbox / production isolation (6) — PASS
+No cross-environment match; forced credit in either direction denied with
+`environment_mismatch`; reference uniqueness is global.
+
+## H. Exact-match completeness closeout (29) — PASS
+| ID | Assertion |
+| --- | --- |
+| H1–H2 | Complete evidence (ref+amount+phone+account) credits exactly once |
+| H3/H3b/H3c | Missing **event** payer phone → `payer_phone_missing`, zero credit, forced credit refused |
+| H4/H4b | Missing **request** payer phone → `payer_phone_missing`, forced credit refused |
+| H5/H5b | Payer phone mismatch → `payer_phone_mismatch`, forced credit refused |
+| H6/H6b | Missing **event** receiving account → `receiving_account_missing`, forced credit refused |
+| H7/H7b | Missing **request** receiving account → `receiving_account_missing`, forced credit refused |
+| H8/H8b | Receiving account mismatch → `receiving_account_mismatch`, forced credit refused |
+| H9–H10 | Only the complete-evidence case moved value; exactly one top-up transaction |
+| H11–H13 | Matcher and credit primitive both carry the presence guards |
+| H14 | `admin_record_om_receipt` records evidence but routes credit through `om_auto_match` — it can record incomplete evidence, it can never auto-credit it |
+| H15–H18 | Privilege matrix (below) |
+| H19–H22 | Master unchanged, zero residue |
+
+## Privilege matrix (truthful)
+| Surface | anon | authenticated | Notes |
+| --- | --- | --- | --- |
+| Raw primitives: `om_auto_match`, `wallet_topup_om_credit` | denied | denied | service_role / SECURITY DEFINER callers only |
+| Participant wrappers: `submit_customer_om_code`, `list_my_topup_requests`, `driver_topup_history`, `wallet_topup_om_create` | denied | EXECUTE granted | bodies are self-scoped to `auth.uid()` |
+| Admin wrappers: `admin_record_om_receipt`, `admin_retry_om_credit`, `om_pending_topups_for_event` | denied | EXECUTE granted | bodies enforce `can_manage_wallet` / finance-ops role |
+| `topup_requests` RLS | no anon policy | self-scoped | — |
+
+## Posture after the run
+- Master wallet: **-100 435 GNF**, held **0** — untouched, never manually reset.
+- Feature flags unchanged: only `om_topup_enabled` ON; all other Chop Pay / OM
+  checkout / cashout / settlement rails OFF.
+- No outbound money, payout or settlement executed.
+- `_qa_s9%` objects: **0** — harnesses and `_qa_s9_results` dropped after this
+  record was written.
+
+## Defects fixed in this closeout
+1. P1 — `om_auto_match` only rejected payer phone / receiving account when both
+   sides carried a value, so an event with either field NULL could auto-credit on
+   reference + amount alone. Presence is now mandatory on both sides.
+2. `wallet_topup_om_credit` now independently re-validates reference, amount,
+   phone presence/equality, receiving-account presence/equality, environment,
+   target party and expiry, so no admin wrapper can bypass the contract.
+3. QA privilege section previously claimed authenticated could not execute
+   legitimate participant/admin wrappers. Rewritten above to the real, correct
+   three-tier shape; no legitimate access was revoked to make the old text true.
+
+## YELLOW register
+- **Live provider receipt test — YELLOW.** No real observed Orange Money provider
+  receipt/reference from an actual transaction was used. Production-format
+  exact-reference matching and idempotency PASS against synthetic
+  production-shaped references only. "One real provider reference" is **not**
+  literally proven.
+- PWA/service-worker build warning remains reported honestly in the release docs.
