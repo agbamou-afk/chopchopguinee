@@ -7876,6 +7876,9 @@ export type Database = {
       }
       _qa_s6_run1: { Args: never; Returns: Json }
       _qa_s6_run2: { Args: never; Returns: Json }
+      _qa_s6_run3: { Args: never; Returns: Json }
+      _qa_s6_run4: { Args: never; Returns: Json }
+      _qa_s6_run5: { Args: never; Returns: Json }
       _qa_s6_setup: {
         Args: { p_drv: string; p_god: string; p_send: string }
         Returns: undefined
