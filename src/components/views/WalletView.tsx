@@ -40,12 +40,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { ChopPayLauncher } from "@/components/pay/ChopPayLauncher";
 import { TransactionReceiptSheet } from "@/components/wallet/TransactionReceiptSheet";
-import { groupTransactions, txLabel, txStatusCopy } from "@/lib/wallet/labels";
+import { groupTransactions, txStatusCopy } from "@/lib/wallet/labels";
 import { SendMoneySheet } from "@/components/wallet/SendMoneySheet";
 import { Send } from "lucide-react";
 import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
 import { WalletArchivedPanel } from "@/components/wallet/WalletArchivedPanel";
-import { useCustomerFinanceOverview } from "@/lib/finance/readModels";
+import {
+  useCustomerFinanceOverview,
+  useCustomerFinanceHistory,
+  type CustomerFinanceEvent,
+} from "@/lib/finance/readModels";
 
 type ActionId = "pay" | "receive" | "scan" | "add" | "send";
 
@@ -95,16 +99,19 @@ export function WalletView() {
   // Slice 7 — every KPI below comes from the server read model. The client
   // never derives a balance, an available amount or a spend aggregate.
   const { overview, refresh: refreshOverview } = useCustomerFinanceOverview();
+  // Slice 7 — displayed history is the server-authored event feed. Raw wallet
+  // transactions stay only for non-financial decoration (merchant names).
+  const { events, refresh: refreshHistory } = useCustomerFinanceHistory(50);
   const [qrOpen, setQrOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterRange, setFilterRange] = useState<"all" | "7d" | "30d">("all");
-  const [receiptTx, setReceiptTx] = useState<WalletTransaction | null>(null);
+  const [receiptTxId, setReceiptTxId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (userId) Analytics.track("wallet.history.viewed", { metadata: { count: transactions.length } });
+    if (userId) Analytics.track("wallet.history.viewed", { metadata: { count: events.length } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
@@ -124,17 +131,19 @@ export function WalletView() {
   // (`useSyncExternalStore`), so flipping `wallet_public_enabled` — including a
   // rollback — changes the hook count between renders and crashes this view
   // with "Rendered more hooks than during the previous render".
-  const filteredTransactions = useMemo(() => {
+  const historyItems = useMemo(() => {
     const now = Date.now();
-    return transactions.filter((tx) => {
-      if (filterType !== "all" && tx.type !== filterType) return false;
-      if (filterRange !== "all") {
-        const cutoff = filterRange === "7d" ? 7 : 30;
-        if (now - new Date(tx.created_at).getTime() > cutoff * 86400000) return false;
-      }
-      return true;
-    });
-  }, [transactions, filterType, filterRange]);
+    return events
+      .filter((ev) => {
+        if (filterType !== "all" && ev.kind !== filterType) return false;
+        if (filterRange !== "all") {
+          const cutoff = filterRange === "7d" ? 7 : 30;
+          if (now - new Date(ev.occurred_at).getTime() > cutoff * 86400000) return false;
+        }
+        return true;
+      })
+      .map((ev) => ({ ...ev, created_at: ev.occurred_at }));
+  }, [events, filterType, filterRange]);
 
   // Lightweight "marchands récents" strip — derived from ChopPay merchant
   // payments in history. Tapping prompts a fresh scan (calm retention loop,
