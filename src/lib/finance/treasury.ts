@@ -133,9 +133,9 @@ export function useTreasury() {
     setLoading(true);
     setError(null);
     const [ov, ex] = await Promise.all([fetchTreasuryOverview(), fetchTreasuryExceptions()]);
-    if (ov.ok) setOverview(ov.data);
+    if (ov.ok === true) setOverview(ov.data);
     else { setOverview(null); setError(ov.error); }
-    if (ex.ok) setExceptions(ex.data);
+    if (ex.ok === true) setExceptions(ex.data);
     else { setExceptions([]); setError((prev) => prev ?? ex.error); }
     setLoading(false);
   }, []);
