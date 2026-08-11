@@ -14,30 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _qa_s11_results: {
-        Row: {
-          detail: string | null
-          id: number
-          name: string
-          ok: boolean
-          run_at: string
-        }
-        Insert: {
-          detail?: string | null
-          id?: number
-          name: string
-          ok: boolean
-          run_at?: string
-        }
-        Update: {
-          detail?: string | null
-          id?: number
-          name?: string
-          ok?: boolean
-          run_at?: string
-        }
-        Relationships: []
-      }
       _qa_s5_results: {
         Row: {
           created_at: string | null
@@ -8369,8 +8345,6 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
-      _qa_s11_fixture_store: { Args: { p_owner: string }; Returns: string }
-      _qa_s11_run: { Args: never; Returns: Json }
       _qa_s5_ok: {
         Args: { p_detail?: string; p_label: string; p_ok: boolean }
         Returns: Json
