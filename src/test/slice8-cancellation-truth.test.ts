@@ -32,7 +32,7 @@ describe("Slice 8 — cancellation UI truth guards", () => {
 
   it("the confirmation dialog renders server quote fields verbatim", () => {
     expect(dialog).toContain("useCancellationQuote");
-    expect(dialog).toContain("quote.fee_gnf");
+    expect(dialog).toContain("quote?.fee_gnf");
     expect(dialog).toContain("quote.basis_gnf");
     expect(dialog).toContain("quote.refundable_gnf");
     for (const re of NO_FEE_MATH) expect(dialog).not.toMatch(re);
