@@ -178,7 +178,7 @@ export function WalletView() {
               </SheetDescription>
             </SheetHeader>
             <div className="mt-4">
-              <TopUpOrangeMoney onClose={() => { setTopUpOpen(false); refresh(); }} />
+              <TopUpOrangeMoney onClose={() => { setTopUpOpen(false); refresh(); void refreshOverview(); }} />
             </div>
           </SheetContent>
         </Sheet>
@@ -575,7 +575,7 @@ export function WalletView() {
         open={sendOpen}
         onOpenChange={setSendOpen}
         available={wallet ? wallet.balance_gnf - wallet.held_gnf : 0}
-        onSent={() => refresh()}
+        onSent={() => { refresh(); void refreshOverview(); }}
       />
     </div>
   );
