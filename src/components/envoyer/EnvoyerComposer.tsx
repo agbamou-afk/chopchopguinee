@@ -456,6 +456,44 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
                   </span>
                 </label>
               </div>
+
+              {declaredEngine && (
+                <div className="rounded-xl border border-border p-3 space-y-2.5">
+                  <label htmlFor="pkg-value" className="text-[13px] font-semibold text-foreground">
+                    Valeur déclarée du contenu
+                  </label>
+                  <Input
+                    id="pkg-value"
+                    value={declaredValue}
+                    onChange={(e) => setDeclaredValue(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                    placeholder="Ex. 250000"
+                    inputMode="numeric"
+                    className="h-12"
+                    aria-describedby="pkg-value-help"
+                  />
+                  <p id="pkg-value-help" className="text-[11.5px] text-muted-foreground leading-snug">
+                    Valeur maximale acceptée : {formatGNF(ceiling)}. Au-delà, l’envoi est refusé —
+                    CHOPCHOP ne transporte pas d’objets de très grande valeur.
+                  </p>
+                  {declaredValueGnf > ceiling && (
+                    <p className="text-[12px] text-destructive">
+                      Valeur au-dessus du plafond autorisé.
+                    </p>
+                  )}
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={attested}
+                      onCheckedChange={(v) => setAttested(v === true)}
+                      className="mt-0.5"
+                      aria-label="Attestation de valeur"
+                    />
+                    <span className="text-[12.5px] text-foreground leading-snug">
+                      {PACKAGE_ATTESTATION_STATEMENT} Une fausse déclaration annule toute
+                      indemnisation.
+                    </span>
+                  </label>
+                </div>
+              )}
             </>
           )}
 
