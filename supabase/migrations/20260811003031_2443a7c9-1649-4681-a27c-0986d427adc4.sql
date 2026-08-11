@@ -1,0 +1,1 @@
+INSERT INTO public._qa_s6_results(part, report) SELECT 1, public._qa_s6_run1();
