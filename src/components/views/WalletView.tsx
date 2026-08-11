@@ -248,6 +248,8 @@ export function WalletView() {
         subtitle={profile?.phone ?? "Vos paiements en GNF"}
       />
 
+      <CancellationDebtPanel />
+
       <div className="px-4 mt-4">
         <WalletCard
           balance={available}
