@@ -53,6 +53,27 @@ export type Database = {
         }
         Relationships: []
       }
+      _qa_s7_results: {
+        Row: {
+          created_at: string
+          id: number
+          part: number
+          result: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          part: number
+          result: Json
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          part?: number
+          result?: Json
+        }
+        Relationships: []
+      }
       account_bans: {
         Row: {
           banned_at: string
@@ -7954,6 +7975,11 @@ export type Database = {
         Returns: string
       }
       _qa_s6_t2: { Args: { p_pkg: string }; Returns: number }
+      _qa_s7_run1: { Args: never; Returns: Json }
+      _qa_s7_run2: { Args: never; Returns: Json }
+      _qa_s7_run3: { Args: never; Returns: Json }
+      _qa_s7_run4: { Args: never; Returns: Json }
+      _qa_s7_user: { Args: { p_id: string; p_tag: string }; Returns: undefined }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
