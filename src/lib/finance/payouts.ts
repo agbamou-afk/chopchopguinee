@@ -26,12 +26,16 @@ export type PayoutEvidence = {
   provider_status: string | null;
   environment: string | null;
   transferred_at: string | null;
+  evidence_source?: string | null;
+  evidence_kind?: string | null;
+  provider_verified?: boolean;
 };
 
 export type PayoutQueueItem = {
   payout_order_id: string;
   status: "reserved" | "needs_review" | "mismatch" | "rejected" | "released" | "settled";
   party_type: string;
+  source_kind: string | null;
   merchant_store_id: string | null;
   store_name: string | null;
   destination_msisdn: string;
@@ -42,6 +46,7 @@ export type PayoutQueueItem = {
   fee_borne_by: "recipient" | "platform";
   merchant_liability_debit_gnf: number;
   recipient_net_gnf: number;
+  expected_provider_transfer_gnf: number;
   reservation_gnf: number;
   settled_gnf: number;
   request_id: string | null;
