@@ -9,6 +9,7 @@ Every part builds its own fixtures inside one transaction and rolls the whole bl
 | 2 | Ride / Bonbonna (Stage 1) | PASS 32/32 |
 | 3 | Repas / Marché cash + Chop Pay orders (Stages 2–4) | PASS 54/54 |
 | 4 | Envoyer declared value, custody, claims, sandbox isolation | **PASS 98/98** |
+| 5 | Orange Money inbound reconciliation | **PASS 115/115** |
 
 ## Part 4 — closeout coverage
 
