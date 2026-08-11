@@ -14,24 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _qa_patch_buffer: {
-        Row: {
-          body: string
-          created_at: string
-          id: number
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id: number
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: number
-        }
-        Relationships: []
-      }
       _qa_s13_results: {
         Row: {
           created_at: string
