@@ -17,22 +17,29 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { formatGNF } from "@/lib/format";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEnvoyerEnabled } from "@/lib/flags/useFeatureFlag";
+import { useEnvoyerDeclaredValueEnabled, useEnvoyerEnabled } from "@/lib/flags/useFeatureFlag";
 import { LocationField, type PickedLocation } from "./LocationField";
 import {
   createPackageCheckout,
   getPackageDelivery,
+  getEnvoyerPolicy,
   listReceivingAccounts,
   requestPackageQuote,
+  uploadPackageEvidence,
   type ReceivingAccount,
 } from "@/lib/packages/api";
 import {
+  PACKAGE_ATTESTATION_STATEMENT,
   PACKAGE_CATEGORY_HINT,
   PACKAGE_CATEGORY_LABEL,
+  PACKAGE_DECLARED_VALUE_FALLBACK_MAX,
   PACKAGE_PROHIBITED,
+  PACKAGE_TENDER_HINT,
+  PACKAGE_TENDER_LABEL,
   type PackageCategory,
   type PackageCheckoutResult,
   type PackageQuote,
+  type PackageTender,
 } from "@/lib/packages/types";
 import {
   GUINEA_PHONE_INVALID_MESSAGE,
