@@ -68,3 +68,43 @@ A1–A15 customer exact-match credit (liability, not revenue; zero-sum journal; 
 
 ### YELLOW register
 - **YELLOW (not convertible to PASS): no actually observed live Orange Money receipt was used.** All Part 5 evidence is production-format *synthetic* receipt proof only. Live-provider receipt verification remains outstanding.
+
+## Part 6 — Merchant Settlement + Manual Orange Money Payout — **PASS 87/87**
+
+Harness: `public._qa_s13_run6()` (service_role only, self-rolling-back), results in `_qa_s13_results(part=6)`.
+Final rerun after fixture corrections: **87 / 87 PASS, 0 failures.**
+
+- **A (reservation)** — funded liability drives eligibility; one reservation per request; principal/fee/expected
+  transfer frozen at reservation; over-reservation and cross-store requests refused; reserving moves no money.
+- **B (manual OM operation)** — `finance_confirm_manual_om_payout` refuses with Stage 5 OFF, refuses ordinary
+  users, the merchant itself and unauthenticated callers; refuses a blank reference, a missing attestation and an
+  impossible transfer timestamp — each with zero evidence and zero movement. The exact confirmation settles once
+  through the canonical engine; evidence facts (amount, fee, recipient, provider, environment) are server-derived
+  from the frozen order, stored as `finance_manual_om` / `manual_operator_attested` with `provider_verified=false`
+  and a traceable attesting operator. Payable, wallet and allocation each move exactly the frozen principal, and
+  the settlement journal balances to zero against provider clearing.
+- **C (mismatch / uniqueness / replay)** — incomplete, wrong-amount, wrong-recipient, wrong-environment,
+  wrong-provider and unsuccessful-status evidence are all quarantined at 0 GNF; a provider reference already
+  consumed anywhere is globally refused; replaying the manual confirmation returns `already_settled`, moves 0 and
+  creates no second evidence row; `_payout_settle_internal` independently refuses mismatched evidence.
+- **D (rejection / scheduler)** — finance rejection releases the reservation exactly once and never touches the
+  payable; the configured daily scheduler queues one settlement per store per period, is idempotent within a
+  period, queues the next period, and never debits.
+- **E (fees)** — recipient-borne: 100000 principal / 5000 fee / 95000 transferred / 100000 debited, no platform
+  fee expense. Platform-borne: 100000 principal / 5000 fee / 100000 transferred / 100000 debited, with the 5000
+  booked once to `E_PROVIDER_FEE`. `net_gnf` is the amount that reaches the recipient — never fee-deducted twice.
+- **F (stage isolation)** — Stage 5 enablement leaves Stage 6 and Stage 7 hard-blocked; driver payout request,
+  legacy hold and legacy `driver_cashout_mark_paid` (even as a finance operator) all refuse; no driver money
+  moves; P2P refuses; no umbrella Chop Pay flag is opened.
+- **G (security)** — anon cannot execute any payout/settlement function; internal primitives stay service-role
+  only; every payout function pins a fixed `search_path`; participants cannot write payout orders, evidence,
+  allocations or payables directly; the manual confirmation has no null-caller shortcut.
+- **H / Z (posture)** — master wallet **-100435 GNF / held 0** unchanged, global posting sum **0**, zero
+  imbalanced journals, feature flags byte-identical, Stage 5/6/7 OFF and `om_topup_enabled` ON in production,
+  and no fixture residue of any kind.
+
+### Production defects found and fixed in Part 6
+1. `payout_provider_evidence.net_gnf` double-subtracted the provider fee; it now truthfully equals the amount
+   that reaches the recipient.
+2. Added `finance_confirm_manual_om_payout` as the only manual Stage 5 rail: staff-only, Stage-5 gated,
+   attestation-required, with every financial fact derived server-side from the frozen payout order.
