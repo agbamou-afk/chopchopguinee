@@ -548,13 +548,68 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
                 </div>
               )}
 
-              <div className="rounded-xl border border-border p-3 space-y-1.5">
-                <p className="text-[13px] font-semibold text-foreground">Paiement</p>
-                <p className="text-[12.5px] text-muted-foreground leading-snug">
-                  Paiement Orange Money avant l’enlèvement. Aucun solde interne n’est utilisé, et
-                  aucun paiement en espèces n’est collecté à la remise.
-                </p>
-              </div>
+              {declaredEngine ? (
+                <>
+                  <div className="rounded-xl border border-border p-3 space-y-2">
+                    <p className="text-[13px] font-semibold text-foreground">
+                      Photos du colis (obligatoire)
+                    </p>
+                    <p className="text-[11.5px] text-muted-foreground leading-snug">
+                      Au moins une photo du contenu ou de l’emballage. Ces photos sont privées :
+                      seuls vous, le coursier assigné et l’équipe CHOPCHOP pouvez les consulter.
+                    </p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      aria-label="Photos du colis"
+                      onChange={(e) => setPhotos(Array.from(e.target.files ?? []).slice(0, 4))}
+                      className="block w-full text-[12.5px] file:mr-3 file:h-10 file:rounded-xl file:border-0 file:bg-primary file:px-3 file:text-primary-foreground"
+                    />
+                    <p className="text-[11.5px] text-muted-foreground">
+                      {photos.length > 0
+                        ? `${photos.length} photo(s) prête(s) à être envoyée(s).`
+                        : "Aucune photo sélectionnée."}
+                    </p>
+                  </div>
+
+                  <fieldset className="rounded-xl border border-border p-3 space-y-2">
+                    <legend className="text-[13px] font-semibold text-foreground px-1">
+                      Mode de paiement de la livraison
+                    </legend>
+                    {(["cash", "chop_pay"] as PackageTender[]).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setTender(t)}
+                        aria-pressed={tender === t}
+                        className={`w-full text-left rounded-xl border p-3 min-h-[56px] transition-colors ${
+                          tender === t ? "border-primary bg-primary/5" : "border-border active:bg-muted"
+                        }`}
+                      >
+                        <p className="text-[13px] font-semibold text-foreground">
+                          {PACKAGE_TENDER_LABEL[t]}
+                        </p>
+                        <p className="text-[11.5px] text-muted-foreground leading-snug">
+                          {PACKAGE_TENDER_HINT[t]}
+                        </p>
+                      </button>
+                    ))}
+                    <p className="text-[11.5px] text-muted-foreground leading-snug">
+                      Valeur déclarée : {formatGNF(declaredValueGnf)}. Les frais de service sont
+                      calculés sur la livraison uniquement, jamais sur la valeur déclarée.
+                    </p>
+                  </fieldset>
+                </>
+              ) : (
+                <div className="rounded-xl border border-border p-3 space-y-1.5">
+                  <p className="text-[13px] font-semibold text-foreground">Paiement</p>
+                  <p className="text-[12.5px] text-muted-foreground leading-snug">
+                    Paiement Orange Money avant l’enlèvement. Aucun solde interne n’est utilisé, et
+                    aucun paiement en espèces n’est collecté à la remise.
+                  </p>
+                </div>
+              )}
 
               <label className="flex items-start gap-2 cursor-pointer">
                 <Checkbox
