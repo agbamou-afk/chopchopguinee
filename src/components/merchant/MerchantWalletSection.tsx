@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Wallet as WalletIcon, Clock, Info, Loader2, Send, ShieldAlert, CheckCircle2, XCircle,
+  Receipt as ReceiptIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,9 @@ import { formatGNF } from "@/lib/format";
 import {
   useMerchantFinance, createMerchantSettlementRequest, type MerchantSettlementRequest,
 } from "@/lib/finance/readModels";
+import {
+  fetchMerchantSettlementReceipt, type MerchantSettlementReceipt,
+} from "@/lib/finance/payouts";
 
 const STATUS_COPY: Record<MerchantSettlementRequest["status"], { label: string; tone: string }> = {
   requested: { label: "Demandé", tone: "bg-secondary/20 text-secondary-foreground border-secondary/40" },
@@ -30,6 +34,8 @@ export function MerchantWalletSection() {
   const { overview, requests, loading, refresh } = useMerchantFinance();
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [receipt, setReceipt] = useState<MerchantSettlementReceipt | null>(null);
+  const [receiptFor, setReceiptFor] = useState<string | null>(null);
 
   const eligible = overview?.eligible_settlement_gnf ?? 0;
   const parsedAmount = useMemo(() => {
@@ -58,6 +64,11 @@ export function MerchantWalletSection() {
     toast.success(res.duplicate ? "Demande déjà enregistrée." : "Demande de règlement enregistrée.");
     setAmount("");
     void refresh();
+  };
+
+  const openReceipt = async (requestId: string) => {
+    setReceiptFor(requestId);
+    setReceipt(await fetchMerchantSettlementReceipt(requestId));
   };
 
   return (
@@ -104,6 +115,12 @@ export function MerchantWalletSection() {
               {formatGNF(overview?.reversed_total_gnf ?? 0)}
             </p>
           </div>
+          <div className="rounded-lg bg-muted/40 p-2 col-span-2">
+            <p className="text-[10px] text-muted-foreground">Réservé pour règlement (non débité)</p>
+            <p className="text-xs font-bold text-foreground tabular-nums">
+              {formatGNF(overview?.reserved_for_settlement_gnf ?? 0)}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -137,7 +154,8 @@ export function MerchantWalletSection() {
           <p className="text-[11px] text-muted-foreground">
             Le versement externe Orange Money n'est pas encore activé. Une demande est
             <span className="font-semibold text-foreground"> enregistrée pour vérification manuelle</span> :
-            aucun argent n'est envoyé et votre solde n'est pas débité tant qu'un règlement réel n'est pas prouvé.
+            le montant est réservé, aucun argent n'est envoyé et votre solde n'est débité que
+            lorsqu'un virement sortant réel est prouvé et réconcilié.
           </p>
         </div>
       </div>
@@ -177,9 +195,29 @@ export function MerchantWalletSection() {
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${copy.tone}`}>
                     {copy.label}
                   </span>
+                  <Button size="sm" variant="ghost" onClick={() => void openReceipt(r.id)}>
+                    <ReceiptIcon className="w-4 h-4" />
+                  </Button>
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {receiptFor && (
+          <div className="mt-3 rounded-xl bg-muted/40 border border-border/60 p-3 text-[11px] text-muted-foreground">
+            {receipt?.receipt_available ? (
+              <div className="space-y-0.5">
+                <p className="font-semibold text-foreground">Reçu de règlement</p>
+                <p>Montant réglé : <span className="tabular-nums">{formatGNF(receipt.merchant_liability_debit_gnf)}</span></p>
+                <p>Reçu par vous : <span className="tabular-nums">{formatGNF(receipt.recipient_net_gnf)}</span> ·
+                  frais {formatGNF(receipt.provider_fee_gnf)} ({receipt.fee_borne_by === "platform" ? "plateforme" : "bénéficiaire"})</p>
+                <p>Référence {receipt.provider} : <span className="font-mono">{receipt.provider_reference}</span></p>
+                <p>Vers {receipt.destination_msisdn} · {new Date(receipt.settled_at).toLocaleString("fr-FR")}</p>
+              </div>
+            ) : (
+              <p>{receipt?.message ?? "Aucun règlement externe prouvé pour cette demande."}</p>
+            )}
           </div>
         )}
       </div>
