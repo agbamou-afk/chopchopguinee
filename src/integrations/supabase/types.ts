@@ -7870,6 +7870,7 @@ export type Database = {
       _qa_s5_run3: { Args: never; Returns: Json }
       _qa_s5_run4: { Args: never; Returns: Json }
       _qa_s6_g4: { Args: { p_drv: string }; Returns: boolean }
+      _qa_s6_l4: { Args: never; Returns: string }
       _qa_s6_quote: {
         Args: { p_amount?: number; p_user: string }
         Returns: string
@@ -7892,6 +7893,7 @@ export type Database = {
         }
         Returns: string
       }
+      _qa_s6_t2: { Args: { p_pkg: string }; Returns: number }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
@@ -11406,41 +11408,25 @@ export type Database = {
         Args: { p_mission_id: string }
         Returns: Json
       }
-      package_delivery_create_checkout:
-        | {
-            Args: {
-              p_description?: string
-              p_idempotency_key?: string
-              p_instructions?: string
-              p_provider?: string
-              p_quote_id: string
-              p_recipient_name: string
-              p_recipient_phone: string
-              p_sandbox?: boolean
-              p_sender_phone?: string
-              p_test_run_id?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_attestation_statement?: string
-              p_declared_value_gnf?: number
-              p_description?: string
-              p_idempotency_key?: string
-              p_instructions?: string
-              p_provider?: string
-              p_quote_id: string
-              p_recipient_name: string
-              p_recipient_phone: string
-              p_sandbox?: boolean
-              p_sender_phone?: string
-              p_tender?: string
-              p_test_run_id?: string
-              p_value_attested?: boolean
-            }
-            Returns: Json
-          }
+      package_delivery_create_checkout: {
+        Args: {
+          p_attestation_statement?: string
+          p_declared_value_gnf?: number
+          p_description?: string
+          p_idempotency_key?: string
+          p_instructions?: string
+          p_provider?: string
+          p_quote_id: string
+          p_recipient_name: string
+          p_recipient_phone: string
+          p_sandbox?: boolean
+          p_sender_phone?: string
+          p_tender?: string
+          p_test_run_id?: string
+          p_value_attested?: boolean
+        }
+        Returns: Json
+      }
       package_delivery_finalize_from_intent: {
         Args: { p_intent_id: string }
         Returns: Json
