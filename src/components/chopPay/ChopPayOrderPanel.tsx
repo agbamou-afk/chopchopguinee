@@ -53,6 +53,7 @@ export function ChopPayOrderPanel({
   const [busy, setBusy] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const reload = useCallback(async () => {
     const r = await getChopPayRuntime(module, sourceId);
