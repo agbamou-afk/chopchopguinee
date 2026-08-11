@@ -213,7 +213,7 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
                   size="sm"
                   className="flex-1 h-11"
                   disabled={busyId === d.id}
-                  onClick={() => void doCancel(d)}
+                  onClick={() => setCancelTarget(d)}
                 >
                   {busyId === d.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                   {canSelfCancel ? "Annuler" : "Signaler un problème"}
