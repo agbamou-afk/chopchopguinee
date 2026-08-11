@@ -7111,13 +7111,16 @@ export type Database = {
           customer_om_code_normalized: string | null
           customer_om_code_raw: string | null
           customer_om_code_submitted_at: string | null
+          environment: string
           expires_at: string
           id: string
+          matched_event_id: string | null
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
           receiving_account_id: string | null
           reference: string
+          review_reason: string | null
           status: Database["public"]["Enums"]["topup_status"]
           target_party_type: string
           transaction_id: string | null
@@ -7135,13 +7138,16 @@ export type Database = {
           customer_om_code_normalized?: string | null
           customer_om_code_raw?: string | null
           customer_om_code_submitted_at?: string | null
+          environment?: string
           expires_at?: string
           id?: string
+          matched_event_id?: string | null
           matched_provider_transaction_id?: string | null
           notes?: string | null
           provider?: string
           receiving_account_id?: string | null
           reference: string
+          review_reason?: string | null
           status?: Database["public"]["Enums"]["topup_status"]
           target_party_type?: string
           transaction_id?: string | null
@@ -7159,13 +7165,16 @@ export type Database = {
           customer_om_code_normalized?: string | null
           customer_om_code_raw?: string | null
           customer_om_code_submitted_at?: string | null
+          environment?: string
           expires_at?: string
           id?: string
+          matched_event_id?: string | null
           matched_provider_transaction_id?: string | null
           notes?: string | null
           provider?: string
           receiving_account_id?: string | null
           reference?: string
+          review_reason?: string | null
           status?: Database["public"]["Enums"]["topup_status"]
           target_party_type?: string
           transaction_id?: string | null
@@ -7173,6 +7182,13 @@ export type Database = {
           user_phone?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "topup_requests_matched_event_id_fkey"
+            columns: ["matched_event_id"]
+            isOneToOne: false
+            referencedRelation: "payment_provider_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "topup_requests_receiving_account_id_fkey"
             columns: ["receiving_account_id"]
@@ -8039,6 +8055,15 @@ export type Database = {
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
+        Returns: string
+      }
+      _topup_stage: {
+        Args: {
+          p_code_at: string
+          p_expires_at: string
+          p_status: string
+          p_tx: string
+        }
         Returns: string
       }
       admin_adjust_agent_float: {
@@ -9990,6 +10015,8 @@ export type Database = {
           receiving_label: string
           receiving_phone: string
           reference: string
+          review_reason: string
+          stage: string
           status: string
         }[]
       }
@@ -10041,13 +10068,16 @@ export type Database = {
           customer_om_code_normalized: string | null
           customer_om_code_raw: string | null
           customer_om_code_submitted_at: string | null
+          environment: string
           expires_at: string
           id: string
+          matched_event_id: string | null
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
           receiving_account_id: string | null
           reference: string
+          review_reason: string | null
           status: Database["public"]["Enums"]["topup_status"]
           target_party_type: string
           transaction_id: string | null
@@ -10383,7 +10413,10 @@ export type Database = {
           receiving_label: string
           receiving_phone: string
           reference: string
+          review_reason: string
+          stage: string
           status: string
+          target_party_type: string
         }[]
       }
       get_nearby_available_drivers: {
@@ -10679,6 +10712,8 @@ export type Database = {
           receiving_label: string
           receiving_phone: string
           reference: string
+          review_reason: string
+          stage: string
           status: string
           updated_at: string
         }[]
@@ -11367,16 +11402,20 @@ export type Database = {
       om_pending_topups_for_event: {
         Args: { p_event_id: string }
         Returns: {
+          account_match: boolean
           amount_gnf: number
           amount_match: boolean
           client_name: string
           client_phone: string
           client_user_id: string
+          code_match: boolean
           created_at: string
+          environment: string
           expires_at: string
           phone_match: boolean
           reference: string
           status: string
+          target_party_type: string
           topup_id: string
         }[]
       }
@@ -12450,13 +12489,16 @@ export type Database = {
           customer_om_code_normalized: string | null
           customer_om_code_raw: string | null
           customer_om_code_submitted_at: string | null
+          environment: string
           expires_at: string
           id: string
+          matched_event_id: string | null
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
           receiving_account_id: string | null
           reference: string
+          review_reason: string | null
           status: Database["public"]["Enums"]["topup_status"]
           target_party_type: string
           transaction_id: string | null
@@ -12483,13 +12525,16 @@ export type Database = {
           customer_om_code_normalized: string | null
           customer_om_code_raw: string | null
           customer_om_code_submitted_at: string | null
+          environment: string
           expires_at: string
           id: string
+          matched_event_id: string | null
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
           receiving_account_id: string | null
           reference: string
+          review_reason: string | null
           status: Database["public"]["Enums"]["topup_status"]
           target_party_type: string
           transaction_id: string | null
@@ -12516,13 +12561,16 @@ export type Database = {
           customer_om_code_normalized: string | null
           customer_om_code_raw: string | null
           customer_om_code_submitted_at: string | null
+          environment: string
           expires_at: string
           id: string
+          matched_event_id: string | null
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
           receiving_account_id: string | null
           reference: string
+          review_reason: string | null
           status: Database["public"]["Enums"]["topup_status"]
           target_party_type: string
           transaction_id: string | null
@@ -12573,13 +12621,16 @@ export type Database = {
           customer_om_code_normalized: string | null
           customer_om_code_raw: string | null
           customer_om_code_submitted_at: string | null
+          environment: string
           expires_at: string
           id: string
+          matched_event_id: string | null
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
           receiving_account_id: string | null
           reference: string
+          review_reason: string | null
           status: Database["public"]["Enums"]["topup_status"]
           target_party_type: string
           transaction_id: string | null
@@ -12606,13 +12657,16 @@ export type Database = {
           customer_om_code_normalized: string | null
           customer_om_code_raw: string | null
           customer_om_code_submitted_at: string | null
+          environment: string
           expires_at: string
           id: string
+          matched_event_id: string | null
           matched_provider_transaction_id: string | null
           notes: string | null
           provider: string
           receiving_account_id: string | null
           reference: string
+          review_reason: string | null
           status: Database["public"]["Enums"]["topup_status"]
           target_party_type: string
           transaction_id: string | null
