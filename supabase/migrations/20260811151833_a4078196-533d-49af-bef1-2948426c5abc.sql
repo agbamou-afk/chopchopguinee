@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public._qa_s11_run() TO PUBLIC;
