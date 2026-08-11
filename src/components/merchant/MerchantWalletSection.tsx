@@ -46,9 +46,10 @@ export function MerchantWalletSection() {
       note: "Demande de règlement marchand",
     });
     setSubmitting(false);
-    if (!res.ok) {
+    if (res.ok === false) {
+      const message = res.error;
       toast.error(
-        res.error.includes("AMOUNT_EXCEEDS_ELIGIBLE")
+        message.includes("AMOUNT_EXCEEDS_ELIGIBLE")
           ? "Montant supérieur au montant éligible confirmé par le serveur."
           : "Demande impossible pour le moment.",
       );
