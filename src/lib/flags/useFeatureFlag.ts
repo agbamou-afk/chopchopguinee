@@ -76,6 +76,16 @@ export function useEnvoyerEnabled(): boolean {
   return useFlag("envoyer_enabled");
 }
 
+/** Slice 6 — declared value + attestation + photo evidence engine. */
+export function useEnvoyerDeclaredValueEnabled(): boolean {
+  return useFlag("envoyer_declared_value_enabled");
+}
+
+/** Slice 6 — customer claims lifecycle (custody disputes). */
+export function useEnvoyerClaimsEnabled(): boolean {
+  return useFlag("envoyer_claims_enabled");
+}
+
 /** true = provider webhooks trusted; false = manual verification (launch default). */
 export function useOmProviderAutomated(): boolean {
   return useFlag("om_provider_mode");
