@@ -8,8 +8,8 @@ import {
   getPackageSecrets,
   listMyPackageDeliveries,
   openPackageClaim,
-  previewPackageCancel,
 } from "@/lib/packages/api";
+import { CancellationConfirmDialog } from "@/components/finance/CancellationConfirmDialog";
 import { useEnvoyerClaimsEnabled } from "@/lib/flags/useFeatureFlag";
 import {
   PACKAGE_CATEGORY_LABEL,
@@ -30,6 +30,7 @@ export function PackageDeliveries({ userId }: { userId: string | null }) {
   const [secrets, setSecrets] = useState<Record<string, PackageSecrets | null>>({});
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<PackageDelivery | null>(null);
   const claimsEnabled = useEnvoyerClaimsEnabled();
 
   const load = useCallback(async () => {
