@@ -49,9 +49,18 @@ Full matrix rerun from the beginning after the D8 closeout: **115 / 115 PASS, 0 
 1. **P1 — admin-first reconciliation was broken for participants.** When the operator recorded the provider receipt *before* the customer/driver pasted their Orange Money code, `submit_customer_om_code` → `om_auto_match` → `wallet_topup_om_credit` aborted with `forbidden` (the credit primitive rejected the non-admin `auth.uid()`), rolling back the whole submission so the code was not even saved. Fixed with a one-shot, event-scoped transaction-local marker (`chopchop.om_credit_internal`) set by `submit_customer_om_code` immediately before delegating to the matcher. The marker authorises the *call only*; `wallet_topup_om_credit` still independently revalidates reference, amount, payer phone, receiving account, environment and target at credit time, and remains EXECUTE-denied to `anon`/`authenticated`.
 2. **P2 — `credit_failed` violated a CHECK constraint.** `admin_record_om_receipt` / `admin_retry_om_credit` and the reconciliation UI write `processing_status = 'credit_failed'`, which was not in `payment_provider_events_processing_chk`, turning a logged credit failure into a hard function abort. The state is now allowed.
 
-### Open (harness, not production)
-- `D8 one customer receipt cannot be redirected into another customer request` — no money moved (`delta=0`), but the forced call returned no error where the harness expected one; the assertion needs to be re-shaped around the actual canonical refusal path.
-- The abort immediately after D8 (`Cette demande n'est plus active`) is fixture-state leakage from D8, not a product failure.
+### Harness seams closed in this rerun (no product behaviour changed)
+- **D8 reshaped into D8.0–D8.7 + D8F/D8G.** Reusing an already-credited provider reference is canonical *idempotency*, not an error: the replay returns the original transaction, moves 0 GNF and leaves the second request uncredited. A fresh, uncredited receipt force-pointed at the wrong request is refused at credit time (payer-phone/target revalidation) and also moves 0 GNF.
+- **G1** now asserts zero *movement* on the target wallet instead of an absolute zero balance, so an earlier legitimate credit in the same fixture cannot make it false-fail. The sandbox receipt still never reaches `credited`.
+- **H5B** added: `wallet_topup_cancel` canonically refuses to cancel a request whose code was already submitted, so the fixture forces the cancelled state and proves it before attempting the credit — H6 is therefore non-vacuous.
+- **I-series baseline** corrected from `clock_timestamp()` to the transaction timestamp; the accounting reconciliation was previously matching zero rows. I3/I4 now reconcile real money: liabilities = wallet credits = master pass-through delta, with no revenue/fee posting.
+
+### Post-rerun live posture (re-verified)
+- Master wallet **-100435 GNF / held 0** (unchanged).
+- Global ledger posting sum **0**, imbalanced journals **0**.
+- Feature flags byte-identical; `om_topup_enabled` is the only finance rail ON, every OM checkout/sandbox rail OFF.
+- No fixture residue: 0 sandbox intents, 0 QA rows outside the rolled-back block.
+- `_qa_s13_run5`: `anon`/`authenticated` EXECUTE denied, `service_role` only.
 
 ### Verified in the latest run (non-exhaustive)
 A1–A15 customer exact-match credit (liability, not revenue; zero-sum journal; terminal states; truthful requester history), B driver exact-match credit into unrestricted balance only, C required-evidence negative matrix (all 0 GNF), D credit-time revalidation / forced-match resistance, E idempotency + replay + advisory-lock concurrency, F cross-party/privilege matrix, G sandbox↔production isolation, I accounting truth, Z rollback posture (master exactly −100435 / held 0, global posting sum 0, zero imbalanced journals, feature flags byte-identical with `om_topup_enabled=true`, no fixture residue, `_qa_s13*` anon/auth EXECUTE denied).
