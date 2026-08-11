@@ -14,27 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _qa_s12_results: {
-        Row: {
-          detail: string | null
-          id: string | null
-          ok: boolean | null
-          seq: number
-        }
-        Insert: {
-          detail?: string | null
-          id?: string | null
-          ok?: boolean | null
-          seq?: number
-        }
-        Update: {
-          detail?: string | null
-          id?: string | null
-          ok?: boolean | null
-          seq?: number
-        }
-        Relationships: []
-      }
       _qa_s5_results: {
         Row: {
           created_at: string | null
