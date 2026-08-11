@@ -7869,6 +7869,7 @@ export type Database = {
       _qa_s5_run2: { Args: never; Returns: Json }
       _qa_s5_run3: { Args: never; Returns: Json }
       _qa_s5_run4: { Args: never; Returns: Json }
+      _qa_s6_g4: { Args: { p_drv: string }; Returns: boolean }
       _qa_s6_quote: {
         Args: { p_amount?: number; p_user: string }
         Returns: string
