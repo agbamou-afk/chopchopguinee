@@ -8,7 +8,7 @@
  * formats them. The execution RPCs re-derive the same values from the same
  * snapshot, so preview and execution can never disagree.
  *
- * No percentages, no basis arithmetic, no `* 0.05`, no `/ 10000` here. Ever.
+ * No percentages here, no basis arithmetic, no bps-to-amount conversion. Ever.
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
