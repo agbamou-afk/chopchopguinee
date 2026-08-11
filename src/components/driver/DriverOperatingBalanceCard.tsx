@@ -1,13 +1,17 @@
-import { Wallet, Lock, ShieldCheck, Plus, Info, Gift } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Wallet, Lock, ShieldCheck, Plus, Info, Gift, History, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatGNF } from "@/lib/format";
 import {
   useDriverBalance,
+  fetchEligibility,
+  type Eligibility,
   INSUFFICIENT_BALANCE_MESSAGE,
   STARTER_CREDIT_LABEL,
   STARTER_CREDIT_NOTE,
 } from "@/lib/finance/driverBalance";
 import { useOmTopupEnabled } from "@/lib/flags/useFeatureFlag";
+import { useDriverTopupHistory } from "@/lib/finance/readModels";
 
 /**
  * Driver Chop Pay wallet — ONE ledger wallet. Earnings, top-ups,
@@ -17,6 +21,15 @@ import { useOmTopupEnabled } from "@/lib/flags/useFeatureFlag";
 export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }) {
   const { summary, loading } = useDriverBalance();
   const topupOn = useOmTopupEnabled();
+  const { rows: topups } = useDriverTopupHistory(5);
+  const [eligibility, setEligibility] = useState<Eligibility | null>(null);
+
+  // Mission eligibility comes from the canonical server finance rule path.
+  useEffect(() => {
+    let alive = true;
+    void fetchEligibility("ride", 0).then((e) => { if (alive) setEligibility(e); });
+    return () => { alive = false; };
+  }, [summary?.balance_gnf, summary?.held_gnf]);
 
   const available = summary?.available_gnf ?? 0;
   const total = summary?.balance_gnf ?? 0;
@@ -24,9 +37,11 @@ export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }
   const collateral = summary?.collateral_held_gnf ?? 0;
   const commission = summary?.commission_held_gnf ?? 0;
   const promo = summary?.promo_available_gnf ?? 0;
-  // Withdrawable NEVER includes the restricted starting credit.
-  const withdrawable = summary?.withdrawable_gnf ?? Math.max(0, available - promo);
-  const blocked = !loading && available <= 0;
+  const promoTotal = summary?.promo_remaining_gnf ?? 0;
+  const unrestricted = summary?.unrestricted_available_gnf ?? 0;
+  // Withdrawable NEVER includes the restricted starting credit — server value only.
+  const withdrawable = summary?.withdrawable_gnf ?? 0;
+  const blocked = !loading && eligibility !== null && !eligibility.eligible;
 
   return (
     <div className="rounded-2xl border border-border/60 bg-card p-4">
@@ -41,6 +56,9 @@ export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }
           </p>
           <p className="text-[11px] text-muted-foreground tabular-nums">
             Total {formatGNF(total)} · retenu {formatGNF(held)}
+          </p>
+          <p className="text-[11px] text-muted-foreground tabular-nums">
+            Fonds libres {formatGNF(unrestricted)} · crédit restreint {formatGNF(promoTotal)}
           </p>
           <p className="text-[11px] text-muted-foreground tabular-nums">
             Montant retirable {formatGNF(withdrawable)}
@@ -75,7 +93,43 @@ export function DriverOperatingBalanceCard({ onTopUp }: { onTopUp?: () => void }
 
       {blocked && (
         <div className="mt-3 rounded-xl border border-secondary/40 bg-secondary/10 p-3 text-xs text-foreground">
-          {INSUFFICIENT_BALANCE_MESSAGE}
+          <p>{INSUFFICIENT_BALANCE_MESSAGE}</p>
+          {eligibility && (
+            <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+              Requis {formatGNF(eligibility.required_gnf)} · manquant {formatGNF(eligibility.shortfall_gnf)}
+            </p>
+          )}
+        </div>
+      )}
+
+      {eligibility?.eligible && (
+        <p className="mt-3 text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
+          <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+          Éligible aux nouvelles missions (requis {formatGNF(eligibility.required_gnf)})
+        </p>
+      )}
+
+      {topups.length > 0 && (
+        <div className="mt-3 border-t border-border/60 pt-3">
+          <p className="text-[11px] font-semibold text-foreground flex items-center gap-1.5 mb-1.5">
+            <History className="w-3.5 h-3.5" /> Mes recharges
+          </p>
+          <div className="space-y-1.5">
+            {topups.map((t) => (
+              <div key={t.id} className="flex items-center gap-2">
+                {t.credited
+                  ? <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
+                  : <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                <span className="text-[11px] text-foreground tabular-nums flex-1">
+                  {formatGNF(t.amount_gnf)}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {t.credited ? "Créditée" : "En vérification"} ·{" "}
+                  {new Date(t.created_at).toLocaleDateString("fr-FR")}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
