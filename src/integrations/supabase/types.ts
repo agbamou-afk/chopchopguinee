@@ -8366,6 +8366,7 @@ export type Database = {
       _qa_s13_run4: { Args: never; Returns: Json }
       _qa_s13_run5: { Args: never; Returns: Json }
       _qa_s13_run6: { Args: never; Returns: Json }
+      _qa_s13_run7: { Args: never; Returns: Json }
       _qa_s13_summary: { Args: { p_part: number; r: Json }; Returns: Json }
       _qa_s13_user: {
         Args: { p_id: string; p_tag: string }
