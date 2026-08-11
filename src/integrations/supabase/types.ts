@@ -8315,6 +8315,41 @@ export type Database = {
         Args: { p_detail?: string; p_label: string; p_ok: boolean }
         Returns: Json
       }
+      _qa_s13_om_case: {
+        Args: {
+          p_acct_req: string
+          p_amount: number
+          p_code: string
+          p_ev_acct: string
+          p_ev_amount: number
+          p_ev_phone: string
+          p_god: string
+          p_party: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      _qa_s13_om_forced: {
+        Args: {
+          p_acct_ok: string
+          p_acct_other: string
+          p_amount: number
+          p_code: string
+          p_mutate: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      _qa_s13_om_rolecall: {
+        Args: {
+          p_a1: string
+          p_a2: string
+          p_role: string
+          p_sql: string
+          p_uid: string
+        }
+        Returns: string
+      }
       _qa_s13_rls_probe: {
         Args: {
           p_bucket: string
@@ -8329,6 +8364,7 @@ export type Database = {
       _qa_s13_run2: { Args: never; Returns: Json }
       _qa_s13_run3: { Args: never; Returns: Json }
       _qa_s13_run4: { Args: never; Returns: Json }
+      _qa_s13_run5: { Args: never; Returns: Json }
       _qa_s13_summary: { Args: { p_part: number; r: Json }; Returns: Json }
       _qa_s13_user: {
         Args: { p_id: string; p_tag: string }
