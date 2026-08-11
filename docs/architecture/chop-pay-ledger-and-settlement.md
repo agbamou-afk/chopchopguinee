@@ -42,3 +42,13 @@ state-guarded (`held` → `captured`/`released` once).
 Chop Pay orders: customer hold → capture → merchant merchandise amount
 less commission, driver delivery earning, platform commission to master.
 Collateral is never merchant revenue and never a driver earning.
+
+## Payout engine (Slice 11)
+`payout_orders` is the generalized outbound spine for merchant settlement and
+future driver payout. Order of operations is fixed:
+eligibility → reservation → outbound provider evidence → reconciliation →
+settlement. Only `_payout_settle_internal` debits a merchant payable, posts
+`payout-settle:<order_id>`, and allocates the debit per payable in
+`payout_settlement_allocations`. Evidence lives in
+`payout_provider_evidence` with a globally unique normalized reference; a
+reference can settle exactly one payout. There is no manual "mark as paid".

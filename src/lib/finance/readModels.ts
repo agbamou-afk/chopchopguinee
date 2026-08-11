@@ -157,6 +157,7 @@ export type MerchantFinanceOverview = {
   settled_total_gnf: number;
   reversed_total_gnf: number;
   open_request_gnf: number;
+  reserved_for_settlement_gnf: number;
   eligible_settlement_gnf: number;
   settlement_rail_enabled: boolean;
 };
