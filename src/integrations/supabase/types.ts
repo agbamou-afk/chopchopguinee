@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      _qa_s12_results: {
+        Row: {
+          detail: string | null
+          id: string | null
+          ok: boolean | null
+          seq: number
+        }
+        Insert: {
+          detail?: string | null
+          id?: string | null
+          ok?: boolean | null
+          seq?: number
+        }
+        Update: {
+          detail?: string | null
+          id?: string | null
+          ok?: boolean | null
+          seq?: number
+        }
+        Relationships: []
+      }
       _qa_s5_results: {
         Row: {
           created_at: string | null
@@ -8062,6 +8083,8 @@ export type Database = {
       }
       _finance_flag: { Args: { p_key: string }; Returns: boolean }
       _finance_privileged: { Args: { p_caller: string }; Returns: boolean }
+      _finance_treasury_facts: { Args: never; Returns: Json }
+      _finance_treasury_gate: { Args: never; Returns: string }
       _hold_account: { Args: { p_kind: string }; Returns: string }
       _is_approved_service_agent: {
         Args: { _user_id: string }
@@ -10663,6 +10686,33 @@ export type Database = {
         Args: { p_snapshot: Json }
         Returns: boolean
       }
+      finance_treasury_drilldown: {
+        Args: { p_code: string; p_limit?: number }
+        Returns: {
+          amount_gnf: number
+          label: string
+          occurred_at: string
+          ref: string
+          source_module: string
+          source_ref: string
+          state: string
+        }[]
+      }
+      finance_treasury_exceptions: {
+        Args: never
+        Returns: {
+          account_code: string
+          amount_gnf: number
+          code: string
+          detail: string
+          entity_count: number
+          occurred_at: string
+          severity: string
+          source_module: string
+          state: string
+        }[]
+      }
+      finance_treasury_overview: { Args: never; Returns: Json }
       find_user_by_phone: {
         Args: { p_phone: string }
         Returns: {
