@@ -30,6 +30,7 @@ import {
   type IssueStatus, type IssueType, type IssueSeverity, type IssueRole,
 } from "@/lib/support/constants";
 import { DISTRICTS } from "@/lib/districts";
+import { EnvoyerClaimsQueue } from "@/components/admin/EnvoyerClaimsQueue";
 
 const toneClass: Record<"ok"|"warn"|"alert"|"muted", string> = {
   ok:    "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
@@ -131,6 +132,10 @@ export default function SupportAdmin() {
         <StatCard label="Critiques actifs" value={stats.critical} icon={AlertTriangle} tone="alert" />
         <StatCard label="Résolus (24h)" value={stats.resolved24} icon={CheckCircle2} tone="ok" />
         <StatCard label="Escaladés" value={stats.escalated} icon={Clock} tone="alert" />
+      </div>
+
+      <div className="mt-3">
+        <EnvoyerClaimsQueue />
       </div>
 
       <Card className="p-3 space-y-2">
