@@ -36,3 +36,35 @@ Stages 6 (driver cashout) and 7 (P2P) GREEN as *blocked*, OFF.
 - No authenticated Finance-operator visual QA of `/admin/wallet/payouts` or `/admin/treasury`.
 
 Details: `docs/qa/chop-pay-slice13-results.md`.
+
+## Final closeout (2026-08-11 23:43 UTC)
+
+### `sandbox_exec` disposition
+`sandbox_exec` is the platform-managed maintenance/debug DB login (LOGIN, INHERIT, BYPASSRLS, not
+superuser; grantable only to `postgres`; no EXECUTE on any function, including the `_qa_s13_*`
+harness — the harness runs as `postgres`/`service_role`). It held blanket `SELECT, INSERT` on all 278
+public tables, which is why it appeared on `provider_fee_schedules` / `payment_provider_events`.
+Because it holds BYPASSRLS, grants — not policies — are the only boundary.
+
+Applied (posture only): `INSERT` **revoked** from `sandbox_exec` on all 38 money-bearing tables
+(wallets, ledger, payment intents/events, payouts + evidence, provider fee schedules, merchant
+settlement, claims, debts, driver finance, order/package runtimes, topups, feature flags).
+`SELECT` retained. No product RLS, no `service_role` boundary, no `anon`/`authenticated` grant changed;
+no financial semantics changed. Proven post-fix: production-mode inserts into
+`payment_provider_events`, `provider_fee_schedules`, `ledger_postings`, `wallets` all refused.
+Residual stated honestly: it keeps BYPASSRLS and blanket read — a platform login unreachable from any
+application path.
+
+### Single untouched atomic sweep
+`_qa_s13_run1() … run7()` executed once, in order, in one transaction after the final edit.
+All seven rows share the final-batch timestamp **2026-08-11 23:43:16.779052+00**.
+**18 / 32 / 54 / 98 / 115 / 87 / 99 = 503 / 503 PASS, 0 failures.**
+
+Posture after: master **-100435 GNF / held 0**; ledger posting sum 0 over 0 rows (rollback
+cleanliness — production ledger tables are empty, not balanced-volume proof); zero imbalanced
+journals; flags byte-identical with `om_topup_enabled` the only finance rail ON; no financial
+fixture residue; `_qa_s13_run1..7` service_role only; 0 internal money-moving primitives exposed to
+anon/authenticated. Typecheck PASS, vitest 20/20, Vite build PASS + PWA (chunk advisory YELLOW).
+
+YELLOW carried: no live Orange Money receipt ever exercised; no authenticated Finance-operator
+visual QA. No flag activated. Slice 13 closed — no Slice 14.
