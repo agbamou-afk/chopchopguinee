@@ -67,7 +67,7 @@ function QueueTable({ bucket }: { bucket: PayoutQueueBucket }) {
       transferredAt: new Date().toISOString(),
     });
     setBusy(false);
-    if (!res.ok) { toast.error(res.error); return; }
+    if (res.ok === false) { toast.error(res.error); return; }
     const status = String((res.result as { status?: string }).status ?? "");
     if (status === "settled") toast.success("Règlement réconcilié et comptabilisé.");
     else toast.warning(`Preuve enregistrée sans mouvement : ${status}`);
@@ -234,7 +234,7 @@ export default function PayoutsAdmin() {
   };
 
   return (
-    <ModulePage module="payments" title="Règlements & versements" description="File de versements marchands et chauffeurs, adossée à la preuve fournisseur.">
+    <ModulePage module="payments" title="Règlements & versements">
       <Card className="p-4 mb-4 flex items-start gap-3">
         <ShieldAlert className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
         <p className="text-xs text-muted-foreground">

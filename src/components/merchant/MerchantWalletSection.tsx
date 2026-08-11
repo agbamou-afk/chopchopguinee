@@ -216,7 +216,7 @@ export function MerchantWalletSection() {
                 <p>Vers {receipt.destination_msisdn} · {new Date(receipt.settled_at).toLocaleString("fr-FR")}</p>
               </div>
             ) : (
-              <p>{receipt?.message ?? "Aucun règlement externe prouvé pour cette demande."}</p>
+              <p>{receipt && !receipt.receipt_available ? receipt.message : "Aucun règlement externe prouvé pour cette demande."}</p>
             )}
           </div>
         )}
