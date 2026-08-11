@@ -135,3 +135,92 @@ Backend harness result unchanged: `_qa_s13_run6()` **87/87 PASS**.
 Frontend verification: typecheck (`tsgo -p tsconfig.app.json`) **PASS, 0 errors**.
 No authenticated Finance visual QA performed (no Finance session) — YELLOW.
 Stage 5/6/7 production flags untouched. Part 7 NOT STARTED.
+
+## Part 7 — Finance control plane, treasury, security, retry/idempotency, sandbox isolation — **PASS 99/99**
+
+Harness: `public._qa_s13_run7()` (service_role only, self-rolling-back), results in `_qa_s13_results(part=7)`.
+
+### Coverage
+- **A — treasury / control-plane truth.** `finance_treasury_overview` / `_exceptions` / `_drilldown` refuse anon and
+  ordinary users, answer only Finance/God roles, and every displayed figure is server-derived. Ride accept →
+  complete, commission reserve, collateral hold/release and cancellation-debt accrual each move the treasury
+  aggregates by exactly the expected delta (A11 baseline now snapshotted immediately before debt creation).
+- **R — Repas / Marché retry & lifecycle seams.** Duplicate accepts, duplicate completes, refused cancellations
+  after custody, funding-hold replays and the Chop Pay merchant capture (courier claim → collateral hold →
+  capture funding exactly the merchandise amount) are all idempotent: the second call moves 0 GNF.
+- **OM inbound ordering.** Both orderings proved: customer-code-first and admin-receipt-first converge on the
+  same single credit; replays return the original transaction and move 0 GNF.
+- **Envoyer Storage isolation.** Private evidence objects probed as owner, assigned courier, unrelated user and
+  ops — only entitled readers resolve an object.
+- **C — manual OM payout provenance.** Manual merchant settlements carry
+  `raw->>'source' = 'finance_manual_om'`, `evidence_kind = manual_operator_attested`, `provider_verified=false`
+  and a traceable attesting operator; replay returns `already_settled`.
+- **B — security posture.** Finance SECURITY DEFINER functions pin `search_path`; internal money-moving
+  primitives, QA helpers and raw finance tables are unreachable by `anon`, and signed-in users cannot write
+  finance truth tables directly.
+
+### Production security fixes found by Part 7 (posture only, no financial behaviour change)
+1. **`provider_fee_schedules` and `payment_provider_events` were granted to `anon`** (SELECT/INSERT/UPDATE/DELETE).
+   RLS still gated the rows, but the grants were far wider than the policies. Now: `anon` has no privilege at all;
+   `authenticated` keeps `SELECT` on fee schedules and `SELECT, UPDATE` on provider events (the admin-only
+   reconciliation policies already scope those), `service_role` full.
+2. **14 internal money-moving primitives** (`_ledger_*`, `_payout_*`, `_merchant_*`, `_chop_pay_*`,
+   `_cash_order_*`, `_package_*`, `_driver_*`, `_customer_cancellation_*`) were EXECUTE-able by `anon` and/or
+   `authenticated`. All revoked; `service_role` only. Full regression rerun after the revocation is green, so no
+   product path depended on those grants.
+
+### Documented exception (honest, not silenced)
+`authenticated` retains `UPDATE` on `payment_provider_events` because the admin reconciliation screen writes
+`processing_status` directly under the `is_any_admin(auth.uid())` policy. `INSERT`/`DELETE` remain denied.
+
+### Harness seams corrected (no product change)
+- A11 baseline snapshotted immediately before debt creation.
+- C7 provenance read from `raw->>'source'` (Part 6 stores manual provenance in `raw`).
+- Repas/Marché store activation performed by a real `admin` (the `merchant_stores` status trigger requires it).
+- Chop Pay marketplace order now claimed by the courier before merchant capture.
+- G1.4 (Part 1) accepts the stronger `not_authorized` refusal for an ordinary driver and adds an explicit
+  unauthenticated refusal check (`G1.4x`) — legacy `driver_cashout_mark_paid` authorizes before gating.
+
+## Slice 13 — Final release board
+
+| Part | Scope | Result |
+| --- | --- | --- |
+| 1 | Stage isolation / flag gating | **PASS 18/18** |
+| 2 | Ride / Bonbonna | **PASS 32/32** |
+| 3 | Repas / Marché cash + Chop Pay orders | **PASS 54/54** |
+| 4 | Envoyer declared value, custody, claims, sandbox isolation | **PASS 98/98** |
+| 5 | Orange Money inbound reconciliation | **PASS 115/115** |
+| 6 | Merchant settlement + manual Orange Money payout | **PASS 87/87** |
+| 7 | Finance control plane, treasury, security, retry, sandbox | **PASS 99/99** |
+| **Total** | | **503 / 503 PASS, 0 failures** |
+
+### App regression (this head)
+- Typecheck `tsgo -p tsconfig.app.json`: **PASS, 0 errors**
+- Unit tests `vitest run`: **PASS, 20/20**
+- Production build `vite build`: **PASS**; PWA service worker generated (134 precache entries).
+  Warning: pre-existing chunk-size advisory (`mapbox-gl`, analytics) — unrelated to this slice.
+
+### Post-run live posture (re-verified after the full rerun)
+- Master wallet **-100435 GNF / held 0**.
+- Global ledger posting sum **0**; zero imbalanced journals.
+- Feature flags byte-identical; `om_topup_enabled` is the only finance rail ON.
+- No fixture residue: 0 QA packages, 0 sandbox intents.
+- `_qa_s13_run1..run7`: `anon` / `authenticated` EXECUTE **denied**, `service_role` only.
+
+### Final staged readiness verdict — NO FLAGS ACTIVATED
+
+| Stage | Rail | Verdict |
+| --- | --- | --- |
+| 1 | Ride / Bonbonna internal ledger | GREEN — regression-proved, currently OFF |
+| 2–3 | Repas / Marché cash orders | GREEN — regression-proved, currently OFF |
+| 4 | Chop Pay orders + Envoyer declared value / claims | GREEN — regression-proved, currently OFF |
+| 4b | Orange Money inbound top-up (`om_topup_enabled`) | **LIVE** — green, YELLOW on live-provider receipts |
+| 5 | Merchant settlement + manual OM outbound | GREEN on synthetic evidence — OFF; activation is a business decision |
+| 6 | Driver cashout | GREEN as *blocked* — OFF, no driver payout rail proved live |
+| 7 | P2P transfer | GREEN as *blocked* — OFF |
+
+### YELLOW register (carried, not convertible)
+- No live Orange Money receipt has ever been used: all inbound (Part 5) and outbound (Parts 6–7) provider
+  evidence is production-format **synthetic** proof.
+- No authenticated Finance-operator visual QA session was performed against `/admin/wallet/payouts` or
+  `/admin/treasury`.
