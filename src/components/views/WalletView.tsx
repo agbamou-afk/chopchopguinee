@@ -45,6 +45,7 @@ import { SendMoneySheet } from "@/components/wallet/SendMoneySheet";
 import { Send } from "lucide-react";
 import { usePublicWalletEnabled } from "@/lib/flags/useFeatureFlag";
 import { WalletArchivedPanel } from "@/components/wallet/WalletArchivedPanel";
+import { CancellationDebtPanel } from "@/components/finance/CancellationDebtPanel";
 import {
   useCustomerFinanceOverview,
   useCustomerFinanceHistory,
