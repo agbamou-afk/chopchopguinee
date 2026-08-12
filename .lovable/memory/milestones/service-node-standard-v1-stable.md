@@ -1,6 +1,6 @@
 ---
 name: Service Node Standard v1 — Stable
-description: Node 0 Course golden-reference audit + CHOPCHOP Service Node Standard v1 (8 lenses, evidence grades, exit gates, scorecard, node order)
+description: Node 0 Course (Moto) golden-reference audit + CHOPCHOP Service Node Standard v1 (8 lenses, evidence grades, exit gates, scorecard, node order); Bonbonna (Node 1) not audited or scored
 type: feature
 ---
 
@@ -31,6 +31,6 @@ gates (4, 5, 11, 14 non-negotiable); universal state vocabulary vs
 service-specific extensions; reusable scorecard filled for Course only.
 
 ## Frozen node order
-Node 0 Course (done) -> Node 1 Bonbonna -> Node 2 Repas -> Node 3 Marché ->
+Node 0 Course (Moto) (done) -> Node 1 Bonbonna (not audited) -> Node 2 Repas -> Node 3 Marché ->
 Node 4 Envoyer -> Node 5 Cross-Service UX/Engagement -> Node 6 Release Blocker
-Closure -> Node 7 Android RC. Node 1 not started.
+Closure -> Node 7 Android RC. Node 1 not started / not audited.

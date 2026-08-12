@@ -218,7 +218,7 @@ Gate 4, 5, 11 and 14 are non-negotiable; a failure there forces HOLD.
 | Field QA | | | |
 | **Verdict** | | | |
 
-### Filled example — Node 0 Course (evidence from the Course audit only)
+### Filled example — Node 0 Course (Moto) (evidence from the Course audit only)
 
 | Lens | Grade | Evidence | Blockers |
 |---|---|---|---|
@@ -242,7 +242,7 @@ Bonbonna, Repas, Marché and Envoyer are **not scored** here; they are future au
 
 | Node | Scope | Status |
 |---|---|---|
-| Node 0 | Course — Golden Reference | DONE (this document) |
+| Node 0 | Course (Moto) — Golden Reference | DONE (this document) |
 | Node 1 | Bonbonna | NOT STARTED |
 | Node 2 | Repas | NOT STARTED |
 | Node 3 | Marché | NOT STARTED |
