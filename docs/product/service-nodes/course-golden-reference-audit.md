@@ -87,7 +87,7 @@ OrdersAdmin (rides list) | LiveOps + AdminLiveOpsMap | OpsCommandCenter
 DriversAdmin (approval/suspension) | DriverSignalsAdmin | DriverCashouts
 FinancePolicyAdmin / PricingAdmin / TreasuryAdmin | CancellationDebtPanel
 SupportAdmin (support_issues) | AuditAdmin (audit_logs, incl. 'ride.settled')
-FlagsAdmin (moto, toktok, om_ride_checkout_enabled, cancellation_policy_enabled)
+FlagsAdmin (shared ride flags: `moto`, `toktok`; `om_ride_checkout_enabled`, `cancellation_policy_enabled`)
 ```
 
 ---
