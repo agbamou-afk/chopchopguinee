@@ -68,3 +68,41 @@ anon/authenticated. Typecheck PASS, vitest 20/20, Vite build PASS + PWA (chunk a
 
 YELLOW carried: no live Orange Money receipt ever exercised; no authenticated Finance-operator
 visual QA. No flag activated. Slice 13 closed — no Slice 14.
+
+## Final security closeout correction (2026-08-12 00:00 UTC) — 503 retired, 507/507 is the board
+
+A post-closeout independent audit found a real production defect: `public.admin_anonymize_user`
+(SECURITY DEFINER) was guarded by `_caller IS NOT NULL AND NOT (god_admin OR super_admin)`, so any
+caller with `auth.uid() IS NULL` passed. EXECUTE was held by PUBLIC → anon, authenticated and
+`sandbox_exec` all had effective EXECUTE on an arbitrary-target account anonymizer.
+
+Fixed (posture only, no financial semantics, RLS, flags, wallet or Slice 13 behaviour changed):
+- fail-closed guard — NULL caller forbidden unless the request role is `service_role` (the only real
+  callsite is the `admin-delete-user` edge function, which calls with the service key); non-null
+  callers must be god_admin/super_admin;
+- PUBLIC + anon EXECUTE revoked; only `authenticated` and `service_role` retained;
+- `_anonymize_user_core` → `service_role` only;
+- `admin_auth_user_exists` (unguarded existence oracle, PUBLIC EXECUTE) given the same fail-closed
+  guard and PUBLIC/anon revoked; `admin_pre_purge_test_user` grant-tightened only.
+- Sibling sweep: no other anon/authenticated-reachable SECURITY DEFINER function uses the pattern;
+  all others gate through `_is_ops_or_god_admin` / `has_admin_role` / `has_role`, which fail closed
+  on NULL.
+
+Part 7 gained four non-vacuous security assertions (S7.1 grants, S7.2 anon refused, S7.3 non-admin
+refused, S7.4 God Admin still succeeds), so Part 7 is **103** and the honest total is **507**.
+
+One untouched sequential sweep after the last edit, single transaction, all seven rows stamped
+**2026-08-11 23:59:40.002633+00**: **18 / 32 / 54 / 98 / 115 / 87 / 103 = 507 / 507 PASS, 0 failures.**
+
+Posture re-proved: master **-100435 / held 0**; ledger sum 0 over 0 rows (rollback cleanliness);
+0 imbalanced journals; flags unchanged with `om_topup_enabled` the only finance rail ON; no fixture
+residue; `_qa_s13_*` service_role-only; 0 internal money primitives exposed to anon/auth;
+`sandbox_exec` INSERT on the locked 38 money-bearing tables = 0; anon and `sandbox_exec` effective
+EXECUTE on `admin_anonymize_user` = false. Typecheck PASS, vitest 20/20, Vite build PASS + PWA.
+
+YELLOW carried: no live Orange Money receipt; no authenticated Finance-operator visual QA; chunk
+advisory. NEW YELLOW (DEF-OPS-003, surfaced by S7.4): `_anonymize_user_core` has two stale steps
+(`merchant_stores.is_active`, `driver_locations.driver_id`, SQLSTATE 42703) — pre-existing data
+hygiene, deliberately not patched so the final sweep stayed untouched.
+
+No flags activated. Slice 13 closed. No Slice 14.

@@ -320,3 +320,76 @@ this board and were deliberately not deleted — they are historical, not releas
 - No authenticated Finance-operator visual QA of `/admin/wallet/payouts` or `/admin/treasury`.
 
 **No feature flag was activated. Slice 13 is closed.**
+
+---
+
+## Final Security Closeout Correction (2026-08-12 00:00 UTC) — supersedes the 503/503 board
+
+### DEF-SEC-002 — `admin_anonymize_user` NULL-auth bypass (FIXED)
+
+Independent live audit found `public.admin_anonymize_user(uuid,text)` (SECURITY DEFINER) guarded by
+`IF _caller IS NOT NULL AND NOT (god_admin OR super_admin) THEN forbidden`. A caller with
+`auth.uid() IS NULL` (anon via PostgREST) passed the guard and could anonymize an arbitrary target.
+EXECUTE was held by PUBLIC, so `anon`, `authenticated` and `sandbox_exec` all had effective EXECUTE.
+
+Callsite audit: the only real caller is the `admin-delete-user` edge function, which invokes the RPC
+with the **service_role** key (so `auth.uid()` is legitimately NULL there). No `src/` callsite exists.
+
+Fix (posture only, no financial semantics touched):
+- Guard is now fail-closed: NULL caller is forbidden **unless** the request role is `service_role`
+  (JWT `role` claim, falling back to `current_user`). Non-null callers must be `god_admin` or
+  `super_admin`.
+- `REVOKE ALL ... FROM PUBLIC, anon`; `GRANT EXECUTE TO authenticated, service_role`.
+  `sandbox_exec` therefore has no effective EXECUTE (it had no direct grant, only PUBLIC).
+- `_anonymize_user_core(uuid,text)` revoked from PUBLIC/anon/authenticated → `service_role` only.
+- `admin_auth_user_exists(uuid)` had **no guard at all** and PUBLIC EXECUTE (auth-user existence
+  oracle). Same fail-closed guard applied; PUBLIC/anon revoked.
+- `admin_pre_purge_test_user(uuid)`: body already rejects NULL callers; grant tightening only
+  (PUBLIC/anon revoked). No body change.
+
+Sibling sweep: no other SECURITY DEFINER function in `public` reachable by anon/authenticated uses
+the `_caller IS NOT NULL AND NOT ...` pattern. All other PUBLIC-executable `admin_*` functions gate
+via `_is_ops_or_god_admin(auth.uid())` / `has_admin_role` / `has_role`, which return false for NULL
+and therefore already fail closed. `admin_unban_user` and `admin_regenerate_group_referral_code`
+were left untouched.
+
+### New Part 7 security assertions (non-vacuous)
+- **S7.1** grants: anon EXECUTE = false, `sandbox_exec` effective EXECUTE = false,
+  `authenticated` EXECUTE = true.
+- **S7.2** unauthenticated caller → `42501 forbidden`.
+- **S7.3** signed-in non-admin → `42501 forbidden`.
+- **S7.4** signed-in God Admin still anonymizes successfully (`ok:true`), inside the rolled-back fixture.
+
+Part 7 count therefore moves **99 → 103**; the honest total is **507**, not 503. The 503 figure is
+retired.
+
+### Final untouched atomic sweep — batch `2026-08-11 23:59:40.002633+00`
+Executed once after the last edit, `_qa_s13_run1() … run7()` sequentially in one transaction.
+All seven rows share that timestamp.
+
+| Part | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Total |
+|---|---|---|---|---|---|---|---|---|
+| Passed | 18 | 32 | 54 | 98 | 115 | 87 | 103 | **507** |
+| Failed | 0 | 0 | 0 | 0 | 0 | 0 | 0 | **0** |
+
+### Post-sweep live posture
+- Master wallet **-100435 GNF / held 0** (DEF-FIN-001 unchanged, not normalized).
+- Ledger posting sum 0 over **0 rows** — rollback cleanliness, production ledger tables are empty.
+  Zero imbalanced journals.
+- Feature flags unchanged; `om_topup_enabled` is the only finance rail ON. Stages 1–7 OFF.
+- No financial fixture residue. `_qa_s13_*` executable by anon/authenticated = 0.
+- Internal money-moving primitives exposed to anon/authenticated = 0.
+- `sandbox_exec` INSERT on the locked 38 money-bearing tables = **0** (re-proved).
+- anon effective EXECUTE on `admin_anonymize_user` = false; `sandbox_exec` = false.
+- Typecheck PASS; vitest **20/20** PASS; production Vite build PASS, PWA `sw.js` generated.
+
+### YELLOW carried / newly surfaced
+- **Carried:** all Orange Money provider evidence, inbound and outbound, is production-format
+  **synthetic**; no live OM receipt has ever been exercised.
+- **Carried:** no authenticated Finance-operator visual QA of `/admin/wallet/payouts` or `/admin/treasury`.
+- **Chunk-size advisory** on the main bundle (pre-existing).
+- **NEW (surfaced by S7.4):** `_anonymize_user_core` reports two failing steps against the current
+  schema — `merchant_stores.is_active` and `driver_locations.driver_id` do not exist (SQLSTATE 42703).
+  The function still returns `ok:true` and anonymizes the remaining surfaces. This is a pre-existing
+  data-hygiene defect, not a security or financial defect; it was deliberately **not** patched here so
+  the final sweep stayed untouched. Track as DEF-OPS-003.
