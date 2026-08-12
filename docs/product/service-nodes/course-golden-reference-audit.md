@@ -1,7 +1,7 @@
-# Course (Moto / Bonbonna) — Golden Reference Audit
+# Course (Moto) — Golden Reference Audit
 
-Node: **Node 0 — Course**
-Scope: AUDIT ONLY. No runtime, finance, RLS, flag, or migration change was made.
+Node: **Node 0 — Course (Moto)**
+Scope: **Moto Course (ride-hailing) only.** This audit scores Node 0 Course (Moto). Shared ride infrastructure that also supports the future `toktok` / Bonbonna node is noted as shared, but Bonbonna is not audited, scored, or implied to be complete. AUDIT ONLY. No runtime, finance, RLS, flag, or migration change was made.
 Head at audit time: `26fe9a7e8658a14124526a39dbb48254fed45030`
 Date: 2026-08-12 (UTC)
 
@@ -11,10 +11,12 @@ Date: 2026-08-12 (UTC)
 
 **REFERENCE WITH GAPS.**
 
-Course is the only CHOPCHOP service with a complete, server-authoritative,
+Course (Moto) is the only CHOPCHOP service with a complete, server-authoritative,
 two-actor lifecycle from discovery to receipt, with idempotent accept/complete,
 a customer-held pickup secret, canonical cancellation economics, and realtime
 state propagation. It is therefore the correct benchmark for every other node.
+
+**Scope note:** This verdict applies to Moto Course only. Shared ride infrastructure that also supports the future `toktok` / Bonbonna node is explicitly noted where used, but Bonbonna has not been audited or scored in this document.
 
 It is *not* perfect. Three honest defects prevent a clean `REFERENCE` grade:
 
@@ -85,16 +87,18 @@ OrdersAdmin (rides list) | LiveOps + AdminLiveOpsMap | OpsCommandCenter
 DriversAdmin (approval/suspension) | DriverSignalsAdmin | DriverCashouts
 FinancePolicyAdmin / PricingAdmin / TreasuryAdmin | CancellationDebtPanel
 SupportAdmin (support_issues) | AuditAdmin (audit_logs, incl. 'ride.settled')
-FlagsAdmin (moto, toktok, om_ride_checkout_enabled, cancellation_policy_enabled)
+FlagsAdmin (shared ride flags: `moto`, `toktok`; `om_ride_checkout_enabled`, `cancellation_policy_enabled`)
 ```
 
 ---
+
+> **Shared infrastructure note:** The ride flags, dispatch, offer, pickup-code and phase-transition machinery are built as a shared ride layer that also supports the future `toktok` / Bonbonna service. This audit scores only their use in Moto Course; Bonbonna is explicitly not audited or scored here.
 
 ## C. Step -> source-of-truth map
 
 | Step | UI | Server truth |
 |---|---|---|
-| Discovery | `home/PrimaryActionGrid.tsx`, `views/ServicesView.tsx` | `feature_flags` (`moto`, `toktok`) |
+| Discovery | `home/PrimaryActionGrid.tsx`, `views/ServicesView.tsx` | shared ride flag layer (`moto` ON; `toktok` uses the same infrastructure but is not Bonbonna audit evidence) |
 | Pickup/destination | `ride/RideBooking.tsx`, `map/DraggablePickupPin.tsx`, `lib/locations/searchPlaces.ts` | `map_places`, `landmarks`, `saved_places` |
 | Route / quote | `booking/EtaPricePreview.tsx`, `lib/maps/routing.ts` | `fare_settings`, `map_fare_troncons` (client-side computation) |
 | Payment mode | none (hardcoded `wallet`) | `_ride_payment_mode(ride)` |
@@ -118,7 +122,7 @@ FlagsAdmin (moto, toktok, om_ride_checkout_enabled, cancellation_policy_enabled)
 
 | Step | Grade | Basis |
 |---|---|---|
-| Discovery / entry tiles | CODE-VERIFIED + VISUAL-YELLOW | flags `moto`/`toktok` ON; no authenticated visual pass this cycle |
+| Discovery / entry tiles | CODE-VERIFIED + VISUAL-YELLOW | shared ride flag `moto` ON; `toktok` shares the same infrastructure but this score is for Moto Course only; no authenticated visual pass this cycle |
 | Pickup selection | CODE-VERIFIED | never substitutes `CONAKRY_FALLBACK` as a real pickup (`RideBooking.tsx:65-67`) |
 | Destination selection | CODE-VERIFIED | place search + map pick |
 | Quote / fare band | CODE-VERIFIED, **GAP on authority** | computed client-side from `fare_settings`; not server-bounded |
