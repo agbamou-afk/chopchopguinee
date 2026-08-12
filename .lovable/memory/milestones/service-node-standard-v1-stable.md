@@ -14,7 +14,10 @@ migration change (head `26fe9a7e8658a14124526a39dbb48254fed45030`).
 - `docs/product/service-nodes/chopchop-service-node-standard-v1.md`
 
 ## Course verdict
-**REFERENCE WITH GAPS.** Course is the benchmark node: full two-actor lifecycle,
+
+**REFERENCE WITH GAPS.** This verdict applies to Moto Course (Node 0) only. Shared ride infrastructure that also supports the future `toktok` / Bonbonna node is explicitly noted as shared, but Bonbonna has not been audited or scored.
+
+Course (Moto) is the benchmark node: full two-actor lifecycle,
 server-authoritative transitions, customer-held pickup secret, idempotent
 accept/complete, snapshot-driven economics, cancellation debt engine, audit
 provenance. Open P1 gaps: CRS-G1 client-supplied fare in `ride_create`,
