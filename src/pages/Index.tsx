@@ -3,9 +3,9 @@ import { formatGNF } from "@/lib/format";
 import { AnimatePresence } from "framer-motion";
 import { UserHome } from "@/components/views/UserHome";
 import { DriverHome } from "@/components/views/DriverHome";
-import { RideBooking } from "@/components/ride/RideBooking";
+import { RideBooking, type RideBookingIntent } from "@/components/ride/RideBooking";
 import { RealtimeTripScreen } from "@/components/trip/RealtimeTripScreen";
-import { NoDriverRecoverySheet } from "@/components/ride/NoDriverRecoverySheet";
+import { NoDriverRecoverySheet, type RecoveryPaymentMode } from "@/components/ride/NoDriverRecoverySheet";
 
 /** Local ride mode type — kept here so the legacy LiveTracking component
  * (now quarantined under `_legacy/`) is not imported from production code. */
