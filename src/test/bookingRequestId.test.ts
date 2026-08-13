@@ -17,12 +17,12 @@ const intent: BookingIntent = {
 describe("booking request id", () => {
   it("produces a valid v4 uuid even without crypto.randomUUID", () => {
     const original = globalThis.crypto;
-    // @ts-expect-error deliberately removing the API for the fallback path
-    globalThis.crypto = { getRandomValues: original.getRandomValues.bind(original) };
+    const stub = { getRandomValues: original.getRandomValues.bind(original) };
+    Object.defineProperty(globalThis, "crypto", { value: stub, configurable: true });
     try {
       expect(newRequestUuid()).toMatch(UUID_RE);
     } finally {
-      globalThis.crypto = original;
+      Object.defineProperty(globalThis, "crypto", { value: original, configurable: true });
     }
   });
 
