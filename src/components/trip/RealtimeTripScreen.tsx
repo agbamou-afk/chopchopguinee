@@ -29,6 +29,8 @@ interface Props {
   onClose: () => void;
   /** Explicit cancellation (releases hold + cancels ride server-side). */
   onCancel?: () => void;
+  /** The 60s search window closed with no driver (server verdict). */
+  onNoDriver?: () => void;
 }
 
 const TITLES: Record<Props["mode"], string> = {
@@ -42,7 +44,7 @@ const TITLES: Record<Props["mode"], string> = {
  * in the v2 flow. Pure presentation around <ActiveTripMap>, plus header,
  * call/cancel side effects and wallet release on cancel.
  */
-export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: Props) {
+export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel, onNoDriver }: Props) {
   const settled = useRef(false);
   const { ride } = useRideRealtime(rideId);
   useRideLifecycleNotifications(ride, "client");
@@ -63,6 +65,20 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
     ride.status !== "cancelled" &&
     ride.status !== "completed";
   const pickupCode = (meta.pickup_code as string | undefined) ?? null;
+
+  /**
+   * Receipt payment truth: mirrors the server's `_ride_payment_mode` rule.
+   * Never assume cash.
+   */
+  const rawPaymentMode = (meta.payment_mode as string | undefined) ?? null;
+  const paymentLabel =
+    rawPaymentMode === "chop_pay" || rawPaymentMode === "choppay"
+      ? "Chop Pay"
+      : rawPaymentMode === "cash"
+        ? "Espèces"
+        : holdId
+          ? "Chop Pay"
+          : "Non renseigné";
 
   useEffect(() => {
     if (!ride) return;
@@ -86,33 +102,37 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
   }, [ride?.status]);
 
   /**
-   * No-driver safety net: while the ride is still pending and unassigned, the
-   * server is polled so the 60-second search window can close itself. The
-   * server releases the reservation in full and charges no cancellation fee —
-   * the client only reacts to that verdict.
+   * No-driver handling is server-autonomous: a scheduled sweeper closes the
+   * 60-second window even if this device is offline or the app is closed. The
+   * client only reacts to the ride row verdict. A slow backstop call is kept
+   * so a reconnecting device converges immediately; it is idempotent and
+   * moves zero GNF once the sweeper has already settled the ride.
    */
   useEffect(() => {
     if (!ride || ride.status !== "pending" || ride.driver_id) return;
     let stopped = false;
     const tick = async () => {
-      const { data, error } = await supabase.rpc("ride_expire_unfulfilled", { p_ride_id: rideId });
-      if (stopped || error) return;
-      const res = data as { status?: string; released_gnf?: number } | null;
-      if (res?.status === "no_driver") {
-        stopped = true;
-        window.clearInterval(timer);
-        toast({
-          title: "Aucun chauffeur disponible",
-          description: res.released_gnf
-            ? "Vos fonds réservés ont été libérés en totalité. Aucun frais."
-            : "Aucun frais ne vous a été facturé. Réessayez dans un instant.",
-        });
-        onClose();
-      }
+      await supabase.rpc("ride_expire_unfulfilled", { p_ride_id: rideId }).catch(() => null);
+      if (stopped) return;
     };
-    const timer = window.setInterval(tick, 5000);
+    void tick();
+    const timer = window.setInterval(tick, 15000);
     return () => { stopped = true; window.clearInterval(timer); };
-  }, [ride?.status, ride?.driver_id, rideId, onClose]);
+  }, [ride?.status, ride?.driver_id, rideId]);
+
+  /** Single source of truth for the no-driver outcome: the ride row itself. */
+  const noDriverHandled = useRef(false);
+  useEffect(() => {
+    if (!ride || noDriverHandled.current) return;
+    if (ride.status !== "cancelled") return;
+    if ((meta.cancel_reason as string | undefined) !== "no_driver_available") return;
+    noDriverHandled.current = true;
+    toast({
+      title: "Aucun chauffeur disponible",
+      description: "Vos fonds réservés ont été libérés en totalité. Aucun frais.",
+    });
+    (onNoDriver ?? onClose)();
+  }, [ride?.status, meta.cancel_reason, onNoDriver, onClose]);
 
   useEffect(() => {
     try {
@@ -185,7 +205,7 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
           rideId={rideId}
           fareGnf={ride.fare_gnf ?? 0}
           driverName={driverName}
-          paymentLabel="Espèces"
+          paymentLabel={paymentLabel}
           serviceLabel={rideServiceTitle(mode)}
           onClose={onClose}
         />
