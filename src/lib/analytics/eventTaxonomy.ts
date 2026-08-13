@@ -48,6 +48,9 @@ export const EVENTS = {
   "toktok.booking.started": "toktok",
   "toktok.booking.completed": "toktok",
   "toktok.booking.cancelled": "toktok",
+  "taxi.booking.started": "taxi",
+  "taxi.booking.completed": "taxi",
+  "taxi.booking.cancelled": "taxi",
 
   // --- Food / Repas ---
   "repas.page.viewed": "repas",
