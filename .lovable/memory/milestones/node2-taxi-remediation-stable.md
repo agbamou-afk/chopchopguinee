@@ -103,10 +103,12 @@ Explicitly: Slice 13 parts 4–7 remain **SECURITY INVOKER**. The fresh 507/507 
 used the existing direct privileged query path and did not alter their bodies,
 grants, or security modes.
 
-## Node 2 verdict: HOLD — NOT LAUNCH-READY
+## Node 2 verdict: ENGINEERING CLOSED / FORMAL HOLD — SUPPLY + GATE 14
 
-Taxi is now structurally certified but must stay OFF:
+Taxi is **NOT** launch-ready, locked, or activated. Engineering certification is
+complete, but the operational gate remains open:
 - TAX-G2 remains open: 0 approved `auto` drivers in production, so there is no real
   Taxi supply to serve a customer.
 - `feature_flags.taxi` = false, and `ride_request_create` fails closed server-side.
+- Two-actor/two-device field **Gate 14** remains outstanding.
 Flip the flag only after real approved Taxi drivers exist and a live field check passes.
