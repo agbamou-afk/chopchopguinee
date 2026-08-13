@@ -76,6 +76,11 @@ export function useEnvoyerEnabled(): boolean {
   return useFlag("envoyer_enabled");
 }
 
+/** Node 2 — Taxi (`auto`) rides. OFF until approved Taxi drivers exist. */
+export function useTaxiEnabled(): boolean {
+  return useFlag("taxi");
+}
+
 /** Slice 6 — declared value + attestation + photo evidence engine. */
 export function useEnvoyerDeclaredValueEnabled(): boolean {
   return useFlag("envoyer_declared_value_enabled");
