@@ -1,0 +1,1 @@
+SELECT jsonb_typeof(public._qa_s13_run1()) t, left((public._qa_s13_run1())::text, 300) sample;
