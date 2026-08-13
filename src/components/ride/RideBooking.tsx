@@ -39,7 +39,15 @@ interface Suggestion {
 interface RideBookingProps {
   type: "moto" | "toktok";
   onClose: () => void;
-  onBook: (trip: { pickupCoords: [number, number]; destCoords: [number, number]; fare: number }) => void;
+  onBook: (trip: {
+    pickupCoords: [number, number];
+    destCoords: [number, number];
+    /** Server-quoted fare in GNF. Never a client-side estimate. */
+    fare: number;
+    paymentMode: "chop_pay" | "cash";
+    pickupLabel?: string;
+    destLabel?: string;
+  }) => void;
   /** Prefilled destination text (the user still confirms via search). */
   initialDestination?: string;
 }
@@ -83,11 +91,12 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const [confirmed, setConfirmed] = useState(false);
   const [routing, setRouting] = useState(false);
   const [routeError, setRouteError] = useState<string | null>(null);
-  const [fare, setFare] = useState<{ base: number; perKm: number; currency: string }>({
-    base: type === "moto" ? 5000 : 8000,
-    perKm: type === "moto" ? 1000 : 1500,
-    currency: "GNF",
-  });
+  // CRS-G1/G3: the fare shown here is the server quote, and the customer
+  // explicitly picks how they pay. No client-side fare arithmetic.
+  const [serverQuoteGnf, setServerQuoteGnf] = useState<number | null>(null);
+  const [quoting, setQuoting] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<"chop_pay" | "cash">("chop_pay");
   const debounceRef = useRef<number | null>(null);
   const mapRef = useRef<ChopMapHandle>(null);
   const option = rideOptions[type];
@@ -137,17 +146,37 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live.isRealLocation, live.coords?.lat, live.coords?.lng]);
 
-  // Load admin-managed fare for this ride type
+  // Server-authoritative quote. The same function the commitment RPC uses,
+  // so the displayed price is exactly what will be charged.
   useEffect(() => {
+    if (!pickupCoords || !destCoords) {
+      setServerQuoteGnf(null);
+      setQuoteError(null);
+      return;
+    }
+    let cancelled = false;
+    setQuoting(true);
+    setQuoteError(null);
     supabase
-      .from("fare_settings")
-      .select("base_price, price_per_km, currency")
-      .eq("ride_type", type)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setFare({ base: Number(data.base_price), perKm: Number(data.price_per_km), currency: data.currency });
+      .rpc("ride_compute_quote_gnf", {
+        p_mode: type,
+        p_pickup_lat: pickupCoords[0],
+        p_pickup_lng: pickupCoords[1],
+        p_dest_lat: destCoords[0],
+        p_dest_lng: destCoords[1],
+      })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || data == null) {
+          setServerQuoteGnf(null);
+          setQuoteError("Tarif indisponible");
+        } else {
+          setServerQuoteGnf(Number(data));
+        }
+        setQuoting(false);
       });
-  }, [type]);
+    return () => { cancelled = true; };
+  }, [type, pickupCoords, destCoords]);
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
@@ -318,17 +347,14 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
     }
   }, [pickupCoords, destCoords]);
 
-  const estimatedPrice = fare.base + fare.perKm * (distanceKm ?? 5);
-
   const previewState: "idle" | "calculating" | "ready" | "unavailable" | "network" =
     !destCoords ? "idle"
-    : routing ? "calculating"
+    : routing || quoting ? "calculating"
+    : quoteError ? "unavailable"
     : routeError && distanceKm == null ? "unavailable"
     : routeError ? "network"
-    : distanceKm != null ? "ready"
+    : serverQuoteGnf != null ? "ready"
     : "calculating";
-  const fareLow = Math.round(estimatedPrice * 0.95);
-  const fareHigh = Math.round(estimatedPrice * 1.1);
 
   return (
     <motion.div
@@ -566,11 +592,53 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           serviceType={type}
           durationS={durationMin != null ? durationMin * 60 : undefined}
           distanceM={distanceKm != null ? distanceKm * 1000 : undefined}
-          fareLowGnf={previewState === "ready" ? fareLow : undefined}
-          fareHighGnf={previewState === "ready" ? fareHigh : undefined}
-          paymentMethod="wallet"
+          fareLowGnf={previewState === "ready" && serverQuoteGnf != null ? serverQuoteGnf : undefined}
+          fareHighGnf={previewState === "ready" && serverQuoteGnf != null ? serverQuoteGnf : undefined}
+          paymentMethod={paymentMode === "cash" ? "cash" : "wallet"}
           onRetry={() => destCoords && setDestCoords([...destCoords] as [number, number])}
         />
+
+        {/* CRS-G3: explicit customer payment choice. */}
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Mode de paiement</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              aria-pressed={paymentMode === "chop_pay"}
+              onClick={() => setPaymentMode("chop_pay")}
+              className={`rounded-xl border px-3 py-3 text-left transition ${
+                paymentMode === "chop_pay"
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-card hover:bg-muted/50"
+              }`}
+            >
+              <span className="block text-sm font-semibold">Chop Pay</span>
+              <span className="block text-[11px] text-muted-foreground">
+                Montant réservé sur votre solde
+              </span>
+            </button>
+            <button
+              type="button"
+              aria-pressed={paymentMode === "cash"}
+              onClick={() => setPaymentMode("cash")}
+              className={`rounded-xl border px-3 py-3 text-left transition ${
+                paymentMode === "cash"
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-card hover:bg-muted/50"
+              }`}
+            >
+              <span className="block text-sm font-semibold">Espèces</span>
+              <span className="block text-[11px] text-muted-foreground">
+                Vous payez le chauffeur directement
+              </span>
+            </button>
+          </div>
+          {paymentMode === "chop_pay" && serverQuoteGnf != null && (
+            <p className="text-[11px] text-muted-foreground">
+              Une réservation de fonds est calculée par le serveur au moment de la commande.
+            </p>
+          )}
+        </div>
 
         {!confirmed ? (
           <Button
@@ -584,7 +652,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
                 return;
               }
               setConfirmed(true);
-              toast({ title: "Itinéraire confirmé", description: "Le tarif appliqué est défini par l'administrateur." });
+              toast({ title: "Itinéraire confirmé", description: "Le tarif appliqué est défini par le serveur." });
             }}
             className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
           >
@@ -592,10 +660,25 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           </Button>
         ) : (
           <Button
-            onClick={() => pickupCoords && destCoords && onBook({ pickupCoords, destCoords, fare: estimatedPrice })}
+            disabled={serverQuoteGnf == null}
+            onClick={() =>
+              pickupCoords &&
+              destCoords &&
+              serverQuoteGnf != null &&
+              onBook({
+                pickupCoords,
+                destCoords,
+                fare: serverQuoteGnf,
+                paymentMode,
+                pickupLabel: pickup || undefined,
+                destLabel: destination || undefined,
+              })
+            }
             className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
           >
-            Réserver pour {formatGNF(Math.round(estimatedPrice))}
+            {serverQuoteGnf == null
+              ? quoteError ?? "Calcul du tarif…"
+              : `Réserver pour ${formatGNF(serverQuoteGnf)}`}
           </Button>
         )}
       </motion.div>

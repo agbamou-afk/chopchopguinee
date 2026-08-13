@@ -8302,6 +8302,7 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_node0_course: { Args: never; Returns: Json }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
       _qa_s13_driver: {
         Args: { p_bal: number; p_tag: string; p_uid: string }
@@ -12407,6 +12408,20 @@ export type Database = {
           p_score: number
         }
         Returns: string
+      }
+      ride_request_create: {
+        Args: {
+          p_client_request_id: string
+          p_dest_label?: string
+          p_dest_lat: number
+          p_dest_lng: number
+          p_mode: Database["public"]["Enums"]["ride_mode"]
+          p_payment_mode: string
+          p_pickup_label?: string
+          p_pickup_lat: number
+          p_pickup_lng: number
+        }
+        Returns: Json
       }
       ride_request_dispatch: { Args: { p_ride_id: string }; Returns: string }
       ride_set_phase: {

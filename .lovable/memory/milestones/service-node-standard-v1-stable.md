@@ -15,13 +15,14 @@ migration change (head `26fe9a7e8658a14124526a39dbb48254fed45030`).
 
 ## Course verdict
 
-**REFERENCE WITH GAPS.** This verdict applies to Moto Course (Node 0) only. Shared ride infrastructure that also supports the future `toktok` / Bonbonna node is explicitly noted as shared, but Bonbonna has not been audited or scored.
+**REFERENCE WITH GAPS** at audit time; the three P1 gaps were closed on 2026-08-13 by `node0-course-closeout-stable`, moving Course (Moto) to REFERENCE / LAUNCH-READY for the request → assignment → completion path. This verdict applies to Moto Course (Node 0) only. Shared ride infrastructure that also supports the future `toktok` / Bonbonna node is explicitly noted as shared, but Bonbonna has not been audited or scored.
 
 Course (Moto) is the benchmark node: full two-actor lifecycle,
 server-authoritative transitions, customer-held pickup secret, idempotent
 accept/complete, snapshot-driven economics, cancellation debt engine, audit
-provenance. Open P1 gaps: CRS-G1 client-supplied fare in `ride_create`,
-CRS-G2 client-computed `fare*1.1` hold, CRS-G3 no customer payment-mode selector.
+provenance. P1 gaps found at audit time and since CLOSED: CRS-G1 client-supplied
+fare in `ride_create`, CRS-G2 client-computed `fare*1.1` hold, CRS-G3 no customer
+payment-mode selector (see `node0-course-closeout-stable`).
 YELLOWs: no authenticated 390x844 visual pass, no live two-device Conakry run,
 no native push.
 

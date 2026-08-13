@@ -46,7 +46,6 @@ import {
   markSignupInviteSeenSession,
 } from "@/components/onboarding/SignupInviteSheet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
-import { createSupportIssue } from "@/lib/support/issues";
 import { UnderConstructionModal } from "@/components/announcements/UnderConstructionModal";
 import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
 import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
@@ -849,74 +848,71 @@ const Index = () => {
                 navigate(`/auth?next=${next}`);
                 return;
               }
-              const holdAmount = Math.ceil(trip.fare * 1.1);
-              const { data, error } = await supabase.rpc("wallet_hold", {
-                p_amount_gnf: holdAmount,
-                p_reference: null,
-                p_description: `Réservation ${bookingRide}`,
-              });
-              if (error) {
-                toast({ title: "Solde insuffisant", description: error.message });
-                return;
-              }
-              const holdId = (data as { id: string }).id;
-              const { data: ride, error: rideErr } = await supabase.rpc("ride_create", {
+              // Single authoritative commitment: the server quotes the fare,
+              // derives any reservation and places it atomically with the ride.
+              // No client-side fare or hold arithmetic (CRS-G1 / CRS-G2).
+              const clientRequestId =
+                typeof crypto !== "undefined" && "randomUUID" in crypto
+                  ? crypto.randomUUID()
+                  : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+              const { data: reqData, error: reqErr } = await supabase.rpc("ride_request_create", {
                 p_mode: bookingRide,
                 p_pickup_lat: trip.pickupCoords[0],
                 p_pickup_lng: trip.pickupCoords[1],
-                p_dest_lat: trip.destCoords?.[0] ?? null,
-                p_dest_lng: trip.destCoords?.[1] ?? null,
-                p_fare_gnf: Math.round(trip.fare),
-                p_hold_tx_id: holdId,
-                p_driver_id: null,
+                p_dest_lat: trip.destCoords[0],
+                p_dest_lng: trip.destCoords[1],
+                p_payment_mode: trip.paymentMode,
+                p_client_request_id: clientRequestId,
+                p_pickup_label: trip.pickupLabel ?? null,
+                p_dest_label: trip.destLabel ?? null,
               });
-              if (rideErr) {
-                const { error: releaseErr } = await supabase.rpc("wallet_release", {
-                  p_hold_id: holdId,
-                  p_reason: "Création course échouée",
+              if (reqErr) {
+                const msg = reqErr.message ?? "";
+                toast({
+                  title: msg.includes("Insufficient balance")
+                    ? "Solde Chop Pay insuffisant"
+                    : msg.includes("ACTIVE_RIDE_EXISTS")
+                      ? "Une course est déjà en cours"
+                      : "Réservation échouée",
+                  description: msg,
                 });
-                if (releaseErr) {
-                  // Double-failure: ride_create failed AND wallet_release failed.
-                  // Log a high-severity support issue so funds can be reconciled
-                  // manually. Never mutate wallet/payment state from here.
-                  await createSupportIssue({
-                    type: "payment_pending",
-                    severity: "high",
-                    assignedRole: "payment",
-                    title: "Fonds à vérifier",
-                    description:
-                      "Réservation course échouée et libération du hold échouée. Vérification manuelle requise.",
-                    metadata: {
-                      source: "ride_booking_hold_release_failure",
-                      holdId,
-                      ride_create_error: rideErr.message,
-                      wallet_release_error: releaseErr.message,
-                      bookingRide,
-                      fare: trip.fare,
-                      holdAmount,
-                    },
-                  });
-                  toast({
-                    title: "Réservation échouée",
-                    description: "Vos fonds sont à vérifier par support.",
-                  });
-                } else {
-                  toast({ title: "Erreur", description: rideErr.message });
-                }
                 return;
               }
-              const newRideId = (ride as { id: string }).id;
-              setActiveTrip({ mode: bookingRide, ...trip, holdId, rideId: newRideId });
+              const req = reqData as {
+                ride_id: string;
+                fare_gnf: number;
+                hold_amount_gnf: number;
+                payment_mode: "cash" | "chop_pay";
+              };
+              const { data: rideRow } = await supabase
+                .from("rides")
+                .select("hold_tx_id")
+                .eq("id", req.ride_id)
+                .maybeSingle();
+              setActiveTrip({
+                mode: bookingRide,
+                ...trip,
+                fare: req.fare_gnf,
+                holdId: rideRow?.hold_tx_id ?? null,
+                rideId: req.ride_id,
+              });
               setBookingRide(null);
               setBookingDestination(undefined);
+              const holdCopy =
+                req.payment_mode === "chop_pay"
+                  ? `Fonds réservés : ${formatGNF(req.hold_amount_gnf)}.`
+                  : "Paiement en espèces au chauffeur.";
               notif.push({
                 kind: "ride",
                 title: "Course confirmée",
-                body: `Votre ${bookingRide?.toUpperCase()} est en route. Fonds réservés : ${formatGNF(holdAmount)}.`,
+                body: `Votre ${bookingRide?.toUpperCase()} est en route. ${holdCopy}`,
               });
               toast({
-                title: "Fonds réservés",
-                description: `${formatGNF(holdAmount)} bloqués jusqu'à la fin de course.`,
+                title: req.payment_mode === "chop_pay" ? "Fonds réservés" : "Course confirmée",
+                description:
+                  req.payment_mode === "chop_pay"
+                    ? `${formatGNF(req.hold_amount_gnf)} bloqués jusqu'à la fin de course. Tarif : ${formatGNF(req.fare_gnf)}.`
+                    : `Tarif : ${formatGNF(req.fare_gnf)} à régler au chauffeur.`,
               });
             }}
           />
