@@ -914,7 +914,7 @@ const Index = () => {
               notif.push({
                 kind: "ride",
                 title: "Course confirmée",
-                body: `Votre ${bookingRide?.toUpperCase()} est en route. ${holdCopy}`,
+                body: `Votre ${rideServiceTitle(bookingRide)} est en route. ${holdCopy}`,
               });
               toast({
                 title: req.payment_mode === "chop_pay" ? "Fonds réservés" : "Course confirmée",
