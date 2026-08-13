@@ -1,101 +1,93 @@
-# Slice 4 Closeout Audit — Read-only Evidence Report
+# Node 0 Closeout — Course (Moto) P1 Remediation Plan
 
-Baseline: 3a58fc4. No code, migrations, or DB state changed.
+Baseline: `2c769fa`. Plan only; nothing edited. Scope is Course/Moto request path. No Bonbonna, no flag activation, no finance-primitive refactor.
 
-## 1. Product-code call sites for the Slice 4 RPCs — **ZERO** (P1)
+## What the audit found in live code
 
-Search over `src/**` and `supabase/functions/**` for `cash_order_quote|accept|merchant_accept|merchant_reject|merchant_prepare|complete_cash|customer_cancel|dispute_open|admin_cash_order_dispute_resolve`:
+Verified this turn:
 
-- `src/**`: only two hits, both non-invocations —
-  - `src/integrations/supabase/types.ts` (generated type entries for the RPCs + `cash_order_runtime` table)
-  - `src/components/admin/finance/FinanceControlsPanel.tsx:30` — the `cash_order_funding_enabled` **feature flag label** only.
-- `supabase/functions/**`: no hits.
-- Only other hits are inside the Slice 4 migrations themselves (definitions + the now-dropped QA harness).
+- `ride_create(p_mode, lat/lng…, p_fare_gnf, p_hold_tx_id, p_driver_id)` inserts `p_fare_gnf` and `p_hold_tx_id` verbatim. No fare recomputation, no hold validation, no ownership check on the hold, no idempotency key, no finance snapshot written. (**CRS-G1**)
+- `src/pages/Index.tsx:852-872` computes `Math.ceil(trip.fare * 1.1)`, calls `wallet_hold` itself, then calls `ride_create`, then compensates with `wallet_release` on failure — a client-orchestrated two-step money path. (**CRS-G2**)
+- `src/components/ride/RideBooking.tsx:143-148, 321, 595` reads `fare_settings` client-side and computes `base + perKm * (distanceKm ?? 5)`; that number is what is sent as the fare. Line 571 hardcodes `paymentMethod="wallet"`. (**CRS-G3**)
+- Server-authoritative pricing **already exists and is unused**: `ride_get_quote` / `ride_compute_quote_gnf` derive fare from `fare_settings` + Haversine over the coordinates. This is the anchor for the fix — no new pricing engine needed.
+- `ride_complete` and `ride_cancel` already branch on `public._ride_payment_mode(ride)`, which reads `metadata->>'payment_mode'` ∈ {`cash`,`chop_pay`} and falls back to `chop_pay` when `hold_tx_id IS NOT NULL`, else `cash`. Both branches are implemented: chop_pay → `wallet_capture` + commission transfer; cash → cancellation-debt engine on cancel. **Nothing writes `metadata.payment_mode` today**, so mode is inferred purely from hold presence.
+- Both read `metadata->'finance_snapshot'` and fall back to `finance_policy_snapshot(...)` at completion/cancel time. Because `ride_create` never freezes a snapshot, Course economics are currently evaluated **at settlement time**, not at request time.
+- Flags today: `chop_pay_checkout_enabled=false`, `chop_pay_enabled=false`, `om_ride_checkout_enabled=false`, `cancellation_policy_enabled=false`, `moto=true`, `toktok=true`, `wallet=true`. Ride wallet holds currently run regardless of the Chop Pay flags.
 
-Live product lifecycle screens still use the legacy paths and never touch the engine:
-- Repas merchant: `src/components/merchant/OrdersSection.tsx` → `advanceRestaurantOrder` (direct `food_orders.state` writes).
-- Marché merchant: `src/components/merchant/MerchantCommandesView.tsx` → `respondToInterest`, `respondOffer`.
-- Customer/driver Repas: `src/lib/repas/orders.ts` → direct `food_orders` insert + `createMission`, ChopPay intent for wallet.
+## Conflicts to surface before coding (decisions needed)
 
-**Finding 1 — P1.** The cash-order engine is deployed but fully unwired. No user, driver, merchant, or admin surface can reach quote/accept/fund/prepare/complete/cancel/dispute. Slice 4's "wire cash order selection" objective is not met in product code; DB-level QA passed against synthetic rows only.
+1. **Chop Pay flags are OFF, yet ride holds run today.** Either the ride path is legitimately outside staged gating, or it is an unnoticed gate leak. The closeout must pick one and say it in the UI: if we gate ride Chop Pay behind `chop_pay_checkout_enabled`, the current wallet-hold ride flow stops working until that flag is turned on (not permitted here) and Course becomes cash-only. Recommendation: **do not add a new gate in this closeout**; treat the existing ride hold as the already-live Chop Pay ride rail, and record the ambiguity as a follow-up so we do not silently change activation posture. Needs your confirmation.
+2. **Cash rides today have no explicit fee/settlement leg on completion** (`ride_complete` else-branch); `cancellation_policy_enabled` is OFF so cash cancellation debt is likely inert. Offering "Espèces" is truthful (the runtime supports it) but the customer must not be told a cancellation fee applies while that flag is off.
+3. `ride_complete` allows a `_finance_privileged` caller to override the fare; that stays.
 
-## 2. Marché state synchronization — **not implemented** (P1)
+## Design
 
-Reading the live definitions of all `cash_order_*` functions:
+### A. One atomic server-owned commitment RPC
 
-- `_cash_order_facts` **reads** `marketplace_offers` (buyer, store, merchant_user_id, `COALESCE(counter_amount_gnf, offer_amount_gnf)`, cash inferred from `metadata->>'payment_method'`) and the latest `missions` row via `ref_market_order_id`.
-- **No** `cash_order_*` function performs any `UPDATE` on `marketplace_offers`. Product-state writes exist only under `IF p_source_module = 'repas'`:
-  - merchant_accept → `food_orders.state='confirmed'`
-  - merchant_prepare → `'preparing'`
-  - merchant_reject / customer_cancel → `'cancelled'`
-  - complete_cash → `'completed'` + `completed_at`
-- **No** `cash_order_*` function updates `missions` at all — for either module. `complete_cash` *reads* mission state as a gate (`pickup_confirmed`, state in picked_up/heading_to_dropoff/arrived_dropoff/delivered) but never advances it to `delivered`, and never sets a mission failure/cancel state on reject/cancel/dispute.
-- Delivery fee is derived from `missions.estimated_earning_gnf`; if no mission row exists, `delivery_fee_gnf = 0`.
+New `public.ride_request_create(p_mode, p_pickup_lat, p_pickup_lng, p_dest_lat, p_dest_lng, p_payment_mode text, p_client_request_id uuid, p_pickup_label text, p_dest_label text)` — SECURITY DEFINER, `SET search_path=public`, EXECUTE to `authenticated` + `service_role` only.
 
-States living **only** in `cash_order_runtime`, invisible to the product lifecycle: `accepted`, `merchant_accepted`, `preparing`, `merchant_rejected`, `disputed`, `dispute_resolved`, `cancelled`, `completed` — for Marché, **all** of them; for Repas, `disputed` / `dispute_resolved` / `merchant_rejected` (partially mapped to `cancelled`) and every mission-side transition.
+Inside one transaction:
+1. `auth.uid()` required (fail closed).
+2. Validate `p_payment_mode ∈ ('cash','chop_pay')`; validate coordinates present and within a Guinea bounding box.
+3. **Idempotency**: `SELECT ... FROM rides WHERE client_id=uid AND metadata->>'client_request_id' = p_client_request_id::text FOR UPDATE` → if found, return it unchanged (`status:'already_created'`). Backed by a partial unique index on `(client_id, (metadata->>'client_request_id'))`. Also reject if the client already has a `pending`/`in_progress` ride (returns `ACTIVE_RIDE_EXISTS`).
+4. **Fare**: `v_fare := public.ride_compute_quote_gnf(p_mode, …)`. Client fare is never accepted — the parameter does not exist.
+5. **Distance**: server-derived Haversine inside `ride_compute_quote_gnf`. Client route distance is *not* trusted and is not an input. (Road-distance uplift is out of scope; note in the audit that Haversine understates real road distance — pricing accuracy is a separate future item, not a P1.)
+6. **Snapshot**: `finance_policy_snapshot(_ride_mission_type(mode), now(), p_payment_mode, v_fare, 0,0,0,false)` stored at `metadata.finance_snapshot`, plus `metadata.payment_mode`, `metadata.fare_source='server:ride_compute_quote_gnf'`, `metadata.client_request_id`, labels. Freezes economics at request time for both `ride_complete` and `ride_cancel` (both already prefer the snapshot).
+7. **Hold (chop_pay only)**: hold amount derived server-side as `ceil(v_fare * hold_multiplier)`, multiplier read from the snapshot/`finance_policies` if present, else a constant defined in the migration (matching today's 1.10). Calls the existing `wallet_hold` under the caller's claims — no new money primitive. Insufficient balance → raise `INSUFFICIENT_FUNDS` and the whole transaction rolls back, so **no orphan hold and no client-side compensation is possible**.
+8. **Cash**: no hold; `hold_tx_id` stays NULL; `metadata.payment_mode='cash'` makes `_ride_payment_mode` explicit rather than inferred.
+9. Insert the ride, return the row + `{fare_gnf, hold_amount_gnf, payment_mode}`.
 
-**Finding 2a — P1.** Marché has zero write-back: an offer can be funded, prepared, and cash-completed while `marketplace_offers.status` stays unchanged.
-**Finding 2b — P1.** Mission state is read-only to the engine for both modules; delivery/custody completion is never recorded on `missions`.
+`ride_create` is **kept** for compatibility but hardened: recompute the fare server-side and ignore `p_fare_gnf` (or raise if it differs beyond rounding), and reject a `p_hold_tx_id` that is not a `held` transaction owned by the caller. Alternative: revoke `authenticated` EXECUTE on `ride_create` once no client calls it. Recommendation: harden **and** revoke `authenticated`, leaving `service_role` — decision point.
 
-## 3. Post-preparation dispute economics (`admin_cash_order_dispute_resolve`)
+### B. CRS-G3 payment selection
 
-Exact behavior from the live definition:
+`RideBooking` gains a two-option selector: **Chop Pay** (wallet-held) and **Espèces** (cash to driver). Both are genuinely supported by `_ride_payment_mode`, `ride_complete`, `ride_cancel`. Rules:
+- Selection is UI intent only; the rail is whatever the server accepts. No new rail invented, no flag bypassed.
+- If a mode is unavailable (e.g. Chop Pay when available balance < required hold), it renders **disabled with an explicit reason** — never a fake success.
+- Copy is truthful: cash shows "Vous payez le chauffeur en espèces"; Chop Pay shows the exact server-quoted hold amount returned by the quote call.
+- Orange Money is **not** offered here (`om_ride_checkout_enabled=false`).
 
-```
-complete_as_delivered  -> _cash_order_capture_platform_fee(...)
-release_driver_funding -> _driver_mission_hold_release_internal(module, id, NULL, reason, caller)
-close_no_value         -> jsonb_build_object('status','closed_no_value')   -- no financial call
-then: runtime.state = 'dispute_resolved' + audit_logs row
-```
+### C. Client changes (surgical)
 
-**3a. `release_driver_funding` after merchant acceptance — P1.**
-`_merchant_payable_fund_internal('driver_cash_funding')` has already: incremented `mission_financial_holds.captured_gnf/captured_unrestricted_gnf` to full, set the cash_funding hold `state='captured'`, debited the driver wallet `balance_gnf` and `held_gnf`, credited the merchant wallet `balance_gnf`, and posted `L_HOLD_CASH_FUNDING → L_MERCHANT_PAYABLE`.
-`_driver_mission_hold_release_internal` only iterates holds in `('held','partially_captured','frozen')` and releases `amount - captured - released`, which is **0** for the captured cash_funding hold (and the hold is `captured`, so it is not even selected).
-=> The merchandise principal is **NOT** restored to the driver. The merchant payable and merchant wallet are **NOT** debited or reversed. In practice this outcome only releases still-open holds — i.e. the `platform_fee` hold (and any partially-captured remainder). The outcome name overstates what it does.
+- `src/components/ride/RideBooking.tsx`: replace the local `base + perKm*km` estimate with a debounced `supabase.rpc('ride_get_quote', …)` call; render the server fare, show a skeleton while quoting, and disable "Réserver" until a quote exists. Add the payment selector; pass `paymentMode` up through `onBook`. Keep `fare_settings` read only as a non-binding pre-destination placeholder, clearly labelled "estimation".
+- `src/pages/Index.tsx`: delete the `Math.ceil(trip.fare*1.1)` + `wallet_hold` + `wallet_release` compensation block; call `ride_request_create` once with a `crypto.randomUUID()` request id retained across retries. Toast the hold amount **returned by the server**. Keep the existing support-issue escalation only for genuine unknown failures.
+- `src/components/booking/EtaPricePreview.tsx`: `paymentMethod` becomes `"chop_pay" | "cash"` with accurate labels.
+- No client table writes, no client-side persisted financial arithmetic anywhere in the path.
 
-**3b. `close_no_value` — P1.**
-No financial call at all. Any `platform_fee` hold stays `state='held'` with driver `wallets.held_gnf` still encumbered, and the funded `merchant_payables` row stays `funded`. Runtime moves to `dispute_resolved`, so no later `cash_order_*` path can act on it (`complete_cash` requires `preparing|merchant_accepted`; `merchant_reject`/`customer_cancel` require `accepted`; a second resolve short-circuits with `already_resolved`). => Holds are left stuck with no in-engine recovery path.
+### D. Migration shape (single migration)
 
-**3c. `complete_as_delivered` — P1 (economics partially correct, lifecycle not).**
-It captures the platform fee correctly (idempotent: `already_resolved` when the hold is not `held`). But it does **not** run the `complete_cash` body: `cash_collected_gnf`, `cash_principal_recovery_gnf`, `cash_delivery_earning_gnf`, `cash_fee_recovery_gnf` stay unpopulated; `completed_at` stays NULL; runtime state becomes `dispute_resolved`, never `completed`; `food_orders` is not set to `completed`; `marketplace_offers` and `missions` are untouched. => No true delivered/completed state, no cash-recovery record.
+1. `CREATE OR REPLACE FUNCTION public.ride_request_create(...)`
+2. `REVOKE ALL ON FUNCTION public.ride_request_create(...) FROM PUBLIC, anon;` `GRANT EXECUTE TO authenticated, service_role;`
+3. `CREATE OR REPLACE FUNCTION public.ride_create(...)` hardened (+ optional `REVOKE EXECUTE ... FROM authenticated`)
+4. Partial unique index on `rides (client_id, (metadata->>'client_request_id')) WHERE metadata ? 'client_request_id'`
+5. Extend `_qa_s13_run*` (or a new `_qa_node0_course()`) with the assertions below.
 
-## 4. Grants — **PASS**
+No new tables, no RLS changes, no grant widening, no flag writes, no historical data touched.
 
-`pg_proc.proacl` (public schema):
+## Regression plan
 
-| function | ACL |
-|---|---|
-| `merchant_payable_create`, `merchant_payable_fund`, `driver_mission_hold_release`, `customer_cancellation_debt_create`, `driver_funding_allocate` | `postgres`, `service_role` only |
-| `_merchant_payable_create_internal`, `_merchant_payable_fund_internal`, `_driver_mission_hold_release_internal`, `_customer_cancellation_debt_create_internal` | `postgres`, `service_role` only |
-| all `cash_order_*` (`quote`, `accept`, `merchant_accept`, `merchant_reject`, `merchant_prepare`, `complete_cash`, `customer_cancel`, `dispute_open`) | `postgres`, `authenticated`, `service_role` |
-| `admin_cash_order_dispute_resolve` | `postgres`, `authenticated`, `service_role` (guarded by `_finance_privileged(auth.uid())`) |
+New assertions, run as one batch:
+1. Tampered fare: `ride_request_create` has no fare parameter; a direct `ride_create` call with an inflated `p_fare_gnf` persists the server-recomputed fare (or raises).
+2. Tampered hold: `ride_create` with a foreign / non-`held` `p_hold_tx_id` raises; `ride_request_create` hold equals `ceil(server_fare * multiplier)` exactly.
+3. Replay: same `client_request_id` twice → one `rides` row, one `wallet_transactions` hold, second call returns `already_created`.
+4. Failure atomicity: chop_pay request with insufficient balance → 0 rides, 0 holds.
+5. Cash mode → `hold_tx_id IS NULL`, `metadata.payment_mode='cash'`, `_ride_payment_mode='cash'`; completion and cancellation take the cash branch.
+6. Chop Pay mode → `_ride_payment_mode='chop_pay'`; `ride_complete` captures against the frozen snapshot's commission bps, not a recomputed live policy.
+7. Snapshot freeze: mutate `finance_policies` after request → `ride_complete` / `ride_cancel` still use the request-time snapshot.
+8. Anon fail-closed on `ride_request_create`.
+9. Full untouched sequential Slice 13 sweep Part 1→7 must still return **507/507 PASS**, master wallet unchanged at `-100 435 GNF`, ledger sum 0, flag posture unchanged.
+Plus `tsgo` typecheck, vitest, and build.
 
-No `anon` grant anywhere in this set; no raw money primitive is reachable by `public`/`anon`/`authenticated`. Each `authenticated`-callable `cash_order_*` re-checks caller identity against the runtime row (driver / merchant / customer) or `_finance_privileged`. `cash_order_runtime`: `SELECT` to `authenticated` under a participant RLS policy, `ALL` to `service_role`. **PASS.**
+## Visual QA (390×844)
 
-## 5. Classification against Slice 4 scope
+Screenshot via Playwright: payment selector (both states + disabled-with-reason), quote loading vs ready, confirmation sheet showing server fare + server hold, active-trip screen, and the completed-ride receipt — verifying every displayed number matches the DB row (`fare_gnf`, hold `amount_gnf`, commission) with no client-side recomputation.
 
-| Scope item | Verdict | Evidence |
-|---|---|---|
-| Wire cash order selection | **P1** | zero call sites (§1) |
-| Full merchandise funding | PASS (DB) | `_merchant_payable_fund_internal` captures full `amount - funded` |
-| Bonus (restricted promo) exclusion | PASS | `RESTRICTED_FUNDS_CANNOT_FUND_MERCHANDISE` when `promo_gnf > 0` |
-| 1% platform fee | PASS | `_cash_order_capture_platform_fee`, idempotent, ledger-posted |
-| Merchant wallet credit | PASS | merchant wallet upsert + credit inside funding |
-| Merchant acceptance | PASS (DB) / P1 (unwired) | `cash_order_merchant_accept` |
-| Preparation | PASS (DB), Repas only | prepare writes `food_orders`; Marché no write-back (§2) |
-| Delivery / cash recovery | YELLOW | correct on `complete_cash`; absent on dispute-resolved path (§3c); mission never advanced (§2b) |
-| Cancellation debt | PASS | `_customer_cancellation_debt_create_internal` on both pre/post-dispatch stages |
-| Merchant rejection release | PASS (Repas) / YELLOW (Marché) | holds released + payable `reversed`; no `marketplace_offers` write-back |
-| Post-preparation dispute handling | **P1** | §3a principal not restored, §3b stuck holds, §3c no completion |
-| Grants / privilege boundary | PASS | §4 |
-| Marché state synchronization | **P1** | §2 |
+## Documentation
 
-### Summary
-- PASS: 8 (core economics + privilege boundary)
-- YELLOW: 2 (Marché reject write-back, delivery/cash recovery on dispute path)
-- P1: 4 (zero product wiring; Marché state sync; mission state sync; dispute economics 3a/3b/3c)
-- P2: none newly raised.
+`docs/product/service-nodes/course-golden-reference-audit.md` and `.lovable/memory/milestones/service-node-standard-v1-stable.md` are updated **only after** code + regression pass: CRS-G1/G2/G3 flipped to CLOSED with evidence, Course regraded to REFERENCE / LAUNCH-READY, remaining non-P1 notes (Haversine vs road distance; the Chop Pay flag-posture ambiguity in Conflict 1) recorded as open YELLOW. Bonbonna stays NOT STARTED / NOT SCORED.
 
-Carried-forward YELLOW register unchanged: Slice 2/3 visual QA (preview signed out), DEF-FIN-001 master wallet −100 435 GNF, Slice 4 UI visual QA.
+## Decisions I need from you
 
-**Recommendation: do not sign Slice 4 as complete.** No fixes proposed here per instruction.
+- **D1** — Conflict 1: leave ride Chop Pay ungated (recommended) or gate it behind `chop_pay_checkout_enabled` and accept Course becoming cash-only until you activate it?
+- **D2** — After migrating the client, revoke `authenticated` EXECUTE on `ride_create` (recommended) or leave it hardened-but-callable?
+- **D3** — Hold multiplier: keep the current 1.10, or source it from `finance_policies` if a field exists there?
