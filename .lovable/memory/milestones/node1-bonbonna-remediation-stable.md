@@ -49,11 +49,36 @@ individuel", fastest through traffic. Shown in booking header + Services.
 - Reconnect/reopen: `Index.tsx` reads the persisted verdict (status=cancelled +
   `cancel_reason=no_driver_available`, last hour) once per session and surfaces
   the recovery sheet. Expiry is never inferred from the client clock.
+- The no-driver acknowledgement is stored in `sessionStorage`, scoped by user id
+  (`chop:no-driver-ack:<uid>:<rideId>`), so it survives remounts but never hides
+  a verdict the customer has not acted on. Display alone never acknowledges.
+- The restore query filters `metadata->>cancel_reason = 'no_driver_available'`
+  **inside the query** and takes the newest match, so a later ordinary
+  cancellation can never mask a qualifying no-driver search.
 
 ## Verification
 - `_qa_node1_bonbonna_full()` = base + sweeper + `_qa_node1_bonbonna_matrix()`
   (eligibility, single-winner, cash truth, cash no-driver zero-movement/no-debt,
-  central cancellation calculator parity, scheduler cadence + fail-closed grants)
+  central cancellation calculator parity, scheduler cadence + fail-closed grants,
+  finance-ineligible driver excluded from dispatch AND refused at accept,
+  cash completion truth (no wallet debit, no payment tx, cash recorded,
+  commission still booked), pre-dispatch cancellation parity with zero residual
+  reservation, and exactly-once Chop Pay capture on replayed completion)
+
+## QA execution hygiene (locked)
+Harnesses are NEVER shipped as migrations again. Evidence runs go through the
+`qa-node-harness` edge function, which only accepts an allowlisted `_qa_*`
+harness and requires the service role key, an `admin` JWT, or the
+`QA_NODE_HARNESS_TOKEN` operator header. The harnesses are SECURITY DEFINER,
+executable by `service_role` only (never `anon` / `authenticated`), and roll
+back every fixture they create. Migrations dated 2026-08-13 that only run
+SELECTs are legacy evidence artifacts kept immutable for history.
+
+Documented exception: Slice 13 parts 4-7 must `SET ROLE` to prove role-level
+access rules, which Postgres forbids inside a SECURITY DEFINER function. They
+stay SECURITY INVOKER and are executed from a privileged session; their results
+are persisted in `_qa_s13_results` and read back with a plain SELECT. Parts 1-3,
+Node 0 and all Node 1 harnesses run through `qa-node-harness`.
 - `_qa_node0_course()` 34/34 PASS (no Course regression)
 - Slice 13 parts 1-7: 507/507 PASS, 0 failed
 - Vitest 24/24 PASS, typecheck clean, no flag or master-wallet drift

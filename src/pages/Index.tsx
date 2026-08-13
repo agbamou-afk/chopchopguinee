@@ -485,8 +485,26 @@ const Index = () => {
 
   // Rides the user has actively dismissed this session — never re-restore them.
   const dismissedRidesRef = useRef<Set<string>>(new Set());
-  // No-driver outcomes already surfaced this session (never replay forever).
+  // No-driver outcomes the customer has ACTED ON. Acknowledgement is stored in
+  // sessionStorage (survives remounts within the browser session) and scoped by
+  // user id so account switches never collide. The in-memory set is only a fast
+  // cache. We never acknowledge on mere display: if the tab dies before the
+  // customer acts, the recovery must come back.
   const noDriverAckRef = useRef<Set<string>>(new Set());
+  const noDriverAckKey = useCallback(
+    (rideId: string) => `chop:no-driver-ack:${user?.id ?? "anon"}:${rideId}`,
+    [user?.id],
+  );
+  const isNoDriverAcked = useCallback((rideId: string) => {
+    if (noDriverAckRef.current.has(rideId)) return true;
+    try {
+      return sessionStorage.getItem(noDriverAckKey(rideId)) === "1";
+    } catch { return false; }
+  }, [noDriverAckKey]);
+  const ackNoDriver = useCallback((rideId: string) => {
+    noDriverAckRef.current.add(rideId);
+    try { sessionStorage.setItem(noDriverAckKey(rideId), "1"); } catch { /* private mode */ }
+  }, [noDriverAckKey]);
 
   /**
    * Build the recovery state from PERSISTED SERVER TRUTH only.
@@ -587,19 +605,21 @@ const Index = () => {
         .select("id,mode,status,metadata,pickup_lat,pickup_lng,dest_lat,dest_lng,created_at")
         .eq("client_id", user.id)
         .eq("status", "cancelled")
+        // Filter the no-driver verdict in the query itself, otherwise a newer
+        // ordinary cancellation would hide an earlier qualifying one.
+        .eq("metadata->>cancel_reason", "no_driver_available")
         .gte("created_at", cutoff)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (cancelled || !ride) return;
-      if (noDriverAckRef.current.has(ride.id)) return;
+      if (isNoDriverAcked(ride.id)) return;
       const recovery = buildNoDriverRecovery(ride as never);
       if (!recovery) return;
-      noDriverAckRef.current.add(ride.id);
       setNoDriverRecovery(recovery);
     })();
     return () => { cancelled = true; };
-  }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp, buildNoDriverRecovery]);
+  }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp, buildNoDriverRecovery, isNoDriverAcked]);
 
   const closeActiveTrip = async (alsoCancel: boolean) => {
     const trip = activeTrip;
@@ -1037,7 +1057,6 @@ const Index = () => {
               if (!ride) return;
               const recovery = buildNoDriverRecovery(ride as never);
               if (!recovery) return;
-              noDriverAckRef.current.add(recovery.rideId);
               setNoDriverRecovery(recovery);
             }}
           />
@@ -1051,9 +1070,16 @@ const Index = () => {
           paymentMode={noDriverRecovery.paymentMode}
           pickupLabel={noDriverRecovery.pickupLabel}
           destLabel={noDriverRecovery.destLabel}
-          onOpenChange={(open) => { if (!open) setNoDriverRecovery(null); }}
+          onOpenChange={(open) => {
+            if (!open) {
+              // Intentional dismissal ("Plus tard" / close) = acknowledgement.
+              ackNoDriver(noDriverRecovery.rideId);
+              setNoDriverRecovery(null);
+            }
+          }}
           onRetry={() => {
             const rec = noDriverRecovery;
+            ackNoDriver(rec.rideId);
             setNoDriverRecovery(null);
             // A retry is a brand-new commitment: fresh idempotency uuid.
             bookingRequestIds.current.reset();
@@ -1067,6 +1093,7 @@ const Index = () => {
           }}
           onSwitchMode={(next) => {
             const rec = noDriverRecovery;
+            ackNoDriver(rec.rideId);
             setNoDriverRecovery(null);
             bookingRequestIds.current.reset();
             setBookingIntent({
