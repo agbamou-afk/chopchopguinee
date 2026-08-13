@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, Bike, X, MapPin } from "lucide-react";
-import { rideModeLabel } from "@/lib/rides/rideModeLabel";
+import { rideModeLabel, type RideProductMode } from "@/lib/rides/rideModeLabel";
 
 /** Persisted server truth for how the cancelled search was going to be paid. */
 export type RecoveryPaymentMode = "chop_pay" | "cash" | "unknown";
@@ -9,7 +9,7 @@ export type RecoveryPaymentMode = "chop_pay" | "cash" | "unknown";
 interface Props {
   open: boolean;
   /** Service the customer was searching for. */
-  mode: "moto" | "toktok";
+  mode: RideProductMode;
   /** Derived from the cancelled ride row — never guessed from UI state. */
   paymentMode: RecoveryPaymentMode;
   /** Known trip intent, preserved so the customer never retypes the route. */
@@ -19,7 +19,7 @@ interface Props {
   /** Search again with the same service (new commitment / new idempotency id). */
   onRetry: () => void;
   /** Open the alternative service booking — never auto-books. */
-  onSwitchMode: (mode: "moto" | "toktok") => void;
+  onSwitchMode: (mode: RideProductMode) => void;
 }
 
 /**
@@ -31,11 +31,15 @@ interface Props {
 export function NoDriverRecoverySheet({
   open, mode, paymentMode, pickupLabel, destLabel, onOpenChange, onRetry, onSwitchMode,
 }: Props) {
-  const alternative: "moto" | "toktok" = mode === "toktok" ? "moto" : "toktok";
+  // Cross-sell the closest alternative: Moto is the deepest supply pool, so
+  // both Bonbonna and Taxi fall back to it; Moto falls back to Bonbonna.
+  const alternative: RideProductMode = mode === "moto" ? "toktok" : "moto";
   const title =
     mode === "toktok"
       ? "Aucun Bonbonna disponible pour le moment"
-      : "Aucun chauffeur Moto disponible pour le moment";
+      : mode === "auto"
+        ? "Aucun Taxi disponible pour le moment"
+        : "Aucun chauffeur Moto disponible pour le moment";
   const description =
     paymentMode === "chop_pay"
       ? "Votre réservation Chop Pay a été libérée en totalité. Aucun frais d'annulation ne vous a été facturé."
