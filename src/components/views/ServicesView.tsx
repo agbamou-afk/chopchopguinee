@@ -1,12 +1,13 @@
 import { type ComponentType } from "react";
 import { motion } from "framer-motion";
-import { ScanLine, Store, LifeBuoy } from "lucide-react";
+import { ScanLine, Store, LifeBuoy, Car } from "lucide-react";
 import { SteeringWheel } from "@/components/icons/SteeringWheel";
 import { useNavigate } from "react-router-dom";
 import {
   usePublicPaymentProductName,
   usePublicPaymentProductSubtitle,
   useEnvoyerEnabled,
+  useTaxiEnabled,
 } from "@/lib/flags/useFeatureFlag";
 import motoIcon from "@/assets/icons/moto.png";
 import toktokIcon from "@/assets/icons/toktok.png";
@@ -43,6 +44,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
   const omName = usePublicPaymentProductName();
   const omSubtitle = usePublicPaymentProductSubtitle();
   const envoyerOn = useEnvoyerEnabled();
+  const taxiOn = useTaxiEnabled();
 
   const tiles: ServiceTile[] = [
     {
@@ -58,6 +60,14 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
       desc: "Plus de place, bagages, abrité de la pluie",
       img: toktokIcon,
       onSelect: () => onActionClick("toktok"),
+    },
+    {
+      id: "auto",
+      label: "Course Taxi",
+      desc: "Voiture fermée, bagages, tout confort",
+      Icon: Car,
+      disabledReason: taxiOn ? undefined : "Bientôt disponible",
+      onSelect: () => onActionClick("auto"),
     },
     {
       id: "envoyer",
