@@ -112,7 +112,9 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel, on
     if (!ride || ride.status !== "pending" || ride.driver_id) return;
     let stopped = false;
     const tick = async () => {
-      await supabase.rpc("ride_expire_unfulfilled", { p_ride_id: rideId }).catch(() => null);
+      try {
+        await supabase.rpc("ride_expire_unfulfilled", { p_ride_id: rideId });
+      } catch { /* backstop only; the sweeper is authoritative */ }
       if (stopped) return;
     };
     void tick();
