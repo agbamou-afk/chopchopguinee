@@ -1,0 +1,1 @@
+ALTER TYPE public.ride_mode ADD VALUE IF NOT EXISTS 'auto';

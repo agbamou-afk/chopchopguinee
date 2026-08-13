@@ -8398,6 +8398,10 @@ export type Database = {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
         Returns: string
       }
+      _ride_required_vehicle: {
+        Args: { p_mode: string }
+        Returns: Database["public"]["Enums"]["driver_vehicle_type"]
+      }
       _topup_stage: {
         Args: {
           p_code_at: string
@@ -13363,7 +13367,7 @@ export type Database = {
         | "needs_review"
       rating_direction: "client_to_driver" | "driver_to_client"
       report_status: "open" | "reviewed" | "actioned" | "dismissed"
-      ride_mode: "moto" | "toktok" | "food"
+      ride_mode: "moto" | "toktok" | "food" | "auto"
       ride_offer_status:
         | "pending"
         | "accepted"
@@ -13776,7 +13780,7 @@ export const Constants = {
       ],
       rating_direction: ["client_to_driver", "driver_to_client"],
       report_status: ["open", "reviewed", "actioned", "dismissed"],
-      ride_mode: ["moto", "toktok", "food"],
+      ride_mode: ["moto", "toktok", "food", "auto"],
       ride_offer_status: [
         "pending",
         "accepted",
