@@ -5,6 +5,7 @@ import { UserHome } from "@/components/views/UserHome";
 import { DriverHome } from "@/components/views/DriverHome";
 import { RideBooking } from "@/components/ride/RideBooking";
 import { RealtimeTripScreen } from "@/components/trip/RealtimeTripScreen";
+import { NoDriverRecoverySheet } from "@/components/ride/NoDriverRecoverySheet";
 
 /** Local ride mode type — kept here so the legacy LiveTracking component
  * (now quarantined under `_legacy/`) is not imported from production code. */
@@ -139,6 +140,7 @@ const Index = () => {
     rideId?: string | null;
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
+  const [noDriverRecovery, setNoDriverRecovery] = useState<"moto" | "toktok" | null>(null);
   const [envoyerOpen, setEnvoyerOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showDriverOnboarding, setShowDriverOnboarding] = useState(false);
@@ -935,9 +937,33 @@ const Index = () => {
             holdId={activeTrip.holdId}
             onClose={() => closeActiveTrip(false)}
             onCancel={() => closeActiveTrip(true)}
+            onNoDriver={() => {
+              const searched = activeTrip.mode as "moto" | "toktok";
+              closeActiveTrip(false);
+              if (searched === "moto" || searched === "toktok") setNoDriverRecovery(searched);
+            }}
           />
         )}
       </AnimatePresence>
+
+      {noDriverRecovery && (
+        <NoDriverRecoverySheet
+          open
+          mode={noDriverRecovery}
+          onOpenChange={(open) => { if (!open) setNoDriverRecovery(null); }}
+          onRetry={() => {
+            const mode = noDriverRecovery;
+            setNoDriverRecovery(null);
+            bookingRequestIds.current.reset();
+            setBookingRide(mode as RideType);
+          }}
+          onSwitchMode={(next) => {
+            setNoDriverRecovery(null);
+            bookingRequestIds.current.reset();
+            setBookingRide(next as RideType);
+          }}
+        />
+      )}
 
       {!onboardingBlocksApp && !bookingRide && !activeTrip && (
         isDriverMode ? (
