@@ -5,7 +5,7 @@ import { MapMarker } from "./MapMarker";
 interface Props {
   lat: number | null;
   lng: number | null;
-  vehicleType?: "moto" | "toktok" | null;
+  vehicleType?: "moto" | "toktok" | "auto" | null;
   radiusM?: number;
   enabled?: boolean;
 }
@@ -26,7 +26,7 @@ export function NearbyAvailableDrivers({
       {drivers.map((d) => (
         <Marker key={d.driver_ref} longitude={d.approx_lng} latitude={d.approx_lat} anchor="center">
           <MapMarker
-            variant={vehicleType === "toktok" ? "toktok" : "moto"}
+            variant={vehicleType === "moto" || vehicleType == null ? "moto" : "toktok"}
             state="online"
             rotation={d.heading ?? 0}
             size={28}
