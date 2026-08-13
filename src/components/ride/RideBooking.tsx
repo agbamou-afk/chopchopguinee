@@ -103,6 +103,9 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const mapRef = useRef<ChopMapHandle>(null);
   const option = rideOptions[type];
   const Icon = option.icon;
+  // Product differentiation (capacity / cargo / weather) so Bonbonna is not
+  // perceived as "a moto with three wheels".
+  const product = RIDE_MODE_PRODUCT[type];
 
   // Reverse-geocode through the backend (Google → Nominatim). Always returns
   // a usable label so map taps never appear to fail.
