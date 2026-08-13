@@ -39,7 +39,15 @@ interface Suggestion {
 interface RideBookingProps {
   type: "moto" | "toktok";
   onClose: () => void;
-  onBook: (trip: { pickupCoords: [number, number]; destCoords: [number, number]; fare: number }) => void;
+  onBook: (trip: {
+    pickupCoords: [number, number];
+    destCoords: [number, number];
+    /** Server-quoted fare in GNF. Never a client-side estimate. */
+    fare: number;
+    paymentMode: "chop_pay" | "cash";
+    pickupLabel?: string;
+    destLabel?: string;
+  }) => void;
   /** Prefilled destination text (the user still confirms via search). */
   initialDestination?: string;
 }
@@ -83,11 +91,12 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   const [confirmed, setConfirmed] = useState(false);
   const [routing, setRouting] = useState(false);
   const [routeError, setRouteError] = useState<string | null>(null);
-  const [fare, setFare] = useState<{ base: number; perKm: number; currency: string }>({
-    base: type === "moto" ? 5000 : 8000,
-    perKm: type === "moto" ? 1000 : 1500,
-    currency: "GNF",
-  });
+  // CRS-G1/G3: the fare shown here is the server quote, and the customer
+  // explicitly picks how they pay. No client-side fare arithmetic.
+  const [serverQuoteGnf, setServerQuoteGnf] = useState<number | null>(null);
+  const [quoting, setQuoting] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<"chop_pay" | "cash">("chop_pay");
   const debounceRef = useRef<number | null>(null);
   const mapRef = useRef<ChopMapHandle>(null);
   const option = rideOptions[type];
