@@ -51,6 +51,8 @@ interface RideBookingProps {
   }) => void;
   /** Prefilled destination text (the user still confirms via search). */
   initialDestination?: string;
+  /** Preserved trip intent (no-driver recovery). Never triggers a booking. */
+  initialIntent?: RideBookingIntent;
 }
 
 /** Trip intent preserved across a no-driver recovery (never auto-books). */
@@ -76,16 +78,22 @@ const rideOptions = {
   },
 };
 
-export function RideBooking({ type, onClose, onBook, initialDestination }: RideBookingProps) {
-  const [pickup, setPickup] = useState("");
-  const [destination, setDestination] = useState(initialDestination ?? "");
+export function RideBooking({ type, onClose, onBook, initialDestination, initialIntent }: RideBookingProps) {
+  const [pickup, setPickup] = useState(initialIntent?.pickupLabel ?? "");
+  const [destination, setDestination] = useState(
+    initialDestination ?? initialIntent?.destLabel ?? "",
+  );
   // Pickup is intentionally null until we have either a real GPS fix or the
   // user picks a place. The Conakry fallback is ONLY a visual map center —
   // never a pickup coordinate (see CHOPCHOP_MAP_STRATEGY.md).
   const live = useLiveUserLocation();
-  const [pickupCoords, setPickupCoords] = useState<[number, number] | null>(null);
-  const [pickupIsReal, setPickupIsReal] = useState(false);
-  const [destCoords, setDestCoords] = useState<[number, number] | null>(null);
+  const [pickupCoords, setPickupCoords] = useState<[number, number] | null>(
+    initialIntent?.pickupCoords ?? null,
+  );
+  const [pickupIsReal, setPickupIsReal] = useState(!!initialIntent?.pickupCoords);
+  const [destCoords, setDestCoords] = useState<[number, number] | null>(
+    initialIntent?.destCoords ?? null,
+  );
   const [locating, setLocating] = useState(false);
   const [activeField, setActiveField] = useState<"pickup" | "destination" | null>(null);
   // When set, the next map tap assigns to this field. Survives blur so the
