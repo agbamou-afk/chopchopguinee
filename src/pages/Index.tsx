@@ -50,6 +50,7 @@ import { UnderConstructionModal } from "@/components/announcements/UnderConstruc
 import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
 import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
 import { rideQaDebug } from "@/lib/rides/debug";
+import { createBookingRequestIdStore } from "@/lib/rides/bookingRequestId";
 import { useAppMode } from "@/hooks/useAppMode";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import {
@@ -125,6 +126,8 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [activeView, setActiveView] = useState<ActiveView>(initialView);
   const [bookingRide, setBookingRide] = useState<RideType>(null);
+  // One persisted uuid per booking commitment attempt (retry idempotency).
+  const bookingRequestIds = useRef(createBookingRequestIdStore());
   const [bookingDestination, setBookingDestination] = useState<string | undefined>(undefined);
   const [activeTrip, setActiveTrip] = useState<{
     mode: TrackingMode;
