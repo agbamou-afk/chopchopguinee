@@ -45,7 +45,7 @@ export interface ActivityItem {
   /** Merchant / store / restaurant name when known. */
   merchantName?: string;
   /** Mission family chip — operational continuity across surfaces. */
-  missionKind?: "moto" | "bonbonna" | "course" | "repas" | "marche" | "envoyer";
+  missionKind?: "moto" | "bonbonna" | "taxi" | "course" | "repas" | "marche" | "envoyer";
   /** Free-form metadata for the detail sheet (avoids re-querying). */
   meta?: Record<string, unknown>;
 }
