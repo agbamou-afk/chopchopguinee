@@ -921,12 +921,15 @@ const Index = () => {
       <AnimatePresence mode="wait">
         {!onboardingBlocksApp && bookingRide && (
           <RideBooking
+            key={`booking-${bookingRide}-${bookingIntent?.destLabel ?? bookingIntent?.destCoords?.join(",") ?? "new"}`}
             type={bookingRide}
             initialDestination={bookingDestination}
+            initialIntent={bookingIntent}
             onClose={() => {
               bookingRequestIds.current.reset();
               setBookingRide(null);
               setBookingDestination(undefined);
+              setBookingIntent(undefined);
             }}
             onBook={async (trip) => {
               const { data: sess } = await supabase.auth.getSession();
@@ -994,6 +997,7 @@ const Index = () => {
               bookingRequestIds.current.reset();
               setBookingRide(null);
               setBookingDestination(undefined);
+              setBookingIntent(undefined);
               const holdCopy =
                 req.payment_mode === "chop_pay"
                   ? `Fonds réservés : ${formatGNF(req.hold_amount_gnf)}.`
