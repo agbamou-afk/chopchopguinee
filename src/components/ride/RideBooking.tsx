@@ -13,6 +13,7 @@ import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
 import { searchConakryPlaces, categoryLabel, confidenceLabel } from "@/lib/locations/searchPlaces";
 import { useLiveUserLocation, CONAKRY_FALLBACK } from "@/lib/location/useLiveUserLocation";
 import { logLocationSearchEvent } from "@/lib/locations/locationSearchTelemetry";
+import { RIDE_MODE_PRODUCT } from "@/lib/rides/rideModeLabel";
 
 function haversineKm(a: [number, number], b: [number, number]): number {
   const R = 6371;
