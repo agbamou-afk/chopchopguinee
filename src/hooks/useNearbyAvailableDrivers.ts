@@ -15,7 +15,7 @@ interface Options {
   lat: number | null;
   lng: number | null;
   radiusM?: number;
-  vehicleType?: "moto" | "toktok" | null;
+  vehicleType?: "moto" | "toktok" | "auto" | null;
   refreshMs?: number;
   enabled?: boolean;
 }
