@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public._qa_node1_bonbonna() TO postgres;
