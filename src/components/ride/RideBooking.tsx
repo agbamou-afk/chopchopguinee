@@ -384,6 +384,17 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           <div className="w-9" />
         </div>
 
+        {product && (
+          <div className="mb-4 rounded-2xl bg-white/10 backdrop-blur-sm px-3 py-2.5">
+            <p className="text-[12px] font-semibold text-primary-foreground">{product.positioning}</p>
+            <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-primary-foreground/85">
+              <li>{product.capacity}</li>
+              <li>{product.cargo}</li>
+              <li>{product.weather}</li>
+            </ul>
+          </div>
+        )}
+
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 relative z-[1100]">
           <div className="flex items-center gap-3 pb-4 border-b border-white/20">
             <div className="w-3 h-3 rounded-full bg-primary-foreground" />
