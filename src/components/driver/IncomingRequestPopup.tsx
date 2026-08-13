@@ -3,6 +3,7 @@ import { formatGNF } from "@/lib/format";
 import { MapPin, Navigation, Clock, Star, X, Check, Bike } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
+import { rideServiceTitle } from "@/lib/rides/rideModeLabel";
 
 // --- Placeholders: replace with real implementations later ---
 function useRequestSound(active: boolean) {
@@ -28,6 +29,8 @@ function triggerVibration(pattern: number | number[]) {
 export interface IncomingRequest {
   id: string;
   type: "ride" | "delivery" | "food";
+  /** Ride mode as stored by the server (`moto` | `toktok`). Drives the label. */
+  mode?: string | null;
   pickup: string;
   destination: string;
   customerName: string;
@@ -44,7 +47,13 @@ interface Props {
   timeoutSec?: number;
 }
 
-const TYPE_LABEL = { ride: "Course Moto", delivery: "Livraison", food: "Repas" } as const;
+const TYPE_LABEL = { ride: "Course", delivery: "Livraison", food: "Repas" } as const;
+
+/** Service name the driver sees — never assume Moto. */
+function requestLabel(request: IncomingRequest): string {
+  if (request.type === "ride") return rideServiceTitle(request.mode ?? null);
+  return TYPE_LABEL[request.type];
+}
 
 export function IncomingRequestPopup({ request, onAccept, onDecline, timeoutSec = 20 }: Props) {
   const [remaining, setRemaining] = useState(timeoutSec);
@@ -114,7 +123,7 @@ export function IncomingRequestPopup({ request, onAccept, onDecline, timeoutSec 
             <div className="p-5">
               <div className="flex items-center justify-between mb-3">
                 <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  Nouvelle {TYPE_LABEL[request.type]}
+                  Nouvelle {requestLabel(request)}
                 </span>
                 <motion.div
                   key={remaining}
