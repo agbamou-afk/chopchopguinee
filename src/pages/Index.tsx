@@ -51,6 +51,7 @@ import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAn
 import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
 import { rideQaDebug } from "@/lib/rides/debug";
 import { createBookingRequestIdStore } from "@/lib/rides/bookingRequestId";
+import { rideServiceTitle } from "@/lib/rides/rideModeLabel";
 import { useAppMode } from "@/hooks/useAppMode";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import {
