@@ -55,7 +55,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     {
       id: "toktok",
       label: "Course Bonbonna",
-      desc: "Tricycle pour vos déplacements",
+      desc: "Jusqu'à 3 places, bagages, abrité de la pluie",
       img: toktokIcon,
       onSelect: () => onActionClick("toktok"),
     },

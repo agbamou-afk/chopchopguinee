@@ -6,6 +6,8 @@ import { useLowDataMode } from "@/hooks/useLowDataMode";
 export interface RideOffer {
   id: string;
   ride_id: string;
+  /** Server-side service mode for this offer (`moto` | `toktok`). */
+  ride_mode?: string | null;
   pickup_zone: string | null;
   destination_zone: string | null;
   estimated_fare_gnf: number | null;
@@ -30,7 +32,7 @@ export function useIncomingOffers(enabled: boolean) {
 
   const refetch = useCallback(async () => {
     if (!user) { setOffers([]); setLatestOffer(null); return; }
-    const selectCols = "id,ride_id,pickup_zone,destination_zone,estimated_fare_gnf,estimated_earning_gnf,distance_to_pickup_m,expires_at,status";
+    const selectCols = "id,ride_id,ride_mode,pickup_zone,destination_zone,estimated_fare_gnf,estimated_earning_gnf,distance_to_pickup_m,expires_at,status";
     const [{ data }, { data: latest }] = await Promise.all([
       supabase
       .from("ride_offers")

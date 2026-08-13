@@ -15,6 +15,7 @@ import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { rideQaDebug } from "@/lib/rides/debug";
 import { rideModeLabel } from "@/lib/rides/rideModeLabel";
+import { rideServiceTitle } from "@/lib/rides/rideModeLabel";
 import { CancellationConfirmDialog } from "@/components/finance/CancellationConfirmDialog";
 
 interface Props {
@@ -83,6 +84,35 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
   useEffect(() => {
     if (ride?.status === "completed") setShowReceipt(true);
   }, [ride?.status]);
+
+  /**
+   * No-driver safety net: while the ride is still pending and unassigned, the
+   * server is polled so the 60-second search window can close itself. The
+   * server releases the reservation in full and charges no cancellation fee —
+   * the client only reacts to that verdict.
+   */
+  useEffect(() => {
+    if (!ride || ride.status !== "pending" || ride.driver_id) return;
+    let stopped = false;
+    const tick = async () => {
+      const { data, error } = await supabase.rpc("ride_expire_unfulfilled", { p_ride_id: rideId });
+      if (stopped || error) return;
+      const res = data as { status?: string; released_gnf?: number } | null;
+      if (res?.status === "no_driver") {
+        stopped = true;
+        window.clearInterval(timer);
+        toast({
+          title: "Aucun chauffeur disponible",
+          description: res.released_gnf
+            ? "Vos fonds réservés ont été libérés en totalité. Aucun frais."
+            : "Aucun frais ne vous a été facturé. Réessayez dans un instant.",
+        });
+        onClose();
+      }
+    };
+    const timer = window.setInterval(tick, 5000);
+    return () => { stopped = true; window.clearInterval(timer); };
+  }, [ride?.status, ride?.driver_id, rideId, onClose]);
 
   useEffect(() => {
     try {
@@ -156,6 +186,7 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
           fareGnf={ride.fare_gnf ?? 0}
           driverName={driverName}
           paymentLabel="Espèces"
+          serviceLabel={rideServiceTitle(mode)}
           onClose={onClose}
         />
       )}

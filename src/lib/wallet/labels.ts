@@ -38,6 +38,8 @@ export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
           if (missionKind === "repas") return "Gain Livraison Repas reçu";
           if (missionKind === "marche") return "Gain Livraison Marché reçu";
           if (missionKind === "moto") return "Gain Course Moto reçu";
+          if (missionKind === "bonbonna") return "Gain Course Bonbonna reçu";
+          if (missionKind === "course") return "Gain de course reçu";
           if (missionKind === "envoyer") return "Gain Envoyer reçu";
           if (isRepas) return "Gain Livraison Repas reçu";
           if (isMarche) return "Gain Livraison Marché reçu";
@@ -89,7 +91,7 @@ export function payoutAvailabilityCopy(tx: WalletTransaction, dir: TxDirection):
   return { label: "Paiement confirmé", tone: "ok" };
 }
 
-export type MissionKind = "moto" | "repas" | "marche" | "envoyer" | null;
+export type MissionKind = "moto" | "bonbonna" | "course" | "repas" | "marche" | "envoyer" | null;
 
 export interface TxContext {
   isRepas: boolean;
@@ -122,16 +124,22 @@ export function txContext(tx: WalletTransaction): TxContext {
   let missionKind: MissionKind = null;
   if (ref.startsWith("mission:")) {
     const part = ref.split(":")[1] ?? "";
-    if (part.startsWith("moto") || part === "ride") missionKind = "moto";
+    if (part.startsWith("moto")) missionKind = "moto";
+    else if (part.startsWith("toktok") || part.startsWith("bonbonna")) missionKind = "bonbonna";
+    else if (part === "ride" || part === "course") missionKind = "course";
     else if (part.startsWith("repas") || part.startsWith("food")) missionKind = "repas";
     else if (part.startsWith("marche") || part.startsWith("marketplace")) missionKind = "marche";
     else if (part.startsWith("envoyer") || part.startsWith("courier")) missionKind = "envoyer";
   }
   if (!missionKind && isCourier) {
-    if (/moto|course/.test(lower)) missionKind = "moto";
+    // Only claim a specific service when the text actually names it; a bare
+    // "course" stays generic instead of silently becoming Moto.
+    if (/\bmoto\b/.test(lower)) missionKind = "moto";
+    else if (/bonbonna|toktok/.test(lower)) missionKind = "bonbonna";
     else if (/repas|food|restaurant/.test(lower)) missionKind = "repas";
     else if (/march[ée]|marketplace|listing/.test(lower)) missionKind = "marche";
     else if (/envoyer|colis|coursier/.test(lower)) missionKind = "envoyer";
+    else if (/course/.test(lower)) missionKind = "course";
   }
 
   // Pickup → Dropoff parsing, e.g. "Mission · Bambeto → Kaloum".
@@ -156,6 +164,8 @@ export function txContext(tx: WalletTransaction): TxContext {
 
 export const MISSION_KIND_LABEL: Record<Exclude<MissionKind, null>, string> = {
   moto: "Course Moto",
+  bonbonna: "Course Bonbonna",
+  course: "Course",
   repas: "Livraison Repas",
   marche: "Livraison Marché",
   envoyer: "Envoyer (Colis)",

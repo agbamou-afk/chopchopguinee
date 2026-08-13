@@ -187,7 +187,7 @@ export function DriverSearchOverlay({
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-semibold truncate">{driver.name}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {driver.vehicle ?? "Moto"}
+                    {driver.vehicle ?? "Véhicule"}
                     {driver.rating != null && ` • ★ ${driver.rating.toFixed(1)}`}
                   </p>
                 </div>

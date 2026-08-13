@@ -6786,6 +6786,7 @@ export type Database = {
           pickup_zone: string | null
           responded_at: string | null
           ride_id: string
+          ride_mode: Database["public"]["Enums"]["ride_mode"] | null
           sent_at: string
           status: Database["public"]["Enums"]["ride_offer_status"]
         }
@@ -6801,6 +6802,7 @@ export type Database = {
           pickup_zone?: string | null
           responded_at?: string | null
           ride_id: string
+          ride_mode?: Database["public"]["Enums"]["ride_mode"] | null
           sent_at?: string
           status?: Database["public"]["Enums"]["ride_offer_status"]
         }
@@ -6816,6 +6818,7 @@ export type Database = {
           pickup_zone?: string | null
           responded_at?: string | null
           ride_id?: string
+          ride_mode?: Database["public"]["Enums"]["ride_mode"] | null
           sent_at?: string
           status?: Database["public"]["Enums"]["ride_offer_status"]
         }
@@ -8303,6 +8306,7 @@ export type Database = {
         Returns: number
       }
       _qa_node0_course: { Args: never; Returns: Json }
+      _qa_node1_bonbonna: { Args: never; Returns: Json }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
       _qa_s13_driver: {
         Args: { p_bal: number; p_tag: string; p_uid: string }
@@ -10167,6 +10171,7 @@ export type Database = {
           pickup_zone: string | null
           responded_at: string | null
           ride_id: string
+          ride_mode: Database["public"]["Enums"]["ride_mode"] | null
           sent_at: string
           status: Database["public"]["Enums"]["ride_offer_status"]
         }
@@ -10191,6 +10196,7 @@ export type Database = {
           pickup_zone: string | null
           responded_at: string | null
           ride_id: string
+          ride_mode: Database["public"]["Enums"]["ride_mode"] | null
           sent_at: string
           status: Database["public"]["Enums"]["ride_offer_status"]
         }
@@ -10215,6 +10221,7 @@ export type Database = {
           pickup_zone: string | null
           responded_at: string | null
           ride_id: string
+          ride_mode: Database["public"]["Enums"]["ride_mode"] | null
           sent_at: string
           status: Database["public"]["Enums"]["ride_offer_status"]
         }
@@ -12389,6 +12396,7 @@ export type Database = {
         }
       }
       ride_dispatch: { Args: { p_ride_id: string }; Returns: string }
+      ride_expire_unfulfilled: { Args: { p_ride_id: string }; Returns: Json }
       ride_get_quote: {
         Args: {
           p_dest_lat?: number

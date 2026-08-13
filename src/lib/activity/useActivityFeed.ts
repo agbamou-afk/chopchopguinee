@@ -149,7 +149,7 @@ function rideToActivity(ride: RideRow, role: "client" | "driver"): ActivityItem 
     entityId: ride.id,
     badge: status === "in_progress" ? "live" : undefined,
     district,
-    missionKind: "moto",
+    missionKind: ride.mode === "toktok" ? "bonbonna" : ride.mode === "moto" ? "moto" : "course",
     meta: { ride },
   };
 }

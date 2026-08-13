@@ -16,6 +16,7 @@ function offerToRequest(o: RideOffer): IncomingRequest {
   return {
     id: o.id,
     type: "ride",
+    mode: o.ride_mode ?? null,
     pickup: o.pickup_zone || "Point de départ",
     destination: o.destination_zone || "Destination",
     customerName: "Client",
@@ -115,7 +116,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
     const restoreActiveRide = async () => {
       const { data: ride } = await supabase
         .from("rides")
-        .select("id,fare_gnf,status")
+        .select("id,fare_gnf,status,mode")
         .eq("driver_id", user.id)
         .in("status", ["pending", "in_progress"])
         .order("created_at", { ascending: false })
@@ -126,7 +127,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
 
       const { data: offer } = await supabase
         .from("ride_offers")
-        .select("id,pickup_zone,destination_zone,estimated_fare_gnf,estimated_earning_gnf,distance_to_pickup_m")
+        .select("id,ride_mode,pickup_zone,destination_zone,estimated_fare_gnf,estimated_earning_gnf,distance_to_pickup_m")
         .eq("ride_id", ride.id)
         .eq("driver_id", user.id)
         .order("sent_at", { ascending: false })
@@ -138,6 +139,7 @@ export function DriverSessionProvider({ children }: { children: ReactNode }) {
       setActiveTrip(offerToRequest({
         id: offer?.id ?? ride.id,
         ride_id: ride.id,
+        ride_mode: offer?.ride_mode ?? ride.mode ?? null,
         pickup_zone: offer?.pickup_zone ?? "Point de départ",
         destination_zone: offer?.destination_zone ?? "Destination",
         estimated_fare_gnf: offer?.estimated_fare_gnf ?? ride.fare_gnf ?? 0,

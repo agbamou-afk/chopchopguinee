@@ -14,6 +14,8 @@ interface Props {
   fareGnf: number;
   driverName?: string | null;
   paymentLabel?: string;
+  /** Service actually delivered ("Course Moto" / "Course Bonbonna"). */
+  serviceLabel?: string;
   onClose: () => void;
 }
 
@@ -24,7 +26,7 @@ interface Props {
  * - "Terminer" exit
  */
 export function ClientTripReceipt({
-  rideId, fareGnf, driverName, paymentLabel = "Espèces", onClose,
+  rideId, fareGnf, driverName, paymentLabel = "Espèces", serviceLabel, onClose,
 }: Props) {
   const [score, setScore] = useState<number>(5);
   const [comment, setComment] = useState("");
@@ -104,6 +106,7 @@ export function ClientTripReceipt({
 
         <section className="rounded-xl surface-money p-4 space-y-2">
           <h3 className="text-sm font-semibold mb-1">Reçu</h3>
+          {serviceLabel && <Row icon={Receipt} label="Service" value={serviceLabel} muted />}
           <Row icon={Banknote} label="Tarif de la course" value={formatGNF(fareGnf)} />
           <Row icon={Receipt} label="Mode de paiement" value={paymentLabel} muted />
           <div className="border-t border-border pt-2 mt-1">
