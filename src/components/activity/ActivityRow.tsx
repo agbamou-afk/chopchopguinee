@@ -137,6 +137,8 @@ export function ActivityRow({ item, onOpen, compact }: ActivityRowProps) {
 
 const MISSION_CHIP: Record<NonNullable<ActivityItem["missionKind"]>, { label: string; tone: string }> = {
   moto: { label: "Course Moto", tone: "bg-primary/10 text-primary" },
+  bonbonna: { label: "Course Bonbonna", tone: "bg-secondary/15 text-secondary-foreground" },
+  course: { label: "Course", tone: "bg-primary/10 text-primary" },
   repas: { label: "Livraison Repas", tone: "bg-[hsl(var(--accent-repas)/0.15)] text-[hsl(var(--accent-repas))]" },
   marche: { label: "Livraison Marché", tone: "bg-[hsl(var(--accent-marche)/0.15)] text-[hsl(var(--accent-marche))]" },
   envoyer: { label: "Envoyer colis", tone: "bg-muted text-foreground" },
