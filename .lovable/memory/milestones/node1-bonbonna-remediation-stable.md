@@ -73,6 +73,12 @@ harness and requires the service role key, an `admin` JWT, or the
 executable by `service_role` only (never `anon` / `authenticated`), and roll
 back every fixture they create. Migrations dated 2026-08-13 that only run
 SELECTs are legacy evidence artifacts kept immutable for history.
+
+Documented exception: Slice 13 parts 4-7 must `SET ROLE` to prove role-level
+access rules, which Postgres forbids inside a SECURITY DEFINER function. They
+stay SECURITY INVOKER and are executed from a privileged session; their results
+are persisted in `_qa_s13_results` and read back with a plain SELECT. Parts 1-3,
+Node 0 and all Node 1 harnesses run through `qa-node-harness`.
 - `_qa_node0_course()` 34/34 PASS (no Course regression)
 - Slice 13 parts 1-7: 507/507 PASS, 0 failed
 - Vitest 24/24 PASS, typecheck clean, no flag or master-wallet drift
