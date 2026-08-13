@@ -94,6 +94,8 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   // CRS-G1/G3: the fare shown here is the server quote, and the customer
   // explicitly picks how they pay. No client-side fare arithmetic.
   const [serverQuoteGnf, setServerQuoteGnf] = useState<number | null>(null);
+  // Server-derived Chop Pay reservation preview. Never computed on the client.
+  const [serverHoldGnf, setServerHoldGnf] = useState<number | null>(null);
   const [quoting, setQuoting] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [paymentMode, setPaymentMode] = useState<"chop_pay" | "cash">("chop_pay");
@@ -151,6 +153,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
   useEffect(() => {
     if (!pickupCoords || !destCoords) {
       setServerQuoteGnf(null);
+      setServerHoldGnf(null);
       setQuoteError(null);
       return;
     }
@@ -158,7 +161,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
     setQuoting(true);
     setQuoteError(null);
     supabase
-      .rpc("ride_compute_quote_gnf", {
+      .rpc("ride_get_quote", {
         p_mode: type,
         p_pickup_lat: pickupCoords[0],
         p_pickup_lng: pickupCoords[1],
@@ -167,11 +170,16 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
       })
       .then(({ data, error }) => {
         if (cancelled) return;
-        if (error || data == null) {
+        const quote = data as { fare_gnf?: number; chop_pay_hold_gnf?: number } | null;
+        if (error || quote?.fare_gnf == null) {
           setServerQuoteGnf(null);
+          setServerHoldGnf(null);
           setQuoteError("Tarif indisponible");
         } else {
-          setServerQuoteGnf(Number(data));
+          setServerQuoteGnf(Number(quote.fare_gnf));
+          setServerHoldGnf(
+            quote.chop_pay_hold_gnf == null ? null : Number(quote.chop_pay_hold_gnf),
+          );
         }
         setQuoting(false);
       });
@@ -633,9 +641,16 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
               </span>
             </button>
           </div>
-          {paymentMode === "chop_pay" && serverQuoteGnf != null && (
+          {paymentMode === "chop_pay" && (
             <p className="text-[11px] text-muted-foreground">
-              Une réservation de fonds est calculée par le serveur au moment de la commande.
+              {serverHoldGnf != null
+                ? `Réservation sur votre solde : ${formatGNF(serverHoldGnf)} (montant calculé par le serveur, ajusté à la fin de la course).`
+                : "Réservation indisponible pour le moment."}
+            </p>
+          )}
+          {paymentMode === "cash" && serverQuoteGnf != null && (
+            <p className="text-[11px] text-muted-foreground">
+              {`${formatGNF(serverQuoteGnf)} — payez le chauffeur directement. Aucun montant n'est réservé.`}
             </p>
           )}
         </div>
