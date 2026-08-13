@@ -38,6 +38,8 @@ export function txLabel(tx: WalletTransaction, dir: TxDirection): string {
           if (missionKind === "repas") return "Gain Livraison Repas reçu";
           if (missionKind === "marche") return "Gain Livraison Marché reçu";
           if (missionKind === "moto") return "Gain Course Moto reçu";
+          if (missionKind === "bonbonna") return "Gain Course Bonbonna reçu";
+          if (missionKind === "course") return "Gain de course reçu";
           if (missionKind === "envoyer") return "Gain Envoyer reçu";
           if (isRepas) return "Gain Livraison Repas reçu";
           if (isMarche) return "Gain Livraison Marché reçu";
