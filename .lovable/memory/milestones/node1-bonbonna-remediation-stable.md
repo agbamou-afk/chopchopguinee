@@ -20,17 +20,33 @@ point — never hardcode a service name in a component.
   cancels with `no_driver_available`, releases the Chop Pay reservation in full
   and charges **zero** cancellation fee. Idempotent, owner-only, fails closed
   for anon.
-- Regression harness `_qa_node1_bonbonna()` → `_qa_s13_results` part 101.
+- Expiry core lives in `_ride_expire_unfulfilled_internal(uuid)` (no session
+  required, not executable by anon/authenticated).
+- `ride_sweep_unfulfilled(int)` + pg_cron job `chopchop-ride-no-driver-sweep`
+  (`* * * * *`) close abandoned searches **autonomously** — no customer device
+  needed, reconnect-safe. Fails closed for any non-ops session; the client only
+  keeps a slow idempotent backstop call and reacts to the ride row verdict.
+- Regression harnesses: `_qa_node1_bonbonna()` (part 101) and
+  `_qa_node1_bonbonna_full()` (part 102 = base + sweeper/receipt evidence).
 
 ## Product identity
-`RIDE_MODE_PRODUCT` differentiates on capacity / cargo / weather:
-Bonbonna = up to 3 passengers, luggage and cartons, sheltered from rain.
-Moto = 1 passenger, fastest through traffic. Shown in booking header + Services.
+`RIDE_MODE_PRODUCT` differentiates on room / cargo / weather. **Never state a
+numerical passenger capacity anywhere** (legal/insurance): Bonbonna = "Plus de
+place à bord", luggage and cartons, sheltered from rain. Moto = "Trajet
+individuel", fastest through traffic. Shown in booking header + Services.
+
+## Receipt + recovery truth
+- Receipt payment label mirrors the server rule (`metadata.payment_mode`):
+  Chop Pay / Espèces / "Non renseigné". Never assume cash.
+- `NoDriverRecoverySheet` offers retry in the same service or switching to the
+  alternative service after a no-driver verdict; a fresh booking request id is
+  issued for each recovery attempt.
 
 ## Verification
-- `_qa_node1_bonbonna()` 24/24 PASS
+- `_qa_node1_bonbonna_full()` 39/39 PASS (2026-08-13)
 - `_qa_node0_course()` 34/34 PASS (no Course regression)
-- Vitest 24/24 PASS, typecheck clean
+- Slice 13 parts 1-7: 507/507 PASS, 0 failed
+- Vitest 24/24 PASS, typecheck clean, no flag or master-wallet drift
 
 ## Known operational gap (not code)
 BNB-G1: zero approved drivers with `vehicle_type = 'toktok'` exist. Bonbonna
