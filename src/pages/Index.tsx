@@ -1021,10 +1021,20 @@ const Index = () => {
             holdId={activeTrip.holdId}
             onClose={() => closeActiveTrip(false)}
             onCancel={() => closeActiveTrip(true)}
-            onNoDriver={() => {
-              const searched = activeTrip.mode as "moto" | "toktok";
+            onNoDriver={async () => {
+              const rideId = activeTrip.rideId!;
               closeActiveTrip(false);
-              if (searched === "moto" || searched === "toktok") setNoDriverRecovery(searched);
+              // Persisted server truth only — payment mode and trip intent.
+              const { data: ride } = await supabase
+                .from("rides")
+                .select("id,mode,status,metadata,pickup_lat,pickup_lng,dest_lat,dest_lng")
+                .eq("id", rideId)
+                .maybeSingle();
+              if (!ride) return;
+              const recovery = buildNoDriverRecovery(ride as never);
+              if (!recovery) return;
+              noDriverAckRef.current.add(recovery.rideId);
+              setNoDriverRecovery(recovery);
             }}
           />
         )}
@@ -1033,17 +1043,35 @@ const Index = () => {
       {noDriverRecovery && (
         <NoDriverRecoverySheet
           open
-          mode={noDriverRecovery}
+          mode={noDriverRecovery.mode}
+          paymentMode={noDriverRecovery.paymentMode}
+          pickupLabel={noDriverRecovery.pickupLabel}
+          destLabel={noDriverRecovery.destLabel}
           onOpenChange={(open) => { if (!open) setNoDriverRecovery(null); }}
           onRetry={() => {
-            const mode = noDriverRecovery;
+            const rec = noDriverRecovery;
             setNoDriverRecovery(null);
+            // A retry is a brand-new commitment: fresh idempotency uuid.
             bookingRequestIds.current.reset();
-            setBookingRide(mode as RideType);
+            setBookingIntent({
+              pickupCoords: rec.pickupCoords ?? null,
+              destCoords: rec.destCoords ?? null,
+              pickupLabel: rec.pickupLabel,
+              destLabel: rec.destLabel,
+            });
+            setBookingRide(rec.mode as RideType);
           }}
           onSwitchMode={(next) => {
+            const rec = noDriverRecovery;
             setNoDriverRecovery(null);
             bookingRequestIds.current.reset();
+            setBookingIntent({
+              pickupCoords: rec.pickupCoords ?? null,
+              destCoords: rec.destCoords ?? null,
+              pickupLabel: rec.pickupLabel,
+              destLabel: rec.destLabel,
+            });
+            // Opens the alternative service booking. Never auto-books.
             setBookingRide(next as RideType);
           }}
         />
