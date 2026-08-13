@@ -8386,6 +8386,10 @@ export type Database = {
         }
         Returns: string
       }
+      _ride_expire_unfulfilled_internal: {
+        Args: { p_ride_id: string }
+        Returns: Json
+      }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
@@ -12494,6 +12498,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      ride_sweep_unfulfilled: { Args: { p_limit?: number }; Returns: Json }
       score_driver_referral_risk: {
         Args: { p_referral: string }
         Returns: {
