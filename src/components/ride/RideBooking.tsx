@@ -675,7 +675,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           </Button>
         ) : (
           <Button
-            disabled={serverQuoteGnf == null}
+            disabled={serverQuoteGnf == null || (paymentMode === "chop_pay" && serverHoldGnf == null)}
             onClick={() =>
               pickupCoords &&
               destCoords &&
