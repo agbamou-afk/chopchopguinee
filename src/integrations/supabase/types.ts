@@ -8398,6 +8398,10 @@ export type Database = {
         Args: { p_ride: Database["public"]["Tables"]["rides"]["Row"] }
         Returns: string
       }
+      _ride_required_vehicle: {
+        Args: { p_mode: string }
+        Returns: Database["public"]["Enums"]["driver_vehicle_type"]
+      }
       _topup_stage: {
         Args: {
           p_code_at: string
