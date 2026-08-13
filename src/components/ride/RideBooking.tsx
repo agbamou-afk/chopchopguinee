@@ -53,6 +53,14 @@ interface RideBookingProps {
   initialDestination?: string;
 }
 
+/** Trip intent preserved across a no-driver recovery (never auto-books). */
+export interface RideBookingIntent {
+  pickupCoords?: [number, number] | null;
+  destCoords?: [number, number] | null;
+  pickupLabel?: string | null;
+  destLabel?: string | null;
+}
+
 const rideOptions = {
   moto: {
     title: "Moto",
