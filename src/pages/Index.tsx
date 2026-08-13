@@ -485,6 +485,47 @@ const Index = () => {
 
   // Rides the user has actively dismissed this session — never re-restore them.
   const dismissedRidesRef = useRef<Set<string>>(new Set());
+  // No-driver outcomes already surfaced this session (never replay forever).
+  const noDriverAckRef = useRef<Set<string>>(new Set());
+
+  /**
+   * Build the recovery state from PERSISTED SERVER TRUTH only.
+   * Returns null when the ride is not a no-driver cancellation.
+   */
+  const buildNoDriverRecovery = useCallback((ride: {
+    id: string;
+    mode: string;
+    status: string;
+    metadata: unknown;
+    pickup_lat: number | null;
+    pickup_lng: number | null;
+    dest_lat: number | null;
+    dest_lng: number | null;
+  }) => {
+    const meta = (ride.metadata ?? {}) as Record<string, unknown>;
+    if (ride.status !== "cancelled") return null;
+    if (meta.cancel_reason !== "no_driver_available") return null;
+    if (ride.mode !== "moto" && ride.mode !== "toktok") return null;
+    const raw = meta.payment_mode as string | undefined;
+    const paymentMode: RecoveryPaymentMode =
+      raw === "chop_pay" || raw === "choppay" ? "chop_pay" : raw === "cash" ? "cash" : "unknown";
+    return {
+      rideId: ride.id,
+      mode: ride.mode as "moto" | "toktok",
+      paymentMode,
+      pickupCoords:
+        ride.pickup_lat != null && ride.pickup_lng != null
+          ? ([Number(ride.pickup_lat), Number(ride.pickup_lng)] as [number, number])
+          : undefined,
+      destCoords:
+        ride.dest_lat != null && ride.dest_lng != null
+          ? ([Number(ride.dest_lat), Number(ride.dest_lng)] as [number, number])
+          : undefined,
+      pickupLabel: (meta.pickup_label as string | undefined) ?? null,
+      destLabel: (meta.dest_label as string | undefined) ?? null,
+    };
+  }, []);
+
   // Only attempt the auto-restore once per mount; closing the trip should not
   // immediately re-open the same ride from the DB.
   const restoreAttemptedRef = useRef(false);
