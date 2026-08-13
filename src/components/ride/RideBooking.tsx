@@ -592,11 +592,53 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           serviceType={type}
           durationS={durationMin != null ? durationMin * 60 : undefined}
           distanceM={distanceKm != null ? distanceKm * 1000 : undefined}
-          fareLowGnf={previewState === "ready" ? fareLow : undefined}
-          fareHighGnf={previewState === "ready" ? fareHigh : undefined}
-          paymentMethod="wallet"
+          fareLowGnf={previewState === "ready" && serverQuoteGnf != null ? serverQuoteGnf : undefined}
+          fareHighGnf={previewState === "ready" && serverQuoteGnf != null ? serverQuoteGnf : undefined}
+          paymentMethod={paymentMode === "cash" ? "cash" : "wallet"}
           onRetry={() => destCoords && setDestCoords([...destCoords] as [number, number])}
         />
+
+        {/* CRS-G3: explicit customer payment choice. */}
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Mode de paiement</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              aria-pressed={paymentMode === "chop_pay"}
+              onClick={() => setPaymentMode("chop_pay")}
+              className={`rounded-xl border px-3 py-3 text-left transition ${
+                paymentMode === "chop_pay"
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-card hover:bg-muted/50"
+              }`}
+            >
+              <span className="block text-sm font-semibold">Chop Pay</span>
+              <span className="block text-[11px] text-muted-foreground">
+                Montant réservé sur votre solde
+              </span>
+            </button>
+            <button
+              type="button"
+              aria-pressed={paymentMode === "cash"}
+              onClick={() => setPaymentMode("cash")}
+              className={`rounded-xl border px-3 py-3 text-left transition ${
+                paymentMode === "cash"
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-card hover:bg-muted/50"
+              }`}
+            >
+              <span className="block text-sm font-semibold">Espèces</span>
+              <span className="block text-[11px] text-muted-foreground">
+                Vous payez le chauffeur directement
+              </span>
+            </button>
+          </div>
+          {paymentMode === "chop_pay" && serverQuoteGnf != null && (
+            <p className="text-[11px] text-muted-foreground">
+              Une réservation de fonds est calculée par le serveur au moment de la commande.
+            </p>
+          )}
+        </div>
 
         {!confirmed ? (
           <Button
@@ -610,7 +652,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
                 return;
               }
               setConfirmed(true);
-              toast({ title: "Itinéraire confirmé", description: "Le tarif appliqué est défini par l'administrateur." });
+              toast({ title: "Itinéraire confirmé", description: "Le tarif appliqué est défini par le serveur." });
             }}
             className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
           >
@@ -618,10 +660,25 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
           </Button>
         ) : (
           <Button
-            onClick={() => pickupCoords && destCoords && onBook({ pickupCoords, destCoords, fare: estimatedPrice })}
+            disabled={serverQuoteGnf == null}
+            onClick={() =>
+              pickupCoords &&
+              destCoords &&
+              serverQuoteGnf != null &&
+              onBook({
+                pickupCoords,
+                destCoords,
+                fare: serverQuoteGnf,
+                paymentMode,
+                pickupLabel: pickup || undefined,
+                destLabel: destination || undefined,
+              })
+            }
             className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
           >
-            Réserver pour {formatGNF(Math.round(estimatedPrice))}
+            {serverQuoteGnf == null
+              ? quoteError ?? "Calcul du tarif…"
+              : `Réserver pour ${formatGNF(serverQuoteGnf)}`}
           </Button>
         )}
       </motion.div>
