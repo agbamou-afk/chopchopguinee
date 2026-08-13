@@ -347,17 +347,14 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
     }
   }, [pickupCoords, destCoords]);
 
-  const estimatedPrice = fare.base + fare.perKm * (distanceKm ?? 5);
-
   const previewState: "idle" | "calculating" | "ready" | "unavailable" | "network" =
     !destCoords ? "idle"
-    : routing ? "calculating"
+    : routing || quoting ? "calculating"
+    : quoteError ? "unavailable"
     : routeError && distanceKm == null ? "unavailable"
     : routeError ? "network"
-    : distanceKm != null ? "ready"
+    : serverQuoteGnf != null ? "ready"
     : "calculating";
-  const fareLow = Math.round(estimatedPrice * 0.95);
-  const fareHigh = Math.round(estimatedPrice * 1.1);
 
   return (
     <motion.div
