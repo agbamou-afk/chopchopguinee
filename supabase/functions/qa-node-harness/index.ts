@@ -18,6 +18,7 @@ const ALLOWED = new Set([
   "_qa_node1_bonbonna_sweeper",
   "_qa_node1_bonbonna_matrix",
   "_qa_node1_bonbonna_full",
+  "_qa_node2_taxi_full",
   "_qa_s13_run1",
   "_qa_s13_run2",
   "_qa_s13_run3",
