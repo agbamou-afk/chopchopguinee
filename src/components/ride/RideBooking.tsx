@@ -146,17 +146,37 @@ export function RideBooking({ type, onClose, onBook, initialDestination }: RideB
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live.isRealLocation, live.coords?.lat, live.coords?.lng]);
 
-  // Load admin-managed fare for this ride type
+  // Server-authoritative quote. The same function the commitment RPC uses,
+  // so the displayed price is exactly what will be charged.
   useEffect(() => {
+    if (!pickupCoords || !destCoords) {
+      setServerQuoteGnf(null);
+      setQuoteError(null);
+      return;
+    }
+    let cancelled = false;
+    setQuoting(true);
+    setQuoteError(null);
     supabase
-      .from("fare_settings")
-      .select("base_price, price_per_km, currency")
-      .eq("ride_type", type)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setFare({ base: Number(data.base_price), perKm: Number(data.price_per_km), currency: data.currency });
+      .rpc("ride_compute_quote_gnf", {
+        p_mode: type,
+        p_pickup_lat: pickupCoords[0],
+        p_pickup_lng: pickupCoords[1],
+        p_dest_lat: destCoords[0],
+        p_dest_lng: destCoords[1],
+      })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || data == null) {
+          setServerQuoteGnf(null);
+          setQuoteError("Tarif indisponible");
+        } else {
+          setServerQuoteGnf(Number(data));
+        }
+        setQuoting(false);
       });
-  }, [type]);
+    return () => { cancelled = true; };
+  }, [type, pickupCoords, destCoords]);
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
