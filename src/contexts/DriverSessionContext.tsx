@@ -16,6 +16,7 @@ function offerToRequest(o: RideOffer): IncomingRequest {
   return {
     id: o.id,
     type: "ride",
+    mode: o.ride_mode ?? null,
     pickup: o.pickup_zone || "Point de départ",
     destination: o.destination_zone || "Destination",
     customerName: "Client",
