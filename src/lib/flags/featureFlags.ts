@@ -26,7 +26,8 @@ export type FlagKey =
   | "om_repas_checkout_enabled"
   | "om_marche_checkout_enabled"
   | "om_sandbox_enabled"
-  | "om_environment";
+  | "om_environment"
+  | "taxi";
 
 const DEFAULTS: Record<FlagKey, boolean> = {
   // Orange Money First pivot: public CHOP Wallet UI is archived until
@@ -62,6 +63,9 @@ const DEFAULTS: Record<FlagKey, boolean> = {
   // defaults keep both off so real customers can never trigger fake flows.
   om_sandbox_enabled: false,
   om_environment: false, // false = production, true = sandbox/staging
+  // Node 2 — Taxi (`auto`) passenger-car rides. OFF until real approved
+  // Taxi drivers exist; the tile renders an honest "bientôt" state.
+  taxi: false,
 };
 
 const KNOWN_FLAGS: FlagKey[] = [
@@ -80,6 +84,7 @@ const KNOWN_FLAGS: FlagKey[] = [
   "om_marche_checkout_enabled",
   "om_sandbox_enabled",
   "om_environment",
+  "taxi",
 ];
 
 let cache: Record<FlagKey, boolean> = { ...DEFAULTS };
