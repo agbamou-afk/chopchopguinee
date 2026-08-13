@@ -1,0 +1,36 @@
+ALTER FUNCTION public._qa_node0_course() SECURITY DEFINER;
+ALTER FUNCTION public._qa_node1_bonbonna() SECURITY DEFINER;
+ALTER FUNCTION public._qa_node1_bonbonna_sweeper() SECURITY DEFINER;
+ALTER FUNCTION public._qa_node1_bonbonna_matrix() SECURITY DEFINER;
+ALTER FUNCTION public._qa_node1_bonbonna_full() SECURITY DEFINER;
+ALTER FUNCTION public._qa_s13_run1() SECURITY DEFINER;
+ALTER FUNCTION public._qa_s13_run4() SECURITY DEFINER;
+ALTER FUNCTION public._qa_s13_run5() SECURITY DEFINER;
+ALTER FUNCTION public._qa_s13_run6() SECURITY DEFINER;
+ALTER FUNCTION public._qa_s13_run7() SECURITY DEFINER;
+
+REVOKE ALL ON FUNCTION public._qa_node0_course() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_node1_bonbonna() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_node1_bonbonna_sweeper() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_node1_bonbonna_matrix() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_node1_bonbonna_full() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run1() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run2() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run3() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run4() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run5() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run6() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run7() FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public._qa_node0_course() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_node1_bonbonna() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_node1_bonbonna_sweeper() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_node1_bonbonna_matrix() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_node1_bonbonna_full() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run1() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run2() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run3() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run4() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run5() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run6() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run7() TO service_role;

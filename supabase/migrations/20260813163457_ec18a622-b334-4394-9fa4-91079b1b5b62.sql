@@ -1,0 +1,1 @@
+ALTER FUNCTION public._qa_s13_run4() SECURITY INVOKER;
