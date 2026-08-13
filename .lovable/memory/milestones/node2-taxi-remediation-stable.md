@@ -77,19 +77,31 @@ Coverage (97 assertions, all natural-language labelled):
   executable by `anon` or `authenticated`.
 - Z Rollback: master wallet unchanged, `taxi` flag back OFF, no flag drift, no fixture residue.
 
-Final untouched sequential sweep (after the last edit):
-Node 2 97/97 · Node 0 34/34 · Node 1 full 78/78 ·
-Slice 13 parts 1–3 18/32/54 — **313/313 PASS, 0 failed**.
-Vitest 28/28, typecheck clean.
-Posture re-read after the sweep: `feature_flags.taxi` = false, 0 approved `auto`
-drivers, 0 `auto` rides, 0 `qa-s13-n2%` residue.
+Final untouched sequential sweep (after the corrected 97-assertion harness and
+re-run evidence):
+- Node 2 `_qa_node2_taxi_full()` = 97/97 PASS, 0 failed.
+- Node 0 `_qa_node0_course()` = 34/34 PASS, 0 failed.
+- Node 1 `_qa_node1_bonbonna_full()` = 78/78 PASS, 0 failed.
+- Fresh Slice 13 direct privileged execution, without migrations or S13 function
+  changes: parts 1–7 = 18/18, 32/32, 54/54, 98/98, 115/115, 87/87, 103/103 =
+  **507/507 PASS, 0 failed**.
+- Vitest = 28/28 PASS.
+- `tsgo --noEmit -p tsconfig.app.json` = clean.
+- Verification-only `bun run build` = PASS in 24.72s, 3,568 modules transformed;
+  PWA `generateSW` succeeded with 134 precache entries and generated `dist/sw.js`
+  plus `dist/workbox-5cb67add.js`.
+- Build YELLOWs only: Browserslist data stale; two CSS minification warnings
+  around `data-state="active"`; dynamic-import chunking advisories; large chunks
+  including ~2.18 MB main / ~1.78 MB mapbox.
 
-Known evidence limitation (pre-existing, not Taxi-related): Slice 13 parts 4–7 use
-`SET ROLE` and are SECURITY INVOKER, so they cannot be executed by `service_role`
-through the QA edge function ("permission denied for table users"). A temporary
-SECURITY DEFINER conversion was attempted and reverted: parts 4/5/7 then aborted on
-"cannot set parameter role within security-definer function", while part 6 ran clean
-at 87/87 PASS. These parts remain runnable only from a migration/postgres context.
+Posture re-read after the sweep: `feature_flags.taxi` = false, 0 approved `auto`
+drivers, 0 `auto` rides, 0 `qa-s13-n2%` residue, master wallet id
+`b6858980-43d2-425d-b12d-b02aac3de52d` remains balance -100435 GNF / held 0,
+no feature-flag drift.
+
+Explicitly: Slice 13 parts 4–7 remain **SECURITY INVOKER**. The fresh 507/507 run
+used the existing direct privileged query path and did not alter their bodies,
+grants, or security modes.
 
 ## Node 2 verdict: HOLD — NOT LAUNCH-READY
 
