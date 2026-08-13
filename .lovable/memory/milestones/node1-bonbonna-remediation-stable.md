@@ -23,7 +23,7 @@ point — never hardcode a service name in a component.
 - Expiry core lives in `_ride_expire_unfulfilled_internal(uuid)` (no session
   required, not executable by anon/authenticated).
 - `ride_sweep_unfulfilled(int)` + pg_cron job `chopchop-ride-no-driver-sweep`
-  (`* * * * *`) close abandoned searches **autonomously** — no customer device
+  (`10 seconds`, pg_cron 1.6 interval schedule) close abandoned searches **autonomously** — no customer device
   needed, reconnect-safe. Fails closed for any non-ops session; the client only
   keeps a slow idempotent backstop call and reacts to the ride row verdict.
 - Regression harnesses: `_qa_node1_bonbonna()` (part 101) and
@@ -36,14 +36,24 @@ place à bord", luggage and cartons, sheltered from rain. Moto = "Trajet
 individuel", fastest through traffic. Shown in booking header + Services.
 
 ## Receipt + recovery truth
-- Receipt payment label mirrors the server rule (`metadata.payment_mode`):
-  Chop Pay / Espèces / "Non renseigné". Never assume cash.
-- `NoDriverRecoverySheet` offers retry in the same service or switching to the
-  alternative service after a no-driver verdict; a fresh booking request id is
-  issued for each recovery attempt.
+- Receipt payment label is persisted server truth only (`metadata.payment_mode`):
+  Chop Pay / Espèces / "Non renseigné". No holdId fallback, never assume cash.
+- `NoDriverRecoverySheet` is the AUTHORITATIVE recovery UX (no duplicate toast).
+  Copy is cash-aware: only a Chop Pay search says the reservation was released
+  in full; a cash search says only that no cancellation fee was charged.
+- Bonbonna no-driver title is exactly "Aucun Bonbonna disponible pour le moment";
+  actions are "Réessayer" and "Voir Moto" (never a silent auto-switch).
+- Trip intent (pickup/dest coordinates + `metadata.pickup_label` /
+  `dest_label`) is preserved into the retry / "Voir Moto" booking; retry always
+  uses a FRESH idempotency uuid and never replays the cancelled commitment.
+- Reconnect/reopen: `Index.tsx` reads the persisted verdict (status=cancelled +
+  `cancel_reason=no_driver_available`, last hour) once per session and surfaces
+  the recovery sheet. Expiry is never inferred from the client clock.
 
 ## Verification
-- `_qa_node1_bonbonna_full()` 39/39 PASS (2026-08-13)
+- `_qa_node1_bonbonna_full()` = base + sweeper + `_qa_node1_bonbonna_matrix()`
+  (eligibility, single-winner, cash truth, cash no-driver zero-movement/no-debt,
+  central cancellation calculator parity, scheduler cadence + fail-closed grants)
 - `_qa_node0_course()` 34/34 PASS (no Course regression)
 - Slice 13 parts 1-7: 507/507 PASS, 0 failed
 - Vitest 24/24 PASS, typecheck clean, no flag or master-wallet drift
