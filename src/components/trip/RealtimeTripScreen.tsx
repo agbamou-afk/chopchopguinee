@@ -85,6 +85,35 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
     if (ride?.status === "completed") setShowReceipt(true);
   }, [ride?.status]);
 
+  /**
+   * No-driver safety net: while the ride is still pending and unassigned, the
+   * server is polled so the 60-second search window can close itself. The
+   * server releases the reservation in full and charges no cancellation fee —
+   * the client only reacts to that verdict.
+   */
+  useEffect(() => {
+    if (!ride || ride.status !== "pending" || ride.driver_id) return;
+    let stopped = false;
+    const tick = async () => {
+      const { data, error } = await supabase.rpc("ride_expire_unfulfilled", { p_ride_id: rideId });
+      if (stopped || error) return;
+      const res = data as { status?: string; released_gnf?: number } | null;
+      if (res?.status === "no_driver") {
+        stopped = true;
+        window.clearInterval(timer);
+        toast({
+          title: "Aucun chauffeur disponible",
+          description: res.released_gnf
+            ? "Vos fonds réservés ont été libérés en totalité. Aucun frais."
+            : "Aucun frais ne vous a été facturé. Réessayez dans un instant.",
+        });
+        onClose();
+      }
+    };
+    const timer = window.setInterval(tick, 5000);
+    return () => { stopped = true; window.clearInterval(timer); };
+  }, [ride?.status, ride?.driver_id, rideId, onClose]);
+
   useEffect(() => {
     try {
       Analytics.track("ride.trust_message_viewed" as any, {
