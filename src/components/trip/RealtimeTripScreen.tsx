@@ -15,6 +15,7 @@ import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { rideQaDebug } from "@/lib/rides/debug";
 import { rideModeLabel } from "@/lib/rides/rideModeLabel";
+import { rideServiceTitle } from "@/lib/rides/rideModeLabel";
 import { CancellationConfirmDialog } from "@/components/finance/CancellationConfirmDialog";
 
 interface Props {
@@ -156,6 +157,7 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel }: 
           fareGnf={ride.fare_gnf ?? 0}
           driverName={driverName}
           paymentLabel="Espèces"
+          serviceLabel={rideServiceTitle(mode)}
           onClose={onClose}
         />
       )}
