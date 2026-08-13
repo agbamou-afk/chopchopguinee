@@ -834,6 +834,7 @@ const Index = () => {
             type={bookingRide}
             initialDestination={bookingDestination}
             onClose={() => {
+              bookingRequestIds.current.reset();
               setBookingRide(null);
               setBookingDestination(undefined);
             }}
@@ -851,10 +852,14 @@ const Index = () => {
               // Single authoritative commitment: the server quotes the fare,
               // derives any reservation and places it atomically with the ride.
               // No client-side fare or hold arithmetic (CRS-G1 / CRS-G2).
-              const clientRequestId =
-                typeof crypto !== "undefined" && "randomUUID" in crypto
-                  ? crypto.randomUUID()
-                  : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+              // The request id is persisted across retries of the same intent so
+              // an ambiguous network failure replays idempotently server-side.
+              const clientRequestId = bookingRequestIds.current.idFor({
+                mode: bookingRide,
+                pickupCoords: trip.pickupCoords,
+                destCoords: trip.destCoords,
+                paymentMode: trip.paymentMode,
+              });
               const { data: reqData, error: reqErr } = await supabase.rpc("ride_request_create", {
                 p_mode: bookingRide,
                 p_pickup_lat: trip.pickupCoords[0],
@@ -896,6 +901,7 @@ const Index = () => {
                 holdId: rideRow?.hold_tx_id ?? null,
                 rideId: req.ride_id,
               });
+              bookingRequestIds.current.reset();
               setBookingRide(null);
               setBookingDestination(undefined);
               const holdCopy =
