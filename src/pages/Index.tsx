@@ -3,9 +3,9 @@ import { formatGNF } from "@/lib/format";
 import { AnimatePresence } from "framer-motion";
 import { UserHome } from "@/components/views/UserHome";
 import { DriverHome } from "@/components/views/DriverHome";
-import { RideBooking } from "@/components/ride/RideBooking";
+import { RideBooking, type RideBookingIntent } from "@/components/ride/RideBooking";
 import { RealtimeTripScreen } from "@/components/trip/RealtimeTripScreen";
-import { NoDriverRecoverySheet } from "@/components/ride/NoDriverRecoverySheet";
+import { NoDriverRecoverySheet, type RecoveryPaymentMode } from "@/components/ride/NoDriverRecoverySheet";
 
 /** Local ride mode type — kept here so the legacy LiveTracking component
  * (now quarantined under `_legacy/`) is not imported from production code. */
@@ -131,6 +131,8 @@ const Index = () => {
   // One persisted uuid per booking commitment attempt (retry idempotency).
   const bookingRequestIds = useRef(createBookingRequestIdStore());
   const [bookingDestination, setBookingDestination] = useState<string | undefined>(undefined);
+  // Trip intent carried into a recovery booking (never auto-books).
+  const [bookingIntent, setBookingIntent] = useState<RideBookingIntent | undefined>(undefined);
   const [activeTrip, setActiveTrip] = useState<{
     mode: TrackingMode;
     pickupCoords: [number, number];
@@ -140,7 +142,15 @@ const Index = () => {
     rideId?: string | null;
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
-  const [noDriverRecovery, setNoDriverRecovery] = useState<"moto" | "toktok" | null>(null);
+  const [noDriverRecovery, setNoDriverRecovery] = useState<{
+    rideId: string;
+    mode: "moto" | "toktok";
+    paymentMode: RecoveryPaymentMode;
+    pickupCoords?: [number, number];
+    destCoords?: [number, number];
+    pickupLabel?: string | null;
+    destLabel?: string | null;
+  } | null>(null);
   const [envoyerOpen, setEnvoyerOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showDriverOnboarding, setShowDriverOnboarding] = useState(false);
@@ -475,6 +485,47 @@ const Index = () => {
 
   // Rides the user has actively dismissed this session — never re-restore them.
   const dismissedRidesRef = useRef<Set<string>>(new Set());
+  // No-driver outcomes already surfaced this session (never replay forever).
+  const noDriverAckRef = useRef<Set<string>>(new Set());
+
+  /**
+   * Build the recovery state from PERSISTED SERVER TRUTH only.
+   * Returns null when the ride is not a no-driver cancellation.
+   */
+  const buildNoDriverRecovery = useCallback((ride: {
+    id: string;
+    mode: string;
+    status: string;
+    metadata: unknown;
+    pickup_lat: number | null;
+    pickup_lng: number | null;
+    dest_lat: number | null;
+    dest_lng: number | null;
+  }) => {
+    const meta = (ride.metadata ?? {}) as Record<string, unknown>;
+    if (ride.status !== "cancelled") return null;
+    if (meta.cancel_reason !== "no_driver_available") return null;
+    if (ride.mode !== "moto" && ride.mode !== "toktok") return null;
+    const raw = meta.payment_mode as string | undefined;
+    const paymentMode: RecoveryPaymentMode =
+      raw === "chop_pay" || raw === "choppay" ? "chop_pay" : raw === "cash" ? "cash" : "unknown";
+    return {
+      rideId: ride.id,
+      mode: ride.mode as "moto" | "toktok",
+      paymentMode,
+      pickupCoords:
+        ride.pickup_lat != null && ride.pickup_lng != null
+          ? ([Number(ride.pickup_lat), Number(ride.pickup_lng)] as [number, number])
+          : undefined,
+      destCoords:
+        ride.dest_lat != null && ride.dest_lng != null
+          ? ([Number(ride.dest_lat), Number(ride.dest_lng)] as [number, number])
+          : undefined,
+      pickupLabel: (meta.pickup_label as string | undefined) ?? null,
+      destLabel: (meta.dest_label as string | undefined) ?? null,
+    };
+  }, []);
+
   // Only attempt the auto-restore once per mount; closing the trip should not
   // immediately re-open the same ride from the DB.
   const restoreAttemptedRef = useRef(false);
@@ -516,6 +567,39 @@ const Index = () => {
     })();
     return () => { cancelled = true; };
   }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp]);
+
+  /**
+   * Reconnect / reopen recovery: a cron-expired search is CANCELLED, so the
+   * active-ride restore above can never surface it. Read the persisted server
+   * verdict (status=cancelled + cancel_reason=no_driver_available) once per
+   * session and show the authoritative recovery sheet.
+   */
+  const noDriverRestoreRef = useRef(false);
+  useEffect(() => {
+    if (!user || isDriverMode || activeTrip || onboardingBlocksApp) return;
+    if (noDriverRestoreRef.current) return;
+    noDriverRestoreRef.current = true;
+    let cancelled = false;
+    (async () => {
+      const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: ride } = await supabase
+        .from("rides")
+        .select("id,mode,status,metadata,pickup_lat,pickup_lng,dest_lat,dest_lng,created_at")
+        .eq("client_id", user.id)
+        .eq("status", "cancelled")
+        .gte("created_at", cutoff)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || !ride) return;
+      if (noDriverAckRef.current.has(ride.id)) return;
+      const recovery = buildNoDriverRecovery(ride as never);
+      if (!recovery) return;
+      noDriverAckRef.current.add(ride.id);
+      setNoDriverRecovery(recovery);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp, buildNoDriverRecovery]);
 
   const closeActiveTrip = async (alsoCancel: boolean) => {
     const trip = activeTrip;
@@ -837,12 +921,15 @@ const Index = () => {
       <AnimatePresence mode="wait">
         {!onboardingBlocksApp && bookingRide && (
           <RideBooking
+            key={`booking-${bookingRide}-${bookingIntent?.destLabel ?? bookingIntent?.destCoords?.join(",") ?? "new"}`}
             type={bookingRide}
             initialDestination={bookingDestination}
+            initialIntent={bookingIntent}
             onClose={() => {
               bookingRequestIds.current.reset();
               setBookingRide(null);
               setBookingDestination(undefined);
+              setBookingIntent(undefined);
             }}
             onBook={async (trip) => {
               const { data: sess } = await supabase.auth.getSession();
@@ -910,6 +997,7 @@ const Index = () => {
               bookingRequestIds.current.reset();
               setBookingRide(null);
               setBookingDestination(undefined);
+              setBookingIntent(undefined);
               const holdCopy =
                 req.payment_mode === "chop_pay"
                   ? `Fonds réservés : ${formatGNF(req.hold_amount_gnf)}.`
@@ -937,10 +1025,20 @@ const Index = () => {
             holdId={activeTrip.holdId}
             onClose={() => closeActiveTrip(false)}
             onCancel={() => closeActiveTrip(true)}
-            onNoDriver={() => {
-              const searched = activeTrip.mode as "moto" | "toktok";
+            onNoDriver={async () => {
+              const rideId = activeTrip.rideId!;
               closeActiveTrip(false);
-              if (searched === "moto" || searched === "toktok") setNoDriverRecovery(searched);
+              // Persisted server truth only — payment mode and trip intent.
+              const { data: ride } = await supabase
+                .from("rides")
+                .select("id,mode,status,metadata,pickup_lat,pickup_lng,dest_lat,dest_lng")
+                .eq("id", rideId)
+                .maybeSingle();
+              if (!ride) return;
+              const recovery = buildNoDriverRecovery(ride as never);
+              if (!recovery) return;
+              noDriverAckRef.current.add(recovery.rideId);
+              setNoDriverRecovery(recovery);
             }}
           />
         )}
@@ -949,17 +1047,35 @@ const Index = () => {
       {noDriverRecovery && (
         <NoDriverRecoverySheet
           open
-          mode={noDriverRecovery}
+          mode={noDriverRecovery.mode}
+          paymentMode={noDriverRecovery.paymentMode}
+          pickupLabel={noDriverRecovery.pickupLabel}
+          destLabel={noDriverRecovery.destLabel}
           onOpenChange={(open) => { if (!open) setNoDriverRecovery(null); }}
           onRetry={() => {
-            const mode = noDriverRecovery;
+            const rec = noDriverRecovery;
             setNoDriverRecovery(null);
+            // A retry is a brand-new commitment: fresh idempotency uuid.
             bookingRequestIds.current.reset();
-            setBookingRide(mode as RideType);
+            setBookingIntent({
+              pickupCoords: rec.pickupCoords ?? null,
+              destCoords: rec.destCoords ?? null,
+              pickupLabel: rec.pickupLabel,
+              destLabel: rec.destLabel,
+            });
+            setBookingRide(rec.mode as RideType);
           }}
           onSwitchMode={(next) => {
+            const rec = noDriverRecovery;
             setNoDriverRecovery(null);
             bookingRequestIds.current.reset();
+            setBookingIntent({
+              pickupCoords: rec.pickupCoords ?? null,
+              destCoords: rec.destCoords ?? null,
+              pickupLabel: rec.pickupLabel,
+              destLabel: rec.destLabel,
+            });
+            // Opens the alternative service booking. Never auto-books.
             setBookingRide(next as RideType);
           }}
         />

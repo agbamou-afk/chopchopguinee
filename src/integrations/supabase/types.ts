@@ -8308,6 +8308,7 @@ export type Database = {
       _qa_node0_course: { Args: never; Returns: Json }
       _qa_node1_bonbonna: { Args: never; Returns: Json }
       _qa_node1_bonbonna_full: { Args: never; Returns: Json }
+      _qa_node1_bonbonna_matrix: { Args: never; Returns: Json }
       _qa_node1_bonbonna_sweeper: { Args: never; Returns: Json }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
       _qa_s13_driver: {

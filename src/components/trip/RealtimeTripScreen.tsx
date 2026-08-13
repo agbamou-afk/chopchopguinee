@@ -76,9 +76,7 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel, on
       ? "Chop Pay"
       : rawPaymentMode === "cash"
         ? "Espèces"
-        : holdId
-          ? "Chop Pay"
-          : "Non renseigné";
+        : "Non renseigné";
 
   useEffect(() => {
     if (!ride) return;
@@ -129,10 +127,8 @@ export function RealtimeTripScreen({ rideId, mode, holdId, onClose, onCancel, on
     if (ride.status !== "cancelled") return;
     if ((meta.cancel_reason as string | undefined) !== "no_driver_available") return;
     noDriverHandled.current = true;
-    toast({
-      title: "Aucun chauffeur disponible",
-      description: "Vos fonds réservés ont été libérés en totalité. Aucun frais.",
-    });
+    // No toast here: the persisted recovery sheet is the authoritative
+    // recovery UX and it is the only surface that knows the payment truth.
     (onNoDriver ?? onClose)();
   }, [ride?.status, meta.cancel_reason, onNoDriver, onClose]);
 
