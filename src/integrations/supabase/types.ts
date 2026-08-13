@@ -8307,6 +8307,8 @@ export type Database = {
       }
       _qa_node0_course: { Args: never; Returns: Json }
       _qa_node1_bonbonna: { Args: never; Returns: Json }
+      _qa_node1_bonbonna_full: { Args: never; Returns: Json }
+      _qa_node1_bonbonna_sweeper: { Args: never; Returns: Json }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
       _qa_s13_driver: {
         Args: { p_bal: number; p_tag: string; p_uid: string }
@@ -8385,6 +8387,10 @@ export type Database = {
           p_party: Database["public"]["Enums"]["party_type"]
         }
         Returns: string
+      }
+      _ride_expire_unfulfilled_internal: {
+        Args: { p_ride_id: string }
+        Returns: Json
       }
       _ride_mission_type: { Args: { p_mode: string }; Returns: string }
       _ride_payment_mode: {
@@ -12494,6 +12500,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      ride_sweep_unfulfilled: { Args: { p_limit?: number }; Returns: Json }
       score_driver_referral_risk: {
         Args: { p_referral: string }
         Returns: {
