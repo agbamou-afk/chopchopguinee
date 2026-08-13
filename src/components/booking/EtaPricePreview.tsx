@@ -6,7 +6,7 @@ export type PreviewState = "idle" | "calculating" | "ready" | "unavailable" | "n
 
 interface Props {
   state: PreviewState;
-  serviceType: "moto" | "toktok" | "livraison";
+  serviceType: "moto" | "toktok" | "auto" | "livraison";
   /** Estimated duration in seconds. */
   durationS?: number;
   /** Estimated distance in meters. */
@@ -19,8 +19,8 @@ interface Props {
   onRetry?: () => void;
 }
 
-const SERVICE_LABEL = { moto: "Moto", toktok: "Bonbonna", livraison: "Livraison" } as const;
-const SERVICE_ICON = { moto: Bike, toktok: Car, livraison: Bike } as const;
+const SERVICE_LABEL = { moto: "Moto", toktok: "Bonbonna", auto: "Taxi", livraison: "Livraison" } as const;
+const SERVICE_ICON = { moto: Bike, toktok: Car, auto: Car, livraison: Bike } as const;
 
 /**
  * Booking preview card. Shows ETA + distance + fare bracket, never fakes

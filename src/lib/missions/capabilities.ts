@@ -1,6 +1,7 @@
 export type DriverCapability =
   | "rides_moto"
   | "rides_toktok"
+  | "rides_taxi"
   | "repas_delivery"
   | "marche_delivery"
   | "package_delivery";
@@ -8,6 +9,7 @@ export type DriverCapability =
 export const CAPABILITY_LABEL: Record<DriverCapability, string> = {
   rides_moto: "Moto",
   rides_toktok: "Bonbonna",
+  rides_taxi: "Taxi",
   repas_delivery: "Livraison Repas",
   marche_delivery: "Livraison Marché",
   package_delivery: "Colis",
@@ -16,6 +18,7 @@ export const CAPABILITY_LABEL: Record<DriverCapability, string> = {
 export const ALL_CAPABILITIES: DriverCapability[] = [
   "rides_moto",
   "rides_toktok",
+  "rides_taxi",
   "repas_delivery",
   "marche_delivery",
   "package_delivery",

@@ -4,12 +4,13 @@ import { AnimatePresence } from "framer-motion";
 import { UserHome } from "@/components/views/UserHome";
 import { DriverHome } from "@/components/views/DriverHome";
 import { RideBooking, type RideBookingIntent } from "@/components/ride/RideBooking";
+import { type RideProductMode } from "@/lib/rides/rideModeLabel";
 import { RealtimeTripScreen } from "@/components/trip/RealtimeTripScreen";
 import { NoDriverRecoverySheet, type RecoveryPaymentMode } from "@/components/ride/NoDriverRecoverySheet";
 
 /** Local ride mode type — kept here so the legacy LiveTracking component
  * (now quarantined under `_legacy/`) is not imported from production code. */
-type TrackingMode = "moto" | "toktok" | "food";
+type TrackingMode = "moto" | "toktok" | "auto" | "food";
 import { QrScanner } from "@/components/scanner/QrScanner";
 import { toast } from "@/hooks/use-toast";
 import { FoodView } from "@/components/views/FoodView";
@@ -63,7 +64,7 @@ import {
   resolveMerchantPostAuthRoute,
 } from "@/lib/merchantRouting";
 
-export type RideType = "moto" | "toktok" | null;
+export type RideType = RideProductMode | null;
 export type ActiveView = "home" | "services" | "food" | "market" | "wallet" | "profile" | "orders";
 
 /**
@@ -144,7 +145,7 @@ const Index = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [noDriverRecovery, setNoDriverRecovery] = useState<{
     rideId: string;
-    mode: "moto" | "toktok";
+    mode: RideProductMode;
     paymentMode: RecoveryPaymentMode;
     pickupCoords?: [number, number];
     destCoords?: [number, number];
@@ -283,7 +284,7 @@ const Index = () => {
     } catch { /* noop */ }
     const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
     const v = meta.requested_driver_vehicle;
-    const vehicle = v === "moto" || v === "toktok" || v === "livraison" ? v : "moto";
+    const vehicle = v === "moto" || v === "toktok" || v === "auto" || v === "livraison" ? v : "moto";
     navigate(`/driver/apply?intent=${encodeURIComponent(vehicle)}`, { replace: true });
   }, [driverResolving, user, signupIntent, driverProfile, navigate]);
 
@@ -523,13 +524,13 @@ const Index = () => {
     const meta = (ride.metadata ?? {}) as Record<string, unknown>;
     if (ride.status !== "cancelled") return null;
     if (meta.cancel_reason !== "no_driver_available") return null;
-    if (ride.mode !== "moto" && ride.mode !== "toktok") return null;
+    if (ride.mode !== "moto" && ride.mode !== "toktok" && ride.mode !== "auto") return null;
     const raw = meta.payment_mode as string | undefined;
     const paymentMode: RecoveryPaymentMode =
       raw === "chop_pay" || raw === "choppay" ? "chop_pay" : raw === "cash" ? "cash" : "unknown";
     return {
       rideId: ride.id,
-      mode: ride.mode as "moto" | "toktok",
+      mode: ride.mode as RideProductMode,
       paymentMode,
       pickupCoords:
         ride.pickup_lat != null && ride.pickup_lng != null
@@ -723,7 +724,7 @@ const Index = () => {
     // Public exploration: ride booking, food and market browsing are allowed
     // without an account. Signup is enforced later at commitment points
     // (real wallet hold / real ride creation) via the conversion gate.
-    const publicActions = new Set(["services", "market", "food", "moto", "toktok", "parcel", "scan", "support"]);
+    const publicActions = new Set(["services", "market", "food", "moto", "toktok", "auto", "parcel", "scan", "support"]);
     const commitmentMap: Record<string, ConversionIntent> = {
       send: "wallet",
       wallet: "wallet",
@@ -742,6 +743,10 @@ const Index = () => {
       case "toktok":
         setBookingDestination(params?.destination);
         setBookingRide("toktok");
+        break;
+      case "auto":
+        setBookingDestination(params?.destination);
+        setBookingRide("auto");
         break;
       case "services":
         setActiveView("services");
@@ -1041,7 +1046,7 @@ const Index = () => {
           <RealtimeTripScreen
             key={`v2-${activeTrip.rideId}`}
             rideId={activeTrip.rideId}
-            mode={activeTrip.mode as "moto" | "toktok"}
+            mode={activeTrip.mode as RideProductMode}
             holdId={activeTrip.holdId}
             onClose={() => closeActiveTrip(false)}
             onCancel={() => closeActiveTrip(true)}

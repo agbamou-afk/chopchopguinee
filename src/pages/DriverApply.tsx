@@ -12,6 +12,7 @@ import { validateReferralCode } from "@/lib/admin/driverGroups";
 const VEHICLE_OPTIONS: Array<{ id: DriverVehicle; label: string; sub: string; icon: typeof Bike }> = [
   { id: "moto", label: "Moto", sub: "Course rapide en ville", icon: Bike },
   { id: "toktok", label: "Bonbonna", sub: "Tricycle, plus de place", icon: Car },
+  { id: "auto", label: "Taxi", sub: "Voiture avec chauffeur", icon: Car },
   { id: "livraison", label: "Livraison", sub: "Coursier colis", icon: Package },
 ];
 
@@ -27,7 +28,7 @@ export default function DriverApply() {
 
   const intentVehicle = (() => {
     const raw = searchParams.get("intent");
-    if (raw === "moto" || raw === "toktok" || raw === "livraison") return raw;
+    if (raw === "moto" || raw === "toktok" || raw === "auto" || raw === "livraison") return raw;
     return null;
   })();
   const [vehicleType, setVehicleType] = useState<DriverVehicle>(
