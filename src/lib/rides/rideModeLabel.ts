@@ -10,9 +10,13 @@
 export const RIDE_MODE_LABEL: Record<string, string> = {
   moto: "Moto",
   toktok: "Bonbonna",
+  auto: "Taxi",
   livraison: "Livraison",
   food: "Repas",
 };
+
+/** Bookable passenger-ride products (internal identifiers). */
+export type RideProductMode = "moto" | "toktok" | "auto";
 
 /** Primary service label shown to users. Falls back to the raw value. */
 export function rideModeLabel(mode: string | null | undefined): string {
@@ -24,6 +28,7 @@ export function rideModeLabel(mode: string | null | undefined): string {
 export const RIDE_MODE_SUBTITLE: Record<string, string> = {
   moto: "Moto-taxi rapide à Conakry",
   toktok: "Tricycle pour vos déplacements",
+  auto: "Voiture avec chauffeur à Conakry",
 };
 
 /**
@@ -65,5 +70,11 @@ export const RIDE_MODE_PRODUCT: Record<string, RideModeProduct> = {
     cargo: "Bagages, courses et cartons",
     weather: "Abrité de la pluie et du soleil",
     positioning: "Plus de place, plus de bagages, à l'abri",
+  },
+  auto: {
+    capacity: "Voiture fermée, trajet en famille ou entre collègues",
+    cargo: "Valises, cartons et achats volumineux dans le coffre",
+    weather: "Totalement à l'abri de la pluie, du soleil et de la poussière",
+    positioning: "Le trajet le plus confortable et le plus discret",
   },
 };
