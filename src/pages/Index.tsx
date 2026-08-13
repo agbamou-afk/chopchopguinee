@@ -46,7 +46,6 @@ import {
   markSignupInviteSeenSession,
 } from "@/components/onboarding/SignupInviteSheet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
-import { createSupportIssue } from "@/lib/support/issues";
 import { UnderConstructionModal } from "@/components/announcements/UnderConstructionModal";
 import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
 import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
