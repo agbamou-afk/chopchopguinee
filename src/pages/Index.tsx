@@ -131,6 +131,8 @@ const Index = () => {
   // One persisted uuid per booking commitment attempt (retry idempotency).
   const bookingRequestIds = useRef(createBookingRequestIdStore());
   const [bookingDestination, setBookingDestination] = useState<string | undefined>(undefined);
+  // Trip intent carried into a recovery booking (never auto-books).
+  const [bookingIntent, setBookingIntent] = useState<RideBookingIntent | undefined>(undefined);
   const [activeTrip, setActiveTrip] = useState<{
     mode: TrackingMode;
     pickupCoords: [number, number];
@@ -140,7 +142,15 @@ const Index = () => {
     rideId?: string | null;
   } | null>(null);
   const [showScanner, setShowScanner] = useState(false);
-  const [noDriverRecovery, setNoDriverRecovery] = useState<"moto" | "toktok" | null>(null);
+  const [noDriverRecovery, setNoDriverRecovery] = useState<{
+    rideId: string;
+    mode: "moto" | "toktok";
+    paymentMode: RecoveryPaymentMode;
+    pickupCoords?: [number, number];
+    destCoords?: [number, number];
+    pickupLabel?: string | null;
+    destLabel?: string | null;
+  } | null>(null);
   const [envoyerOpen, setEnvoyerOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showDriverOnboarding, setShowDriverOnboarding] = useState(false);
