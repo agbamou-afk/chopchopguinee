@@ -50,6 +50,7 @@ import { UnderConstructionModal } from "@/components/announcements/UnderConstruc
 import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
 import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
 import { rideQaDebug } from "@/lib/rides/debug";
+import { createBookingRequestIdStore } from "@/lib/rides/bookingRequestId";
 import { useAppMode } from "@/hooks/useAppMode";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import {
@@ -125,6 +126,8 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [activeView, setActiveView] = useState<ActiveView>(initialView);
   const [bookingRide, setBookingRide] = useState<RideType>(null);
+  // One persisted uuid per booking commitment attempt (retry idempotency).
+  const bookingRequestIds = useRef(createBookingRequestIdStore());
   const [bookingDestination, setBookingDestination] = useState<string | undefined>(undefined);
   const [activeTrip, setActiveTrip] = useState<{
     mode: TrackingMode;
@@ -834,6 +837,7 @@ const Index = () => {
             type={bookingRide}
             initialDestination={bookingDestination}
             onClose={() => {
+              bookingRequestIds.current.reset();
               setBookingRide(null);
               setBookingDestination(undefined);
             }}
@@ -851,10 +855,14 @@ const Index = () => {
               // Single authoritative commitment: the server quotes the fare,
               // derives any reservation and places it atomically with the ride.
               // No client-side fare or hold arithmetic (CRS-G1 / CRS-G2).
-              const clientRequestId =
-                typeof crypto !== "undefined" && "randomUUID" in crypto
-                  ? crypto.randomUUID()
-                  : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+              // The request id is persisted across retries of the same intent so
+              // an ambiguous network failure replays idempotently server-side.
+              const clientRequestId = bookingRequestIds.current.idFor({
+                mode: bookingRide,
+                pickupCoords: trip.pickupCoords,
+                destCoords: trip.destCoords,
+                paymentMode: trip.paymentMode,
+              });
               const { data: reqData, error: reqErr } = await supabase.rpc("ride_request_create", {
                 p_mode: bookingRide,
                 p_pickup_lat: trip.pickupCoords[0],
@@ -896,6 +904,7 @@ const Index = () => {
                 holdId: rideRow?.hold_tx_id ?? null,
                 rideId: req.ride_id,
               });
+              bookingRequestIds.current.reset();
               setBookingRide(null);
               setBookingDestination(undefined);
               const holdCopy =

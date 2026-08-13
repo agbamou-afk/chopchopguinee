@@ -9,10 +9,17 @@ Date: 2026-08-12 (UTC)
 
 ## A. Executive verdict
 
-**REFERENCE WITH GAPS** at audit time — **CLOSED 2026-08-13** by the Node 0
-Closeout (see `docs/product/service-nodes/node0-course-closeout.md`).
-CRS-G1, CRS-G2 and CRS-G3 are remediated; the current Course (Moto) verdict is
-**REFERENCE / LAUNCH-READY** for the request → assignment → completion path.
+**REFERENCE WITH GAPS** at audit time. CRS-G1, CRS-G2 and CRS-G3 are
+**CLOSED 2026-08-13** by the Node 0 Closeout
+(see `docs/product/service-nodes/node0-course-closeout.md`).
+
+Current formal verdict: **HOLD — Gate 14 only.** The request → assignment →
+completion path is functionally **READY WITH YELLOWS** (Slice 13 507/507,
+`_qa_node0_course()` 34/34, no P0/P1 open), but Standard v1 Gate 14 (controlled
+two-actor / two-device smoke) has not been executed — the sandbox reports
+`LOVABLE_BROWSER_AUTH_STATUS=signed_out`, so independent authenticated client
+and driver sessions could not be established. Gate 14 is non-negotiable in the
+frozen Standard, so `REFERENCE` / `LAUNCH-READY` cannot be claimed yet.
 
 Course (Moto) is the only CHOPCHOP service with a complete, server-authoritative,
 two-actor lifecycle from discovery to receipt, with idempotent accept/complete,

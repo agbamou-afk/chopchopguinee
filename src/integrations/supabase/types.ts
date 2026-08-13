@@ -12424,6 +12424,10 @@ export type Database = {
         Returns: Json
       }
       ride_request_dispatch: { Args: { p_ride_id: string }; Returns: string }
+      ride_reservation_amount_gnf: {
+        Args: { p_fare_gnf: number }
+        Returns: number
+      }
       ride_set_phase: {
         Args: { p_phase: string; p_ride_id: string }
         Returns: {

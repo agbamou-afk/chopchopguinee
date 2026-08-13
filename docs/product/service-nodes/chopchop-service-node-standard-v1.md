@@ -223,16 +223,16 @@ Gate 4, 5, 11 and 14 are non-negotiable; a failure there forces HOLD.
 | Lens | Grade | Evidence | Blockers |
 |---|---|---|---|
 | Runtime | REGRESSION-PROVEN | `ride_create/accept/set_phase/confirm_pickup/start/complete/cancel`; `rides` SELECT-only RLS | — |
-| Finance | REGRESSION-PROVEN with GAP | Slice 13 507/507; snapshot commission; `SETTLEMENT_REQUIRED_INSUFFICIENT_HOLD` | CRS-G1 client fare, CRS-G2 client hold |
-| Customer UX | CODE-VERIFIED + VISUAL-YELLOW | RideBooking -> RealtimeTripScreen -> receipt | CRS-G3 no payment selector |
+| Finance | REGRESSION-PROVEN | Slice 13 507/507 (batch `node0-final-gate-20260813002450`); `_qa_node0_course()` 34/34; server-derived fare + reservation in `ride_request_create` | CRS-G1 / CRS-G2 CLOSED 2026-08-13 |
+| Customer UX | CODE-VERIFIED + VISUAL-YELLOW | RideBooking -> RealtimeTripScreen -> receipt; explicit Chop Pay / Espèces selector with server `chop_pay_hold_gnf` preview | CRS-G3 CLOSED 2026-08-13; no authenticated 390x844 visual pass |
 | Supply UX | CODE-VERIFIED | offers, accept, navigation, arrival, completion, earnings | CRS-G9 weak-GPS not surfaced |
 | Recovery | REGRESSION-PROVEN | duplicate accept/complete, stale offer, wrong code, cancel stages, compensating release | CRS-G6 no driver no-show flow |
 | Ops | CODE-VERIFIED | OrdersAdmin, LiveOps, DriversAdmin, SupportAdmin, AuditAdmin, `ride.settled` | — |
 | Security | REGRESSION-PROVEN | SECURITY DEFINER RPCs, `ONLY_ASSIGNED_DRIVER_CAN_COMPLETE`, customer-only pickup confirm | — |
 | Environment | CODE-VERIFIED + FIELD-YELLOW | polling fallback, low-data mode, no fake pickup coordinate, session restore | CRS-G5 no native push |
 | Engagement | PARTIAL | saved places, ratings, activity/receipts real | CRS-G7 recents, CRS-G8 fake promo carousel |
-| Field QA | FIELD-YELLOW | no live two-device Conakry run this cycle | Gate 14 unmet |
-| **Verdict** | **REFERENCE WITH GAPS** | Benchmark for all nodes; CRS-G1/G2/G3 must be closed before Course itself can be locked `LAUNCH-READY` | — |
+| Field QA | FIELD-YELLOW | no controlled two-actor/two-device run: sandbox reports `LOVABLE_BROWSER_AUTH_STATUS=signed_out`, so independent authenticated client + driver sessions could not be established | **Gate 14 unmet** |
+| **Verdict** | **HOLD (Gate 14 only)** | Functionally READY WITH YELLOWS: CRS-G1/G2/G3 CLOSED, Slice 13 507/507, Node 0 QA 34/34. Gate 14 (two-actor smoke) is non-negotiable in this Standard and has not been executed, so the formal verdict cannot be `REFERENCE` or `LAUNCH-READY`. | Gate 14 |
 
 Bonbonna, Repas, Marché and Envoyer are **not scored** here; they are future audits.
 
