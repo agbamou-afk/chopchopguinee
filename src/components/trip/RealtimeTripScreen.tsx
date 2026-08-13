@@ -20,7 +20,7 @@ import { CancellationConfirmDialog } from "@/components/finance/CancellationConf
 
 interface Props {
   rideId: string;
-  mode: "moto" | "toktok" | "food";
+  mode: "moto" | "toktok" | "auto" | "food";
   /** Wallet hold to release if the user cancels before pickup. */
   holdId?: string | null;
   /** Close the dashboard but keep the ride active in the background.
