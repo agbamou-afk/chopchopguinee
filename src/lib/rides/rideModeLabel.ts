@@ -43,7 +43,7 @@ export function rideServiceTitle(mode: string | null | undefined): string {
  * cargo, and it is the sheltered option when it rains.
  */
 export interface RideModeProduct {
-  /** Seats available for passengers. */
+  /** Room on board, described qualitatively (never a passenger count). */
   capacity: string;
   /** What can realistically travel with the passenger. */
   cargo: string;
@@ -55,13 +55,13 @@ export interface RideModeProduct {
 
 export const RIDE_MODE_PRODUCT: Record<string, RideModeProduct> = {
   moto: {
-    capacity: "1 passager",
+    capacity: "Trajet individuel",
     cargo: "Sac à main ou petit sac à dos",
     weather: "À éviter sous la pluie",
     positioning: "Le plus rapide dans les embouteillages",
   },
   toktok: {
-    capacity: "Jusqu'à 3 passagers",
+    capacity: "Plus de place à bord",
     cargo: "Bagages, courses et cartons",
     weather: "Abrité de la pluie et du soleil",
     positioning: "Plus de place, plus de bagages, à l'abri",

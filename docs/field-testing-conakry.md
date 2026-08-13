@@ -8,7 +8,7 @@ any URL containing `?field=1`.
 
 1. **Kaloum (centre admin)** — pickup → Madina, moto.
 2. **Madina marché** — saved place "Travail", livraison vers Ratoma.
-3. **Bambeto rond-point** — toktok 3 passagers vers Cosa.
+3. **Bambeto rond-point** — Bonbonna (toktok) avec bagages vers Cosa.
 4. **Kipé résidence** — repas commande depuis Le Damier.
 5. **Aéroport Gbessia** — long trajet vers Kaloum, vérifier ETA.
 6. **Cosa carrefour** — annulation côté chauffeur, ré-affectation.
