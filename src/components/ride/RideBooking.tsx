@@ -13,7 +13,7 @@ import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
 import { searchConakryPlaces, categoryLabel, confidenceLabel } from "@/lib/locations/searchPlaces";
 import { useLiveUserLocation, CONAKRY_FALLBACK } from "@/lib/location/useLiveUserLocation";
 import { logLocationSearchEvent } from "@/lib/locations/locationSearchTelemetry";
-import { RIDE_MODE_PRODUCT } from "@/lib/rides/rideModeLabel";
+import { RIDE_MODE_PRODUCT, type RideProductMode } from "@/lib/rides/rideModeLabel";
 
 function haversineKm(a: [number, number], b: [number, number]): number {
   const R = 6371;
@@ -38,7 +38,7 @@ interface Suggestion {
 }
 
 interface RideBookingProps {
-  type: "moto" | "toktok";
+  type: RideProductMode;
   onClose: () => void;
   onBook: (trip: {
     pickupCoords: [number, number];
@@ -75,6 +75,12 @@ const rideOptions = {
     icon: Car,
     eta: "5-8 min",
     speedKmh: 22,
+  },
+  auto: {
+    title: "Taxi",
+    icon: Car,
+    eta: "5-10 min",
+    speedKmh: 24,
   },
 };
 
