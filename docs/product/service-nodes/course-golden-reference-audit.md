@@ -9,7 +9,10 @@ Date: 2026-08-12 (UTC)
 
 ## A. Executive verdict
 
-**REFERENCE WITH GAPS.**
+**REFERENCE WITH GAPS** at audit time — **CLOSED 2026-08-13** by the Node 0
+Closeout (see `docs/product/service-nodes/node0-course-closeout.md`).
+CRS-G1, CRS-G2 and CRS-G3 are remediated; the current Course (Moto) verdict is
+**REFERENCE / LAUNCH-READY** for the request → assignment → completion path.
 
 Course (Moto) is the only CHOPCHOP service with a complete, server-authoritative,
 two-actor lifecycle from discovery to receipt, with idempotent accept/complete,
@@ -209,9 +212,9 @@ FlagsAdmin (shared ride flags: `moto`, `toktok`; `om_ride_checkout_enabled`, `ca
 
 | ID | Gap | Severity |
 |---|---|---|
-| CRS-G1 | `ride_create` trusts the client-supplied `p_fare_gnf`; no server recompute/bounding | P1 (finance authority) |
-| CRS-G2 | Hold amount `fare*1.1` computed in the client | P1 (client-side financial reconstruction) |
-| CRS-G3 | No customer payment-mode selector; cash unreachable from the ride booking UI | P1 (product completeness) |
+| CRS-G1 | `ride_create` trusts the client-supplied `p_fare_gnf`; no server recompute/bounding | P1 (finance authority) — **CLOSED**: `ride_request_create` has no fare parameter; `ride_create` now recomputes and ignores the client fare |
+| CRS-G2 | Hold amount `fare*1.1` computed in the client | P1 (client-side financial reconstruction) — **CLOSED**: reservation derived server-side and placed atomically with the ride |
+| CRS-G3 | No customer payment-mode selector; cash unreachable from the ride booking UI | P1 (product completeness) — **CLOSED**: explicit Chop Pay / Espèces selector persisted as `metadata.payment_mode` |
 | CRS-G4 | Fare band is computed client-side from `fare_settings`; no server quote RPC | P2 |
 | CRS-G5 | No native push; trip alerts rely on in-app/foreground state | P2 (Android node) |
 | CRS-G6 | No driver no-show flow for the customer (only cancel) | P2 |
