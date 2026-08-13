@@ -35,7 +35,30 @@ service-role-only harness (allowlisted in `qa-node-harness`). It flips the `taxi
 flag ON only inside a subtransaction that always ends in `QA_NODE2_ROLLBACK`, so
 production flag state, the master wallet and all fixtures are restored.
 
-Coverage (48 assertions, all natural-language labelled):
+## T7 correction pass (2026-08-13) — real handshake + negative rails
+
+The first harness version was rejected for shortcutting the pickup handshake via
+direct `metadata` writes. It was replaced by a version that drives the **real**
+production RPCs (`ride_set_phase` → wrong-code rejection → `ride_confirm_pickup`
+with the true code → `ride_start` → `ride_complete`), plus explicit negative
+dispatch rails (moto, Bonbonna, offline, suspended, frozen `auto` drivers each
+get exactly zero Taxi offers), zero-movement proof for flag-off refusals,
+`ride_complete` replay idempotency (no second wallet/ledger/journal effect) and
+full residue/master-wallet cleanliness.
+
+One real defect in the harness assumptions was found and corrected against
+server truth rather than by weakening it: closing an unfulfilled search first
+retires the pending offer, so an old offer fails with `OFFER_NO_LONGER_PENDING`
+(not `MISSION_NO_LONGER_AVAILABLE`). Two extra assertions were added — the offer
+is really `expired`, and a *fresh* offer planted after the sweep is refused with
+`MISSION_NO_LONGER_AVAILABLE` and never gives the cancelled trip a driver.
+
+Client label leakage fixed in the same pass: `taxi` mission kind added to
+`src/lib/activity/types.ts`, `ActivityRow.tsx` ("Course Taxi"),
+`useActivityFeed.ts` (`auto` → `taxi`) and `src/lib/wallet/labels.ts`
+("Gain Course Taxi reçu"), covered by `src/test/node2-taxi-labels.test.ts`.
+
+Coverage (97 assertions, all natural-language labelled):
 - A Identity/config: `auto` enum, `_ride_mission_type='taxi'`, `_ride_required_vehicle='auto'`,
   fare 1500/2000, own 1000 bps policy, flag currently OFF.
 - B Fail-closed: booking refused with `TAXI_NOT_ENABLED` and zero rides created while OFF;
@@ -55,9 +78,11 @@ Coverage (48 assertions, all natural-language labelled):
 - Z Rollback: master wallet unchanged, `taxi` flag back OFF, no flag drift, no fixture residue.
 
 Final untouched sequential sweep (after the last edit):
-Node 2 48/48 · Node 0 34/34 · Node 1 24/24 + full 78/78 + matrix 39/39 + sweeper 15/15 ·
-Slice 13 parts 1–3 18/32/54 — **342/342 PASS, 0 failed**.
-Vitest 24/24, typecheck clean.
+Node 2 97/97 · Node 0 34/34 · Node 1 full 78/78 ·
+Slice 13 parts 1–3 18/32/54 — **313/313 PASS, 0 failed**.
+Vitest 28/28, typecheck clean.
+Posture re-read after the sweep: `feature_flags.taxi` = false, 0 approved `auto`
+drivers, 0 `auto` rides, 0 `qa-s13-n2%` residue.
 
 Known evidence limitation (pre-existing, not Taxi-related): Slice 13 parts 4–7 use
 `SET ROLE` and are SECURITY INVOKER, so they cannot be executed by `service_role`
