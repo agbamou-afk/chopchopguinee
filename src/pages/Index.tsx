@@ -568,6 +568,39 @@ const Index = () => {
     return () => { cancelled = true; };
   }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp]);
 
+  /**
+   * Reconnect / reopen recovery: a cron-expired search is CANCELLED, so the
+   * active-ride restore above can never surface it. Read the persisted server
+   * verdict (status=cancelled + cancel_reason=no_driver_available) once per
+   * session and show the authoritative recovery sheet.
+   */
+  const noDriverRestoreRef = useRef(false);
+  useEffect(() => {
+    if (!user || isDriverMode || activeTrip || onboardingBlocksApp) return;
+    if (noDriverRestoreRef.current) return;
+    noDriverRestoreRef.current = true;
+    let cancelled = false;
+    (async () => {
+      const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: ride } = await supabase
+        .from("rides")
+        .select("id,mode,status,metadata,pickup_lat,pickup_lng,dest_lat,dest_lng,created_at")
+        .eq("client_id", user.id)
+        .eq("status", "cancelled")
+        .gte("created_at", cutoff)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || !ride) return;
+      if (noDriverAckRef.current.has(ride.id)) return;
+      const recovery = buildNoDriverRecovery(ride as never);
+      if (!recovery) return;
+      noDriverAckRef.current.add(ride.id);
+      setNoDriverRecovery(recovery);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, isDriverMode, activeTrip, onboardingBlocksApp, buildNoDriverRecovery]);
+
   const closeActiveTrip = async (alsoCancel: boolean) => {
     const trip = activeTrip;
     if (trip?.rideId) {
