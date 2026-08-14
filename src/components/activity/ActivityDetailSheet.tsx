@@ -8,6 +8,7 @@ import type { ActivityItem } from "@/lib/activity/types";
 import { formatActivityTime } from "@/lib/activity/types";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { useNavigate } from "react-router-dom";
+import { CustodyCodeCard } from "@/components/repas/CustodyCodeCard";
 
 interface ActivityDetailSheetProps {
   item: ActivityItem | null;
@@ -75,6 +76,24 @@ export function ActivityDetailSheet({ item, onClose }: ActivityDetailSheetProps)
           <Row label="Date" value={formatActivityTime(item.occurredAt)} />
           {item.reference && <Row label="Référence" value={item.reference} mono />}
         </div>
+
+        {/* R6 — one-time handover code, re-fetched from the server on every open. */}
+        {item.kind === "food_order" && item.entityId && item.status !== "completed" && (
+          <div className="mt-4 space-y-2">
+            <CustodyCodeCard
+              orderId={item.entityId}
+              kind="customer_delivery"
+              title="Code de livraison"
+              instruction="Donnez ce code au coursier seulement quand vous avez la commande en main."
+            />
+            <CustodyCodeCard
+              orderId={item.entityId}
+              kind="customer_pickup"
+              title="Code de retrait"
+              instruction="Donnez ce code au restaurant seulement quand vous récupérez la commande."
+            />
+          </div>
+        )}
 
         <Separator className="my-5" />
 
