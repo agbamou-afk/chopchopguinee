@@ -65,6 +65,13 @@ export interface RepasReceipt {
   state: FoodOrderState;
   payment_method: FoodPaymentMethod;
   payment_status: string | null;
+  /** Legacy raw `food_orders.payment_status` — never canonical on its own. */
+  legacy_payment_status?: string | null;
+  /** Canonical committed tender runtime state (Chop Pay / cash engine). */
+  engine_state?: string | null;
+  payment_rail?: "chop_pay" | "cash" | null;
+  payment_state?: RepasPaymentState;
+  payment_settled?: boolean;
   created_at: string;
   paid_at: string | null;
   completed_at: string | null;
