@@ -1,0 +1,12 @@
+ALTER FUNCTION public._qa_s13_run4() SECURITY DEFINER SET search_path TO 'public';
+ALTER FUNCTION public._qa_s13_run5() SECURITY DEFINER SET search_path TO 'public';
+ALTER FUNCTION public._qa_s13_run6() SECURITY DEFINER SET search_path TO 'public';
+ALTER FUNCTION public._qa_s13_run7() SECURITY DEFINER SET search_path TO 'public';
+REVOKE ALL ON FUNCTION public._qa_s13_run4() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run5() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run6() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._qa_s13_run7() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run4() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run5() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run6() TO service_role;
+GRANT EXECUTE ON FUNCTION public._qa_s13_run7() TO service_role;
