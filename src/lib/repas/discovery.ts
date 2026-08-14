@@ -30,6 +30,17 @@ export interface RepasDiscoveryRestaurant {
   menu_items_available: number;
   orderable_now: boolean;
   blocked_reason: RepasBlockedReason | null;
+  /** Canonical, server-derived per-channel orderability. */
+  orderable_pickup: boolean;
+  orderable_delivery: boolean;
+  pickup_blocked_reason: RepasChannelBlockedReason | null;
+  delivery_blocked_reason: RepasChannelBlockedReason | null;
+  /**
+   * True when delivery is offered but final eligibility still depends on the
+   * customer destination (a max-distance policy is configured). Discovery
+   * never pre-approves a route: `repas_quote_preview` stays authoritative.
+   */
+  delivery_destination_check_required: boolean;
 }
 
 export interface RepasRestaurantPublic extends RepasDiscoveryRestaurant {
@@ -44,6 +55,32 @@ export type RepasBlockedReason =
   | "no_menu"
   | "no_available_items"
   | "no_fulfillment";
+
+export type RepasChannelBlockedReason =
+  | "RESTAURANT_NOT_PUBLISHED"
+  | "RESTAURANT_CLOSED"
+  | "NO_AVAILABLE_ITEMS"
+  | "PICKUP_NOT_OFFERED"
+  | "PICKUP_UNAVAILABLE"
+  | "DELIVERY_NOT_OFFERED"
+  | "DELIVERY_DISTANCE_UNVERIFIABLE"
+  | "DELIVERY_UNAVAILABLE";
+
+export const REPAS_CHANNEL_REASON_LABEL: Record<RepasChannelBlockedReason, string> = {
+  RESTAURANT_NOT_PUBLISHED: "Restaurant non publié.",
+  RESTAURANT_CLOSED: "Restaurant fermé pour le moment.",
+  NO_AVAILABLE_ITEMS: "Aucun plat disponible pour le moment.",
+  PICKUP_NOT_OFFERED: "Retrait non proposé par ce restaurant.",
+  PICKUP_UNAVAILABLE: "Retrait indisponible pour le moment.",
+  DELIVERY_NOT_OFFERED: "Livraison non proposée par ce restaurant.",
+  DELIVERY_DISTANCE_UNVERIFIABLE: "Livraison indisponible : position du restaurant non vérifiée.",
+  DELIVERY_UNAVAILABLE: "Livraison indisponible pour le moment.",
+};
+
+export function repasChannelReasonLabel(reason: string | null | undefined): string | null {
+  if (!reason) return null;
+  return REPAS_CHANNEL_REASON_LABEL[reason as RepasChannelBlockedReason] ?? "Indisponible.";
+}
 
 export const REPAS_BLOCKED_REASON_LABEL: Record<RepasBlockedReason, string> = {
   not_published: "Ce restaurant n'est pas encore publié.",
