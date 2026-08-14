@@ -3142,8 +3142,12 @@ export type Database = {
           delivery_address: string | null
           delivery_distance_km: number | null
           delivery_fee_gnf: number | null
+          delivery_instructions: string | null
+          delivery_landmark: string | null
           delivery_lat: number | null
           delivery_lng: number | null
+          delivery_location_quality: string | null
+          delivery_location_source: string | null
           fulfillment: Database["public"]["Enums"]["food_fulfillment"]
           id: string
           notes: string | null
@@ -3175,8 +3179,12 @@ export type Database = {
           delivery_address?: string | null
           delivery_distance_km?: number | null
           delivery_fee_gnf?: number | null
+          delivery_instructions?: string | null
+          delivery_landmark?: string | null
           delivery_lat?: number | null
           delivery_lng?: number | null
+          delivery_location_quality?: string | null
+          delivery_location_source?: string | null
           fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
           id?: string
           notes?: string | null
@@ -3208,8 +3216,12 @@ export type Database = {
           delivery_address?: string | null
           delivery_distance_km?: number | null
           delivery_fee_gnf?: number | null
+          delivery_instructions?: string | null
+          delivery_landmark?: string | null
           delivery_lat?: number | null
           delivery_lng?: number | null
+          delivery_location_quality?: string | null
+          delivery_location_source?: string | null
           fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
           id?: string
           notes?: string | null
@@ -8813,6 +8825,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      _repas_location_quality: {
+        Args: {
+          p_label: string
+          p_landmark: string
+          p_lat: number
+          p_lng: number
+          p_source: string
+        }
+        Returns: string
+      }
       _repas_ops_actor_role: { Args: { p_uid: string }; Returns: string }
       _repas_ops_allowed_actions: {
         Args: { p_order_id: string; p_role: string; p_uid: string }
@@ -12761,10 +12783,13 @@ export type Database = {
         Args: {
           p_client_request_id: string
           p_delivery_address?: string
+          p_delivery_instructions?: string
+          p_delivery_landmark?: string
           p_delivery_lat?: number
           p_delivery_lng?: number
           p_fulfillment: string
           p_items: Json
+          p_location_source?: string
           p_notes?: string
           p_payment_method: string
           p_restaurant_id: string
