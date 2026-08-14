@@ -8553,6 +8553,7 @@ export type Database = {
       _qa_node3_repas_r5_runtime: { Args: never; Returns: Json }
       _qa_node3_repas_r6_custody: { Args: never; Returns: Json }
       _qa_node3_repas_r7_ext: { Args: never; Returns: Json }
+      _qa_node3_repas_r7_semantics: { Args: never; Returns: Json }
       _qa_node3_repas_r7_tracking_receipt: { Args: never; Returns: Json }
       _qa_r6_proof: {
         Args: {

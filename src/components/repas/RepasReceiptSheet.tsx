@@ -3,7 +3,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { formatGNF } from "@/lib/format";
-import { getRepasReceipt, REPAS_CUSTODY_BOUNDARY_LABEL, type RepasReceipt } from "@/lib/repas/tracking";
+import {
+  getRepasReceipt,
+  REPAS_CUSTODY_BOUNDARY_LABEL,
+  repasPaymentStateLabel,
+  repasReceiptTotalLabel,
+  type RepasReceipt,
+} from "@/lib/repas/tracking";
 import { formatActivityTime } from "@/lib/activity/types";
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -91,7 +97,7 @@ export function RepasReceiptSheet({
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-foreground">Total payé</span>
+              <span className="text-sm font-semibold text-foreground">{repasReceiptTotalLabel(receipt)}</span>
               <span className="text-lg font-extrabold tabular-nums text-foreground">
                 {formatGNF(receipt.order_total_gnf)}
               </span>
@@ -99,6 +105,7 @@ export function RepasReceiptSheet({
 
             <div className="rounded-2xl bg-muted/40 px-4 py-3 space-y-1">
               <Meta label="Paiement" value={PAYMENT_LABEL[receipt.payment_method] ?? receipt.payment_method} />
+              <Meta label="Statut du paiement" value={repasPaymentStateLabel(receipt.payment_state)} />
               <Meta label="Mode" value={receipt.fulfillment === "pickup" ? "Retrait sur place" : "Livraison"} />
               <Meta label="Commandé le" value={formatActivityTime(receipt.created_at)} />
               {receipt.completed_at && (

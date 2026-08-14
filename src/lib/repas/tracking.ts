@@ -57,6 +57,22 @@ export interface RepasReceiptLine {
   line_total_gnf: number;
 }
 
+/**
+ * Canonical payment truth derived server-side from the committed tender
+ * runtime (Chop Pay / cash). The legacy `food_orders.payment_status` column is
+ * never authoritative when it disagrees with the engine.
+ */
+export type RepasPaymentState =
+  | "authorized"
+  | "paid"
+  | "released"
+  | "due"
+  | "collected"
+  | "cancelled"
+  | "disputed"
+  | "dispute_resolved"
+  | "unknown";
+
 export interface RepasReceipt {
   order_id: string;
   viewer_role: RepasViewerRole;
@@ -65,6 +81,13 @@ export interface RepasReceipt {
   state: FoodOrderState;
   payment_method: FoodPaymentMethod;
   payment_status: string | null;
+  /** Legacy raw `food_orders.payment_status` — never canonical on its own. */
+  legacy_payment_status?: string | null;
+  /** Canonical committed tender runtime state (Chop Pay / cash engine). */
+  engine_state?: string | null;
+  payment_rail?: "chop_pay" | "cash" | null;
+  payment_state?: RepasPaymentState;
+  payment_settled?: boolean;
   created_at: string;
   paid_at: string | null;
   completed_at: string | null;
@@ -114,8 +137,10 @@ const DELIVERY_STATE_LABEL: Record<FoodOrderState, string> = {
   placed: "Commande envoyée au restaurant",
   confirmed: "Restaurant a confirmé",
   preparing: "En préparation",
-  ready: "Prête — remise au coursier",
-  out_for_delivery: "En route vers vous",
+  // `ready` is BEFORE the R6 restaurant→courier custody handoff: it must never
+  // imply the courier already holds the order.
+  ready: "Prête au restaurant",
+  out_for_delivery: "Remise au coursier — en route vers vous",
   completed: "Livrée",
   cancelled: "Annulée",
 };
@@ -156,10 +181,45 @@ export const REPAS_MERCHANT_ACTION_LABEL: Record<string, string> = {
 };
 
 export const REPAS_CUSTODY_BOUNDARY_LABEL: Record<string, string> = {
+  // Actual R6 `repas_custody_events.boundary` values.
+  restaurant_to_courier: "Remise au coursier",
+  courier_to_customer: "Remise au client",
+  merchant_to_customer_pickup: "Retrait par le client",
+  // Legacy credential-style aliases, kept only so historical rows never render
+  // a raw snake_case identifier.
   restaurant_handoff: "Remise au coursier",
   customer_delivery: "Remise au client",
   customer_pickup: "Retrait par le client",
 };
+
+/** French label for the canonical (engine-derived) payment state. */
+export const REPAS_PAYMENT_STATE_LABEL: Record<RepasPaymentState, string> = {
+  authorized: "Autorisé — en cours",
+  paid: "Payé",
+  released: "Annulé — montant libéré",
+  due: "À régler",
+  collected: "Réglé en espèces",
+  cancelled: "Annulée",
+  disputed: "En litige",
+  dispute_resolved: "Litige résolu",
+  unknown: "Non confirmé",
+};
+
+export function repasPaymentStateLabel(state?: string | null): string {
+  if (!state) return REPAS_PAYMENT_STATE_LABEL.unknown;
+  return REPAS_PAYMENT_STATE_LABEL[state as RepasPaymentState] ?? REPAS_PAYMENT_STATE_LABEL.unknown;
+}
+
+/**
+ * The total may only be labelled as paid when the canonical engine says the
+ * value is really settled and retained.
+ */
+export function repasReceiptTotalLabel(
+  r: Pick<RepasReceipt, "payment_state" | "payment_settled" | "payment_rail">,
+): string {
+  if (!r.payment_settled) return "Total de la commande";
+  return r.payment_rail === "cash" || r.payment_state === "collected" ? "Total réglé" : "Total payé";
+}
 
 /** Fulfillment-correct custody card to show to the customer, if any. */
 export function customerCustodyKind(t: RepasTracking): "customer_delivery" | "customer_pickup" | null {
