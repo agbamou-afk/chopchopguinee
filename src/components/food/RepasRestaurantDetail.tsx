@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import type { FoodMenuItem, FoodRestaurant, FoodFulfillment } from "@/lib/repas/types";
 import { listMenu } from "@/lib/repas/restaurants";
 import { useRepasCart } from "@/lib/repas/cart";
-import { createFoodOrder, type RepasTender } from "@/lib/repas/orders";
+import { createFoodOrder, getRepasQuote, type RepasQuote, type RepasTender } from "@/lib/repas/orders";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useWallet } from "@/hooks/useWallet";
 import { ConversionGateSheet } from "@/components/onboarding/ConversionGateSheet";
@@ -41,9 +41,10 @@ function TrustChip({ icon: Icon, label, tone = "muted" }: { icon: typeof ShieldC
 export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [menu, setMenu] = useState<FoodMenuItem[] | null>(null);
   const [stage, setStage] = useState<Stage>("menu");
-  // Retrait sur place n'est pas encore pris en charge côté serveur (fail-closed).
   const [fulfillment, setFulfillment] = useState<FoodFulfillment>("delivery");
   const [paymentMethod, setPaymentMethod] = useState<RepasTender>("cash");
+  /** R4.5-E — every displayed fee/total comes from this server quote. */
+  const [quote, setQuote] = useState<RepasQuote | null>(null);
   /**
    * Sticky idempotency key: created once per cart commitment attempt and
    * reused across retries so a network retry can never create a second order.
@@ -106,7 +107,36 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
     return Array.from(map.entries()).map(([category, items]) => ({ category, items }));
   }, [menu]);
 
+  const cartKey = useMemo(
+    () => myCartLines.map((l) => `${l.menuItemId}:${l.qty}`).sort().join(","),
+    [myCartLines],
+  );
+
+  // Server truth: the fee/total shown at checkout is never computed here.
+  useEffect(() => {
+    if (stage !== "checkout" || itemCount === 0 || !isLoggedIn) {
+      setQuote(null);
+      return;
+    }
+    let alive = true;
+    getRepasQuote(
+      restaurant.id,
+      myCartLines.map((l) => ({ menuItemId: l.menuItemId, qty: l.qty })),
+      fulfillment,
+    )
+      .then((q) => alive && setQuote(q))
+      .catch(() => alive && setQuote(null));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, cartKey, fulfillment, restaurant.id, isLoggedIn, itemCount]);
+
   const handlePlaceOrder = async () => {
+    if (fulfillment === "pickup" && paymentMethod !== "choppay") {
+      toast.error("Le retrait sur place se règle avec Chop Pay.");
+      return;
+    }
     if (!isLoggedIn) {
       setGateOpen(true);
       return;
@@ -426,18 +456,20 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         <p className="text-xs font-medium text-muted-foreground mb-1.5">Mode</p>
                         <div className="grid grid-cols-2 gap-2">
                           <button
-                            disabled
-                            title="Retrait sur place bientôt disponible"
-                            onClick={() => setFulfillment("pickup")}
+                            disabled={!restaurant.pickup_available}
+                            onClick={() => {
+                              setFulfillment("pickup");
+                              setPaymentMethod("choppay");
+                            }}
                             className={cn(
                               "h-12 rounded-xl text-sm font-medium border transition",
                               fulfillment === "pickup"
                                 ? "bg-primary/10 border-primary text-primary"
                                 : "bg-card border-border text-muted-foreground",
-                              "opacity-40",
+                              !restaurant.pickup_available && "opacity-40",
                             )}
                           >
-                            <Package className="w-4 h-4 inline mr-1.5" /> Retrait · bientôt
+                            <Package className="w-4 h-4 inline mr-1.5" /> Retrait
                           </button>
                           <button
                             disabled={!restaurant.delivery_available}
@@ -456,6 +488,12 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         {fulfillment === "delivery" && (
                           <p className="text-[11px] text-muted-foreground mt-1.5">
                             Livraison à confirmer avec le restaurant.
+                          </p>
+                        )}
+                        {fulfillment === "pickup" && (
+                          <p className="text-[11px] text-muted-foreground mt-1.5">
+                            Aucun livreur : vous récupérez la commande au restaurant
+                            (~{restaurant.prep_time_min} min).
                           </p>
                         )}
                       </div>
@@ -523,7 +561,9 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         <p className="text-xs font-medium text-muted-foreground mb-1.5">Paiement</p>
                         <div className="grid grid-cols-2 gap-2">
                           {(["cash", "choppay"] as RepasTender[]).map((pm) => {
-                            const disabled = pm === "choppay" && !restaurant.choppay_enabled;
+                            const disabled =
+                              (pm === "choppay" && !restaurant.choppay_enabled) ||
+                              (pm === "cash" && fulfillment === "pickup");
                             const label = pm === "cash" ? "Espèces" : "Chop Pay";
                             return (
                               <button
@@ -548,6 +588,11 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                             Chop Pay n'est pas encore activé pour ce restaurant.
                           </p>
                         )}
+                        {fulfillment === "pickup" && (
+                          <p className="text-[11px] text-muted-foreground mt-1.5">
+                            Le retrait sur place se règle uniquement avec Chop Pay pour le moment.
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -565,9 +610,27 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                   )}
 
                   <div className="border-t border-border pt-3 space-y-1.5 text-sm mb-5">
-                    <div className="flex justify-between font-bold text-base text-foreground">
+                    <div className="flex justify-between text-muted-foreground">
                       <span>Sous-total</span>
-                      <span>{formatGNF(subtotal)}</span>
+                      <span>{formatGNF(quote?.merchandiseSubtotalGnf ?? subtotal)}</span>
+                    </div>
+                    {quote && (
+                      <>
+                        {quote.deliveryFeeGnf > 0 && (
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Livraison</span>
+                            <span>{formatGNF(quote.deliveryFeeGnf)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Frais de service</span>
+                          <span>{formatGNF(quote.platformFeeGnf)}</span>
+                        </div>
+                      </>
+                    )}
+                    <div className="flex justify-between font-bold text-base text-foreground">
+                      <span>Total</span>
+                      <span>{formatGNF(quote?.orderTotalGnf ?? subtotal)}</span>
                     </div>
                   </div>
 
@@ -598,7 +661,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                       }}
                       disabled={submitting || itemCount === 0}
                     >
-                      {submitting ? "Envoi…" : `Commander ${formatGNF(subtotal)}`}
+                      {submitting ? "Envoi…" : `Commander ${formatGNF(quote?.orderTotalGnf ?? subtotal)}`}
                     </PrimaryButton>
                   )}
                 </>

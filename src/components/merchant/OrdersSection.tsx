@@ -8,8 +8,8 @@ import {
   listRestaurantOrders,
   listSellerInterests,
   respondToInterest,
-  RESTAURANT_NEXT_LABEL,
-  RESTAURANT_NEXT_STATE,
+  restaurantNextState,
+  restaurantNextLabel,
 } from "@/lib/merchant/operations";
 
 interface Props {
@@ -33,10 +33,10 @@ export function OrdersSection({ restaurantId, sellerId }: Props) {
   }, [restaurantId, sellerId]);
 
   const advance = async (o: FoodOrder) => {
-    if (!RESTAURANT_NEXT_STATE[o.state]) return;
+    if (!restaurantNextState(o.state, o.fulfillment)) return;
     setBusy(o.id);
     try {
-      const next = await advanceRestaurantOrder(o.id, o.state);
+      const next = await advanceRestaurantOrder(o.id, o.state, o.fulfillment);
       setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, state: next } : x)));
     } catch (e: any) {
       toast({ title: "Erreur", description: e?.message ?? "Action impossible" });
@@ -82,14 +82,14 @@ export function OrdersSection({ restaurantId, sellerId }: Props) {
                 {o.fulfillment === "delivery" ? "Livraison" : "Retrait"}
                 {o.notes ? ` · ${o.notes}` : ""}
               </p>
-              {RESTAURANT_NEXT_STATE[o.state] && (
+              {restaurantNextState(o.state, o.fulfillment) && (
                 <Button
                   size="sm"
                   className="mt-2 w-full"
                   onClick={() => advance(o)}
                   disabled={busy === o.id}
                 >
-                  {RESTAURANT_NEXT_LABEL[o.state]}
+                  {restaurantNextLabel(o.state, o.fulfillment)}
                 </Button>
               )}
             </div>

@@ -1,0 +1,10 @@
+INSERT INTO public._qa_s13_results(part, result) SELECT 460, public._qa_node0_course();
+INSERT INTO public._qa_s13_results(part, result) SELECT 461, public._qa_node1_bonbonna_full();
+INSERT INTO public._qa_s13_results(part, result) SELECT 462, public._qa_node2_taxi_full();
+INSERT INTO public._qa_s13_results(part, result) SELECT 463, public._qa_s13_run1();
+INSERT INTO public._qa_s13_results(part, result) SELECT 464, public._qa_s13_run2();
+INSERT INTO public._qa_s13_results(part, result) SELECT 465, public._qa_s13_run3();
+INSERT INTO public._qa_s13_results(part, result) SELECT 466, public._qa_s13_run4();
+INSERT INTO public._qa_s13_results(part, result) SELECT 467, public._qa_s13_run5();
+INSERT INTO public._qa_s13_results(part, result) SELECT 468, public._qa_s13_run6();
+INSERT INTO public._qa_s13_results(part, result) SELECT 469, public._qa_s13_run7();

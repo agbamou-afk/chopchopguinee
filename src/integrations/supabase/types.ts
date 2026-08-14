@@ -8317,6 +8317,7 @@ export type Database = {
       _qa_node1_bonbonna_matrix: { Args: never; Returns: Json }
       _qa_node1_bonbonna_sweeper: { Args: never; Returns: Json }
       _qa_node2_taxi_full: { Args: never; Returns: Json }
+      _qa_node3_repas_pickup: { Args: never; Returns: Json }
       _qa_node3_repas_r1_r4: { Args: never; Returns: Json }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
       _qa_s13_driver: {
@@ -9590,6 +9591,10 @@ export type Database = {
         Returns: Json
       }
       chop_pay_merchant_accept: {
+        Args: { p_source_id: string; p_source_module: string }
+        Returns: Json
+      }
+      chop_pay_merchant_pickup_complete: {
         Args: { p_source_id: string; p_source_module: string }
         Returns: Json
       }
@@ -12262,6 +12267,10 @@ export type Database = {
           p_payment_method: string
           p_restaurant_id: string
         }
+        Returns: Json
+      }
+      repas_quote_preview: {
+        Args: { p_fulfillment: string; p_items: Json; p_restaurant_id: string }
         Returns: Json
       }
       request_account_deletion: { Args: { _reason?: string }; Returns: Json }

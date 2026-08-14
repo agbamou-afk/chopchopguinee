@@ -54,6 +54,26 @@ export const RESTAURANT_NEXT_LABEL: Partial<Record<FoodOrderState, string>> = {
 };
 
 /**
+ * R4.5 — a pickup order has no courier leg: `ready` is followed directly by the
+ * customer collecting at the counter, which completes the order.
+ */
+export function restaurantNextState(
+  current: FoodOrderState,
+  fulfillment?: string | null,
+): FoodOrderState | undefined {
+  if (fulfillment === "pickup" && current === "ready") return "completed";
+  return RESTAURANT_NEXT_STATE[current];
+}
+
+export function restaurantNextLabel(
+  current: FoodOrderState,
+  fulfillment?: string | null,
+): string | undefined {
+  if (fulfillment === "pickup" && current === "ready") return "Client a récupéré";
+  return RESTAURANT_NEXT_LABEL[current];
+}
+
+/**
  * Node 3 / R4 — every restaurant-side transition is server-authoritative.
  * The client may only *request* an action; `repas_merchant_transition`
  * validates ownership, the legal lifecycle, and routes cash / Chop Pay orders
@@ -101,9 +121,11 @@ export function translateRepasMerchantError(msg: string): string {
 export async function advanceRestaurantOrder(
   orderId: string,
   current: FoodOrderState,
+  fulfillment?: string | null,
 ): Promise<FoodOrderState> {
-  const next = RESTAURANT_NEXT_STATE[current];
-  const action = NEXT_ACTION[current];
+  const pickupHandover = fulfillment === "pickup" && current === "ready";
+  const next = pickupHandover ? ("completed" as FoodOrderState) : RESTAURANT_NEXT_STATE[current];
+  const action: RepasMerchantAction | undefined = pickupHandover ? "complete" : NEXT_ACTION[current];
   if (!next || !action) throw new Error("Aucune étape suivante");
   await repasMerchantTransition(orderId, action);
   return next;
