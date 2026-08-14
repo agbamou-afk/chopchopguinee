@@ -8638,7 +8638,7 @@ export type Database = {
           p_kind: string
           p_order_id: string
         }
-        Returns: undefined
+        Returns: Json
       }
       _repas_custody_guard: {
         Args: { _m: Database["public"]["Tables"]["missions"]["Row"] }
