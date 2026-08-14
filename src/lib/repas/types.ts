@@ -68,6 +68,17 @@ export interface FoodOrder {
   payment_method: FoodPaymentMethod;
   payment_status?: FoodPaymentStatus;
   subtotal_gnf: number;
+  /** Server-frozen totals (R5/R7). `order_total_gnf` is the amount the customer owes. */
+  base_delivery_fee_gnf?: number;
+  delivery_fee_gnf?: number;
+  promo_discount_gnf?: number;
+  platform_fee_gnf?: number;
+  order_total_gnf?: number;
+  delivery_distance_km?: number | null;
+  paid_at?: string | null;
+  completed_at?: string | null;
+  settlement_state?: string | null;
+  client_request_id?: string | null;
   notes: string | null;
   delivery_address: string | null;
   delivery_lat: number | null;
@@ -75,6 +86,17 @@ export interface FoodOrder {
   created_at: string;
   updated_at: string;
 }
+
+/** Retrait (pickup) never says "livraison". */
+export const FOOD_ORDER_PICKUP_STATE_LABEL: Record<FoodOrderState, string> = {
+  placed: "Commande envoyée",
+  confirmed: "Restaurant a confirmé",
+  preparing: "En préparation",
+  ready: "Prête — à retirer sur place",
+  out_for_delivery: "Prête — à retirer sur place",
+  completed: "Retirée",
+  cancelled: "Annulée",
+};
 
 export const FOOD_ORDER_STATE_LABEL: Record<FoodOrderState, string> = {
   placed: "Commande envoyée",

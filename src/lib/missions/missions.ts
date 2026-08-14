@@ -10,6 +10,28 @@ import {
 } from "./types";
 import { resolveDistrict } from "@/lib/districts";
 import { findNearestHub } from "@/lib/districts/hubs";
+import { MISSION_SAFE_COLS } from "./columns";
+
+/**
+ * R7 — the courier's estimated earning is no longer selectable from the table.
+ * Entitled actors hydrate it through the participant-authorized RPC.
+ */
+export async function hydrateMissionEarnings(missions: Mission[]): Promise<Mission[]> {
+  if (missions.length === 0) return missions;
+  const { data } = await (supabase as any).rpc("mission_earnings", {
+    p_mission_ids: missions.map((m) => m.id),
+  });
+  const map = (data ?? {}) as Record<string, number>;
+  return missions.map((m) => ({ ...m, estimated_earning_gnf: Number(map[m.id] ?? 0) }));
+}
+
+export async function missionEarning(missionId: string): Promise<number | null> {
+  const { data } = await (supabase as any).rpc("mission_earnings", {
+    p_mission_ids: [missionId],
+  });
+  const v = (data ?? {})[missionId];
+  return v === undefined || v === null ? null : Number(v);
+}
 
 /**
  * Lightweight mission ops. All writes also log a `mission_events` row so the
@@ -23,23 +45,24 @@ import { findNearestHub } from "@/lib/districts/hubs";
 export async function listCourierMissions(courierId: string): Promise<Mission[]> {
   const { data, error } = await supabase
     .from("missions")
-    .select("*")
+    .select(MISSION_SAFE_COLS)
     .eq("courier_id", courierId)
     .order("created_at", { ascending: false })
     .limit(40);
   if (error) throw error;
-  return (data ?? []) as Mission[];
+  return hydrateMissionEarnings((data ?? []) as unknown as Mission[]);
 }
 
 export async function listCustomerMissions(customerId: string): Promise<Mission[]> {
   const { data, error } = await supabase
     .from("missions")
-    .select("*")
+    .select(MISSION_SAFE_COLS)
     .eq("customer_id", customerId)
     .order("created_at", { ascending: false })
     .limit(40);
   if (error) throw error;
-  return (data ?? []) as Mission[];
+  // Customers never receive courier economics.
+  return ((data ?? []) as unknown as Mission[]).map((m) => ({ ...m, estimated_earning_gnf: 0 }));
 }
 
 /**
@@ -64,14 +87,14 @@ export async function listAvailableMissions(capabilities: string[]): Promise<Mis
   if (types.length === 0) return [];
   const { data, error } = await supabase
     .from("missions")
-    .select("*")
+    .select(MISSION_SAFE_COLS)
     .is("courier_id", null)
     .eq("state", "assigned")
     .in("type", types)
     .order("created_at", { ascending: false })
     .limit(20);
   if (error) throw error;
-  return (data ?? []) as Mission[];
+  return hydrateMissionEarnings((data ?? []) as unknown as Mission[]);
 }
 
 /** Courier claims an unassigned mission. */
@@ -259,8 +282,8 @@ export async function createMission(input: {
       ref_market_order_id: input.ref_market_order_id ?? null,
       ref_ride_id: input.ref_ride_id ?? null,
     })
-    .select("*")
+    .select(MISSION_SAFE_COLS)
     .single();
   if (error) throw error;
-  return data as Mission;
+  return data as unknown as Mission;
 }

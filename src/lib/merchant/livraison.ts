@@ -10,6 +10,7 @@
  *   - idempotent: a second call for the same offer returns the existing mission
  */
 import { supabase } from "@/integrations/supabase/client";
+import { MISSION_SAFE_COLS } from "@/lib/missions/columns";
 
 export interface DeliveryMission {
   id: string;
@@ -27,7 +28,8 @@ export interface DeliveryMission {
   dropoff_lat: number | null;
   dropoff_lng: number | null;
   payload_summary: string | null;
-  estimated_earning_gnf: number;
+  /** R7 — not selectable from the table; hydrate via `mission_earnings` when entitled. */
+  estimated_earning_gnf?: number;
   merchant_handoff_code: string | null;
   pickup_photo_url: string | null;
   delivery_photo_url: string | null;
@@ -72,7 +74,7 @@ export async function createMarketplaceDeliveryMission(
 export async function getMissionForOffer(offerId: string): Promise<DeliveryMission | null> {
   const { data } = await (supabase as any)
     .from("missions")
-    .select("*")
+    .select(MISSION_SAFE_COLS)
     .eq("ref_market_order_id", offerId)
     .maybeSingle();
   return (data as DeliveryMission | null) ?? null;

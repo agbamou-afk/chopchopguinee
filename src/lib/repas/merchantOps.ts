@@ -13,6 +13,7 @@
  * `advanceRestaurantOrder` / `repas_complete_order` RPC.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { FOOD_ORDER_SAFE_COLS } from "@/lib/missions/columns";
 import type {
   FoodMenuItem,
   FoodOrder,
@@ -193,7 +194,7 @@ export interface FoodOrderDetail extends FoodOrder {
 export async function getRestaurantOrderDetail(orderId: string): Promise<FoodOrderDetail | null> {
   const { data: order, error } = await (supabase as any)
     .from("food_orders")
-    .select("*")
+    .select(FOOD_ORDER_SAFE_COLS)
     .eq("id", orderId)
     .maybeSingle();
   if (error || !order) return null;

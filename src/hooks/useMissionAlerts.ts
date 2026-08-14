@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { missionEarning } from "@/lib/missions/missions";
 import { toast } from "sonner";
 import { MISSION_TYPE_LABEL, type Mission } from "@/lib/missions/types";
 import { formatGNF } from "@/lib/format";
@@ -49,7 +50,7 @@ export function useMissionAlerts({
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "missions" },
-        (payload) => {
+        async (payload) => {
           const m = payload.new as Mission;
           if (!m || seen.current.has(m.id)) return;
           if (m.courier_id) return; // already assigned
@@ -61,10 +62,12 @@ export function useMissionAlerts({
           const district = formatDistrictPair(pickupPt, dropPt)
             ?? detectDistrictInText(m.dropoff_address)
             ?? detectDistrictInText(m.pickup_address);
+          // R7 — the earning is not part of the raw payload anymore; it is
+          // hydrated through the participant-authorized `mission_earnings` RPC.
+          const earning = await missionEarning(m.id).catch(() => null);
+          const gain = earning == null ? null : `Gain estimé ${formatGNF(earning)}`;
           toast(`Nouvelle ${MISSION_TYPE_LABEL[m.type]}`, {
-            description: district
-              ? `${district} · Gain estimé ${formatGNF(m.estimated_earning_gnf)}`
-              : `Gain estimé ${formatGNF(m.estimated_earning_gnf)}`,
+            description: [district, gain].filter(Boolean).join(" · ") || undefined,
             duration: 6000,
           });
         },

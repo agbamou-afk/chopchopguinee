@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DISTRICTS, districtChipClasses, type DistrictMeta } from "@/lib/districts";
 import { MISSION_TYPE_SHORT, MISSION_STATE_LABEL, type Mission } from "@/lib/missions/types";
+import { MISSION_SAFE_COLS } from "@/lib/missions/columns";
 import { needsReview } from "@/lib/payments/review";
 import type { PaymentIntent } from "@/lib/payments/types";
 import { listAdminIssues, type SupportIssue } from "@/lib/support/issues";
@@ -68,11 +69,11 @@ function useMissions() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("missions")
-        .select("*")
+        .select(MISSION_SAFE_COLS)
         .order("created_at", { ascending: false })
         .limit(60);
       if (error) throw error;
-      return (data ?? []) as Mission[];
+      return (data ?? []) as unknown as Mission[];
     },
   });
 }
