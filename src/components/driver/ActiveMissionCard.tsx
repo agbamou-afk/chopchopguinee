@@ -38,6 +38,13 @@ import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
 import { PackageHandoffPanel } from "./PackageHandoffPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { RepasCustodySheet, type RepasCustodyPhase } from "@/components/repas/RepasCustodySheet";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  custodyPhaseStillValid,
+  isRepasCourierMission,
+  refreshRepasCourierMission,
+} from "@/lib/repas/courierRefresh";
+import { useCallback } from "react";
 
 /** Extract a phone number from payload_summary (we embed ☎ +224... in Repas). */
 function extractPhone(s: string | null): string | null {
@@ -71,9 +78,66 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
   const isMarketplace = mission.type === "marketplace_delivery";
   // Repas deliveries use the R6 custody handshake (real photo + one-time code).
   const isRepas = mission.type === "food_delivery";
+  const isRepasOrder = isRepasCourierMission(mission);
   const proofBlocks =
     !isMarketplace && !isRepas && !!proof && proof.requirement === "required" && !proofTaken;
   const dirLabel = useMemo(() => directionsLabel(mission), [mission]);
+
+  // ───────── R7 canonical refresh (Repas courier) ─────────
+  const refreshing = useRef(false);
+  const missionRef = useRef(mission);
+  missionRef.current = mission;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  const refreshCanonical = useCallback(async () => {
+    const current = missionRef.current;
+    if (!isRepasCourierMission(current)) return;
+    if (refreshing.current) return;
+    refreshing.current = true;
+    try {
+      const res = await refreshRepasCourierMission(current);
+      if (res) onChangeRef.current?.(res.mission);
+    } finally {
+      refreshing.current = false;
+    }
+  }, []);
+
+  // Realtime is a signal only: it just triggers the canonical read above.
+  useEffect(() => {
+    if (!isRepasOrder || terminal) return;
+    const orderId = mission.ref_food_order_id as string;
+    const channel = supabase
+      .channel(`repas-courier-${mission.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "food_orders", filter: `id=eq.${orderId}` },
+        () => { void refreshCanonical(); },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "missions", filter: `id=eq.${mission.id}` },
+        () => { void refreshCanonical(); },
+      )
+      .subscribe();
+    const onOnline = () => { void refreshCanonical(); };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refreshCanonical();
+    };
+    window.addEventListener("online", onOnline);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("online", onOnline);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [isRepasOrder, terminal, mission.id, mission.ref_food_order_id, refreshCanonical]);
+
+  // A custody sheet cannot remain logically open once canonical state moved on.
+  useEffect(() => {
+    if (!custodyPhase) return;
+    if (!custodyPhaseStillValid(custodyPhase, mission.state)) setCustodyPhase(null);
+  }, [custodyPhase, mission.state]);
 
   // ───────── Operational mini-map ─────────
   const pickup: LatLng | null =
@@ -459,7 +523,8 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
           onOpenChange={(o) => { if (!o) setCustodyPhase(null); }}
           onConfirmed={() => {
             setCustodyPhase(null);
-            onChange?.(mission);
+            // Never propagate the stale pre-confirmation object.
+            void refreshCanonical();
           }}
         />
       )}
