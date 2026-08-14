@@ -74,11 +74,6 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [quote, setQuote] = useState<RepasQuote | null>(null);
   /** R5 — the quote is the only source of price truth; block checkout when it is missing or refused. */
   const [quoteError, setQuoteError] = useState<string | null>(null);
-  /**
-   * Sticky idempotency key: created once per cart commitment attempt and
-   * reused across retries so a network retry can never create a second order.
-   */
-  const [requestId, setRequestId] = useState<string>(() => crypto.randomUUID());
   const [notes, setNotes] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCoords, setDeliveryCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -228,6 +223,17 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       setGateOpen(true);
       return;
     }
+    /**
+     * R9 — the idempotency key is durable: the SAME uuid is replayed for the
+     * same cart even after a reload or a killed tab, so an unknown outcome can
+     * never become a second order.
+     */
+    const requestId = repasRequestIdFor({
+      restaurantId: restaurant.id,
+      fulfillment,
+      paymentMethod,
+      lines: myCartLines.map((l) => ({ menuItemId: l.menuItemId, qty: l.qty })),
+    });
     setSubmitting(true);
     try {
       const result = await createFoodOrder({
@@ -251,11 +257,25 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
         toast.success("Paiement Chop Pay autorisé. Commande envoyée au restaurant.");
       }
       cart.clear();
-      setRequestId(crypto.randomUUID());
+      clearRepasRequestId();
       setStage("confirmed");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Impossible de passer la commande";
-      toast.error(msg);
+      // R9 — the outcome may be unknown (timeout / dropped connection). Ask the
+      // server whether this exact request already produced a canonical order
+      // before showing a dead end the customer would resolve by re-ordering.
+      const recovered = await resumeFoodOrder(requestId).catch(() => null);
+      if (recovered) {
+        setDeliveryPending(fulfillment === "delivery" && !recovered.missionId);
+        setLastOrderId(recovered.orderId);
+        setLastMissionId(recovered.missionId);
+        cart.clear();
+        clearRepasRequestId();
+        setStage("confirmed");
+        toast.success("Votre commande était déjà enregistrée.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setSubmitting(false);
     }
