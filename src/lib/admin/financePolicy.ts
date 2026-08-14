@@ -33,6 +33,11 @@ export interface FinancePolicyRow {
   require_collateral_before_offer: boolean;
   transaction_fee_bps: number;
   fee_basis: string;
+  /** R5 — Repas pricing control plane. */
+  delivery_flat_fee_gnf: number | null;
+  delivery_max_distance_km: number | null;
+  pickup_platform_fee_bps: number | null;
+  courier_payout_gnf: number | null;
   cash_funding_mode: string;
   cash_funding_pct_bps: number;
   cash_funding_max_gnf: number | null;
@@ -66,7 +71,11 @@ export type EditableField =
   | "cancel_after_dispatch_bps"
   | "cancel_basis"
   | "max_declared_value_gnf"
-  | "claims_exposure_max_gnf";
+  | "claims_exposure_max_gnf"
+  | "delivery_flat_fee_gnf"
+  | "delivery_max_distance_km"
+  | "pickup_platform_fee_bps"
+  | "courier_payout_gnf";
 
 export const FIELD_LABELS: Record<EditableField, string> = {
   commission_bps: "Commission chauffeur (%)",
@@ -86,6 +95,10 @@ export const FIELD_LABELS: Record<EditableField, string> = {
   cancel_basis: "Base d'annulation",
   max_declared_value_gnf: "Valeur déclarée maximum (GNF)",
   claims_exposure_max_gnf: "Exposition sinistres CHOPCHOP max (GNF)",
+  delivery_flat_fee_gnf: "Prix de livraison client (GNF)",
+  delivery_max_distance_km: "Distance de livraison maximum (km)",
+  pickup_platform_fee_bps: "Frais de service retrait (%)",
+  courier_payout_gnf: "Rémunération coursier (GNF)",
 };
 
 /** bps fields are displayed as percentages. */
@@ -96,6 +109,7 @@ export const BPS_FIELDS: EditableField[] = [
   "cash_funding_pct_bps",
   "cancel_before_dispatch_bps",
   "cancel_after_dispatch_bps",
+  "pickup_platform_fee_bps",
 ];
 
 export const BASIS_OPTIONS: Record<string, { value: string; label: string }[]> = {
@@ -143,6 +157,8 @@ export const FIELDS_BY_SERVICE: Record<MissionType, EditableField[]> = {
   ],
   repas: [
     "commission_bps", "min_driver_balance_gnf",
+    "delivery_flat_fee_gnf", "courier_payout_gnf", "delivery_max_distance_km",
+    "pickup_platform_fee_bps",
     "collateral_mode", "collateral_pct_bps", "collateral_basis", "collateral_max_gnf",
     "cash_funding_mode", "cash_funding_pct_bps",
     "transaction_fee_bps", "fee_basis",
@@ -167,6 +183,7 @@ export const FIELDS_BY_SERVICE: Record<MissionType, EditableField[]> = {
 export function formatFieldValue(field: string, value: unknown): string {
   if (value === null || value === undefined || value === "") return "—";
   if (BPS_FIELDS.includes(field as EditableField)) return `${(Number(value) / 100).toFixed(2)} %`;
+  if (field.endsWith("_km")) return `${Number(value)} km`;
   const options = BASIS_OPTIONS[field];
   if (options) return options.find((o) => o.value === value)?.label ?? String(value);
   if (typeof value === "boolean") return value ? "Oui" : "Non";

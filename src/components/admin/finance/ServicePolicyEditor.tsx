@@ -93,7 +93,11 @@ export function ServicePolicyEditor({ missionType, rows, canEdit, onSaved }: Pro
       p_cash_funding_max_gnf: null,
       p_max_declared_value_gnf: num("max_declared_value_gnf"),
       p_claims_exposure_max_gnf: num("claims_exposure_max_gnf"),
-    });
+      p_delivery_flat_fee_gnf: num("delivery_flat_fee_gnf"),
+      p_delivery_max_distance_km: num("delivery_max_distance_km"),
+      p_pickup_platform_fee_bps: num("pickup_platform_fee_bps"),
+      p_courier_payout_gnf: num("courier_payout_gnf"),
+    } as never);
     setSaving(false);
     if (error) {
       toast({ title: "Refusé par le serveur", description: error.message, variant: "destructive" });

@@ -7,7 +7,13 @@ import { toast } from "sonner";
 import type { FoodMenuItem, FoodRestaurant, FoodFulfillment } from "@/lib/repas/types";
 import { listMenu } from "@/lib/repas/restaurants";
 import { useRepasCart } from "@/lib/repas/cart";
-import { createFoodOrder, getRepasQuote, type RepasQuote, type RepasTender } from "@/lib/repas/orders";
+import {
+  createFoodOrder,
+  getRepasQuote,
+  repasIneligibleLabel,
+  type RepasQuote,
+  type RepasTender,
+} from "@/lib/repas/orders";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useWallet } from "@/hooks/useWallet";
 import { ConversionGateSheet } from "@/components/onboarding/ConversionGateSheet";
@@ -123,6 +129,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       restaurant.id,
       myCartLines.map((l) => ({ menuItemId: l.menuItemId, qty: l.qty })),
       fulfillment,
+      fulfillment === "delivery" ? deliveryCoords : null,
     )
       .then((q) => alive && setQuote(q))
       .catch(() => alive && setQuote(null));
@@ -130,7 +137,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage, cartKey, fulfillment, restaurant.id, isLoggedIn, itemCount]);
+  }, [stage, cartKey, fulfillment, restaurant.id, isLoggedIn, itemCount, deliveryCoords]);
 
   const handlePlaceOrder = async () => {
     if (fulfillment === "pickup" && paymentMethod !== "choppay") {
@@ -616,11 +623,33 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                     </div>
                     {quote && (
                       <>
-                        {quote.deliveryFeeGnf > 0 && (
-                          <div className="flex justify-between text-muted-foreground">
-                            <span>Livraison</span>
-                            <span>{formatGNF(quote.deliveryFeeGnf)}</span>
-                          </div>
+                        {quote.fulfillment === "delivery" && (
+                          <>
+                            <div className="flex justify-between text-muted-foreground">
+                              <span>Livraison</span>
+                              <span
+                                className={cn(
+                                  quote.promoDiscountGnf > 0 && "line-through opacity-60",
+                                )}
+                              >
+                                {formatGNF(quote.baseDeliveryFeeGnf)}
+                              </span>
+                            </div>
+                            {quote.promoDiscountGnf > 0 && (
+                              <>
+                                <div className="flex justify-between text-primary">
+                                  <span>
+                                    Promo{quote.promotionName ? ` · ${quote.promotionName}` : ""}
+                                  </span>
+                                  <span>-{formatGNF(quote.promoDiscountGnf)}</span>
+                                </div>
+                                <div className="flex justify-between text-muted-foreground">
+                                  <span>Livraison à payer</span>
+                                  <span>{formatGNF(quote.deliveryFeeGnf)}</span>
+                                </div>
+                              </>
+                            )}
+                          </>
                         )}
                         <div className="flex justify-between text-muted-foreground">
                           <span>Frais de service</span>
@@ -632,6 +661,19 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                       <span>Total</span>
                       <span>{formatGNF(quote?.orderTotalGnf ?? subtotal)}</span>
                     </div>
+                    {quote && quote.fulfillment === "delivery" && quote.deliveryDistanceKm !== null && (
+                      <p className="text-[11px] text-muted-foreground pt-0.5">
+                        Distance estimée : {quote.deliveryDistanceKm.toFixed(1)} km
+                        {quote.deliveryMaxDistanceKm !== null
+                          ? ` · zone maximum ${quote.deliveryMaxDistanceKm} km`
+                          : ""}
+                      </p>
+                    )}
+                    {quote && repasIneligibleLabel(quote) && (
+                      <p className="text-[11px] text-destructive pt-0.5">
+                        {repasIneligibleLabel(quote)}
+                      </p>
+                    )}
                   </div>
 
                   {stage === "cart" ? (
@@ -659,7 +701,11 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         }
                         requireAuth(handlePlaceOrder);
                       }}
-                      disabled={submitting || itemCount === 0}
+                      disabled={
+                        submitting ||
+                        itemCount === 0 ||
+                        (!!quote && !quote.deliveryEligible)
+                      }
                     >
                       {submitting ? "Envoi…" : `Commander ${formatGNF(quote?.orderTotalGnf ?? subtotal)}`}
                     </PrimaryButton>

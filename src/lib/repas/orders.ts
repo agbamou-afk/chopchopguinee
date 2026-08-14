@@ -69,6 +69,14 @@ const ERROR_FR: Record<string, string> = {
   CASH_ORDER_FUNDING_DISABLED: "Le paiement en espèces n'est pas encore activé.",
   CUSTOMER_CASH_RESTRICTED_BY_DEBT:
     "Des frais d'annulation restent dus : réglez-les avant une nouvelle commande en espèces.",
+  OUTSIDE_DELIVERY_ZONE:
+    "Cette adresse est en dehors de la zone de livraison de ce restaurant.",
+  DELIVERY_DISTANCE_UNVERIFIABLE:
+    "Impossible de vérifier la distance : précisez votre position pour la livraison.",
+  CASH_DELIVERY_PRICING_UNSUPPORTED:
+    "Ce tarif de livraison ne peut pas être réglé en espèces. Utilisez Chop Pay.",
+  REPAS_PRICING_NOT_CONFIGURED:
+    "La tarification Repas n'est pas encore configurée. Réessayez plus tard.",
 };
 
 export function translateRepasError(msg: string): string {
@@ -138,9 +146,18 @@ export type { FoodPaymentMethod };
 export interface RepasQuote {
   fulfillment: FoodFulfillment;
   merchandiseSubtotalGnf: number;
+  /** Catalogue delivery price before any campaign. */
+  baseDeliveryFeeGnf: number;
+  /** What the customer actually pays for delivery. */
   deliveryFeeGnf: number;
+  promoDiscountGnf: number;
+  promotionName: string | null;
   platformFeeGnf: number;
   orderTotalGnf: number;
+  deliveryDistanceKm: number | null;
+  deliveryMaxDistanceKm: number | null;
+  deliveryEligible: boolean;
+  ineligibleReason: string | null;
   pickupAvailable: boolean;
   deliveryAvailable: boolean;
   chopPayEnabled: boolean;
@@ -153,19 +170,35 @@ export async function getRepasQuote(
   restaurantId: string,
   items: { menuItemId: string; qty: number }[],
   fulfillment: FoodFulfillment,
+  destination?: { lat: number; lng: number } | null,
 ): Promise<RepasQuote> {
   const { data, error } = await (supabase as any).rpc("repas_quote_preview", {
     p_restaurant_id: restaurantId,
     p_items: items.map((i) => ({ menu_item_id: i.menuItemId, qty: i.qty })),
     p_fulfillment: fulfillment,
+    p_delivery_lat: destination?.lat ?? null,
+    p_delivery_lng: destination?.lng ?? null,
   });
   if (error) throw new Error(translateRepasError(error.message));
   return {
     fulfillment: data.fulfillment as FoodFulfillment,
     merchandiseSubtotalGnf: Number(data.merchandise_subtotal_gnf ?? 0),
+    baseDeliveryFeeGnf: Number(data.base_delivery_fee_gnf ?? 0),
     deliveryFeeGnf: Number(data.delivery_fee_gnf ?? 0),
+    promoDiscountGnf: Number(data.promo_discount_gnf ?? 0),
+    promotionName: (data.promotion_name as string | null) ?? null,
     platformFeeGnf: Number(data.platform_fee_gnf ?? 0),
     orderTotalGnf: Number(data.order_total_gnf ?? 0),
+    deliveryDistanceKm:
+      data.delivery_distance_km === null || data.delivery_distance_km === undefined
+        ? null
+        : Number(data.delivery_distance_km),
+    deliveryMaxDistanceKm:
+      data.delivery_max_distance_km === null || data.delivery_max_distance_km === undefined
+        ? null
+        : Number(data.delivery_max_distance_km),
+    deliveryEligible: data.delivery_eligible !== false,
+    ineligibleReason: (data.ineligible_reason as string | null) ?? null,
     pickupAvailable: !!data.pickup_available,
     deliveryAvailable: !!data.delivery_available,
     chopPayEnabled: !!data.chop_pay_enabled,
@@ -173,4 +206,21 @@ export async function getRepasQuote(
     cashPickupSupported: !!data.cash_pickup_supported,
     transactionFeeBps: Number(data.transaction_fee_bps ?? 0),
   };
+}
+
+/** Human-readable explanation for a refused delivery, straight from server truth. */
+export function repasIneligibleLabel(q: RepasQuote): string | null {
+  if (q.deliveryEligible) return null;
+  switch (q.ineligibleReason) {
+    case "OUTSIDE_DELIVERY_ZONE":
+      return q.deliveryDistanceKm !== null && q.deliveryMaxDistanceKm !== null
+        ? `Hors zone de livraison : ${q.deliveryDistanceKm.toFixed(1)} km (maximum ${q.deliveryMaxDistanceKm} km).`
+        : "Cette adresse est hors de la zone de livraison.";
+    case "DESTINATION_REQUIRED":
+      return "Partagez votre position pour vérifier que la livraison est possible.";
+    case "DISTANCE_UNKNOWN":
+      return "Distance de livraison non vérifiable pour cette adresse.";
+    default:
+      return "Livraison indisponible pour cette adresse.";
+  }
 }

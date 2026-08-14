@@ -7,6 +7,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { toast } from "@/hooks/use-toast";
 import { ServicePolicyEditor } from "@/components/admin/finance/ServicePolicyEditor";
 import { FinanceControlsPanel } from "@/components/admin/finance/FinanceControlsPanel";
+import { RepasPromotionsPanel } from "@/components/admin/finance/RepasPromotionsPanel";
 import {
   FinancePolicyRow, MISSION_LABELS, MISSION_TYPES, loadPolicies,
 } from "@/lib/admin/financePolicy";
@@ -56,6 +57,7 @@ export default function FinancePolicyAdmin() {
               <TabsTrigger key={t} value={t}>{MISSION_LABELS[t]}</TabsTrigger>
             ))}
             <TabsTrigger value="controls">Contrôles &amp; activation</TabsTrigger>
+            <TabsTrigger value="repas-promos">Campagnes Repas</TabsTrigger>
           </TabsList>
 
           {MISSION_TYPES.map((t) => (
@@ -71,6 +73,10 @@ export default function FinancePolicyAdmin() {
 
           <TabsContent value="controls" className="mt-3">
             <FinanceControlsPanel isGodAdmin={isSuperAdmin} />
+          </TabsContent>
+
+          <TabsContent value="repas-promos" className="mt-3">
+            <RepasPromotionsPanel isGodAdmin={isSuperAdmin} />
           </TabsContent>
         </Tabs>
       )}
