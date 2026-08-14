@@ -99,6 +99,43 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const { wallet, available } = useWallet("client");
   const { user } = useAuth();
 
+  /**
+   * R11 — a Conakry destination is slow to type and easy to lose. Rehydrate any
+   * draft for this restaurant so a reload or a dropped connection never costs
+   * the customer their landmark and instructions.
+   */
+  useEffect(() => {
+    const draft = readDestinationDraft(restaurant.id);
+    if (!draft) return;
+    setDeliveryAddress(draft.label);
+    setDeliveryLandmark(draft.landmark);
+    setDeliveryInstructions(draft.instructions);
+    setLocationSource(draft.source);
+    setDeliveryCoords(
+      draft.lat !== null && draft.lng !== null ? { lat: draft.lat, lng: draft.lng } : null,
+    );
+  }, [restaurant.id]);
+
+  // Persist as the customer types. Convenience only: never priced, never trusted.
+  useEffect(() => {
+    writeDestinationDraft({
+      restaurantId: restaurant.id,
+      label: deliveryAddress,
+      landmark: deliveryLandmark,
+      instructions: deliveryInstructions,
+      lat: deliveryCoords?.lat ?? null,
+      lng: deliveryCoords?.lng ?? null,
+      source: locationSource,
+    });
+  }, [
+    restaurant.id,
+    deliveryAddress,
+    deliveryLandmark,
+    deliveryInstructions,
+    deliveryCoords,
+    locationSource,
+  ]);
+
   useEffect(() => {
     let alive = true;
     setResolution("loading");
@@ -142,6 +179,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
         setLastMissionId(recovered.missionId);
         setDeliveryPending(recovered.fulfillment === "delivery" && !recovered.missionId);
         cart.clear();
+        clearDestinationDraft();
         setStage("confirmed");
         toast.success("Votre commande précédente a bien été enregistrée.");
       })
@@ -285,6 +323,10 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
         deliveryAddress: fulfillment === "delivery" ? deliveryAddress || undefined : undefined,
         deliveryLat: fulfillment === "delivery" ? deliveryCoords?.lat : undefined,
         deliveryLng: fulfillment === "delivery" ? deliveryCoords?.lng : undefined,
+        deliveryLandmark: fulfillment === "delivery" ? deliveryLandmark || undefined : undefined,
+        deliveryInstructions:
+          fulfillment === "delivery" ? deliveryInstructions || undefined : undefined,
+        locationSource: fulfillment === "delivery" ? locationSource : undefined,
         items: myCartLines.map((l) => ({
           menuItemId: l.menuItemId,
           qty: l.qty,
@@ -298,6 +340,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       }
       cart.clear();
       clearRepasRequestId();
+      clearDestinationDraft();
       setStage("confirmed");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Impossible de passer la commande";
@@ -311,6 +354,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
         setLastMissionId(recovered.missionId);
         cart.clear();
         clearRepasRequestId();
+        clearDestinationDraft();
         setStage("confirmed");
         toast.success("Votre commande était déjà enregistrée.");
       } else {
