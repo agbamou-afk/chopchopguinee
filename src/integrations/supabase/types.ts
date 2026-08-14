@@ -8552,6 +8552,16 @@ export type Database = {
       }
       _qa_node3_repas_r5_runtime: { Args: never; Returns: Json }
       _qa_node3_repas_r6_custody: { Args: never; Returns: Json }
+      _qa_r6_proof: {
+        Args: {
+          p_mission: string
+          p_owner: string
+          p_phase: string
+          p_tag?: string
+        }
+        Returns: string
+      }
+      _qa_r6_value: { Args: { p_users: string[] }; Returns: number }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
       _qa_s13_driver: {
         Args: { p_bal: number; p_tag: string; p_uid: string }
