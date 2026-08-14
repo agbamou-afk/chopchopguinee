@@ -46,27 +46,23 @@ export const PRODUCT_CATEGORIES = [
 ];
 
 export async function listOwnProducts(sellerId: string): Promise<MerchantProduct[]> {
-  const { data, error } = await (supabase as any)
-    .from("marketplace_listings")
-    .select(PRODUCT_COLS)
-    .eq("seller_id", sellerId)
-    .eq("kind", "merchant")
-    .order("created_at", { ascending: false })
-    .limit(200);
+  // Canonical owner read model (server-authoritative truth).
+  const { data, error } = await (supabase as any).rpc("marche_listings_owner", { p_limit: 200 });
   if (error) throw error;
-  return (data ?? []) as MerchantProduct[];
+  return ((data ?? []) as (MerchantProduct & { kind: string })[]).filter(
+    (p) => p.kind === "merchant" && p.seller_id === sellerId,
+  ) as MerchantProduct[];
 }
 
 export async function listStoreProducts(storeId: string): Promise<MerchantProduct[]> {
-  const { data, error } = await (supabase as any)
-    .from("marketplace_listings")
-    .select(PRODUCT_COLS)
-    .eq("store_id", storeId)
-    .eq("kind", "merchant")
-    .order("created_at", { ascending: false })
-    .limit(500);
+  const { data, error } = await (supabase as any).rpc("marche_store_listings_owner", {
+    p_store_id: storeId,
+    p_limit: 500,
+  });
   if (error) throw error;
-  return (data ?? []) as MerchantProduct[];
+  return ((data ?? []) as (MerchantProduct & { kind: string })[]).filter(
+    (p) => p.kind === "merchant",
+  ) as MerchantProduct[];
 }
 
 export async function getProductImages(listingId: string): Promise<string[]> {
