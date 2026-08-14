@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { toast } from "sonner";
-import type { FoodMenuItem, FoodRestaurant, FoodFulfillment, FoodPaymentMethod } from "@/lib/repas/types";
+import type { FoodMenuItem, FoodRestaurant, FoodFulfillment } from "@/lib/repas/types";
 import { listMenu } from "@/lib/repas/restaurants";
 import { useRepasCart } from "@/lib/repas/cart";
-import { createFoodOrder } from "@/lib/repas/orders";
+import { createFoodOrder, type RepasTender } from "@/lib/repas/orders";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useWallet } from "@/hooks/useWallet";
 import { ConversionGateSheet } from "@/components/onboarding/ConversionGateSheet";
@@ -44,7 +44,12 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [fulfillment, setFulfillment] = useState<FoodFulfillment>(
     restaurant.delivery_available ? "delivery" : "pickup",
   );
-  const [paymentMethod, setPaymentMethod] = useState<FoodPaymentMethod>("cash");
+  const [paymentMethod, setPaymentMethod] = useState<RepasTender>("cash");
+  /**
+   * Sticky idempotency key: created once per cart commitment attempt and
+   * reused across retries so a network retry can never create a second order.
+   */
+  const [requestId, setRequestId] = useState<string>(() => crypto.randomUUID());
   const [notes, setNotes] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCoords, setDeliveryCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -107,40 +112,30 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       setGateOpen(true);
       return;
     }
-    if (paymentMethod === "wallet" && available < subtotal) {
-      toast.error("Solde ChopWallet insuffisant");
-      return;
-    }
     setSubmitting(true);
     try {
       const result = await createFoodOrder({
         restaurantId: restaurant.id,
         fulfillment,
         paymentMethod,
+        clientRequestId: requestId,
         notes: notes || undefined,
         deliveryAddress: fulfillment === "delivery" ? deliveryAddress || undefined : undefined,
         deliveryLat: fulfillment === "delivery" ? deliveryCoords?.lat : undefined,
         deliveryLng: fulfillment === "delivery" ? deliveryCoords?.lng : undefined,
         items: myCartLines.map((l) => ({
           menuItemId: l.menuItemId,
-          name: l.name,
-          unitPriceGnf: l.unitPriceGnf,
           qty: l.qty,
         })),
       });
-      setDeliveryPending(fulfillment === "delivery" && result.deliveryPending);
-      setLastOrderId(result.order?.id ?? null);
+      setDeliveryPending(result.deliveryPending);
+      setLastOrderId(result.orderId);
       setLastMissionId(result.missionId ?? null);
-      if (paymentMethod === "wallet") {
-        if (result.paymentStatus === "authorized") {
-          toast.success("Paiement autorisé. Votre commande est en préparation.");
-        } else if (result.paymentStatus === "failed") {
-          toast.error(
-            "Solde CHOP insuffisant. Rechargez votre wallet ou choisissez un autre mode de paiement.",
-          );
-        }
+      if (paymentMethod === "choppay") {
+        toast.success("Paiement Chop Pay autorisé. Commande envoyée au restaurant.");
       }
       cart.clear();
+      setRequestId(crypto.randomUUID());
       setStage("confirmed");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Impossible de passer la commande";
@@ -526,10 +521,10 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                       {/* Payment method */}
                       <div>
                         <p className="text-xs font-medium text-muted-foreground mb-1.5">Paiement</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {(["cash", "wallet", "choppay"] as FoodPaymentMethod[]).map((pm) => {
+                        <div className="grid grid-cols-2 gap-2">
+                          {(["cash", "choppay"] as RepasTender[]).map((pm) => {
                             const disabled = pm === "choppay" && !restaurant.choppay_enabled;
-                            const label = pm === "cash" ? "Cash" : pm === "wallet" ? "Wallet" : "ChopPay";
+                            const label = pm === "cash" ? "Espèces" : "Chop Pay";
                             return (
                               <button
                                 key={pm}
@@ -548,9 +543,9 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                             );
                           })}
                         </div>
-                        {paymentMethod === "wallet" && wallet && (
+                        {paymentMethod === "choppay" && !restaurant.choppay_enabled && (
                           <p className="text-[11px] text-muted-foreground mt-1.5">
-                            Solde disponible : {formatGNF(available)}
+                            Chop Pay n'est pas encore activé pour ce restaurant.
                           </p>
                         )}
                       </div>

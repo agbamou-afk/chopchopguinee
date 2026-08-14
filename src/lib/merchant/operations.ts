@@ -1,10 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { FoodOrder, FoodOrderState } from "@/lib/repas/types";
-import {
-  getCashOrderRuntime,
-  merchantAcceptCashOrder,
-  merchantPrepareCashOrder,
-} from "@/lib/cash/cashOrders";
+import { translateCashError } from "@/lib/cash/cashOrders";
 
 /* ------------------------------------------------------------------ */
 /* Repas — restaurant operations                                      */
@@ -57,53 +53,64 @@ export const RESTAURANT_NEXT_LABEL: Partial<Record<FoodOrderState, string>> = {
   out_for_delivery: "Marquer terminé",
 };
 
-export async function advanceRestaurantOrder(orderId: string, current: FoodOrderState): Promise<FoodOrderState> {
+/**
+ * Node 3 / R4 — every restaurant-side transition is server-authoritative.
+ * The client may only *request* an action; `repas_merchant_transition`
+ * validates ownership, the legal lifecycle, and routes cash / Chop Pay orders
+ * through the locked Slice 4 / Slice 5 engines. No raw state UPDATE remains.
+ */
+export type RepasMerchantAction =
+  | "accept"
+  | "prepare"
+  | "ready"
+  | "handoff"
+  | "complete"
+  | "reject";
+
+const NEXT_ACTION: Partial<Record<FoodOrderState, RepasMerchantAction>> = {
+  placed: "accept",
+  confirmed: "prepare",
+  preparing: "ready",
+  ready: "handoff",
+  out_for_delivery: "complete",
+};
+
+export async function repasMerchantTransition(
+  orderId: string,
+  action: RepasMerchantAction,
+  reason?: string,
+): Promise<void> {
+  const { error } = await (supabase as any).rpc("repas_merchant_transition", {
+    p_order_id: orderId,
+    p_action: action,
+    p_reason: reason ?? null,
+  });
+  if (error) throw new Error(translateRepasMerchantError(error.message));
+}
+
+export function translateRepasMerchantError(msg: string): string {
+  const m = (msg || "").toUpperCase();
+  if (m.includes("ILLEGAL_TRANSITION")) return "Cette étape n'est pas possible depuis l'état actuel.";
+  if (m.includes("CASH_ORDER_NOT_ACCEPTED")) return "Commande espèces : aucun coursier engagé pour l'instant.";
+  if (m.includes("CHOP_PAY_NOT_AUTHORIZED")) return "Paiement Chop Pay non autorisé sur cette commande.";
+  if (m.includes("NOT_AUTHORIZED")) return "Action non autorisée.";
+  if (m.includes("UNSUPPORTED_TENDER")) return "Mode de paiement non pris en charge.";
+  return translateCashError(msg);
+}
+
+export async function advanceRestaurantOrder(
+  orderId: string,
+  current: FoodOrderState,
+): Promise<FoodOrderState> {
   const next = RESTAURANT_NEXT_STATE[current];
-  if (!next) throw new Error("Aucune étape suivante");
-  // Slice 4 — cash orders are engine-owned. The authoritative signal is the
-  // order's explicit tender, not the presence of a runtime row: a cash order
-  // with no courier engaged yet must not fall back to a direct state write.
-  const { data: order } = await (supabase as any)
-    .from("food_orders")
-    .select("payment_method")
-    .eq("id", orderId)
-    .maybeSingle();
-  if (order?.payment_method === "cash") {
-    const cash = await getCashOrderRuntime("repas", orderId);
-    if (!cash) {
-      throw new Error("Commande espèces : aucun coursier engagé pour l'instant.");
-    }
-    if (next === "confirmed") {
-      await merchantAcceptCashOrder("repas", orderId);
-      return "confirmed";
-    }
-    if (next === "preparing") {
-      await merchantPrepareCashOrder("repas", orderId);
-      return "preparing";
-    }
-    // 'ready' / 'out_for_delivery' / 'completed' are driven by the courier
-    // mission lifecycle, which finalises the cash economics server-side.
-    throw new Error(
-      "Commande espèces : la suite est pilotée par le coursier (retrait puis livraison).",
-    );
-  }
-  // Trusted completion goes through the RPC so wallet capture + merchant settlement
-  // run atomically. The completion trigger blocks direct UPDATE to 'completed' for
-  // wallet-paid orders.
-  if (next === "completed") {
-    const { error } = await (supabase as any).rpc("repas_complete_order", {
-      p_food_order_id: orderId,
-      p_reason: "Restaurant marked order as completed",
-    });
-    if (error) throw error;
-    return next;
-  }
-  const { error } = await (supabase as any)
-    .from("food_orders")
-    .update({ state: next })
-    .eq("id", orderId);
-  if (error) throw error;
+  const action = NEXT_ACTION[current];
+  if (!next || !action) throw new Error("Aucune étape suivante");
+  await repasMerchantTransition(orderId, action);
   return next;
+}
+
+export async function rejectRestaurantOrder(orderId: string, reason?: string): Promise<void> {
+  await repasMerchantTransition(orderId, "reject", reason);
 }
 
 export async function listRestaurantMenu(restaurantId: string) {
