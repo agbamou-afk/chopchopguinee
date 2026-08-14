@@ -46,27 +46,23 @@ export const PRODUCT_CATEGORIES = [
 ];
 
 export async function listOwnProducts(sellerId: string): Promise<MerchantProduct[]> {
-  const { data, error } = await (supabase as any)
-    .from("marketplace_listings")
-    .select(PRODUCT_COLS)
-    .eq("seller_id", sellerId)
-    .eq("kind", "merchant")
-    .order("created_at", { ascending: false })
-    .limit(200);
+  // Canonical owner read model (server-authoritative truth).
+  const { data, error } = await (supabase as any).rpc("marche_listings_owner", { p_limit: 200 });
   if (error) throw error;
-  return (data ?? []) as MerchantProduct[];
+  return ((data ?? []) as (MerchantProduct & { kind: string })[]).filter(
+    (p) => p.kind === "merchant" && p.seller_id === sellerId,
+  ) as MerchantProduct[];
 }
 
 export async function listStoreProducts(storeId: string): Promise<MerchantProduct[]> {
-  const { data, error } = await (supabase as any)
-    .from("marketplace_listings")
-    .select(PRODUCT_COLS)
-    .eq("store_id", storeId)
-    .eq("kind", "merchant")
-    .order("created_at", { ascending: false })
-    .limit(500);
+  const { data, error } = await (supabase as any).rpc("marche_store_listings_owner", {
+    p_store_id: storeId,
+    p_limit: 500,
+  });
   if (error) throw error;
-  return (data ?? []) as MerchantProduct[];
+  return ((data ?? []) as (MerchantProduct & { kind: string })[]).filter(
+    (p) => p.kind === "merchant",
+  ) as MerchantProduct[];
 }
 
 export async function getProductImages(listingId: string): Promise<string[]> {
@@ -140,13 +136,10 @@ export interface CreateProductInput {
 }
 
 export async function createProduct(input: CreateProductInput): Promise<MerchantProduct> {
-  const status: ProductStatus = input.publish ? "active" : "paused";
-  const visibility: ProductVisibility = input.publish ? "public" : "private";
   const pricing_mode: PricingMode = input.pricing_mode ?? "fixed";
   const allow_offers = pricing_mode === "negotiable" ? !!input.allow_offers : false;
   const asking_price_gnf = input.asking_price_gnf ?? input.price_gnf ?? null;
   const payload = {
-    seller_id: input.sellerId,
     store_id: input.storeId,
     kind: "merchant",
     category: input.category || "Autre",
@@ -159,15 +152,18 @@ export async function createProduct(input: CreateProductInput): Promise<Merchant
     allow_offers,
     quantity_in_stock: input.quantity_in_stock,
     barcode: input.barcode?.trim() || null,
-    status,
-    visibility,
+    publish: input.publish,
   };
-  const { data, error } = await (supabase as any)
-    .from("marketplace_listings")
-    .insert(payload)
-    .select(PRODUCT_COLS)
-    .single();
+  const { data: newId, error } = await (supabase as any).rpc("marche_listing_create", {
+    p_payload: payload,
+  });
   if (error) throw error;
+  const { data, error: readErr } = await (supabase as any)
+    .from("marketplace_listings")
+    .select(PRODUCT_COLS)
+    .eq("id", newId)
+    .single();
+  if (readErr) throw readErr;
   return data as MerchantProduct;
 }
 
@@ -187,11 +183,24 @@ export interface UpdateProductInput {
 }
 
 export async function updateProduct(id: string, patch: UpdateProductInput): Promise<void> {
-  const { error } = await (supabase as any)
-    .from("marketplace_listings")
-    .update(patch)
-    .eq("id", id);
-  if (error) throw error;
+  const { status, visibility, ...fields } = patch;
+  if (Object.keys(fields).length > 0) {
+    const { error } = await (supabase as any).rpc("marche_listing_update", {
+      p_listing_id: id,
+      p_payload: fields,
+    });
+    if (error) throw error;
+  }
+  if (status === "removed") {
+    const { error } = await (supabase as any).rpc("marche_listing_archive", { p_listing_id: id });
+    if (error) throw error;
+  } else if (status === "active" || visibility === "public") {
+    const { error } = await (supabase as any).rpc("marche_listing_publish", { p_listing_id: id });
+    if (error) throw error;
+  } else if (status === "paused" || visibility === "private") {
+    const { error } = await (supabase as any).rpc("marche_listing_unpublish", { p_listing_id: id });
+    if (error) throw error;
+  }
 }
 
 // Owner/admin-only: returns the private minimum price (or null).
@@ -204,39 +213,35 @@ export async function getListingMinimumPrice(listingId: string): Promise<number 
 }
 
 export async function adjustStock(id: string, delta: number): Promise<number> {
-  const { data: cur, error: e0 } = await (supabase as any)
-    .from("marketplace_listings")
-    .select("quantity_in_stock")
-    .eq("id", id)
-    .maybeSingle();
-  if (e0) throw e0;
-  const next = Math.max(0, ((cur?.quantity_in_stock as number | null) ?? 0) + delta);
-  const { error } = await (supabase as any)
-    .from("marketplace_listings")
-    .update({ quantity_in_stock: next })
-    .eq("id", id);
+  const { data, error } = await (supabase as any).rpc("marche_listing_adjust_stock", {
+    p_listing_id: id,
+    p_delta: delta,
+  });
   if (error) throw error;
-  return next;
+  return (data as number) ?? 0;
 }
 
 export async function setOutOfStock(id: string): Promise<void> {
-  const { error } = await (supabase as any)
-    .from("marketplace_listings")
-    .update({ quantity_in_stock: 0 })
-    .eq("id", id);
+  const { error } = await (supabase as any).rpc("marche_listing_set_stock", {
+    p_listing_id: id,
+    p_quantity: 0,
+  });
   if (error) throw error;
 }
 
 export async function archiveProduct(id: string): Promise<void> {
-  await updateProduct(id, { status: "removed", visibility: "private" });
+  const { error } = await (supabase as any).rpc("marche_listing_archive", { p_listing_id: id });
+  if (error) throw error;
 }
 
 export async function publishProduct(id: string): Promise<void> {
-  await updateProduct(id, { status: "active", visibility: "public" });
+  const { error } = await (supabase as any).rpc("marche_listing_publish", { p_listing_id: id });
+  if (error) throw error;
 }
 
 export async function unpublishProduct(id: string): Promise<void> {
-  await updateProduct(id, { status: "paused", visibility: "private" });
+  const { error } = await (supabase as any).rpc("marche_listing_unpublish", { p_listing_id: id });
+  if (error) throw error;
 }
 
 export async function uploadProductImage(opts: {

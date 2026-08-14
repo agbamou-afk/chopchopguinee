@@ -109,54 +109,17 @@ export async function listStoresWithSummary(opts: {
   const stores = (data as MerchantStore[] | null) ?? [];
   if (stores.length === 0) return [];
   const ids = stores.map((s) => s.id);
-  // Fetch a small batch of public+active listings with their cover image,
-  // then aggregate per store. RLS prevents leaking draft/private rows.
-  const { data: listings } = await (supabase as unknown as {
-    from: (t: string) => {
-      select: (s: string) => {
-        in: (
-          c: string,
-          v: unknown[],
-        ) => {
-          eq: (c: string, v: unknown) => {
-            eq: (c: string, v: unknown) => {
-              order: (c: string, o: { ascending: boolean }) => {
-                limit: (n: number) => Promise<{ data: unknown }>;
-              };
-            };
-          };
-        };
-      };
-    };
-  })
-    .from("marketplace_listings")
-    .select("id, store_id, listing_images(url, position, is_primary)")
-    .in("store_id", ids)
-    .eq("status", "active")
-    .eq("visibility", "public")
-    .order("created_at", { ascending: false })
-    .limit(500);
-  type R = {
-    id: string;
-    store_id: string;
-    listing_images?: { url: string; position: number; is_primary: boolean }[];
-  };
+  // Canonical server read model: only publicly orderable supply is counted/previewed.
+  const { data: previews } = await (supabase as unknown as {
+    rpc: (n: string, a: Record<string, unknown>) => Promise<{ data: unknown }>;
+  }).rpc("marche_store_listing_previews", { p_store_ids: ids });
+  type R = { store_id: string; listing_count: number; sample_photos: string[] | null };
   const buckets = new Map<string, { count: number; photos: string[] }>();
-  for (const row of ((listings as R[] | null) ?? [])) {
-    const b = buckets.get(row.store_id) ?? { count: 0, photos: [] };
-    b.count += 1;
-    if (b.photos.length < 3) {
-      const cover =
-        row.listing_images
-          ?.slice()
-          .sort(
-            (a, c) =>
-              (c.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) ||
-              a.position - c.position,
-          )[0]?.url;
-      if (cover) b.photos.push(cover);
-    }
-    buckets.set(row.store_id, b);
+  for (const row of ((previews as R[] | null) ?? [])) {
+    buckets.set(row.store_id, {
+      count: row.listing_count ?? 0,
+      photos: (row.sample_photos ?? []).filter(Boolean).slice(0, 3),
+    });
   }
   return stores.map((s) => ({
     ...s,

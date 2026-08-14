@@ -92,11 +92,12 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
       const uid = sess.session?.user.id ?? null;
       if (mounted) setSelfId(uid);
 
-      const { data: l } = await supabase
-        .from("marketplace_listings")
-        .select("id, seller_id, kind, category, title, description, price_gnf, is_negotiable, is_urgent, delivery_available, condition, neighborhood, commune, landmark, created_at, availability, fulfillment_options, photo_count, store_id, pricing_mode, asking_price_gnf, allow_offers, quantity_in_stock")
-        .eq("id", listingId)
-        .maybeSingle();
+      // Canonical public/owner detail read model.
+      const { data: l } = await (
+        supabase as unknown as {
+          rpc: (n: string, a: Record<string, unknown>) => Promise<{ data: unknown }>;
+        }
+      ).rpc("marche_listing_public", { p_listing_id: listingId });
       if (!mounted || !l) return;
       setListing(l as FullListing);
 
@@ -106,17 +107,14 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
         if (mounted) setStore(s);
       }
 
-      const { data: imgs } = await supabase
-        .from("listing_images")
-        .select("url, position")
-        .eq("listing_id", listingId)
-        .order("position", { ascending: true });
-      if (mounted) setImages((imgs ?? []).map((i) => i.url));
+      const imgs = ((l as unknown as { images?: string[] }).images ?? []);
+      if (mounted) setImages(imgs);
 
+      const sellerId = (l as unknown as { seller_id: string }).seller_id;
       const { data: prof } = await supabase
         .from("profiles")
         .select("full_name, phone")
-        .eq("user_id", l.seller_id)
+        .eq("user_id", sellerId)
         .maybeSingle();
       if (mounted) setSeller(prof ?? { full_name: null, phone: null });
 

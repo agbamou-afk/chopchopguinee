@@ -1034,6 +1034,13 @@ export type Database = {
             referencedRelation: "marketplace_listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conversations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
+          },
         ]
       }
       customer_cancellation_debts: {
@@ -3661,6 +3668,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "listing_images_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
+          },
+          {
             foreignKeyName: "listing_images_source_image_id_fkey"
             columns: ["source_image_id"]
             isOneToOne: false
@@ -3714,6 +3728,13 @@ export type Database = {
             referencedRelation: "marketplace_listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "listing_interests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
+          },
         ]
       }
       listing_metrics: {
@@ -3748,6 +3769,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "marketplace_listings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_metrics_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
           },
         ]
       }
@@ -3787,6 +3815,13 @@ export type Database = {
             referencedRelation: "marketplace_listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "listing_reports_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
+          },
         ]
       }
       listing_saves: {
@@ -3812,6 +3847,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "marketplace_listings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_saves_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
           },
         ]
       }
@@ -4699,6 +4741,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "marketplace_listings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_offers_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
           },
         ]
       }
@@ -7423,6 +7472,13 @@ export type Database = {
             referencedRelation: "marketplace_listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "saved_listings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
+          },
         ]
       }
       saved_places: {
@@ -8159,6 +8215,37 @@ export type Database = {
         }
         Relationships: []
       }
+      v_marche_listing_truth: {
+        Row: {
+          availability:
+            | Database["public"]["Enums"]["listing_availability"]
+            | null
+          is_demo: boolean | null
+          is_orderable: boolean | null
+          kind: Database["public"]["Enums"]["listing_kind"] | null
+          listing_id: string | null
+          photo_count: number | null
+          price_gnf: number | null
+          pricing_mode: string | null
+          quantity_in_stock: number | null
+          refusal_reason: string | null
+          seller_banned: boolean | null
+          seller_id: string | null
+          status: Database["public"]["Enums"]["listing_status"] | null
+          store_id: string | null
+          store_ok: boolean | null
+          visibility: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _anonymize_user_core: {
@@ -8408,6 +8495,53 @@ export type Database = {
       _map_distance_meters: {
         Args: { a_lat: number; a_lng: number; b_lat: number; b_lng: number }
         Returns: number
+      }
+      _marche_listing_assert_valid: {
+        Args: { l: Database["public"]["Tables"]["marketplace_listings"]["Row"] }
+        Returns: undefined
+      }
+      _marche_listing_authz: {
+        Args: { p_listing_id: string }
+        Returns: {
+          allow_offers: boolean
+          asking_price_gnf: number | null
+          availability: Database["public"]["Enums"]["listing_availability"]
+          barcode: string | null
+          category: string
+          commune: string | null
+          condition: string | null
+          created_at: string
+          delivery_available: boolean
+          description: string | null
+          fulfillment_options: string[]
+          id: string
+          is_negotiable: boolean
+          is_urgent: boolean
+          kind: Database["public"]["Enums"]["listing_kind"]
+          landmark: string | null
+          minimum_price_gnf: number | null
+          neighborhood: string | null
+          offer_increment_gnf: number | null
+          photo_count: number
+          price_gnf: number | null
+          pricing_mode: string
+          promoted: boolean
+          quantity_in_stock: number | null
+          seller_id: string
+          sold_count: number
+          status: Database["public"]["Enums"]["listing_status"]
+          store_id: string | null
+          title: string
+          updated_at: string
+          view_count: number
+          visibility: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marketplace_listings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       _merchant_payable_create_internal: {
         Args: {
@@ -8696,6 +8830,11 @@ export type Database = {
       _qa_node3_repas_r8_extra: { Args: never; Returns: Json }
       _qa_node3_repas_r9_recovery_flows: { Args: never; Returns: Json }
       _qa_node3_repas_r9_recovery_flows_fxcore: { Args: never; Returns: Json }
+      _qa_node4_marche_r1: { Args: never; Returns: Json }
+      _qa_node4_probe: {
+        Args: { p_role: string; p_sql: string; p_uid: string }
+        Returns: number
+      }
       _qa_r6_proof: {
         Args: {
           p_mission: string
@@ -11689,9 +11828,132 @@ export type Database = {
         Args: { _kind: string; _listing_id: string }
         Returns: undefined
       }
+      marche_is_demo_seller: { Args: { p_seller_id: string }; Returns: boolean }
+      marche_listing_adjust_stock: {
+        Args: { p_delta: number; p_listing_id: string }
+        Returns: number
+      }
+      marche_listing_archive: { Args: { p_listing_id: string }; Returns: Json }
+      marche_listing_create: { Args: { p_payload: Json }; Returns: string }
+      marche_listing_is_public: {
+        Args: { p_listing_id: string }
+        Returns: boolean
+      }
+      marche_listing_public: { Args: { p_listing_id: string }; Returns: Json }
+      marche_listing_publish: { Args: { p_listing_id: string }; Returns: Json }
+      marche_listing_set_availability: {
+        Args: { p_availability: string; p_listing_id: string }
+        Returns: Json
+      }
+      marche_listing_set_stock: {
+        Args: { p_listing_id: string; p_quantity: number }
+        Returns: number
+      }
+      marche_listing_truth: { Args: { p_listing_id: string }; Returns: Json }
+      marche_listing_unpublish: {
+        Args: { p_listing_id: string }
+        Returns: Json
+      }
+      marche_listing_update: {
+        Args: { p_listing_id: string; p_payload: Json }
+        Returns: Json
+      }
+      marche_listings_discover: {
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_sort?: string
+          p_store_id?: string
+        }
+        Returns: {
+          availability: string
+          category: string
+          commune: string
+          condition: string
+          cover_url: string
+          created_at: string
+          delivery_available: boolean
+          description: string
+          fulfillment_options: string[]
+          id: string
+          is_negotiable: boolean
+          is_urgent: boolean
+          kind: string
+          neighborhood: string
+          photo_count: number
+          price_gnf: number
+          store_id: string
+          title: string
+        }[]
+      }
+      marche_listings_owner: {
+        Args: { p_limit?: number }
+        Returns: {
+          allow_offers: boolean
+          asking_price_gnf: number
+          availability: string
+          barcode: string
+          category: string
+          cover_url: string
+          created_at: string
+          description: string
+          id: string
+          is_orderable: boolean
+          kind: string
+          photo_count: number
+          price_gnf: number
+          pricing_mode: string
+          quantity_in_stock: number
+          refusal_reason: string
+          seller_id: string
+          status: string
+          store_id: string
+          title: string
+          updated_at: string
+          visibility: string
+        }[]
+      }
       marche_offer_set_tender: {
         Args: { p_method: string; p_offer_id: string }
         Returns: Json
+      }
+      marche_seller_banned: { Args: { p_seller_id: string }; Returns: boolean }
+      marche_store_listing_previews: {
+        Args: { p_store_ids: string[] }
+        Returns: {
+          listing_count: number
+          sample_photos: string[]
+          store_id: string
+        }[]
+      }
+      marche_store_listings_owner: {
+        Args: { p_limit?: number; p_store_id: string }
+        Returns: {
+          allow_offers: boolean
+          asking_price_gnf: number
+          availability: string
+          barcode: string
+          category: string
+          cover_url: string
+          created_at: string
+          description: string
+          id: string
+          is_orderable: boolean
+          kind: string
+          photo_count: number
+          price_gnf: number
+          pricing_mode: string
+          quantity_in_stock: number
+          refusal_reason: string
+          seller_id: string
+          status: string
+          store_id: string
+          title: string
+          updated_at: string
+          visibility: string
+        }[]
       }
       marche_toggle_listing_save: {
         Args: { _listing_id: string }
