@@ -137,8 +137,10 @@ const DELIVERY_STATE_LABEL: Record<FoodOrderState, string> = {
   placed: "Commande envoyée au restaurant",
   confirmed: "Restaurant a confirmé",
   preparing: "En préparation",
-  ready: "Prête — remise au coursier",
-  out_for_delivery: "En route vers vous",
+  // `ready` is BEFORE the R6 restaurant→courier custody handoff: it must never
+  // imply the courier already holds the order.
+  ready: "Prête au restaurant",
+  out_for_delivery: "Remise au coursier — en route vers vous",
   completed: "Livrée",
   cancelled: "Annulée",
 };
