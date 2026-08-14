@@ -8441,6 +8441,7 @@ export type Database = {
           section: string
         }[]
       }
+      _qa_node3_repas_r5_runtime: { Args: never; Returns: Json }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
       _qa_s13_driver: {
         Args: { p_bal: number; p_tag: string; p_uid: string }
