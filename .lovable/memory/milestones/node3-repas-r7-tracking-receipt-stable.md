@@ -73,3 +73,56 @@ Approved live `livraison` couriers: **0**. Engineering is closed; live Repas del
 depends on courier supply.
 
 **Verdict: GO — R7 micro-closeout complete.**
+
+---
+
+## R7 FINAL TRUTH MICRO-CLOSEOUT (receipt semantics) — HEAD 0ee2b516
+
+Verdict: **GO** — three receipt/tracking semantic defects closed, no economics touched.
+
+### A. Ready label no longer claims custody
+`src/lib/repas/tracking.ts`: delivery `ready` = **"Prête au restaurant"** (was
+"Prête — remise au coursier", which claimed courier possession before the R6
+restaurant→courier handoff). Courier possession / en route is now communicated only by
+`out_for_delivery` ("Remise au coursier — en route vers vous"), i.e. after real R6 custody.
+
+### B. Custody boundary labels keyed on the real R6 events
+`REPAS_CUSTODY_BOUNDARY_LABEL` now maps the actual `repas_custody_events.boundary` values —
+`restaurant_to_courier` → Remise au coursier, `courier_to_customer` → Remise au client,
+`merchant_to_customer_pickup` → Retrait par le client — with the legacy credential-style keys
+retained only as aliases so historical rows never render raw snake_case.
+
+### C. Canonical receipt payment truth
+`public.repas_order_receipt(uuid)` (still STABLE / SECURITY DEFINER / `search_path=public`,
+anon revoked) now derives, read-only, from the same committed tender runtime tracking uses:
+- `payment_rail` (`chop_pay` | `cash` | null), `engine_state`, `payment_state`, `payment_settled`
+- chop_pay: completed→`paid`, cancelled/merchant_rejected→`released`, disputed→`disputed`,
+  dispute_resolved→`dispute_resolved`, otherwise→`authorized`
+- cash: completed→`collected`, cancelled/merchant_rejected→`cancelled`, otherwise→`due`
+- legacy `food_orders.payment_status` kept as `legacy_payment_status` (raw, never canonical)
+  and **never mutated**; no settlement economics changed.
+Client: `RepasReceiptSheet` shows `Statut du paiement` from canonical state and labels the total
+dynamically — `Total payé` (settled Chop Pay) / `Total réglé` (settled cash) / `Total de la
+commande` for authorized, due, released and cancelled. Frozen item/pricing math untouched.
+
+### D. QA
+- R7 harness extended with `public._qa_node3_repas_r7_semantics()` (wired into
+  `_qa_node3_repas_r7_ext`, rollback-only, revoked from anon/authenticated):
+  **R7 175/175** (was 155) — completed Chop Pay = canonical `paid` even with legacy `unpaid`,
+  placed/authorized never paid, in-flight never paid, cancelled = `released` not paid,
+  legacy column unmutated, receipt reads create no journal and move no wallet,
+  real R6 boundaries preserved, no fabricated cash runtime.
+- Vitest `src/test/repasReceiptSemantics.test.ts` (8 tests): ready/custody-boundary labels and
+  total/payment-label semantics.
+
+### E. Full frozen board (all green, after last edit)
+R7 **175/175** · R6 171/171 · R5 static 71/71 · R5 runtime 91/91 · R4.5 64/64 · R1–R4 148/148 ·
+Course 34/34 · Bonbonna full/base/matrix/sweeper 78/24/39/15 · Taxi 97/97 ·
+Slice 13 **507/507** (18+32+54+98+115+87+103) via the established privileged
+`public._qa_s13_results` path, no grant weakening ·
+Vitest **46/46** (9 files) · `tsgo --noEmit -p tsconfig.app.json` exit 0 ·
+`bun run build` PASS, PWA generateSW precache **134 entries** · `git status --short` clean.
+
+### F. Posture
+ledger posting sum 0 · imbalanced journals 0 · master wallet **-100435 / held 0** ·
+feature flags unchanged · approved live `livraison` couriers **0** · zero R7 fixture residue.
