@@ -8556,6 +8556,7 @@ export type Database = {
       _qa_node3_repas_r7_readtruth: { Args: never; Returns: Json }
       _qa_node3_repas_r7_semantics: { Args: never; Returns: Json }
       _qa_node3_repas_r7_tracking_receipt: { Args: never; Returns: Json }
+      _qa_node3_repas_r8_discovery: { Args: never; Returns: Json }
       _qa_r6_proof: {
         Args: {
           p_mission: string
@@ -8645,6 +8646,7 @@ export type Database = {
         }
         Returns: string
       }
+      _repas_caller_is_staff: { Args: never; Returns: boolean }
       _repas_custody_consume: {
         Args: {
           p_actor: string
@@ -12521,6 +12523,10 @@ export type Database = {
         Args: { p_driver?: string }
         Returns: number
       }
+      repas_admin_set_publication: {
+        Args: { p_action: string; p_reason?: string; p_restaurant_id: string }
+        Returns: Json
+      }
       repas_capture_and_settle_order: {
         Args: { p_food_order_id: string; p_reason?: string }
         Returns: Json
@@ -12597,6 +12603,49 @@ export type Database = {
           p_restaurant_id: string
         }
         Returns: Json
+      }
+      repas_restaurant_menu_public: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          category: string
+          description: string
+          id: string
+          is_available: boolean
+          name: string
+          photo_url: string
+          prep_time_min: number
+          price_gnf: number
+          restaurant_id: string
+          sort_position: number
+        }[]
+      }
+      repas_restaurant_public: {
+        Args: { p_restaurant_id: string }
+        Returns: Json
+      }
+      repas_restaurants_discover: {
+        Args: { p_limit?: number; p_search?: string }
+        Returns: {
+          avatar_url: string
+          blocked_reason: string
+          choppay_enabled: boolean
+          cover_url: string
+          cuisine: string
+          delivery_available: boolean
+          delivery_ready: boolean
+          district: string
+          has_coordinates: boolean
+          id: string
+          is_open: boolean
+          menu_items_available: number
+          menu_items_total: number
+          name: string
+          orderable_now: boolean
+          pickup_available: boolean
+          pickup_ready: boolean
+          prep_time_min: number
+          verified: boolean
+        }[]
       }
       request_account_deletion: { Args: { _reason?: string }; Returns: Json }
       review_learned_route_segment: {

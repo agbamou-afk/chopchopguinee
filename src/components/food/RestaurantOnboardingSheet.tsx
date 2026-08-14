@@ -24,7 +24,6 @@ export function RestaurantOnboardingSheet({
   const [cuisine, setCuisine] = useState<string>("");
   const [district, setDistrict] = useState<string>("");
   const [delivery, setDelivery] = useState(false);
-  const [choppay, setChopPay] = useState(false);
   const [busy, setBusy] = useState(false);
   const [existing, setExisting] = useState<FoodRestaurant | null>(null);
 
@@ -41,7 +40,6 @@ export function RestaurantOnboardingSheet({
         setCuisine(own.cuisine ?? "");
         setDistrict(own.district ?? "");
         setDelivery(own.delivery_available);
-        setChopPay(own.choppay_enabled);
       }
     })();
   }, [open]);
@@ -66,9 +64,13 @@ export function RestaurantOnboardingSheet({
         cuisine: cuisine || null,
         district: district || null,
         delivery_available: delivery,
-        choppay_enabled: choppay,
       });
-      toast({ title: existing ? "Restaurant mis à jour" : "Restaurant créé" });
+      toast({
+        title: existing ? "Restaurant mis à jour" : "Restaurant créé",
+        description: existing
+          ? undefined
+          : "Votre restaurant sera visible par les clients après validation par CHOPCHOP.",
+      });
       onCreated?.(r);
       onOpenChange(false);
     } catch (e) {
@@ -85,7 +87,8 @@ export function RestaurantOnboardingSheet({
         <SheetHeader className="text-left">
           <SheetTitle>{existing ? "Modifier mon restaurant" : "Créer un restaurant"}</SheetTitle>
           <SheetDescription className="text-xs">
-            Configuration rapide. Vous pourrez ajouter votre menu après.
+            Configuration rapide. Ajoutez votre menu, puis l’équipe CHOPCHOP valide la
+            publication avant que les clients puissent commander.
           </SheetDescription>
         </SheetHeader>
         <div className="space-y-3 mt-4">
@@ -134,13 +137,12 @@ export function RestaurantOnboardingSheet({
             </div>
             <Switch checked={delivery} onCheckedChange={setDelivery} />
           </label>
-          <label className="flex items-center justify-between p-3 rounded-2xl bg-card shadow-card">
-            <div>
-              <p className="text-sm font-medium">ChopPay accepté</p>
-              <p className="text-[11px] text-muted-foreground">Affiche un badge ChopPay sur votre restaurant.</p>
-            </div>
-            <Switch checked={choppay} onCheckedChange={setChopPay} />
-          </label>
+          <div className="p-3 rounded-2xl bg-muted/60">
+            <p className="text-sm font-medium">Chop Pay</p>
+            <p className="text-[11px] text-muted-foreground">
+              Activé par l’équipe CHOPCHOP après vérification de votre restaurant.
+            </p>
+          </div>
           <Button onClick={submit} disabled={busy} className="w-full">
             {busy ? "Enregistrement…" : existing ? "Mettre à jour" : "Créer mon restaurant"}
           </Button>

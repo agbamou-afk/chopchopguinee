@@ -1,18 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { FoodMenuItem, FoodRestaurant } from "./types";
 
-export async function listOpenRestaurants(limit = 30): Promise<FoodRestaurant[]> {
-  const { data, error } = await (supabase as any)
-    .from("food_restaurants")
-    .select("*")
-    .eq("status", "active")
-    .order("is_open", { ascending: false })
-    .order("name", { ascending: true })
-    .limit(limit);
-  if (error) throw error;
-  return (data ?? []) as FoodRestaurant[];
-}
-
+/**
+ * Owner/merchant-side helpers only. Customer discovery goes through the
+ * canonical R8 read models in `@/lib/repas/discovery`.
+ */
 export async function getRestaurant(id: string): Promise<FoodRestaurant | null> {
   const { data, error } = await (supabase as any)
     .from("food_restaurants")
@@ -60,21 +52,21 @@ export async function createOrUpdateRestaurant(input: {
   district?: string | null;
   delivery_available?: boolean;
   pickup_available?: boolean;
-  choppay_enabled?: boolean;
   is_open?: boolean;
 }): Promise<FoodRestaurant> {
   const existing = await getOwnRestaurant(input.ownerUserId);
+  /**
+   * R8 — publication state, canonical status, Chop Pay capability and the
+   * owner link are staff-only. The database rejects them on update, so the
+   * merchant payload never carries them.
+   */
   const payload: Record<string, unknown> = {
-    owner_user_id: input.ownerUserId,
     name: input.name,
-    slug: existing?.slug ?? `${slugify(input.name)}-${input.ownerUserId.slice(0, 6)}`,
     cuisine: input.cuisine ?? null,
     district: input.district ?? null,
     delivery_available: !!input.delivery_available,
     pickup_available: input.pickup_available ?? true,
-    choppay_enabled: !!input.choppay_enabled,
     is_open: input.is_open ?? true,
-    status: "active",
   };
   const t = (supabase as any).from("food_restaurants");
   if (existing) {
@@ -82,7 +74,14 @@ export async function createOrUpdateRestaurant(input: {
     if (error) throw error;
     return data as FoodRestaurant;
   }
-  const { data, error } = await t.insert(payload).select("*").single();
+  const { data, error } = await t
+    .insert({
+      ...payload,
+      owner_user_id: input.ownerUserId,
+      slug: `${slugify(input.name)}-${input.ownerUserId.slice(0, 6)}`,
+    })
+    .select("*")
+    .single();
   if (error) throw error;
   return data as FoodRestaurant;
 }
