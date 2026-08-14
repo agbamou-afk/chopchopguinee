@@ -12624,6 +12624,10 @@ export type Database = {
         Returns: Json
       }
       repas_order_receipt: { Args: { p_order_id: string }; Returns: Json }
+      repas_order_resume: {
+        Args: { p_client_request_id: string }
+        Returns: Json
+      }
       repas_order_tracking: { Args: { p_order_id: string }; Returns: Json }
       repas_platform_fee_gnf: {
         Args: {
