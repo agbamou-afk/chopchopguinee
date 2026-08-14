@@ -126,3 +126,43 @@ Vitest **46/46** (9 files) · `tsgo --noEmit -p tsconfig.app.json` exit 0 ·
 ### F. Posture
 ledger posting sum 0 · imbalanced journals 0 · master wallet **-100435 / held 0** ·
 feature flags unchanged · approved live `livraison` couriers **0** · zero R7 fixture residue.
+
+---
+
+## R7 LAST READ-TRUTH MICRO-PASS
+HEAD at certification: `faca328d20105d8a19aa1a5de544c988108194cb`
+
+### 1. Frozen promotion name on the receipt
+`repas_order_receipt` no longer reads `public.repas_pricing_promotions`. The receipt's
+`promotion_name` now comes only from the frozen `food_orders.pricing_snapshot->>'promotion_name'`
+written at order creation by `repas_pricing_effective(...)`. Legacy rows without the frozen key
+return `null` (`promotion_name_frozen = false`); the current promotion table is never presented
+as historical receipt fact. No change to order creation, promotion economics, or amounts.
+
+### 2. Pre-engagement cash is `due`, never `unknown`
+With no Chop Pay runtime and no cash runtime, the receipt derives the minimum truthful state from
+the committed tender/state: cash + nonterminal => `cash/due`, unsettled, `engine_state` null;
+cash + cancelled => `cash/cancelled`, unsettled. `collected` is impossible without a canonical
+completed cash runtime, and no runtime is ever fabricated. Chop Pay stays runtime-authoritative.
+
+### 3. QA
+`public._qa_node3_repas_r7_readtruth()` (rollback-only, revoked from anon/authenticated, wired into
+the R7 harness): frozen-promotion history stability across rename/disable/delete of the live
+promotion row (name, base fee, discount, charged delivery fee, platform fee, total all stable),
+legacy null-not-today's-promo proof, and a rollback-only pre-engagement cash order proving
+`cash/due` -> cancel -> `cash/cancelled` with zero cash runtime, no settlement journal
+(only the canonical Slice 8 `cancellation_fee_charged` entry), and no wallet drift.
+**R7 203/203** (was 175; assertions expanded, never replaced).
+
+### 4. Final board (all green, after last edit)
+R7 **203/203** · R6 171/171 · R5 runtime 91/91 · R5 static 71/71 · R4.5 64/64 · R1–R4 148/148 ·
+Course 34/34 · Bonbonna 78/78 · Taxi 97/97 ·
+Slice 13 **507/507** (18+32+54+98+115+87+103; parts 4–7 via the established privileged
+`public._qa_s13_results` path, no grant weakening) ·
+Vitest **46/46** (9 files) · `tsgo --noEmit -p tsconfig.app.json` exit 0 ·
+`bun run build` PASS, PWA generateSW precache **134 entries** · `git status --short` clean.
+
+### 5. Posture
+No feature-flag, pricing, custody, economics or state-guard changes. `repas_order_receipt`
+remains SECURITY DEFINER with anon EXECUTE revoked; the new harness is revoked from
+anon/authenticated. Verdict: **GO**.
