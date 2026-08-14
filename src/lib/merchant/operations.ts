@@ -191,10 +191,10 @@ export async function setListingAvailability(
   listingId: string,
   availability: "available" | "reserved" | "sold" | "to_confirm",
 ) {
-  const { error } = await (supabase as any)
-    .from("marketplace_listings")
-    .update({ availability })
-    .eq("id", listingId);
+  const { error } = await (supabase as any).rpc("marche_listing_set_availability", {
+    p_listing_id: listingId,
+    p_availability: availability,
+  });
   if (error) throw error;
 }
 

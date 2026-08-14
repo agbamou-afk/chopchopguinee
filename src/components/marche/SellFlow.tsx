@@ -128,12 +128,14 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
       return;
     }
 
-    const { data: listing, error } = await supabase
-      .from("marketplace_listings")
-      .insert({
-        seller_id: uid,
-        kind: ownStore ? "merchant" : "community",
+    const { data: newListingId, error } = await (
+      supabase as unknown as {
+        rpc: (n: string, a: Record<string, unknown>) => Promise<{ data: string | null; error: { message: string } | null }>;
+      }
+    ).rpc("marche_listing_create", {
+      p_payload: {
         store_id: ownStore?.id ?? null,
+        kind: ownStore ? "merchant" : "community",
         category: parsed.data.category,
         title: parsed.data.title,
         description: parsed.data.description ?? null,
@@ -147,14 +149,15 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
         neighborhood: parsed.data.neighborhood ?? null,
         commune: parsed.data.commune ?? null,
         landmark: parsed.data.landmark ?? null,
-      } as never)
-      .select("id")
-      .single();
-    if (error || !listing) {
+        publish: true,
+      },
+    });
+    if (error || !newListingId) {
       toast({ title: "Erreur", description: error?.message ?? "Publication échouée" });
       setBusy(false);
       return;
     }
+    const listing = { id: newListingId };
 
     // Upload images
     const uploaded: { url: string; position: number }[] = [];
