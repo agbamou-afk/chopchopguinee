@@ -97,4 +97,4 @@ P2: reorder/favorites/ratings, checkout ETA truth, order-state notifications, ad
 
 ## 9. HEAD and change confirmation
 
-HEAD: `69548fb6ed6c9a9a65d5f1f57562043e81b26506`. Zero changes made — audit is read-only; the only file written is this plan document.
+HEAD: `57db98d0766a6a22534cc4386c27d0d867016161`. Zero changes made — audit is read-only; the only file written is this plan document.
