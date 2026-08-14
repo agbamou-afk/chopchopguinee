@@ -19,24 +19,27 @@ import { MapPin } from "lucide-react";
 import { useNearbyAvailableDrivers } from "@/hooks/useNearbyAvailableDrivers";
 
 const NearbyDriversMap = lazy(() => import("@/components/home/NearbyDriversMap"));
+import { discoverRestaurants, type RepasDiscoveryRestaurant } from "@/lib/repas/discovery";
 
 interface UserHomeProps {
   onActionClick: (action: string, params?: { destination?: string }) => void;
   onToggleDriverMode: () => void;
 }
 
-/** Real popular-restaurants data is wired in a later pass; until then we
- *  intentionally render an empty-state instead of fake listings. */
-const popularRestaurants: Array<{
-  name: string;
-  image: string;
-  rating: number;
-  deliveryTime: string;
-  distance: string;
-  category: string;
-}> = [];
-
 export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
+  /** R8 — the home rail shows real published supply only. */
+  const [popularRestaurants, setPopularRestaurants] = useState<RepasDiscoveryRestaurant[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    discoverRestaurants(null, 4)
+      .then((r) => alive && setPopularRestaurants(r))
+      .catch(() => alive && setPopularRestaurants([]));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const { available: walletBalance, loading: walletLoading, error: walletError, wallet } = useWallet("client");
   const { user } = useAuth();
   useCustomerMissionAlerts(user?.id ?? null);
@@ -344,8 +347,8 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
             <div className="grid grid-cols-2 gap-3">
               {popularRestaurants.map((restaurant) => (
                 <RestaurantCard
-                  key={restaurant.name}
-                  {...restaurant}
+                  key={restaurant.id}
+                  restaurant={restaurant}
                   onClick={() => onActionClick("food")}
                 />
               ))}
