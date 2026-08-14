@@ -8552,6 +8552,7 @@ export type Database = {
       }
       _qa_node3_repas_r5_runtime: { Args: never; Returns: Json }
       _qa_node3_repas_r6_custody: { Args: never; Returns: Json }
+      _qa_node3_repas_r7_tracking_receipt: { Args: never; Returns: Json }
       _qa_r6_proof: {
         Args: {
           p_mission: string
@@ -11977,6 +11978,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      mission_earnings: { Args: { p_mission_ids: string[] }; Returns: Json }
       mission_report_issue: {
         Args: {
           _district?: string
@@ -12568,6 +12570,8 @@ export type Database = {
         }
         Returns: Json
       }
+      repas_order_receipt: { Args: { p_order_id: string }; Returns: Json }
+      repas_order_tracking: { Args: { p_order_id: string }; Returns: Json }
       repas_platform_fee_gnf: {
         Args: {
           p_bps: number

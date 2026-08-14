@@ -16,6 +16,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { FoodFulfillment, FoodOrder, FoodPaymentMethod } from "./types";
+import { FOOD_ORDER_SAFE_COLS } from "@/lib/missions/columns";
 
 /** Canonical launch tenders. `wallet` is deprecated and rejected server-side. */
 export type RepasTender = "cash" | "choppay";
@@ -129,7 +130,7 @@ export async function cancelMyFoodOrder(orderId: string, reason?: string) {
 export async function listMyFoodOrders(userId: string, limit = 20): Promise<FoodOrder[]> {
   const { data, error } = await (supabase as any)
     .from("food_orders")
-    .select("*")
+    .select(FOOD_ORDER_SAFE_COLS)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit);

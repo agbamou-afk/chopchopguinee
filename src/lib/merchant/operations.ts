@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { FoodOrder, FoodOrderState } from "@/lib/repas/types";
 import { translateCashError } from "@/lib/cash/cashOrders";
+import { FOOD_ORDER_SAFE_COLS, MISSION_SAFE_COLS } from "@/lib/missions/columns";
 
 /* ------------------------------------------------------------------ */
 /* Repas — restaurant operations                                      */
@@ -28,7 +29,7 @@ export async function setRestaurantFulfillment(
 export async function listRestaurantOrders(restaurantId: string, limit = 30): Promise<FoodOrder[]> {
   const { data, error } = await (supabase as any)
     .from("food_orders")
-    .select("*")
+    .select(FOOD_ORDER_SAFE_COLS)
     .eq("restaurant_id", restaurantId)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -250,7 +251,7 @@ export async function respondToInterest(
 export async function listMerchantMissions(merchantUserId: string, limit = 20) {
   const { data, error } = await (supabase as any)
     .from("missions")
-    .select("*")
+    .select(MISSION_SAFE_COLS)
     .eq("merchant_id", merchantUserId)
     .order("created_at", { ascending: false })
     .limit(limit);

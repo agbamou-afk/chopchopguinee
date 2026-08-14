@@ -10,7 +10,7 @@ import {
   type ListingInterest,
 } from "@/lib/marche/interests";
 import { listMyFoodOrders } from "@/lib/repas/orders";
-import { FOOD_ORDER_STATE_LABEL, type FoodOrder } from "@/lib/repas/types";
+import { FOOD_ORDER_STATE_LABEL, FOOD_ORDER_PICKUP_STATE_LABEL, type FoodOrder } from "@/lib/repas/types";
 import { listCustomerMissions, listCourierMissions } from "@/lib/missions/missions";
 import {
   MISSION_STATE_LABEL,
@@ -236,7 +236,14 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
     let alive = true;
     const fetcher = partyType === "driver" ? listCourierMissions : listCustomerMissions;
     fetcher(userId)
-      .then((rows) => alive && setMissions(rows))
+      .then((rows) => {
+        // R7 — a Repas order is a single canonical activity entry for the
+        // customer; its delivery mission must not duplicate the feed.
+        const deduped = partyType === "driver"
+          ? rows
+          : rows.filter((m) => !m.ref_food_order_id);
+        return alive && setMissions(deduped);
+      })
       .catch(() => alive && setMissions([]));
     return () => {
       alive = false;
@@ -265,8 +272,11 @@ export function useActivityFeed(partyType: "client" | "driver" = "client") {
       id: `food:${o.id}`,
       kind: "food_order",
       title: "Commande Repas",
-      subtitle: FOOD_ORDER_STATE_LABEL[o.state],
-      amount: -o.subtotal_gnf,
+      subtitle: o.fulfillment === "pickup"
+        ? FOOD_ORDER_PICKUP_STATE_LABEL[o.state]
+        : FOOD_ORDER_STATE_LABEL[o.state],
+      // R7 — server-frozen order total (merchandise + livraison + frais), never a client sum.
+      amount: -(o.order_total_gnf ?? o.subtotal_gnf),
       status:
         o.state === "completed"
           ? "completed"

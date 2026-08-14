@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,8 @@ import type { ActivityItem } from "@/lib/activity/types";
 import { formatActivityTime } from "@/lib/activity/types";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { useNavigate } from "react-router-dom";
-import { CustodyCodeCard } from "@/components/repas/CustodyCodeCard";
+import { RepasOrderTrackingPanel } from "@/components/repas/RepasOrderTrackingPanel";
+import { RepasReceiptSheet } from "@/components/repas/RepasReceiptSheet";
 
 interface ActivityDetailSheetProps {
   item: ActivityItem | null;
@@ -27,6 +28,7 @@ function Row({ label, value, mono }: { label: string; value: React.ReactNode; mo
 export function ActivityDetailSheet({ item, onClose }: ActivityDetailSheetProps) {
   const navigate = useNavigate();
   const open = !!item;
+  const [receiptOrderId, setReceiptOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     if (item) {
@@ -48,6 +50,7 @@ export function ActivityDetailSheet({ item, onClose }: ActivityDetailSheetProps)
   const amountStr = item.amount !== undefined ? `${positive ? "+" : ""}${formatGNF(item.amount)}` : "—";
 
   return (
+    <>
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" className="rounded-t-3xl px-5 pb-8 pt-5 max-h-[88vh] overflow-y-auto">
         <SheetHeader className="text-left">
@@ -77,20 +80,12 @@ export function ActivityDetailSheet({ item, onClose }: ActivityDetailSheetProps)
           {item.reference && <Row label="Référence" value={item.reference} mono />}
         </div>
 
-        {/* R6 — one-time handover code, re-fetched from the server on every open. */}
-        {item.kind === "food_order" && item.entityId && item.status !== "completed" && (
-          <div className="mt-4 space-y-2">
-            <CustodyCodeCard
+        {/* R7 — server-authoritative tracking (incl. the fulfillment-correct R6 code). */}
+        {item.kind === "food_order" && item.entityId && (
+          <div className="mt-4">
+            <RepasOrderTrackingPanel
               orderId={item.entityId}
-              kind="customer_delivery"
-              title="Code de livraison"
-              instruction="Donnez ce code au coursier seulement quand vous avez la commande en main."
-            />
-            <CustodyCodeCard
-              orderId={item.entityId}
-              kind="customer_pickup"
-              title="Code de retrait"
-              instruction="Donnez ce code au restaurant seulement quand vous récupérez la commande."
+              onOpenReceipt={() => setReceiptOrderId(item.entityId ?? null)}
             />
           </div>
         )}
@@ -143,5 +138,11 @@ export function ActivityDetailSheet({ item, onClose }: ActivityDetailSheetProps)
         </div>
       </SheetContent>
     </Sheet>
+    <RepasReceiptSheet
+      orderId={receiptOrderId}
+      open={!!receiptOrderId}
+      onClose={() => setReceiptOrderId(null)}
+    />
+    </>
   );
 }

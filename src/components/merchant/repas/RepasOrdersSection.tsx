@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ChevronRight, Phone, Truck, ShoppingBag, MapPin } from "lucide-react";
 import { SectionCard } from "../SectionCard";
 import { Button } from "@/components/ui/button";
+import { getRepasTracking, type RepasTracking } from "@/lib/repas/tracking";
 import {
   Sheet,
   SheetContent,
@@ -75,6 +76,7 @@ export function RepasOrdersSection({ restaurantId }: Props) {
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
   const [detail, setDetail] = useState<FoodOrderDetail | null>(null);
+  const [tracking, setTracking] = useState<RepasTracking | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [pickupCodeOrderId, setPickupCodeOrderId] = useState<string | null>(null);
 
@@ -105,11 +107,28 @@ export function RepasOrdersSection({ restaurantId }: Props) {
     (async () => {
       const d = await getRestaurantOrderDetail(openId);
       if (alive) setDetail(d);
+      // R7 — the merchant's next action is server truth, never client-derived.
+      try {
+        const t = await getRepasTracking(openId);
+        if (alive) setTracking(t);
+      } catch {
+        if (alive) setTracking(null);
+      }
     })();
     return () => {
       alive = false;
     };
   }, [openId]);
+
+  /** Map the local next-state affordance onto the server's canonical action name. */
+  const STATE_TO_ACTION: Record<string, string> = {
+    confirmed: "accept",
+    preparing: "prepare",
+    ready: "ready",
+    completed: "pickup_collection",
+  };
+  const allowed = (action: string) =>
+    tracking && tracking.order_id === openId ? (tracking.allowed_actions ?? []).includes(action) : true;
 
   const advance = async (o: FoodOrder) => {
     if (!restaurantNextState(o.state, o.fulfillment)) return;
@@ -141,7 +160,7 @@ export function RepasOrdersSection({ restaurantId }: Props) {
           {RESTAURANT_STATE_LABEL[o.state]}
         </span>
         <span className="text-xs text-muted-foreground">
-          {o.subtotal_gnf.toLocaleString("fr-FR")} GNF
+          {(o.order_total_gnf ?? o.subtotal_gnf).toLocaleString("fr-FR")} GNF
         </span>
       </div>
       <div className="flex items-center justify-between gap-2 mt-1.5">
@@ -363,14 +382,18 @@ export function RepasOrdersSection({ restaurantId }: Props) {
               )}
 
               {custodyBoundary(detail.state, detail.fulfillment) === "pickup_collection" ? (
-                <Button className="w-full" onClick={() => setPickupCodeOrderId(detail.id)}>
+                <Button
+                  className="w-full"
+                  disabled={!allowed("pickup_collection")}
+                  onClick={() => setPickupCodeOrderId(detail.id)}
+                >
                   Client a récupéré
                 </Button>
               ) : custodyBoundary(detail.state, detail.fulfillment) === "courier_handoff" ? null : (
                 restaurantNextState(detail.state, detail.fulfillment) && (
                 <Button
                   className="w-full"
-                  disabled={busy === detail.id}
+                  disabled={busy === detail.id || !allowed(STATE_TO_ACTION[restaurantNextState(detail.state, detail.fulfillment) as string] ?? "")}
                   onClick={() => advance(detail)}
                 >
                   {restaurantNextLabel(detail.state, detail.fulfillment)}
