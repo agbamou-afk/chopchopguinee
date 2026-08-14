@@ -17,9 +17,15 @@ import {
   createFoodOrder,
   getRepasQuote,
   repasIneligibleLabel,
+  resumeFoodOrder,
   type RepasQuote,
   type RepasTender,
 } from "@/lib/repas/orders";
+import {
+  clearRepasRequestId,
+  pendingRepasRequestId,
+  repasRequestIdFor,
+} from "@/lib/repas/checkoutRequestId";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useWallet } from "@/hooks/useWallet";
 import { ConversionGateSheet } from "@/components/onboarding/ConversionGateSheet";
