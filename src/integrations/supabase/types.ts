@@ -6831,6 +6831,115 @@ export type Database = {
         }
         Relationships: []
       }
+      repas_custody_credentials: {
+        Row: {
+          attempts: number
+          code_hash: string
+          code_plain: string
+          code_salt: string
+          consumed_at: string | null
+          consumed_by: string | null
+          created_at: string
+          expires_at: string | null
+          holder_user_id: string
+          id: string
+          kind: string
+          locked_at: string | null
+          order_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          code_plain: string
+          code_salt: string
+          consumed_at?: string | null
+          consumed_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          holder_user_id: string
+          id?: string
+          kind: string
+          locked_at?: string | null
+          order_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          code_plain?: string
+          code_salt?: string
+          consumed_at?: string | null
+          consumed_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          holder_user_id?: string
+          id?: string
+          kind?: string
+          locked_at?: string | null
+          order_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repas_custody_credentials_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repas_custody_events: {
+        Row: {
+          actor_user_id: string
+          boundary: string
+          counterparty_user_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          method: string
+          mission_id: string | null
+          occurred_at: string
+          order_id: string
+          photo_path: string | null
+        }
+        Insert: {
+          actor_user_id: string
+          boundary: string
+          counterparty_user_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          method: string
+          mission_id?: string | null
+          occurred_at?: string
+          order_id: string
+          photo_path?: string | null
+        }
+        Update: {
+          actor_user_id?: string
+          boundary?: string
+          counterparty_user_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          method?: string
+          mission_id?: string | null
+          occurred_at?: string
+          order_id?: string
+          photo_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repas_custody_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       repas_pricing_promotions: {
         Row: {
           created_at: string
@@ -8442,6 +8551,7 @@ export type Database = {
         }[]
       }
       _qa_node3_repas_r5_runtime: { Args: never; Returns: Json }
+      _qa_node3_repas_r6_custody: { Args: never; Returns: Json }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
       _qa_s13_driver: {
         Args: { p_bal: number; p_tag: string; p_uid: string }
@@ -8519,6 +8629,27 @@ export type Database = {
           p_owner: string
           p_party: Database["public"]["Enums"]["party_type"]
         }
+        Returns: string
+      }
+      _repas_custody_consume: {
+        Args: {
+          p_actor: string
+          p_code: string
+          p_kind: string
+          p_order_id: string
+        }
+        Returns: undefined
+      }
+      _repas_custody_guard: {
+        Args: { _m: Database["public"]["Tables"]["missions"]["Row"] }
+        Returns: undefined
+      }
+      _repas_custody_hash: {
+        Args: { p_code: string; p_salt: string }
+        Returns: string
+      }
+      _repas_custody_issue: {
+        Args: { p_holder: string; p_kind: string; p_order_id: string }
         Returns: string
       }
       _ride_expire_unfulfilled_internal: {
@@ -12366,6 +12497,23 @@ export type Database = {
         Args: { p_food_order_id: string; p_reason?: string }
         Returns: Json
       }
+      repas_custody_code_view: {
+        Args: { p_kind: string; p_order_id: string }
+        Returns: Json
+      }
+      repas_custody_confirm_delivery: {
+        Args: { p_code: string; p_mission_id: string; p_photo_path: string }
+        Returns: Json
+      }
+      repas_custody_confirm_handoff: {
+        Args: { p_code: string; p_mission_id: string; p_photo_path: string }
+        Returns: Json
+      }
+      repas_custody_confirm_pickup_collection: {
+        Args: { p_code: string; p_order_id: string }
+        Returns: Json
+      }
+      repas_custody_status: { Args: { p_order_id: string }; Returns: Json }
       repas_customer_cancel_order: {
         Args: { p_order_id: string; p_reason?: string }
         Returns: Json
