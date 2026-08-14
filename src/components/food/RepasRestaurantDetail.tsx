@@ -51,6 +51,8 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [paymentMethod, setPaymentMethod] = useState<RepasTender>("cash");
   /** R4.5-E — every displayed fee/total comes from this server quote. */
   const [quote, setQuote] = useState<RepasQuote | null>(null);
+  /** R5 — the quote is the only source of price truth; block checkout when it is missing or refused. */
+  const [quoteError, setQuoteError] = useState<string | null>(null);
   /**
    * Sticky idempotency key: created once per cart commitment attempt and
    * reused across retries so a network retry can never create a second order.
@@ -122,6 +124,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   useEffect(() => {
     if (stage !== "checkout" || itemCount === 0 || !isLoggedIn) {
       setQuote(null);
+      setQuoteError(null);
       return;
     }
     let alive = true;
@@ -131,8 +134,18 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       fulfillment,
       fulfillment === "delivery" ? deliveryCoords : null,
     )
-      .then((q) => alive && setQuote(q))
-      .catch(() => alive && setQuote(null));
+      .then((q) => {
+        if (!alive) return;
+        setQuote(q);
+        setQuoteError(null);
+      })
+      .catch((e: unknown) => {
+        if (!alive) return;
+        setQuote(null);
+        setQuoteError(
+          e instanceof Error ? e.message : "Prix indisponible pour le moment.",
+        );
+      });
     return () => {
       alive = false;
     };
