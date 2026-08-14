@@ -59,19 +59,19 @@ export function MarketView({ onBack }: MarketViewProps) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    let q = supabase
-      .from("marketplace_listings")
-      .select(
-        "id, title, price_gnf, is_negotiable, is_urgent, delivery_available, neighborhood, commune, created_at, kind, availability, fulfillment_options, photo_count, condition, description, listing_images(url, position)"
-      )
-      .eq("status", "active")
-      .limit(60);
-    if (sort === "recent") q = q.order("created_at", { ascending: false });
-    if (sort === "price_asc") q = q.order("price_gnf", { ascending: true, nullsFirst: false });
-    if (sort === "price_desc") q = q.order("price_gnf", { ascending: false, nullsFirst: false });
-    if (category) q = q.eq("category", category);
-    if (search.trim()) q = q.ilike("title", `%${search.trim()}%`);
-    const { data } = await q;
+    // Canonical discovery read model — server decides what is public/orderable.
+    const { data } = await (
+      supabase as unknown as {
+        rpc: (n: string, a: Record<string, unknown>) => Promise<{ data: unknown }>;
+      }
+    ).rpc("marche_listings_discover", {
+      p_search: search.trim() || null,
+      p_category: category,
+      p_store_id: null,
+      p_sort: sort,
+      p_limit: 60,
+      p_offset: 0,
+    });
     const mapped: ListingCardData[] = ((data ?? []) as unknown as RawListing[]).map((r) => ({
       id: r.id,
       title: r.title,
@@ -89,8 +89,7 @@ export function MarketView({ onBack }: MarketViewProps) {
       photo_count: (r as unknown as { photo_count?: number }).photo_count ?? null,
       condition: (r as unknown as { condition?: string | null }).condition ?? null,
       description: (r as unknown as { description?: string | null }).description ?? null,
-      cover_url:
-        r.listing_images?.slice().sort((a, b) => a.position - b.position)[0]?.url ?? null,
+      cover_url: (r as unknown as { cover_url?: string | null }).cover_url ?? null,
     }));
     setListings(mapped);
     setLoading(false);

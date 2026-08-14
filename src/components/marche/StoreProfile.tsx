@@ -30,15 +30,18 @@ export function StoreProfile({
       const s = await getStoreById(storeId);
       if (!alive) return;
       setStore(s);
-      const { data } = await supabase
-        .from("marketplace_listings")
-        .select("id, title, price_gnf, is_negotiable, is_urgent, delivery_available, neighborhood, commune, created_at, kind, listing_images(url, position)")
-        .eq("status", "active")
-        .eq("visibility", "public")
-        // store_id may not be in generated types; cast through
-        .eq("store_id" as never, storeId as never)
-        .order("created_at", { ascending: false })
-        .limit(60);
+      const { data } = await (
+        supabase as unknown as {
+          rpc: (n: string, a: Record<string, unknown>) => Promise<{ data: unknown }>;
+        }
+      ).rpc("marche_listings_discover", {
+        p_search: null,
+        p_category: null,
+        p_store_id: storeId,
+        p_sort: "recent",
+        p_limit: 60,
+        p_offset: 0,
+      });
       if (!alive) return;
       const mapped: ListingCardData[] = ((data ?? []) as unknown as RawListing[]).map((r) => ({
         id: r.id,
@@ -51,7 +54,7 @@ export function StoreProfile({
         commune: r.commune,
         created_at: r.created_at,
         kind: r.kind,
-        cover_url: r.listing_images?.slice().sort((a, b) => a.position - b.position)[0]?.url ?? null,
+        cover_url: (r as unknown as { cover_url?: string | null }).cover_url ?? null,
       }));
       setListings(mapped);
       setLoading(false);
