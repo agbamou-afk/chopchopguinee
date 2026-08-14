@@ -26,6 +26,12 @@ import {
   pendingRepasRequestId,
   repasRequestIdFor,
 } from "@/lib/repas/checkoutRequestId";
+import {
+  clearDestinationDraft,
+  readDestinationDraft,
+  writeDestinationDraft,
+  type RepasLocationSource,
+} from "@/lib/repas/destinationDraft";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useWallet } from "@/hooks/useWallet";
 import { ConversionGateSheet } from "@/components/onboarding/ConversionGateSheet";
@@ -76,6 +82,10 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryLandmark, setDeliveryLandmark] = useState("");
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  /** How the point was obtained. Never a quality claim — the server decides. */
+  const [locationSource, setLocationSource] = useState<RepasLocationSource>("unspecified");
   const [deliveryCoords, setDeliveryCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
