@@ -113,6 +113,36 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
 
   /** Every capability below is server-derived, never inferred client-side. */
   const view = detail ?? restaurant;
+
+  /**
+   * R9 — reload / reopen after an interrupted commit. If a request id is still
+   * pending locally, the server states whether it already became a real order.
+   * Nothing is ever assumed: a not-found simply leaves the cart as it was.
+   */
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const pending = pendingRepasRequestId();
+    if (!pending) return;
+    let alive = true;
+    resumeFoodOrder(pending)
+      .then((recovered) => {
+        if (!alive || !recovered) return;
+        clearRepasRequestId();
+        setLastOrderId(recovered.orderId);
+        setLastMissionId(recovered.missionId);
+        setDeliveryPending(recovered.fulfillment === "delivery" && !recovered.missionId);
+        cart.clear();
+        setStage("confirmed");
+        toast.success("Votre commande précédente a bien été enregistrée.");
+      })
+      .catch(() => {
+        /* offline: keep the pending key so the retry stays idempotent */
+      });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
   const orderableNow = resolution === "found" && (detail?.orderable_now ?? false);
   /** Per-channel truth: never offer a channel the server would refuse. */
   const canPickup = resolution === "found" && (detail?.orderable_pickup ?? false);
