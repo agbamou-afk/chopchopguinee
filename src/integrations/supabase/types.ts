@@ -6940,6 +6940,115 @@ export type Database = {
           },
         ]
       }
+      repas_ops_cases: {
+        Row: {
+          created_at: string
+          created_by: string
+          food_order_id: string
+          id: string
+          note: string
+          reason_code: string
+          resolution_code: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          food_order_id: string
+          id?: string
+          note: string
+          reason_code: string
+          resolution_code?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          food_order_id?: string
+          id?: string
+          note?: string
+          reason_code?: string
+          resolution_code?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repas_ops_cases_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repas_ops_events: {
+        Row: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          after_state: Json | null
+          before_state: Json | null
+          case_id: string
+          created_at: string
+          finance_result: Json | null
+          food_order_id: string
+          id: string
+          note: string | null
+          reason_code: string | null
+          request_id: string
+        }
+        Insert: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          after_state?: Json | null
+          before_state?: Json | null
+          case_id: string
+          created_at?: string
+          finance_result?: Json | null
+          food_order_id: string
+          id?: string
+          note?: string | null
+          reason_code?: string | null
+          request_id: string
+        }
+        Update: {
+          action?: string
+          actor_role?: string
+          actor_user_id?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          case_id?: string
+          created_at?: string
+          finance_result?: Json | null
+          food_order_id?: string
+          id?: string
+          note?: string | null
+          reason_code?: string | null
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repas_ops_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "repas_ops_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       repas_pricing_promotions: {
         Row: {
           created_at: string
@@ -8701,6 +8810,24 @@ export type Database = {
           p_phase: string
         }
         Returns: undefined
+      }
+      _repas_ops_actor_role: { Args: { p_uid: string }; Returns: string }
+      _repas_ops_allowed_actions: {
+        Args: { p_order_id: string; p_role: string; p_uid: string }
+        Returns: string[]
+      }
+      _repas_ops_flags: {
+        Args: {
+          p_courier: string
+          p_custody_locked: boolean
+          p_disputed: boolean
+          p_engine_state: string
+          p_fulfillment: string
+          p_mission_state: string
+          p_state: string
+          p_updated: string
+        }
+        Returns: string[]
       }
       _ride_expire_unfulfilled_internal: {
         Args: { p_ride_id: string }
@@ -12609,6 +12736,22 @@ export type Database = {
       repas_delivery_earning_gnf: { Args: never; Returns: number }
       repas_merchant_transition: {
         Args: { p_action: string; p_order_id: string; p_reason?: string }
+        Returns: Json
+      }
+      repas_ops_case_detail: { Args: { p_order_id: string }; Returns: Json }
+      repas_ops_command: {
+        Args: {
+          p_action: string
+          p_note?: string
+          p_order_id: string
+          p_params?: Json
+          p_reason_code?: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
+      repas_ops_queue: {
+        Args: { p_filter?: string; p_limit?: number; p_search?: string }
         Returns: Json
       }
       repas_order_create: {
