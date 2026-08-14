@@ -93,6 +93,14 @@ export function FoodView({ onBack }: FoodViewProps) {
           </p>
         )}
 
+        {/* R8 — "supply exists but nothing is orderable" is its own truthful state. */}
+        {visible !== null && visible.length > 0 && openCount === 0 && (
+          <div className="flex items-start gap-2 p-3 rounded-2xl bg-card border border-border text-[11px] text-muted-foreground">
+            <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+            <span>Aucun restaurant ouvert actuellement.</span>
+          </div>
+        )}
+
         {user && !ownRestaurant && (
           <button
             onClick={() => setCreateOpen(true)}
@@ -157,9 +165,13 @@ export function FoodView({ onBack }: FoodViewProps) {
         ) : visible.length === 0 ? (
           <EmptyState
             icon={UtensilsCrossed}
-            title={searchQuery ? "Aucun résultat" : "Aucun restaurant disponible pour le moment"}
+            title={
+              searchQuery || cuisine
+                ? "Aucun résultat"
+                : "Aucun restaurant disponible pour le moment"
+            }
             description={
-              searchQuery
+              searchQuery || cuisine
                 ? "Aucun restaurant publié ne correspond à cette recherche."
                 : "Les restaurants partenaires seront affichés ici dès leur publication."
             }
