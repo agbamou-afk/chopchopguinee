@@ -83,6 +83,11 @@ export interface FoodOrder {
   delivery_address: string | null;
   delivery_lat: number | null;
   delivery_lng: number | null;
+  /** R11 — frozen Conakry destination snapshot. Immutable once committed. */
+  delivery_landmark?: string | null;
+  delivery_instructions?: string | null;
+  delivery_location_source?: string | null;
+  delivery_location_quality?: string | null;
   created_at: string;
   updated_at: string;
 }
