@@ -8540,7 +8540,9 @@ export type Database = {
       _qa_node1_bonbonna_sweeper: { Args: never; Returns: Json }
       _qa_node2_taxi_full: { Args: never; Returns: Json }
       _qa_node3_repas_pickup: { Args: never; Returns: Json }
+      _qa_node3_repas_pickup_fxcore: { Args: never; Returns: Json }
       _qa_node3_repas_r1_r4: { Args: never; Returns: Json }
+      _qa_node3_repas_r1_r4_fxcore: { Args: never; Returns: Json }
       _qa_node3_repas_r5: {
         Args: never
         Returns: {
@@ -8553,11 +8555,15 @@ export type Database = {
       _qa_node3_repas_r5_runtime: { Args: never; Returns: Json }
       _qa_node3_repas_r5_runtime_core: { Args: never; Returns: Json }
       _qa_node3_repas_r6_custody: { Args: never; Returns: Json }
+      _qa_node3_repas_r6_custody_fxcore: { Args: never; Returns: Json }
       _qa_node3_repas_r7_ext: { Args: never; Returns: Json }
       _qa_node3_repas_r7_readtruth: { Args: never; Returns: Json }
       _qa_node3_repas_r7_semantics: { Args: never; Returns: Json }
       _qa_node3_repas_r7_tracking_receipt: { Args: never; Returns: Json }
+      _qa_node3_repas_r7_tracking_receipt_fxcore: { Args: never; Returns: Json }
+      _qa_node3_repas_r8_core: { Args: never; Returns: Json }
       _qa_node3_repas_r8_discovery: { Args: never; Returns: Json }
+      _qa_node3_repas_r8_extra: { Args: never; Returns: Json }
       _qa_r6_proof: {
         Args: {
           p_mission: string
@@ -8629,10 +8635,12 @@ export type Database = {
       _qa_s13_run1: { Args: never; Returns: Json }
       _qa_s13_run2: { Args: never; Returns: Json }
       _qa_s13_run3: { Args: never; Returns: Json }
+      _qa_s13_run3_fxcore: { Args: never; Returns: Json }
       _qa_s13_run4: { Args: never; Returns: Json }
       _qa_s13_run5: { Args: never; Returns: Json }
       _qa_s13_run6: { Args: never; Returns: Json }
       _qa_s13_run7: { Args: never; Returns: Json }
+      _qa_s13_run7_fxcore: { Args: never; Returns: Json }
       _qa_s13_summary: { Args: { p_part: number; r: Json }; Returns: Json }
       _qa_s13_user: {
         Args: { p_id: string; p_tag: string }
@@ -8646,6 +8654,10 @@ export type Database = {
           p_party: Database["public"]["Enums"]["party_type"]
         }
         Returns: string
+      }
+      _repas_assert_orderable_publication: {
+        Args: { p_r: Database["public"]["Tables"]["food_restaurants"]["Row"] }
+        Returns: undefined
       }
       _repas_caller_is_staff: { Args: never; Returns: boolean }
       _repas_custody_consume: {
@@ -12523,6 +12535,35 @@ export type Database = {
       refresh_driver_referral_milestones: {
         Args: { p_driver?: string }
         Returns: number
+      }
+      repas_admin_restaurant_overview: {
+        Args: never
+        Returns: {
+          blocked_reason: string
+          choppay_enabled: boolean
+          created_at: string
+          cuisine: string
+          delivery_available: boolean
+          delivery_ready: boolean
+          discoverable: boolean
+          district: string
+          has_coordinates: boolean
+          id: string
+          is_open: boolean
+          menu_items_available: number
+          menu_items_total: number
+          merchant_store_id: string
+          merchant_store_name: string
+          merchant_store_status: string
+          name: string
+          orderable_now: boolean
+          owner_label: string
+          owner_user_id: string
+          pickup_available: boolean
+          pickup_ready: boolean
+          status: string
+          verification_state: string
+        }[]
       }
       repas_admin_set_publication: {
         Args: { p_action: string; p_reason?: string; p_restaurant_id: string }

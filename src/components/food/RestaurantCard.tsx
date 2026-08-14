@@ -55,8 +55,10 @@ export function RestaurantCard({ restaurant: r, onClick }: RestaurantCardProps) 
           {r.cuisine ?? "Cuisine locale"}
         </p>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-2">
+          {/* R8 — this is a preparation estimate, never a delivery ETA. */}
           <span className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />~{r.prep_time_min} min
+            <Clock className="w-3 h-3" />
+            Préparation ~{r.prep_time_min} min
           </span>
           {r.district && (
             <span className="flex items-center gap-1 truncate">

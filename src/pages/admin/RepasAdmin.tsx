@@ -4,7 +4,13 @@ import { UtensilsCrossed, Store, CheckCircle2, ClipboardList } from "lucide-reac
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatGNF } from "@/lib/format";
-import { setRestaurantPublication, type RepasPublicationAction } from "@/lib/repas/discovery";
+import {
+  listAdminRestaurantOverview,
+  repasBlockedLabel,
+  setRestaurantPublication,
+  type RepasAdminRestaurantRow,
+  type RepasPublicationAction,
+} from "@/lib/repas/discovery";
 import { toast } from "sonner";
 
 type Order = {
@@ -16,17 +22,7 @@ type Order = {
   created_at: string;
 };
 
-type AdminRestaurant = {
-  id: string;
-  name: string;
-  district: string | null;
-  cuisine: string | null;
-  status: string;
-  verification_state: string;
-  is_open: boolean;
-  choppay_enabled: boolean;
-  menu_count: number;
-};
+type AdminRestaurant = RepasAdminRestaurantRow;
 
 const PUBLICATION_LABEL: Record<string, string> = {
   verified: "Publié",
@@ -44,37 +40,16 @@ export default function RepasAdmin() {
 
   const load = async () => {
     setLoading(true);
-    const [o, r, m] = await Promise.all([
+    const [o, overview] = await Promise.all([
       supabase
         .from("food_orders")
         .select("id,restaurant_id,subtotal_gnf,state,fulfillment,created_at")
         .order("created_at", { ascending: false })
         .limit(200),
-      supabase
-        .from("food_restaurants")
-        .select("id,name,district,cuisine,status,verification_state,is_open,choppay_enabled")
-        .order("created_at", { ascending: false })
-        .limit(500),
-      supabase.from("food_menu_items").select("restaurant_id").limit(5000),
+      listAdminRestaurantOverview().catch(() => [] as AdminRestaurant[]),
     ]);
     setOrders((o.data ?? []) as Order[]);
-    const counts: Record<string, number> = {};
-    ((m.data ?? []) as Array<{ restaurant_id: string }>).forEach((x) => {
-      counts[x.restaurant_id] = (counts[x.restaurant_id] ?? 0) + 1;
-    });
-    setRestaurants(
-      ((r.data ?? []) as Array<Record<string, unknown>>).map((x) => ({
-        id: x.id as string,
-        name: x.name as string,
-        district: (x.district ?? null) as string | null,
-        cuisine: (x.cuisine ?? null) as string | null,
-        status: x.status as string,
-        verification_state: x.verification_state as string,
-        is_open: !!x.is_open,
-        choppay_enabled: !!x.choppay_enabled,
-        menu_count: counts[x.id as string] ?? 0,
-      })),
-    );
+    setRestaurants(overview);
     setLoading(false);
   };
 
@@ -110,7 +85,7 @@ export default function RepasAdmin() {
 
   const stats = useMemo(() => ({
     restos: restaurants.length,
-    published: restaurants.filter((r) => r.verification_state === "verified" && r.status === "active").length,
+    published: restaurants.filter((r) => r.discoverable).length,
     orders: orders.length,
     inflight: orders.filter((o) => ["placed", "confirmed", "preparing", "ready"].includes(o.state)).length,
   }), [orders, restaurants]);
@@ -125,7 +100,7 @@ export default function RepasAdmin() {
     <ModulePage module="repas" title="Repas" subtitle="Restaurants et commandes réelles">
       <StatGrid items={[
         { label: "Restaurants", value: loading ? "…" : String(stats.restos), icon: Store },
-        { label: "Publiés", value: loading ? "…" : String(stats.published), icon: CheckCircle2 },
+        { label: "Visibles clients", value: loading ? "…" : String(stats.published), icon: CheckCircle2 },
         { label: "Commandes", value: loading ? "…" : String(stats.orders), icon: ClipboardList },
         { label: "En cours", value: loading ? "…" : String(stats.inflight), icon: UtensilsCrossed },
       ]} />
@@ -137,13 +112,53 @@ export default function RepasAdmin() {
           menu réel.
         </p>
         <DataTable
-          columns={["Restaurant", "Quartier", "Menu", "État", "Ouvert", "Actions"]}
+          columns={[
+            "Restaurant",
+            "Propriétaire",
+            "Boutique liée",
+            "Publication",
+            "Ouvert",
+            "Menu (dispo/total)",
+            "Capacités",
+            "GPS",
+            "Visible / Commandable",
+            "Actions",
+          ]}
           rows={loading ? [] : restaurants.map((r) => [
-            <span className="font-medium">{r.name}</span>,
-            r.district ?? "—",
-            `${r.menu_count} plat${r.menu_count > 1 ? "s" : ""}`,
-            <StatusBadge status={PUBLICATION_LABEL[r.verification_state] ?? r.verification_state} />,
+            <span className="font-medium">
+              {r.name}
+              {r.district ? <span className="block text-[11px] text-muted-foreground">{r.district}</span> : null}
+            </span>,
+            <span className="font-mono text-[11px]">{r.owner_label ?? "—"}</span>,
+            r.merchant_store_id ? (
+              <span className="text-[11px]">
+                {r.merchant_store_name ?? r.merchant_store_id.slice(0, 8)}
+                <span className="block text-muted-foreground">{r.merchant_store_status ?? "—"}</span>
+              </span>
+            ) : (
+              <span className="text-[11px] text-muted-foreground">Non liée</span>
+            ),
+            <span className="flex flex-col gap-1">
+              <StatusBadge status={PUBLICATION_LABEL[r.verification_state] ?? r.verification_state} />
+              <span className="text-[11px] text-muted-foreground">{r.status}</span>
+            </span>,
             r.is_open ? "Oui" : "Non",
+            `${r.menu_items_available}/${r.menu_items_total}`,
+            <span className="text-[11px] text-muted-foreground">
+              {[
+                r.delivery_available ? (r.delivery_ready ? "Livraison" : "Livraison (sans GPS)") : null,
+                r.pickup_available ? "Retrait" : null,
+                r.choppay_enabled ? "Chop Pay" : null,
+              ].filter(Boolean).join(" · ") || "Aucune"}
+            </span>,
+            r.has_coordinates ? "Oui" : "Non",
+            <span className="text-[11px]">
+              {r.discoverable ? "Visible" : "Non visible"} ·{" "}
+              {r.orderable_now ? "Commandable" : "Non commandable"}
+              {r.blocked_reason ? (
+                <span className="block text-muted-foreground">{repasBlockedLabel(r.blocked_reason)}</span>
+              ) : null}
+            </span>,
             <div className="flex gap-1.5">
               {r.verification_state === "verified" && r.status === "active" ? (
                 <>
@@ -165,8 +180,8 @@ export default function RepasAdmin() {
               ) : (
                 <>
                   <button
-                    disabled={busyId === r.id || r.menu_count === 0}
-                    title={r.menu_count === 0 ? "Aucun plat au menu" : undefined}
+                    disabled={busyId === r.id || r.menu_items_total === 0}
+                    title={r.menu_items_total === 0 ? "Aucun plat au menu" : undefined}
                     className="px-2 py-1 rounded-lg gradient-primary text-primary-foreground text-[11px] disabled:opacity-40"
                     onClick={() => act(r.id, "publish")}
                   >
