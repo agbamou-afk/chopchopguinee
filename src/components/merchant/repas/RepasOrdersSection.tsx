@@ -27,6 +27,8 @@ import {
   type FoodOrderState,
 } from "@/lib/repas/types";
 import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
+import { CustodyCodeCard } from "@/components/repas/CustodyCodeCard";
+import { MerchantPickupCollectionSheet } from "@/components/repas/MerchantPickupCollectionSheet";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,6 +55,20 @@ const STATE_TONE: Record<FoodOrderState, string> = {
   cancelled: "bg-destructive/15 text-destructive",
 };
 
+/**
+ * R6 — the two physical handover boundaries are custody-gated: they can no
+ * longer be advanced with a plain one-click transition.
+ *  - delivery @ ready  → the courier consumes the restaurant's code
+ *  - pickup   @ ready  → the restaurant consumes the customer's code
+ */
+function custodyBoundary(
+  state: FoodOrderState,
+  fulfillment?: string | null,
+): "courier_handoff" | "pickup_collection" | null {
+  if (state !== "ready") return null;
+  return fulfillment === "delivery" ? "courier_handoff" : "pickup_collection";
+}
+
 export function RepasOrdersSection({ restaurantId }: Props) {
   const { user } = useAuth();
   const [orders, setOrders] = useState<FoodOrder[]>([]);
@@ -60,6 +76,7 @@ export function RepasOrdersSection({ restaurantId }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [detail, setDetail] = useState<FoodOrderDetail | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [pickupCodeOrderId, setPickupCodeOrderId] = useState<string | null>(null);
 
   const reload = async () => {
     setLoading(true);
@@ -144,7 +161,22 @@ export function RepasOrdersSection({ restaurantId }: Props) {
         </p>
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </div>
-      {restaurantNextState(o.state, o.fulfillment) && (
+      {custodyBoundary(o.state, o.fulfillment) === "pickup_collection" ? (
+        <Button
+          size="sm"
+          className="mt-2 w-full"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPickupCodeOrderId(o.id);
+          }}
+        >
+          Client a récupéré
+        </Button>
+      ) : custodyBoundary(o.state, o.fulfillment) === "courier_handoff" ? (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Prêt — remettez au coursier avec votre code de remise.
+        </p>
+      ) : restaurantNextState(o.state, o.fulfillment) ? (
         <Button
           size="sm"
           className="mt-2 w-full"
@@ -156,7 +188,7 @@ export function RepasOrdersSection({ restaurantId }: Props) {
         >
           {restaurantNextLabel(o.state, o.fulfillment)}
         </Button>
-      )}
+      ) : null}
     </button>
   );
 
@@ -289,6 +321,15 @@ export function RepasOrdersSection({ restaurantId }: Props) {
                 </div>
               )}
 
+              {custodyBoundary(detail.state, detail.fulfillment) === "courier_handoff" && (
+                <CustodyCodeCard
+                  orderId={detail.id}
+                  kind="restaurant_handoff"
+                  title="Code de remise coursier"
+                  instruction="Communiquez ce code au coursier uniquement au moment où vous lui remettez physiquement la commande."
+                />
+              )}
+
               {detail.notes && (
                 <div className="rounded-xl bg-muted/40 border border-border/50 p-3">
                   <p className="text-xs font-semibold text-muted-foreground uppercase">Note</p>
@@ -321,7 +362,12 @@ export function RepasOrdersSection({ restaurantId }: Props) {
                 )
               )}
 
-              {restaurantNextState(detail.state, detail.fulfillment) && (
+              {custodyBoundary(detail.state, detail.fulfillment) === "pickup_collection" ? (
+                <Button className="w-full" onClick={() => setPickupCodeOrderId(detail.id)}>
+                  Client a récupéré
+                </Button>
+              ) : custodyBoundary(detail.state, detail.fulfillment) === "courier_handoff" ? null : (
+                restaurantNextState(detail.state, detail.fulfillment) && (
                 <Button
                   className="w-full"
                   disabled={busy === detail.id}
@@ -329,11 +375,22 @@ export function RepasOrdersSection({ restaurantId }: Props) {
                 >
                   {restaurantNextLabel(detail.state, detail.fulfillment)}
                 </Button>
+                )
               )}
             </div>
           )}
         </SheetContent>
       </Sheet>
+
+      <MerchantPickupCollectionSheet
+        orderId={pickupCodeOrderId ?? ""}
+        open={!!pickupCodeOrderId}
+        onOpenChange={(o) => { if (!o) setPickupCodeOrderId(null); }}
+        onConfirmed={() => {
+          setPickupCodeOrderId(null);
+          void reload();
+        }}
+      />
     </>
   );
 }

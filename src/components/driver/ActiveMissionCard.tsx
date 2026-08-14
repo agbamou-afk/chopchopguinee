@@ -37,6 +37,7 @@ import { RouteEstimateChip } from "@/components/maps/RouteEstimateChip";
 import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
 import { PackageHandoffPanel } from "./PackageHandoffPanel";
 import { useAuth } from "@/contexts/AuthContext";
+import { RepasCustodySheet, type RepasCustodyPhase } from "@/components/repas/RepasCustodySheet";
 
 /** Extract a phone number from payload_summary (we embed ☎ +224... in Repas). */
 function extractPhone(s: string | null): string | null {
@@ -56,6 +57,7 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
   const [issueOpen, setIssueOpen] = useState(false);
   const [proofTaken, setProofTaken] = useState(false);
   const [trustKind, setTrustKind] = useState<"pickup" | "delivery" | null>(null);
+  const [custodyPhase, setCustodyPhase] = useState<RepasCustodyPhase | null>(null);
   const identity = MISSION_IDENTITY[mission.type];
   const pipeline = MISSION_PIPELINES[mission.type];
   const Icon = identity.icon;
@@ -67,8 +69,10 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
   // Marketplace deliveries use a dedicated trust handshake (photo+code RPC)
   // instead of the lightweight `proofTaken` toggle.
   const isMarketplace = mission.type === "marketplace_delivery";
+  // Repas deliveries use the R6 custody handshake (real photo + one-time code).
+  const isRepas = mission.type === "food_delivery";
   const proofBlocks =
-    !isMarketplace && !!proof && proof.requirement === "required" && !proofTaken;
+    !isMarketplace && !isRepas && !!proof && proof.requirement === "required" && !proofTaken;
   const dirLabel = useMemo(() => directionsLabel(mission), [mission]);
 
   // ───────── Operational mini-map ─────────
@@ -148,6 +152,14 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
     }
     if (isMarketplace && mission.state === "arrived_dropoff") {
       setTrustKind("delivery");
+      return;
+    }
+    if (isRepas && mission.state === "arrived_pickup") {
+      setCustodyPhase("pickup");
+      return;
+    }
+    if (isRepas && mission.state === "arrived_dropoff") {
+      setCustodyPhase("delivery");
       return;
     }
     if (proofBlocks) {
@@ -338,7 +350,7 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
         </Button>
       )}
 
-      {!terminal && proof && !isMarketplace && (
+      {!terminal && proof && !isMarketplace && !isRepas && (
         <button
           type="button"
           onClick={() => {
@@ -435,6 +447,19 @@ export function ActiveMissionCard({ mission, onChange }: ActiveMissionCardProps)
           onDone={() => {
             // Realtime listener in MissionsPanel will refresh; clear local proof toggle.
             setProofTaken(false);
+          }}
+        />
+      )}
+
+      {isRepas && custodyPhase && (
+        <RepasCustodySheet
+          missionId={mission.id}
+          phase={custodyPhase}
+          open={!!custodyPhase}
+          onOpenChange={(o) => { if (!o) setCustodyPhase(null); }}
+          onConfirmed={() => {
+            setCustodyPhase(null);
+            onChange?.(mission);
           }}
         />
       )}
