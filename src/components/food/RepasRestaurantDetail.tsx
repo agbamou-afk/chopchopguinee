@@ -116,6 +116,17 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   /** Per-channel truth: never offer a channel the server would refuse. */
   const canPickup = resolution === "found" && (detail?.orderable_pickup ?? false);
   const canDeliver = resolution === "found" && (detail?.orderable_delivery ?? false);
+
+  // Never leave the customer on a channel the server cannot honour.
+  useEffect(() => {
+    if (resolution !== "found") return;
+    if (fulfillment === "delivery" && !canDeliver && canPickup) {
+      setFulfillment("pickup");
+      setPaymentMethod("choppay");
+    } else if (fulfillment === "pickup" && !canPickup && canDeliver) {
+      setFulfillment("delivery");
+    }
+  }, [resolution, canDeliver, canPickup, fulfillment]);
   const blockedLabel =
     resolution === "unavailable"
       ? "Ce restaurant n'est plus disponible."
