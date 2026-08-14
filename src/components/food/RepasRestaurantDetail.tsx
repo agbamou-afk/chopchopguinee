@@ -153,6 +153,12 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   }, [stage, cartKey, fulfillment, restaurant.id, isLoggedIn, itemCount, deliveryCoords]);
 
   const handlePlaceOrder = async () => {
+    if (!quote || !quote.deliveryEligible) {
+      toast.error(
+        quoteError ?? "Prix indisponible : impossible de valider cette commande.",
+      );
+      return;
+    }
     if (fulfillment === "pickup" && paymentMethod !== "choppay") {
       toast.error("Le retrait sur place se règle avec Chop Pay.");
       return;
