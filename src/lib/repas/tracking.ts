@@ -57,6 +57,22 @@ export interface RepasReceiptLine {
   line_total_gnf: number;
 }
 
+/**
+ * Canonical payment truth derived server-side from the committed tender
+ * runtime (Chop Pay / cash). The legacy `food_orders.payment_status` column is
+ * never authoritative when it disagrees with the engine.
+ */
+export type RepasPaymentState =
+  | "authorized"
+  | "paid"
+  | "released"
+  | "due"
+  | "collected"
+  | "cancelled"
+  | "disputed"
+  | "dispute_resolved"
+  | "unknown";
+
 export interface RepasReceipt {
   order_id: string;
   viewer_role: RepasViewerRole;
