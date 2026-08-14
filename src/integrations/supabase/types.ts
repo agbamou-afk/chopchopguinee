@@ -6835,8 +6835,8 @@ export type Database = {
         Row: {
           attempts: number
           code_hash: string
-          code_plain: string
           code_salt: string
+          code_secret_id: string | null
           consumed_at: string | null
           consumed_by: string | null
           created_at: string
@@ -6851,8 +6851,8 @@ export type Database = {
         Insert: {
           attempts?: number
           code_hash: string
-          code_plain: string
           code_salt: string
+          code_secret_id?: string | null
           consumed_at?: string | null
           consumed_by?: string | null
           created_at?: string
@@ -6867,8 +6867,8 @@ export type Database = {
         Update: {
           attempts?: number
           code_hash?: string
-          code_plain?: string
           code_salt?: string
+          code_secret_id?: string | null
           consumed_at?: string | null
           consumed_by?: string | null
           created_at?: string
@@ -8640,6 +8640,10 @@ export type Database = {
         }
         Returns: Json
       }
+      _repas_custody_dispute_blocked: {
+        Args: { p_order_id: string }
+        Returns: boolean
+      }
       _repas_custody_guard: {
         Args: { _m: Database["public"]["Tables"]["missions"]["Row"] }
         Returns: undefined
@@ -8651,6 +8655,19 @@ export type Database = {
       _repas_custody_issue: {
         Args: { p_holder: string; p_kind: string; p_order_id: string }
         Returns: string
+      }
+      _repas_custody_purge_secret: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      _repas_custody_verify_photo: {
+        Args: {
+          p_courier: string
+          p_mission_id: string
+          p_path: string
+          p_phase: string
+        }
+        Returns: undefined
       }
       _ride_expire_unfulfilled_internal: {
         Args: { p_ride_id: string }
