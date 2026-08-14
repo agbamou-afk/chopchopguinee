@@ -8561,8 +8561,10 @@ export type Database = {
       _qa_node3_repas_r7_semantics: { Args: never; Returns: Json }
       _qa_node3_repas_r7_tracking_receipt: { Args: never; Returns: Json }
       _qa_node3_repas_r7_tracking_receipt_fxcore: { Args: never; Returns: Json }
+      _qa_node3_repas_r8_channel: { Args: never; Returns: Json }
       _qa_node3_repas_r8_core: { Args: never; Returns: Json }
       _qa_node3_repas_r8_discovery: { Args: never; Returns: Json }
+      _qa_node3_repas_r8_discovery_truth: { Args: never; Returns: Json }
       _qa_node3_repas_r8_extra: { Args: never; Returns: Json }
       _qa_r6_proof: {
         Args: {
