@@ -113,6 +113,20 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   /** Every capability below is server-derived, never inferred client-side. */
   const view = detail ?? restaurant;
   const orderableNow = resolution === "found" && (detail?.orderable_now ?? false);
+  /** Per-channel truth: never offer a channel the server would refuse. */
+  const canPickup = resolution === "found" && (detail?.orderable_pickup ?? false);
+  const canDeliver = resolution === "found" && (detail?.orderable_delivery ?? false);
+
+  // Never leave the customer on a channel the server cannot honour.
+  useEffect(() => {
+    if (resolution !== "found") return;
+    if (fulfillment === "delivery" && !canDeliver && canPickup) {
+      setFulfillment("pickup");
+      setPaymentMethod("choppay");
+    } else if (fulfillment === "pickup" && !canPickup && canDeliver) {
+      setFulfillment("delivery");
+    }
+  }, [resolution, canDeliver, canPickup, fulfillment]);
   const blockedLabel =
     resolution === "unavailable"
       ? "Ce restaurant n'est plus disponible."
@@ -538,7 +552,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         <p className="text-xs font-medium text-muted-foreground mb-1.5">Mode</p>
                         <div className="grid grid-cols-2 gap-2">
                           <button
-                            disabled={!view.pickup_ready}
+                            disabled={!canPickup}
                             onClick={() => {
                               setFulfillment("pickup");
                               setPaymentMethod("choppay");
@@ -548,20 +562,20 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                               fulfillment === "pickup"
                                 ? "bg-primary/10 border-primary text-primary"
                                 : "bg-card border-border text-muted-foreground",
-                              !view.pickup_ready && "opacity-40",
+                              !canPickup && "opacity-40",
                             )}
                           >
                             <Package className="w-4 h-4 inline mr-1.5" /> Retrait
                           </button>
                           <button
-                            disabled={!view.delivery_ready}
+                            disabled={!canDeliver}
                             onClick={() => setFulfillment("delivery")}
                             className={cn(
                               "h-12 rounded-xl text-sm font-medium border transition",
                               fulfillment === "delivery"
                                 ? "bg-primary/10 border-primary text-primary"
                                 : "bg-card border-border text-muted-foreground",
-                              !view.delivery_ready && "opacity-40",
+                              !canDeliver && "opacity-40",
                             )}
                           >
                             <Truck className="w-4 h-4 inline mr-1.5" /> Livraison
@@ -569,7 +583,9 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         </div>
                         {fulfillment === "delivery" && (
                           <p className="text-[11px] text-muted-foreground mt-1.5">
-                            Livraison à confirmer avec le restaurant.
+                            {detail?.delivery_destination_check_required
+                              ? "Éligibilité livraison vérifiée à l’adresse indiquée."
+                              : "Livraison à confirmer avec le restaurant."}
                           </p>
                         )}
                         {fulfillment === "pickup" && (

@@ -68,13 +68,14 @@ export function RestaurantCard({ restaurant: r, onClick }: RestaurantCardProps) 
           )}
         </div>
         <div className="flex items-center gap-1.5 mt-2 text-[10px] text-muted-foreground">
-          {r.delivery_ready && (
+          {r.orderable_delivery && (
             <span className="inline-flex items-center gap-1">
               <Truck className="w-3 h-3" />
-              Livraison
+              {/* Capability only — the address is verified at checkout. */}
+              {r.delivery_destination_check_required ? "Livraison selon adresse" : "Livraison"}
             </span>
           )}
-          {r.pickup_ready && (
+          {r.orderable_pickup && (
             <span className="inline-flex items-center gap-1">
               <Package className="w-3 h-3" />
               Retrait
