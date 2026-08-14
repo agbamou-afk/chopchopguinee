@@ -63,6 +63,10 @@ const ERROR_FR: Record<string, string> = {
   ITEM_WRONG_RESTAURANT: "Un article ne provient pas de ce restaurant.",
   ITEM_UNAVAILABLE: "Un article n'est plus disponible.",
   INVALID_QUANTITY: "Quantité invalide.",
+  PICKUP_NOT_YET_SUPPORTED: "Le retrait sur place n'est pas encore disponible. Choisissez la livraison.",
+  CASH_ORDER_FUNDING_DISABLED: "Le paiement en espèces n'est pas encore activé.",
+  CUSTOMER_CASH_RESTRICTED_BY_DEBT:
+    "Des frais d'annulation restent dus : réglez-les avant une nouvelle commande en espèces.",
 };
 
 export function translateRepasError(msg: string): string {

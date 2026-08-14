@@ -41,9 +41,8 @@ function TrustChip({ icon: Icon, label, tone = "muted" }: { icon: typeof ShieldC
 export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [menu, setMenu] = useState<FoodMenuItem[] | null>(null);
   const [stage, setStage] = useState<Stage>("menu");
-  const [fulfillment, setFulfillment] = useState<FoodFulfillment>(
-    restaurant.delivery_available ? "delivery" : "pickup",
-  );
+  // Retrait sur place n'est pas encore pris en charge côté serveur (fail-closed).
+  const [fulfillment, setFulfillment] = useState<FoodFulfillment>("delivery");
   const [paymentMethod, setPaymentMethod] = useState<RepasTender>("cash");
   /**
    * Sticky idempotency key: created once per cart commitment attempt and
@@ -427,17 +426,18 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         <p className="text-xs font-medium text-muted-foreground mb-1.5">Mode</p>
                         <div className="grid grid-cols-2 gap-2">
                           <button
-                            disabled={!restaurant.pickup_available}
+                            disabled
+                            title="Retrait sur place bientôt disponible"
                             onClick={() => setFulfillment("pickup")}
                             className={cn(
                               "h-12 rounded-xl text-sm font-medium border transition",
                               fulfillment === "pickup"
                                 ? "bg-primary/10 border-primary text-primary"
                                 : "bg-card border-border text-muted-foreground",
-                              !restaurant.pickup_available && "opacity-40",
+                              "opacity-40",
                             )}
                           >
-                            <Package className="w-4 h-4 inline mr-1.5" /> Retrait
+                            <Package className="w-4 h-4 inline mr-1.5" /> Retrait · bientôt
                           </button>
                           <button
                             disabled={!restaurant.delivery_available}

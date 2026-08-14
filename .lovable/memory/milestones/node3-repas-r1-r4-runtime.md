@@ -33,10 +33,22 @@ type: feature
   completion RPC. Slice 1–5 money primitives stay closed to app roles.
 
 ## Certification
-`public._qa_node3_repas_r1_r4()` — 77 assertions, **77/77 PASS**, fully
-rolled back (master wallet, feature flags, orders, restaurants, cash and
-Chop Pay runtimes all verified residue-free). Allowlisted in the
-`qa-node-harness` edge function; service-role only.
+`public._qa_node3_repas_r1_r4()` — expanded to **147 assertions, 147/147
+PASS** after the R1–R4 micro-closeout (MC1 full idempotency fingerprint
+incl. coordinates/notes, MC2 cash-rail fail-closed, MC3 pickup fail-closed,
+MC4 pre-dispatch cash cancellation through Slice 8 + unpaid-debt cash block,
+MC5 full positive Chop Pay lifecycle with exact reconciliation, MC6 contract
+expansion). Fully rolled back (master wallet, feature flags, orders,
+restaurants, cash / Chop Pay runtimes and cancellation debts residue-free).
+Allowlisted in the `qa-node-harness` edge function; service-role only.
+
+Micro-closeout regression sweep: Node 0 Course 34/34, Node 1 Bonbonna full
+78/78, Bonbonna matrix 39/39, Node 2 Taxi 97/97, Slice 13 parts 1–3 104/104,
+Vitest 28/28, typecheck clean.
+
+Reconciliation proven end-to-end: customer out 166 500 = merchant 150 000 +
+driver 15 000 + platform 1 500. Pre-dispatch cash cancellation fee = 8 250
+(5% of 165 000).
 
 Regression sweep re-run after the last edit:
 Node 0 Course 34/34, Node 1 Bonbonna full 78/78, Bonbonna matrix 39/39,
