@@ -12674,6 +12674,8 @@ export type Database = {
           cover_url: string
           cuisine: string
           delivery_available: boolean
+          delivery_blocked_reason: string
+          delivery_destination_check_required: boolean
           delivery_ready: boolean
           district: string
           has_coordinates: boolean
@@ -12682,8 +12684,11 @@ export type Database = {
           menu_items_available: number
           menu_items_total: number
           name: string
+          orderable_delivery: boolean
           orderable_now: boolean
+          orderable_pickup: boolean
           pickup_available: boolean
+          pickup_blocked_reason: string
           pickup_ready: boolean
           prep_time_min: number
           verified: boolean
