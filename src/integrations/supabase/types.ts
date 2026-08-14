@@ -814,6 +814,7 @@ export type Database = {
           cancelled_at: string | null
           collateral_gnf: number
           completed_at: string | null
+          courier_payout_gnf: number | null
           created_at: string
           customer_refunded_gnf: number
           customer_user_id: string
@@ -853,6 +854,7 @@ export type Database = {
           cancelled_at?: string | null
           collateral_gnf?: number
           completed_at?: string | null
+          courier_payout_gnf?: number | null
           created_at?: string
           customer_refunded_gnf?: number
           customer_user_id: string
@@ -892,6 +894,7 @@ export type Database = {
           cancelled_at?: string | null
           collateral_gnf?: number
           completed_at?: string | null
+          courier_payout_gnf?: number | null
           created_at?: string
           customer_refunded_gnf?: number
           customer_user_id?: string
@@ -2849,8 +2852,11 @@ export type Database = {
           collateral_mode: string
           collateral_pct_bps: number
           commission_bps: number
+          courier_payout_gnf: number | null
           created_at: string
           created_by: string | null
+          delivery_flat_fee_gnf: number | null
+          delivery_max_distance_km: number | null
           effective_from: string
           enabled: boolean
           fee_basis: string
@@ -2860,6 +2866,7 @@ export type Database = {
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
+          pickup_platform_fee_bps: number | null
           require_collateral_before_offer: boolean
           transaction_fee_bps: number
           updated_at: string
@@ -2879,8 +2886,11 @@ export type Database = {
           collateral_mode?: string
           collateral_pct_bps?: number
           commission_bps?: number
+          courier_payout_gnf?: number | null
           created_at?: string
           created_by?: string | null
+          delivery_flat_fee_gnf?: number | null
+          delivery_max_distance_km?: number | null
           effective_from?: string
           enabled?: boolean
           fee_basis?: string
@@ -2890,6 +2900,7 @@ export type Database = {
           min_driver_balance_gnf?: number
           mission_type: string
           note?: string | null
+          pickup_platform_fee_bps?: number | null
           require_collateral_before_offer?: boolean
           transaction_fee_bps?: number
           updated_at?: string
@@ -2909,8 +2920,11 @@ export type Database = {
           collateral_mode?: string
           collateral_pct_bps?: number
           commission_bps?: number
+          courier_payout_gnf?: number | null
           created_at?: string
           created_by?: string | null
+          delivery_flat_fee_gnf?: number | null
+          delivery_max_distance_km?: number | null
           effective_from?: string
           enabled?: boolean
           fee_basis?: string
@@ -2920,6 +2934,7 @@ export type Database = {
           min_driver_balance_gnf?: number
           mission_type?: string
           note?: string | null
+          pickup_platform_fee_bps?: number | null
           require_collateral_before_offer?: boolean
           transaction_fee_bps?: number
           updated_at?: string
@@ -3118,19 +3133,29 @@ export type Database = {
       }
       food_orders: {
         Row: {
+          base_delivery_fee_gnf: number | null
           captured_intent_id: string | null
           client_request_id: string | null
           completed_at: string | null
+          courier_payout_gnf: number | null
           created_at: string
           delivery_address: string | null
+          delivery_distance_km: number | null
+          delivery_fee_gnf: number | null
           delivery_lat: number | null
           delivery_lng: number | null
           fulfillment: Database["public"]["Enums"]["food_fulfillment"]
           id: string
           notes: string | null
+          order_total_gnf: number | null
           paid_at: string | null
           payment_method: Database["public"]["Enums"]["food_payment_method"]
           payment_status: string
+          platform_fee_gnf: number | null
+          pricing_policy_id: string | null
+          pricing_snapshot: Json | null
+          promo_discount_gnf: number | null
+          promotion_id: string | null
           request_fingerprint: string | null
           restaurant_id: string
           settlement_state: string
@@ -3141,19 +3166,29 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          base_delivery_fee_gnf?: number | null
           captured_intent_id?: string | null
           client_request_id?: string | null
           completed_at?: string | null
+          courier_payout_gnf?: number | null
           created_at?: string
           delivery_address?: string | null
+          delivery_distance_km?: number | null
+          delivery_fee_gnf?: number | null
           delivery_lat?: number | null
           delivery_lng?: number | null
           fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
           id?: string
           notes?: string | null
+          order_total_gnf?: number | null
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["food_payment_method"]
           payment_status?: string
+          platform_fee_gnf?: number | null
+          pricing_policy_id?: string | null
+          pricing_snapshot?: Json | null
+          promo_discount_gnf?: number | null
+          promotion_id?: string | null
           request_fingerprint?: string | null
           restaurant_id: string
           settlement_state?: string
@@ -3164,19 +3199,29 @@ export type Database = {
           user_id: string
         }
         Update: {
+          base_delivery_fee_gnf?: number | null
           captured_intent_id?: string | null
           client_request_id?: string | null
           completed_at?: string | null
+          courier_payout_gnf?: number | null
           created_at?: string
           delivery_address?: string | null
+          delivery_distance_km?: number | null
+          delivery_fee_gnf?: number | null
           delivery_lat?: number | null
           delivery_lng?: number | null
           fulfillment?: Database["public"]["Enums"]["food_fulfillment"]
           id?: string
           notes?: string | null
+          order_total_gnf?: number | null
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["food_payment_method"]
           payment_status?: string
+          platform_fee_gnf?: number | null
+          pricing_policy_id?: string | null
+          pricing_snapshot?: Json | null
+          promo_discount_gnf?: number | null
+          promotion_id?: string | null
           request_fingerprint?: string | null
           restaurant_id?: string
           settlement_state?: string
@@ -3187,6 +3232,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "food_orders_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "repas_pricing_promotions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "food_orders_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -6779,6 +6831,57 @@ export type Database = {
         }
         Relationships: []
       }
+      repas_pricing_promotions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          delivery_discount_gnf: number | null
+          delivery_fee_override_gnf: number | null
+          disabled_at: string | null
+          disabled_by: string | null
+          enabled: boolean
+          ends_at: string
+          fulfillment_scope: string
+          id: string
+          name: string
+          reason: string
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          delivery_discount_gnf?: number | null
+          delivery_fee_override_gnf?: number | null
+          disabled_at?: string | null
+          disabled_by?: string | null
+          enabled?: boolean
+          ends_at: string
+          fulfillment_scope?: string
+          id?: string
+          name: string
+          reason: string
+          starts_at: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          delivery_discount_gnf?: number | null
+          delivery_fee_override_gnf?: number | null
+          disabled_at?: string | null
+          disabled_by?: string | null
+          enabled?: boolean
+          ends_at?: string
+          fulfillment_scope?: string
+          id?: string
+          name?: string
+          reason?: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ride_offers: {
         Row: {
           decline_reason: string | null
@@ -7902,6 +8005,16 @@ export type Database = {
         }
         Returns: Json
       }
+      _chop_pay_courier_adjust_internal: {
+        Args: {
+          p_actor: string
+          p_delta: number
+          p_driver: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       _chop_pay_customer_capture_internal: {
         Args: {
           p_actor?: string
@@ -8319,6 +8432,15 @@ export type Database = {
       _qa_node2_taxi_full: { Args: never; Returns: Json }
       _qa_node3_repas_pickup: { Args: never; Returns: Json }
       _qa_node3_repas_r1_r4: { Args: never; Returns: Json }
+      _qa_node3_repas_r5: {
+        Args: never
+        Returns: {
+          detail: string
+          name: string
+          ok: boolean
+          section: string
+        }[]
+      }
       _qa_s13_admin: { Args: { p_id: string }; Returns: undefined }
       _qa_s13_driver: {
         Args: { p_bal: number; p_tag: string; p_uid: string }
@@ -8538,6 +8660,10 @@ export type Database = {
       admin_create_campaign: { Args: { payload: Json }; Returns: string }
       admin_create_contract: { Args: { payload: Json }; Returns: string }
       admin_create_driver_group: { Args: { payload: Json }; Returns: string }
+      admin_disable_repas_promotion: {
+        Args: { p_id: string; p_reason: string }
+        Returns: Json
+      }
       admin_driver_group_stats: {
         Args: { p_from?: string; p_group?: string; p_to?: string }
         Returns: {
@@ -9176,6 +9302,9 @@ export type Database = {
           p_collateral_mode?: string
           p_collateral_pct_bps?: number
           p_commission_bps?: number
+          p_courier_payout_gnf?: number
+          p_delivery_flat_fee_gnf?: number
+          p_delivery_max_distance_km?: number
           p_effective_from?: string
           p_fee_basis?: string
           p_fixed_commission_gnf?: number
@@ -9183,45 +9312,11 @@ export type Database = {
           p_min_driver_balance_gnf?: number
           p_mission_type: string
           p_note?: string
+          p_pickup_platform_fee_bps?: number
           p_require_collateral_before_offer?: boolean
           p_transaction_fee_bps?: number
         }
-        Returns: {
-          cancel_after_dispatch_bps: number
-          cancel_basis: string
-          cancel_before_dispatch_bps: number
-          cash_funding_max_gnf: number | null
-          cash_funding_mode: string
-          cash_funding_pct_bps: number
-          claims_exposure_max_gnf: number | null
-          collateral_basis: string
-          collateral_fixed_gnf: number
-          collateral_max_gnf: number | null
-          collateral_min_gnf: number
-          collateral_mode: string
-          collateral_pct_bps: number
-          commission_bps: number
-          created_at: string
-          created_by: string | null
-          effective_from: string
-          enabled: boolean
-          fee_basis: string
-          fixed_commission_gnf: number
-          id: string
-          max_declared_value_gnf: number | null
-          min_driver_balance_gnf: number
-          mission_type: string
-          note: string | null
-          require_collateral_before_offer: boolean
-          transaction_fee_bps: number
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "finance_policies"
-          isOneToOne: true
-          isSetofReturn: false
-        }
+        Returns: Json
       }
       admin_set_merchant_location_status: {
         Args: { p_note?: string; p_status: string; p_store_id: string }
@@ -9331,6 +9426,18 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_set_repas_promotion: {
+        Args: {
+          p_delivery_discount_gnf?: number
+          p_delivery_fee_override_gnf?: number
+          p_ends_at: string
+          p_fulfillment_scope?: string
+          p_name: string
+          p_reason: string
+          p_starts_at: string
+        }
+        Returns: Json
       }
       admin_set_starter_credit_policy: {
         Args: {
@@ -10585,8 +10692,11 @@ export type Database = {
           collateral_mode: string
           collateral_pct_bps: number
           commission_bps: number
+          courier_payout_gnf: number | null
           created_at: string
           created_by: string | null
+          delivery_flat_fee_gnf: number | null
+          delivery_max_distance_km: number | null
           effective_from: string
           enabled: boolean
           fee_basis: string
@@ -10596,6 +10706,7 @@ export type Database = {
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
+          pickup_platform_fee_bps: number | null
           require_collateral_before_offer: boolean
           transaction_fee_bps: number
           updated_at: string
@@ -10624,8 +10735,11 @@ export type Database = {
           collateral_mode: string
           collateral_pct_bps: number
           commission_bps: number
+          courier_payout_gnf: number | null
           created_at: string
           created_by: string | null
+          delivery_flat_fee_gnf: number | null
+          delivery_max_distance_km: number | null
           effective_from: string
           enabled: boolean
           fee_basis: string
@@ -10635,6 +10749,7 @@ export type Database = {
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
+          pickup_platform_fee_bps: number | null
           require_collateral_before_offer: boolean
           transaction_fee_bps: number
           updated_at: string
@@ -10663,8 +10778,11 @@ export type Database = {
           collateral_mode: string
           collateral_pct_bps: number
           commission_bps: number
+          courier_payout_gnf: number | null
           created_at: string
           created_by: string | null
+          delivery_flat_fee_gnf: number | null
+          delivery_max_distance_km: number | null
           effective_from: string
           enabled: boolean
           fee_basis: string
@@ -10674,6 +10792,7 @@ export type Database = {
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
+          pickup_platform_fee_bps: number | null
           require_collateral_before_offer: boolean
           transaction_fee_bps: number
           updated_at: string
@@ -12250,6 +12369,10 @@ export type Database = {
         Args: { p_order_id: string; p_reason?: string }
         Returns: Json
       }
+      repas_delivery_distance_km: {
+        Args: { p_lat: number; p_lng: number; p_restaurant_id: string }
+        Returns: number
+      }
       repas_delivery_earning_gnf: { Args: never; Returns: number }
       repas_merchant_transition: {
         Args: { p_action: string; p_order_id: string; p_reason?: string }
@@ -12269,8 +12392,27 @@ export type Database = {
         }
         Returns: Json
       }
+      repas_platform_fee_gnf: {
+        Args: {
+          p_bps: number
+          p_delivery_fee_gnf: number
+          p_fee_basis: string
+          p_subtotal_gnf: number
+        }
+        Returns: number
+      }
+      repas_pricing_effective: {
+        Args: { p_at?: string; p_fulfillment?: string }
+        Returns: Json
+      }
       repas_quote_preview: {
-        Args: { p_fulfillment: string; p_items: Json; p_restaurant_id: string }
+        Args: {
+          p_delivery_lat?: number
+          p_delivery_lng?: number
+          p_fulfillment: string
+          p_items: Json
+          p_restaurant_id: string
+        }
         Returns: Json
       }
       request_account_deletion: { Args: { _reason?: string }; Returns: Json }
