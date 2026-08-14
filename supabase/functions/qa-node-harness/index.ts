@@ -26,6 +26,7 @@ const ALLOWED = new Set([
   "_qa_s13_run5",
   "_qa_s13_run6",
   "_qa_s13_run7",
+  "_qa_node3_repas_r1_r4",
 ]);
 
 function json(body: unknown, status = 200) {

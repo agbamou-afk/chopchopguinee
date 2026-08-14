@@ -1,203 +1,115 @@
+/**
+ * Node 3 / R1–R3 — Repas order client bindings.
+ *
+ * The production checkout no longer writes to `food_orders` / `food_order_items`
+ * directly. The single canonical entry point is `repas_order_create`, which:
+ *  - binds the customer from auth.uid()
+ *  - re-prices every line from `food_menu_items` (client prices are ignored)
+ *  - validates restaurant/item orderability
+ *  - creates the canonical `food_delivery` mission with the server-owned
+ *    courier earning snapshot
+ *  - authorizes Chop Pay through the locked Slice 5 engine in the same
+ *    transaction
+ *  - is idempotent on (customer, client_request_id)
+ *
+ * The legacy `choppay_create_payment_intent` branch has been removed.
+ */
 import { supabase } from "@/integrations/supabase/client";
 import type { FoodFulfillment, FoodOrder, FoodPaymentMethod } from "./types";
-import { createMission } from "@/lib/missions/missions";
+
+/** Canonical launch tenders. `wallet` is deprecated and rejected server-side. */
+export type RepasTender = "cash" | "choppay";
 
 export interface CreateOrderInput {
   restaurantId: string;
   fulfillment: FoodFulfillment;
-  paymentMethod: FoodPaymentMethod;
+  paymentMethod: RepasTender;
+  /** Sticky retry key — same value must be reused across retries. */
+  clientRequestId: string;
   notes?: string;
   deliveryAddress?: string;
   deliveryLat?: number;
   deliveryLng?: number;
-  items: { menuItemId: string; name: string; unitPriceGnf: number; qty: number }[];
+  items: { menuItemId: string; qty: number }[];
 }
 
 export interface CreateOrderResult {
-  order: FoodOrder;
+  orderId: string;
+  /** Server-authoritative subtotal. Never derived from the browser. */
+  subtotalGnf: number;
+  state: string;
+  paymentMethod: RepasTender;
   missionId: string | null;
-  /** True when a delivery was requested but no mission could be dispatched. */
   deliveryPending: boolean;
-  /** CHOPPay payment intent id when wallet was used. */
-  paymentIntentId?: string | null;
-  /** Final payment_status after authorization attempt. */
-  paymentStatus?: string;
+  replay: boolean;
 }
 
-const REPAS_DEFAULT_COURIER_EARNING_GNF = 15000;
+const ERROR_FR: Record<string, string> = {
+  NOT_AUTHENTICATED: "Connectez-vous pour commander.",
+  CLIENT_REQUEST_ID_REQUIRED: "Requête invalide.",
+  UNSUPPORTED_TENDER: "Ce mode de paiement n'est plus pris en charge.",
+  INVALID_FULFILLMENT: "Mode de retrait invalide.",
+  EMPTY_CART: "Votre panier est vide.",
+  CART_TOO_LARGE: "Panier trop volumineux.",
+  IDEMPOTENCY_CONFLICT: "Cette commande a déjà été envoyée avec un contenu différent.",
+  RESTAURANT_NOT_FOUND: "Restaurant introuvable.",
+  RESTAURANT_NOT_ORDERABLE: "Ce restaurant n'accepte pas encore de commandes.",
+  RESTAURANT_CLOSED: "Ce restaurant est fermé pour le moment.",
+  DELIVERY_NOT_AVAILABLE: "Ce restaurant ne fait pas de livraison.",
+  PICKUP_NOT_AVAILABLE: "Ce restaurant ne fait pas de retrait sur place.",
+  DELIVERY_LOCATION_REQUIRED: "Indiquez une adresse de livraison.",
+  CHOP_PAY_CHECKOUT_DISABLED: "Le paiement Chop Pay n'est pas encore activé.",
+  MENU_ITEM_NOT_FOUND: "Un article n'est plus au menu.",
+  ITEM_WRONG_RESTAURANT: "Un article ne provient pas de ce restaurant.",
+  ITEM_UNAVAILABLE: "Un article n'est plus disponible.",
+  INVALID_QUANTITY: "Quantité invalide.",
+};
+
+export function translateRepasError(msg: string): string {
+  const raw = (msg || "").toUpperCase();
+  for (const [k, v] of Object.entries(ERROR_FR)) if (raw.includes(k)) return v;
+  return msg || "Impossible de passer la commande.";
+}
 
 export async function createFoodOrder(input: CreateOrderInput): Promise<CreateOrderResult> {
-  const { data: auth } = await supabase.auth.getUser();
-  const uid = auth.user?.id;
-  if (!uid) throw new Error("not_authenticated");
+  const { data, error } = await (supabase as any).rpc("repas_order_create", {
+    p_restaurant_id: input.restaurantId,
+    p_items: input.items.map((i) => ({ menu_item_id: i.menuItemId, qty: i.qty })),
+    p_fulfillment: input.fulfillment,
+    p_payment_method: input.paymentMethod,
+    p_client_request_id: input.clientRequestId,
+    p_delivery_address: input.deliveryAddress ?? null,
+    p_delivery_lat: input.deliveryLat ?? null,
+    p_delivery_lng: input.deliveryLng ?? null,
+    p_notes: input.notes ?? null,
+  });
+  if (error) throw new Error(translateRepasError(error.message));
 
-  const subtotal = input.items.reduce((s, i) => s + i.unitPriceGnf * i.qty, 0);
+  const missionId = (data?.mission_id as string | null) ?? null;
+  return {
+    orderId: data.order_id as string,
+    subtotalGnf: Number(data.subtotal_gnf ?? 0),
+    state: String(data.state ?? "placed"),
+    paymentMethod: input.paymentMethod,
+    missionId,
+    deliveryPending: input.fulfillment === "delivery" && !missionId,
+    replay: !!data.replay,
+  };
+}
 
-  const { data: order, error } = await (supabase as any)
-    .from("food_orders")
-    .insert({
-      user_id: uid,
-      restaurant_id: input.restaurantId,
-      fulfillment: input.fulfillment,
-      payment_method: input.paymentMethod,
-      subtotal_gnf: subtotal,
-      notes: input.notes ?? null,
-      delivery_address: input.deliveryAddress ?? null,
-      delivery_lat: input.deliveryLat ?? null,
-      delivery_lng: input.deliveryLng ?? null,
-      state: "placed",
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
-
-  const itemRows = input.items.map((i) => ({
-    order_id: order.id,
-    menu_item_id: i.menuItemId,
-    name_snapshot: i.name,
-    unit_price_gnf: i.unitPriceGnf,
-    qty: i.qty,
-  }));
-  const { error: itemsErr } = await (supabase as any).from("food_order_items").insert(itemRows);
-  if (itemsErr) throw itemsErr;
-
-  const foodOrder = order as FoodOrder;
-
-  // --- CHOPPay authorization (wallet only, additive, never marks paid) ---
-  let paymentIntentId: string | null = null;
-  let paymentStatus: string = (foodOrder as any).payment_status ?? "unpaid";
-  let walletAuthFailed = false;
-
-  if (input.paymentMethod === "wallet") {
-    try {
-      // Look up linked merchant_store_id (best-effort) for future settlement.
-      let merchantStoreId: string | null = null;
-      try {
-        const { data: rr } = await (supabase as any)
-          .from("food_restaurants")
-          .select("merchant_store_id")
-          .eq("id", input.restaurantId)
-          .maybeSingle();
-        merchantStoreId = rr?.merchant_store_id ?? null;
-      } catch { /* optional column / ignore */ }
-
-      const { data: intent, error: intentErr } = await (supabase as any).rpc(
-        "choppay_create_payment_intent",
-        {
-          p_source_module: "repas",
-          p_source_id: foodOrder.id,
-          p_amount_gnf: subtotal,
-          p_purpose: "repas_payment",
-          p_merchant_store_id: merchantStoreId,
-          p_payee_user_id: null,
-          p_description: "Commande Repas",
-          p_metadata: {
-            food_order_id: foodOrder.id,
-            restaurant_id: input.restaurantId,
-            item_count: input.items.reduce((n, i) => n + i.qty, 0),
-            subtotal_gnf: subtotal,
-            fulfillment_type: input.fulfillment,
-          },
-          p_use_wallet: true,
-        }
-      );
-      if (intentErr) throw intentErr;
-
-      paymentIntentId = intent?.id ?? null;
-      const state: string = intent?.state ?? "failed";
-      // processing => wallet hold succeeded (authorized); failed => hold failed
-      paymentStatus = state === "processing" ? "authorized"
-                    : state === "confirmed"  ? "paid"
-                    : state === "failed"     ? "failed"
-                    : "pending";
-      if (paymentStatus === "failed") walletAuthFailed = true;
-    } catch (err) {
-      console.warn("[repas] choppay authorization failed", err);
-      paymentStatus = "failed";
-      walletAuthFailed = true;
+/** Canonical customer cancellation — denied once the kitchen is preparing. */
+export async function cancelMyFoodOrder(orderId: string, reason?: string) {
+  const { data, error } = await (supabase as any).rpc("repas_customer_cancel_order", {
+    p_order_id: orderId,
+    p_reason: reason ?? null,
+  });
+  if (error) {
+    if ((error.message || "").includes("REPAS_PREPARATION_LOCKED")) {
+      throw new Error("La préparation a commencé : contactez le restaurant ou ouvrez un litige.");
     }
-
-    // Persist payment_status on the order (frontend never sets 'paid').
-    try {
-      await (supabase as any)
-        .from("food_orders")
-        .update({ payment_status: paymentStatus })
-        .eq("id", foodOrder.id);
-      (foodOrder as any).payment_status = paymentStatus;
-    } catch { /* non-fatal */ }
+    throw new Error(translateRepasError(error.message));
   }
-
-  // --- Mission dispatch (delivery only, additive, non-blocking) -----------
-  let missionId: string | null = null;
-  let deliveryPending = false;
-
-  if (input.fulfillment === "delivery") {
-    deliveryPending = true;
-    // Do not dispatch a courier if CHOP Wallet authorization failed.
-    if (walletAuthFailed) {
-      return { order: foodOrder, missionId, deliveryPending, paymentIntentId, paymentStatus };
-    }
-    try {
-      // Load restaurant for pickup context + delivery eligibility.
-      const { data: r } = await (supabase as any)
-        .from("food_restaurants")
-        .select("id,name,district,delivery_available,owner_user_id")
-        .eq("id", input.restaurantId)
-        .maybeSingle();
-
-      if (
-        r?.delivery_available &&
-        (input.deliveryAddress || (input.deliveryLat && input.deliveryLng))
-      ) {
-        const itemCount = input.items.reduce((n, i) => n + i.qty, 0);
-        // Best-effort customer phone — not required for dispatch.
-        let phone: string | null = null;
-        try {
-          const { data: p } = await (supabase as any)
-            .from("profiles")
-            .select("phone")
-            .eq("user_id", uid)
-            .maybeSingle();
-          phone = p?.phone ?? null;
-        } catch { /* ignore */ }
-
-        const payMethodLabel =
-          input.paymentMethod === "wallet"
-            ? "ChopWallet"
-            : input.paymentMethod === "choppay"
-              ? "ChopPay"
-              : "Espèces";
-        const summary = [
-          r.name,
-          `${itemCount} article${itemCount > 1 ? "s" : ""}`,
-          `${subtotal.toLocaleString("fr-FR")} GNF`,
-          `Paiement ${payMethodLabel}`,
-          phone ? `☎ ${phone}` : null,
-        ]
-          .filter(Boolean)
-          .join(" · ");
-        const mission = await createMission({
-          type: "food_delivery",
-          customer_id: uid,
-          merchant_id: r.owner_user_id ?? null,
-          pickup_address: r.district ? `${r.name} · ${r.district}` : r.name,
-          dropoff_address: input.deliveryAddress ?? null,
-          dropoff_lat: input.deliveryLat,
-          dropoff_lng: input.deliveryLng,
-          payload_summary: summary,
-          estimated_earning_gnf: REPAS_DEFAULT_COURIER_EARNING_GNF,
-          ref_food_order_id: foodOrder.id,
-        });
-        missionId = mission.id;
-        deliveryPending = false;
-      }
-    } catch (err) {
-      // Honest fallback — order stands, delivery to confirm.
-      console.warn("[repas] mission dispatch failed", err);
-    }
-  }
-
-  return { order: foodOrder, missionId, deliveryPending, paymentIntentId, paymentStatus };
+  return data;
 }
 
 export async function listMyFoodOrders(userId: string, limit = 20): Promise<FoodOrder[]> {
@@ -210,3 +122,5 @@ export async function listMyFoodOrders(userId: string, limit = 20): Promise<Food
   if (error) throw error;
   return (data ?? []) as FoodOrder[];
 }
+
+export type { FoodPaymentMethod };
