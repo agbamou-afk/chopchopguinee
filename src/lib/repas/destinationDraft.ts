@@ -66,7 +66,7 @@ export function writeDestinationDraft(
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...draft, savedAt: Date.now() }));
   } catch {
-    /* private mode / quota: the session still holds the值 in React state */
+    /* private mode / quota: the live session still holds the value in React state */
   }
 }
 
