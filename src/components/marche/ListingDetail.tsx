@@ -110,10 +110,11 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
       const imgs = ((l as unknown as { images?: string[] }).images ?? []);
       if (mounted) setImages(imgs);
 
+      const sellerId = (l as unknown as { seller_id: string }).seller_id;
       const { data: prof } = await supabase
         .from("profiles")
         .select("full_name, phone")
-        .eq("user_id", l.seller_id)
+        .eq("user_id", sellerId)
         .maybeSingle();
       if (mounted) setSeller(prof ?? { full_name: null, phone: null });
 
