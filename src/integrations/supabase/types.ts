@@ -3119,6 +3119,7 @@ export type Database = {
       food_orders: {
         Row: {
           captured_intent_id: string | null
+          client_request_id: string | null
           completed_at: string | null
           created_at: string
           delivery_address: string | null
@@ -3130,6 +3131,7 @@ export type Database = {
           paid_at: string | null
           payment_method: Database["public"]["Enums"]["food_payment_method"]
           payment_status: string
+          request_fingerprint: string | null
           restaurant_id: string
           settlement_state: string
           settlement_tx_id: string | null
@@ -3140,6 +3142,7 @@ export type Database = {
         }
         Insert: {
           captured_intent_id?: string | null
+          client_request_id?: string | null
           completed_at?: string | null
           created_at?: string
           delivery_address?: string | null
@@ -3151,6 +3154,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["food_payment_method"]
           payment_status?: string
+          request_fingerprint?: string | null
           restaurant_id: string
           settlement_state?: string
           settlement_tx_id?: string | null
@@ -3161,6 +3165,7 @@ export type Database = {
         }
         Update: {
           captured_intent_id?: string | null
+          client_request_id?: string | null
           completed_at?: string | null
           created_at?: string
           delivery_address?: string | null
@@ -3172,6 +3177,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["food_payment_method"]
           payment_status?: string
+          request_fingerprint?: string | null
           restaurant_id?: string
           settlement_state?: string
           settlement_tx_id?: string | null
@@ -12232,6 +12238,29 @@ export type Database = {
       }
       repas_complete_order: {
         Args: { p_food_order_id: string; p_reason?: string }
+        Returns: Json
+      }
+      repas_customer_cancel_order: {
+        Args: { p_order_id: string; p_reason?: string }
+        Returns: Json
+      }
+      repas_delivery_earning_gnf: { Args: never; Returns: number }
+      repas_merchant_transition: {
+        Args: { p_action: string; p_order_id: string; p_reason?: string }
+        Returns: Json
+      }
+      repas_order_create: {
+        Args: {
+          p_client_request_id: string
+          p_delivery_address?: string
+          p_delivery_lat?: number
+          p_delivery_lng?: number
+          p_fulfillment: string
+          p_items: Json
+          p_notes?: string
+          p_payment_method: string
+          p_restaurant_id: string
+        }
         Returns: Json
       }
       request_account_deletion: { Args: { _reason?: string }; Returns: Json }
