@@ -181,10 +181,45 @@ export const REPAS_MERCHANT_ACTION_LABEL: Record<string, string> = {
 };
 
 export const REPAS_CUSTODY_BOUNDARY_LABEL: Record<string, string> = {
+  // Actual R6 `repas_custody_events.boundary` values.
+  restaurant_to_courier: "Remise au coursier",
+  courier_to_customer: "Remise au client",
+  merchant_to_customer_pickup: "Retrait par le client",
+  // Legacy credential-style aliases, kept only so historical rows never render
+  // a raw snake_case identifier.
   restaurant_handoff: "Remise au coursier",
   customer_delivery: "Remise au client",
   customer_pickup: "Retrait par le client",
 };
+
+/** French label for the canonical (engine-derived) payment state. */
+export const REPAS_PAYMENT_STATE_LABEL: Record<RepasPaymentState, string> = {
+  authorized: "Autorisé — en cours",
+  paid: "Payé",
+  released: "Annulé — montant libéré",
+  due: "À régler",
+  collected: "Réglé en espèces",
+  cancelled: "Annulée",
+  disputed: "En litige",
+  dispute_resolved: "Litige résolu",
+  unknown: "Non confirmé",
+};
+
+export function repasPaymentStateLabel(state?: string | null): string {
+  if (!state) return REPAS_PAYMENT_STATE_LABEL.unknown;
+  return REPAS_PAYMENT_STATE_LABEL[state as RepasPaymentState] ?? REPAS_PAYMENT_STATE_LABEL.unknown;
+}
+
+/**
+ * The total may only be labelled as paid when the canonical engine says the
+ * value is really settled and retained.
+ */
+export function repasReceiptTotalLabel(
+  r: Pick<RepasReceipt, "payment_state" | "payment_settled" | "payment_rail">,
+): string {
+  if (!r.payment_settled) return "Total de la commande";
+  return r.payment_rail === "cash" || r.payment_state === "collected" ? "Total réglé" : "Total payé";
+}
 
 /** Fulfillment-correct custody card to show to the customer, if any. */
 export function customerCustodyKind(t: RepasTracking): "customer_delivery" | "customer_pickup" | null {
