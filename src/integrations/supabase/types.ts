@@ -8830,6 +8830,11 @@ export type Database = {
       _qa_node3_repas_r8_extra: { Args: never; Returns: Json }
       _qa_node3_repas_r9_recovery_flows: { Args: never; Returns: Json }
       _qa_node3_repas_r9_recovery_flows_fxcore: { Args: never; Returns: Json }
+      _qa_node4_marche_r1: { Args: never; Returns: Json }
+      _qa_node4_probe: {
+        Args: { p_role: string; p_sql: string; p_uid: string }
+        Returns: number
+      }
       _qa_r6_proof: {
         Args: {
           p_mission: string
