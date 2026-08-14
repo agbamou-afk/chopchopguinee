@@ -1,55 +1,44 @@
----
-name: Node 3 Repas R8 — Discovery Truth
-description: Server-authoritative Repas publication/discovery model; staff-only publication; no fake restaurants, ratings, ETA or distance
-type: feature
----
+# node3-repas-r8-discovery-truth-stable
 
-# Node 3 Repas R8 — Discovery Truth (LOCKED)
+VERDICT: GO — R8 final certification closeout complete.
+HEAD: 2ae03c465d28555c679281265345d945f51d8d56 (git status clean)
 
-## Contract
-- Three distinct concepts, all server-derived: **visible** (published supply only),
-  **open** (`is_open`), **orderable now** (`orderable_now` + `blocked_reason`).
-- Publication signal = `food_restaurants.verification_state`
-  (`none`=brouillon, `verified`=publié, `suspended`, `rejected`).
+## Closeout corrections
+- Publication bypass closed: `repas_quote_preview` and `repas_order_create` both call
+  `_repas_assert_orderable_publication` and fail closed with `RESTAURANT_NOT_PUBLISHED`
+  unless `status='active' AND verification_state='verified'`, before any durable
+  order/mission/money state. Not RLS-dependent.
+- `repas_admin_set_publication(...,'publish')` refuses zero-menu supply (`PUBLISH_REQUIRES_MENU`).
+  A restaurant whose real menu is temporarily unavailable may still publish (shown non-orderable).
+- QA fixtures modernized to `verified` through the trusted fixture context; production guard untouched.
+- `RepasRestaurantDetail`: canonical fetch resolution (`loading|found|unavailable`); after resolution a
+  NULL/error result is treated as unavailable and disables add/cart/checkout. No stale-snapshot fallback.
+  Unsplash fallback replaced by a neutral CHOPCHOP placeholder (gradient + icon).
+- `RestaurantCard`: prep estimate labelled `Préparation ~N min` (never a delivery ETA).
+- `FoodView`: marketplace-empty = `Aucun restaurant disponible pour le moment`; search-empty = `Aucun résultat`.
+- Admin ops truth: `repas_admin_restaurant_overview()` (staff-only) + expanded `/admin/repas` table —
+  owner, merchant-store link/status, publication + canonical status, open state, available/total menu,
+  delivery/pickup/Chop Pay capability, coordinates completeness, derived discoverable/orderable truth.
+  No fabricated ratings/orders/revenue/traffic.
 
-## Server
-- `repas_restaurants_discover(text,int)` — published supply only, excludes zero-menu
-  restaurants, no rating/ETA/distance dimension, never exposes `owner_user_id`.
-- `repas_restaurant_public(uuid)` — participant-scoped detail; owner/staff may see drafts.
-- `repas_restaurant_menu_public(uuid)` — real menu of published restaurants only.
-- `repas_admin_set_publication(uuid,text,text)` — staff only, audited in `audit_logs`.
-- `_food_restaurant_guard` trigger — owners cannot self-publish, self-enable Chop Pay,
-  change `status`, reassign owner or link a merchant store.
-- RLS on `food_restaurants` / `food_menu_items`: public SELECT requires
-  `status='active' AND verification_state='verified'` (owner/staff bypass).
+## Board (after last edit)
+- R8 dedicated QA: 142/142 PASS (was 89) — adds draft quote/commit refusal before money,
+  zero-menu publish refusal, anon/stranger mutation proofs, hidden draft/suspended reads,
+  and a non-vacuous historical R7 receipt-freeze proof across menu mutation + suspension.
+- R7 203/203 · R6 171/171 · R5 static 71/71 + runtime 91/91 · R4.5 64/64 · R1–R4 148/148
+- Course 34/34 · Bonbonna full/base/matrix/sweeper 78/24/39/15 · Taxi 97/97
+- Slice 13 parts 1–7: 18+32+54+98+115+87+103 = 507/507 PASS
+  (parts 4–7 executed on the privileged path and recorded in `_qa_s13_results`; no grant weakening)
+- Vitest 53 passed (10 files, incl. new `repas-r8-discovery-truth.test.ts`)
+- `tsgo --noEmit -p tsconfig.app.json` clean · production build PASS · PWA generateSW, 134 precache entries
 
-## Client
-- `src/lib/repas/discovery.ts` is the only customer-facing discovery seam.
-- `FoodView`, `RestaurantCard`, `UserHome` rail and `RepasRestaurantDetail` render server
-  truth only; the fake restaurant catalogue and fake LiveStrip claims were deleted.
-- Merchant onboarding no longer sends privileged columns; Chop Pay is staff-activated.
-- `/admin/repas` exposes Publier / Retirer / Suspendre / Refuser.
+## Posture
+- Ledger posting sum 0 · imbalanced journals 0 · master wallet -100435 / held 0 (unchanged)
+- Feature flags unchanged · R8 fixture residue 0
+- Live supply: 0 discoverable restaurants, 0 with available menu. `Le bon coin` untouched
+  (active, verification_state none, zero menu) and therefore yields zero customer supply.
 
-## Certification
-- `public._qa_node3_repas_r8_discovery()` — **89/89 PASS**.
-- Typecheck exit 0, Vitest 46/46 PASS.
-
-## Post-landing closeout (2026-08-14 19:0x UTC)
-- Merchant onboarding no longer submits `status` / `choppay_enabled` / `owner_user_id`
-  on update (`createOrUpdateRestaurant`), and `listOpenRestaurants` was deleted —
-  customer discovery has exactly one seam.
-- `/admin/repas` now has the publication queue (Publier / Retirer / Suspendre / Refuser),
-  a real menu-item count per restaurant, and a "Publiés" stat. Publishing is disabled
-  when the restaurant has zero menu items.
-- Guard fallout fixed: `_qa_node3_repas_r5_runtime` is now a thin wrapper that sets
-  `app.repas_publication_ctx` before delegating to `_qa_node3_repas_r5_runtime_core`
-  (its fixture seeds a suspended restaurant). Guard itself was NOT weakened.
-
-## Verified board
-- R8 89/89, R7 203/203, R6 171/171, R5 71/71, R5 runtime 91/91, Pickup 64/64,
-  R1–R4 148/148, Node 0 34/34, Node 1 78/78, Node 2 97/97 — all PASS.
-- Slice 13 finance: parts 1/2/3/6 PASS (18, 32, 54, 87) via the QA runner.
-  Parts 4/5/7 use `SET ROLE` and can only be executed by a direct privileged
-  postgres session — not reachable through the edge runner. Pre-existing limitation,
-  unchanged by R8.
-- Typecheck exit 0, Vitest 46/46, production build PASS (134 precache entries).
+## Honest limitations
+- Anonymous INSERT rejection is proven live through the public API (HTTP 42501, zero rows) and in-harness
+  via policy-predicate proofs; `SET ROLE` is not possible inside SECURITY DEFINER harnesses.
+- No realtime system was added; suspension truth surfaces on refetch/reopen.

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Minus, ShoppingBag, Clock, X, CheckCircle2, MapPin, ShieldCheck, Truck, Package, BadgeCheck, Loader2, LocateFixed } from "lucide-react";
+import { ArrowLeft, Plus, Minus, ShoppingBag, Clock, X, CheckCircle2, MapPin, ShieldCheck, Truck, Package, BadgeCheck, Loader2, LocateFixed, UtensilsCrossed } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -54,6 +54,13 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [menu, setMenu] = useState<FoodMenuItem[] | null>(null);
   /** R8 — canonical, re-fetched truth wins over the discovery snapshot. */
   const [detail, setDetail] = useState<RepasRestaurantPublic | null>(null);
+  /**
+   * R8 — the canonical fetch resolution is tracked distinctly from its payload.
+   * Once the fetch has resolved, a NULL/error result means the restaurant is no
+   * longer published: we must never silently fall back to the stale card
+   * snapshot and keep pretending it is orderable.
+   */
+  const [resolution, setResolution] = useState<"loading" | "found" | "unavailable">("loading");
   const [stage, setStage] = useState<Stage>("menu");
   const [fulfillment, setFulfillment] = useState<FoodFulfillment>("delivery");
   const [paymentMethod, setPaymentMethod] = useState<RepasTender>("cash");
@@ -83,9 +90,18 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
 
   useEffect(() => {
     let alive = true;
+    setResolution("loading");
     getPublicRestaurant(restaurant.id)
-      .then((d) => alive && setDetail(d))
-      .catch(() => alive && setDetail(null));
+      .then((d) => {
+        if (!alive) return;
+        setDetail(d);
+        setResolution(d ? "found" : "unavailable");
+      })
+      .catch(() => {
+        if (!alive) return;
+        setDetail(null);
+        setResolution("unavailable");
+      });
     getPublicMenu(restaurant.id)
       .then((m) => alive && setMenu(m))
       .catch(() => alive && setMenu([]));
@@ -96,8 +112,13 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
 
   /** Every capability below is server-derived, never inferred client-side. */
   const view = detail ?? restaurant;
-  const orderableNow = view.orderable_now;
-  const blockedLabel = repasBlockedLabel(view.blocked_reason);
+  const orderableNow = resolution === "found" && (detail?.orderable_now ?? false);
+  const blockedLabel =
+    resolution === "unavailable"
+      ? "Ce restaurant n'est plus disponible."
+      : resolution === "loading"
+        ? null
+        : repasBlockedLabel(view.blocked_reason);
 
   // Items in cart belonging to this restaurant
   const myCartLines = cart.restaurantId === restaurant.id ? cart.lines : [];
@@ -220,7 +241,8 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
     }
   };
 
-  const cover = view.cover_url || view.avatar_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600";
+  /** R8 — no unrelated stock photo is ever presented as this restaurant. */
+  const cover = view.cover_url || view.avatar_url || null;
 
   return (
     <motion.div
@@ -232,7 +254,17 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       <div className="max-w-md mx-auto pb-40">
         {/* Hero */}
         <div className="relative h-44">
-          <img loading="lazy" decoding="async" src={cover} alt={restaurant.name} className="w-full h-full object-cover" />
+          {cover ? (
+            <img loading="lazy" decoding="async" src={cover} alt={restaurant.name} className="w-full h-full object-cover" />
+          ) : (
+            <div
+              data-testid="repas-cover-placeholder"
+              className="w-full h-full bg-gradient-to-br from-primary/15 via-muted to-secondary/15 flex items-center justify-center"
+              aria-label="Photo du restaurant indisponible"
+            >
+              <UtensilsCrossed className="w-9 h-9 text-muted-foreground" />
+            </div>
+          )}
           <button
             onClick={onClose}
             className="absolute top-4 left-4 w-10 h-10 rounded-full bg-card/90 backdrop-blur flex items-center justify-center"

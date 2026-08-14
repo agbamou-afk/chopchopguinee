@@ -107,6 +107,40 @@ export async function getPublicMenu(id: string): Promise<FoodMenuItem[]> {
 
 export type RepasPublicationAction = "publish" | "unpublish" | "suspend" | "reject";
 
+/** Staff-only operational overview. Every field is a real database fact. */
+export interface RepasAdminRestaurantRow {
+  id: string;
+  name: string;
+  district: string | null;
+  cuisine: string | null;
+  owner_user_id: string | null;
+  owner_label: string | null;
+  merchant_store_id: string | null;
+  merchant_store_name: string | null;
+  merchant_store_status: string | null;
+  verification_state: string;
+  status: string;
+  is_open: boolean;
+  menu_items_total: number;
+  menu_items_available: number;
+  delivery_available: boolean;
+  pickup_available: boolean;
+  choppay_enabled: boolean;
+  has_coordinates: boolean;
+  delivery_ready: boolean;
+  pickup_ready: boolean;
+  discoverable: boolean;
+  orderable_now: boolean;
+  blocked_reason: string | null;
+  created_at: string;
+}
+
+export async function listAdminRestaurantOverview(): Promise<RepasAdminRestaurantRow[]> {
+  const { data, error } = await (supabase as any).rpc("repas_admin_restaurant_overview");
+  if (error) throw error;
+  return (data ?? []) as RepasAdminRestaurantRow[];
+}
+
 /** Staff-only. Owners cannot publish themselves — the database refuses it. */
 export async function setRestaurantPublication(
   restaurantId: string,

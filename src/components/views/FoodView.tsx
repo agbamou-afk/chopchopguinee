@@ -157,7 +157,7 @@ export function FoodView({ onBack }: FoodViewProps) {
         ) : visible.length === 0 ? (
           <EmptyState
             icon={UtensilsCrossed}
-            title={searchQuery ? "Aucun résultat" : "Repas bientôt disponible"}
+            title={searchQuery ? "Aucun résultat" : "Aucun restaurant disponible pour le moment"}
             description={
               searchQuery
                 ? "Aucun restaurant publié ne correspond à cette recherche."
