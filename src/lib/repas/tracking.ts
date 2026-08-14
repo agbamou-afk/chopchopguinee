@@ -17,6 +17,20 @@ export interface RepasTrackingCustodyCredential {
   holder_is_self: boolean;
 }
 
+/**
+ * R11 — frozen destination snapshot as returned by `repas_order_tracking`.
+ * `coordinates` is only ever present for the courier and finance roles.
+ */
+export interface RepasTrackingDestination {
+  label: string | null;
+  landmark: string | null;
+  instructions: string | null;
+  location_source: string | null;
+  location_quality: string | null;
+  has_coordinates: boolean;
+  coordinates?: { lat: number | null; lng: number | null } | null;
+}
+
 export interface RepasTracking {
   order_id: string;
   viewer_role: RepasViewerRole;
@@ -43,6 +57,8 @@ export interface RepasTracking {
   merchandise_subtotal_gnf?: number;
   delivery_address?: string | null;
   pickup_address?: string | null;
+  /** Null for Retrait: a pickup order has no destination at all. */
+  destination?: RepasTrackingDestination | null;
   cash_due_gnf?: number | null;
   courier?: { full_name: string | null; phone: string | null } | null;
   customer?: { full_name: string | null; phone: string | null } | null;

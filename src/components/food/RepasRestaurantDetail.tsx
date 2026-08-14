@@ -26,6 +26,12 @@ import {
   pendingRepasRequestId,
   repasRequestIdFor,
 } from "@/lib/repas/checkoutRequestId";
+import {
+  clearDestinationDraft,
+  readDestinationDraft,
+  writeDestinationDraft,
+  type RepasLocationSource,
+} from "@/lib/repas/destinationDraft";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useWallet } from "@/hooks/useWallet";
 import { ConversionGateSheet } from "@/components/onboarding/ConversionGateSheet";
@@ -76,6 +82,10 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryLandmark, setDeliveryLandmark] = useState("");
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  /** How the point was obtained. Never a quality claim — the server decides. */
+  const [locationSource, setLocationSource] = useState<RepasLocationSource>("unspecified");
   const [deliveryCoords, setDeliveryCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -88,6 +98,43 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const { isLoggedIn, requireAuth } = useAuthGuard();
   const { wallet, available } = useWallet("client");
   const { user } = useAuth();
+
+  /**
+   * R11 — a Conakry destination is slow to type and easy to lose. Rehydrate any
+   * draft for this restaurant so a reload or a dropped connection never costs
+   * the customer their landmark and instructions.
+   */
+  useEffect(() => {
+    const draft = readDestinationDraft(restaurant.id);
+    if (!draft) return;
+    setDeliveryAddress(draft.label);
+    setDeliveryLandmark(draft.landmark);
+    setDeliveryInstructions(draft.instructions);
+    setLocationSource(draft.source);
+    setDeliveryCoords(
+      draft.lat !== null && draft.lng !== null ? { lat: draft.lat, lng: draft.lng } : null,
+    );
+  }, [restaurant.id]);
+
+  // Persist as the customer types. Convenience only: never priced, never trusted.
+  useEffect(() => {
+    writeDestinationDraft({
+      restaurantId: restaurant.id,
+      label: deliveryAddress,
+      landmark: deliveryLandmark,
+      instructions: deliveryInstructions,
+      lat: deliveryCoords?.lat ?? null,
+      lng: deliveryCoords?.lng ?? null,
+      source: locationSource,
+    });
+  }, [
+    restaurant.id,
+    deliveryAddress,
+    deliveryLandmark,
+    deliveryInstructions,
+    deliveryCoords,
+    locationSource,
+  ]);
 
   useEffect(() => {
     let alive = true;
@@ -132,6 +179,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
         setLastMissionId(recovered.missionId);
         setDeliveryPending(recovered.fulfillment === "delivery" && !recovered.missionId);
         cart.clear();
+        clearDestinationDraft();
         setStage("confirmed");
         toast.success("Votre commande précédente a bien été enregistrée.");
       })
@@ -275,6 +323,10 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
         deliveryAddress: fulfillment === "delivery" ? deliveryAddress || undefined : undefined,
         deliveryLat: fulfillment === "delivery" ? deliveryCoords?.lat : undefined,
         deliveryLng: fulfillment === "delivery" ? deliveryCoords?.lng : undefined,
+        deliveryLandmark: fulfillment === "delivery" ? deliveryLandmark || undefined : undefined,
+        deliveryInstructions:
+          fulfillment === "delivery" ? deliveryInstructions || undefined : undefined,
+        locationSource: fulfillment === "delivery" ? locationSource : undefined,
         items: myCartLines.map((l) => ({
           menuItemId: l.menuItemId,
           qty: l.qty,
@@ -288,6 +340,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
       }
       cart.clear();
       clearRepasRequestId();
+      clearDestinationDraft();
       setStage("confirmed");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Impossible de passer la commande";
@@ -301,6 +354,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
         setLastMissionId(recovered.missionId);
         cart.clear();
         clearRepasRequestId();
+        clearDestinationDraft();
         setStage("confirmed");
         toast.success("Votre commande était déjà enregistrée.");
       } else {
@@ -655,17 +709,45 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                       {fulfillment === "delivery" && (
                         <div>
                           <label className="text-xs font-medium text-muted-foreground block mb-1">
-                            Adresse / repère
+                            Quartier / zone
                           </label>
                           <input
                             value={deliveryAddress}
                             onChange={(e) => {
                               setDeliveryAddress(e.target.value);
-                              if (deliveryCoords) setDeliveryCoords(null);
                             }}
                             className="w-full bg-muted rounded-xl px-4 py-3 text-sm focus:outline-none"
-                            placeholder="Quartier, repère utile…"
+                            placeholder="Kipé, Lambanyi, Taouyah…"
                           />
+
+                          <label className="text-xs font-medium text-muted-foreground block mb-1 mt-3">
+                            Repère le plus proche
+                          </label>
+                          <input
+                            value={deliveryLandmark}
+                            onChange={(e) => {
+                              setDeliveryLandmark(e.target.value);
+                              if (locationSource === "unspecified" && e.target.value.trim()) {
+                                setLocationSource("typed");
+                              }
+                            }}
+                            className="w-full bg-muted rounded-xl px-4 py-3 text-sm focus:outline-none"
+                            placeholder="Près de Prima Center, face à la pharmacie…"
+                          />
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            À Conakry, le repère aide plus qu'un nom de rue.
+                          </p>
+
+                          <label className="text-xs font-medium text-muted-foreground block mb-1 mt-3">
+                            Indications pour le coursier (optionnel)
+                          </label>
+                          <input
+                            value={deliveryInstructions}
+                            onChange={(e) => setDeliveryInstructions(e.target.value)}
+                            className="w-full bg-muted rounded-xl px-4 py-3 text-sm focus:outline-none"
+                            placeholder="Portail bleu, appeler en arrivant…"
+                          />
+
                           <button
                             type="button"
                             onClick={() => {
@@ -678,22 +760,23 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                                 (pos) => {
                                   const { latitude, longitude } = pos.coords;
                                   setDeliveryCoords({ lat: latitude, lng: longitude });
-                                  setDeliveryAddress(
-                                    `Position actuelle (${latitude.toFixed(5)}, ${longitude.toFixed(5)})`,
-                                  );
+                                  // R11 — the pin NEVER overwrites what the customer
+                                  // typed: coordinates and a human place name are
+                                  // two different, complementary truths.
+                                  setLocationSource("gps");
                                   setLocating(false);
-                                  toast.success("Position actuelle sélectionnée");
+                                  toast.success("Position ajoutée à votre adresse");
                                 },
                                 () => {
                                   setLocating(false);
-                                  toast("Position non autorisée. Entrez l’adresse manuellement.");
+                                  toast("Position non autorisée. Décrivez le quartier et le repère.");
                                 },
                                 { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
                               );
                             }}
                             disabled={locating}
                             className={cn(
-                              "mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium border transition",
+                              "mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium border transition",
                               deliveryCoords
                                 ? "bg-primary/10 border-primary/30 text-primary"
                                 : "bg-card border-border text-muted-foreground hover:text-foreground",
@@ -705,8 +788,20 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                             ) : (
                               <LocateFixed className="w-3.5 h-3.5" />
                             )}
-                            {deliveryCoords ? "Position actuelle utilisée" : "Utiliser ma position actuelle"}
+                            {deliveryCoords ? "Position GPS ajoutée" : "Ajouter ma position GPS"}
                           </button>
+                          {deliveryCoords && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDeliveryCoords(null);
+                                setLocationSource(deliveryLandmark.trim() ? "typed" : "unspecified");
+                              }}
+                              className="mt-2 ml-2 text-[11px] font-medium text-muted-foreground underline"
+                            >
+                              Retirer la position
+                            </button>
+                          )}
                         </div>
                       )}
 

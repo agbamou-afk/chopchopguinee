@@ -17,6 +17,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { FoodFulfillment, FoodOrder, FoodPaymentMethod } from "./types";
 import { FOOD_ORDER_SAFE_COLS } from "@/lib/missions/columns";
+import type { RepasLocationSource } from "./destinationDraft";
 
 /** Canonical launch tenders. `wallet` is deprecated and rejected server-side. */
 export type RepasTender = "cash" | "choppay";
@@ -31,6 +32,12 @@ export interface CreateOrderInput {
   deliveryAddress?: string;
   deliveryLat?: number;
   deliveryLng?: number;
+  /** R11 — Conakry landmark ("près de Prima Center"). Stored verbatim. */
+  deliveryLandmark?: string;
+  /** R11 — arrival instructions ("portail bleu, appeler en arrivant"). */
+  deliveryInstructions?: string;
+  /** R11 — how the point was obtained. The server derives the quality verdict. */
+  locationSource?: RepasLocationSource;
   items: { menuItemId: string; qty: number }[];
 }
 
@@ -59,6 +66,8 @@ const ERROR_FR: Record<string, string> = {
   DELIVERY_NOT_AVAILABLE: "Ce restaurant ne fait pas de livraison.",
   PICKUP_NOT_AVAILABLE: "Ce restaurant ne fait pas de retrait sur place.",
   DELIVERY_LOCATION_REQUIRED: "Indiquez une adresse de livraison.",
+  REPAS_DESTINATION_IMMUTABLE:
+    "La destination de cette commande est figée et ne peut plus être modifiée.",
   CHOP_PAY_CHECKOUT_DISABLED: "Le paiement Chop Pay n'est pas encore activé.",
   MENU_ITEM_NOT_FOUND: "Un article n'est plus au menu.",
   ITEM_WRONG_RESTAURANT: "Un article ne provient pas de ce restaurant.",
@@ -97,6 +106,9 @@ export async function createFoodOrder(input: CreateOrderInput): Promise<CreateOr
     p_delivery_lat: input.deliveryLat ?? null,
     p_delivery_lng: input.deliveryLng ?? null,
     p_notes: input.notes ?? null,
+    p_delivery_landmark: input.deliveryLandmark?.trim() || null,
+    p_delivery_instructions: input.deliveryInstructions?.trim() || null,
+    p_location_source: input.locationSource ?? "unspecified",
   });
   if (error) throw new Error(translateRepasError(error.message));
 
