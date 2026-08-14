@@ -8550,14 +8550,7 @@ export type Database = {
           section: string
         }[]
       }
-      _qa_node3_repas_r5_runtime: {
-        Args: never
-        Returns: {
-          detail: string
-          label: string
-          ok: boolean
-        }[]
-      }
+      _qa_node3_repas_r5_runtime: { Args: never; Returns: Json }
       _qa_node3_repas_r5_runtime_core: { Args: never; Returns: Json }
       _qa_node3_repas_r6_custody: { Args: never; Returns: Json }
       _qa_node3_repas_r7_ext: { Args: never; Returns: Json }
