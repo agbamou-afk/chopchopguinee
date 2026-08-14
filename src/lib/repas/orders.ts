@@ -225,3 +225,40 @@ export function repasIneligibleLabel(q: RepasQuote): string | null {
       return "Livraison indisponible pour cette adresse.";
   }
 }
+
+/**
+ * R9 — canonical recovery lookup.
+ *
+ * When a commit outcome is unknown (timeout, connection drop, tab killed), the
+ * client must never guess and must never retry blindly into a second order.
+ * It re-presents the same `client_request_id` and the server states whether a
+ * canonical order already exists. Read-only: it can never create anything.
+ */
+export interface ResumedFoodOrder {
+  orderId: string;
+  state: string;
+  fulfillment: FoodFulfillment;
+  paymentMethod: string;
+  orderTotalGnf: number;
+  missionId: string | null;
+  createdAt: string;
+}
+
+export async function resumeFoodOrder(
+  clientRequestId: string,
+): Promise<ResumedFoodOrder | null> {
+  const { data, error } = await (supabase as any).rpc("repas_order_resume", {
+    p_client_request_id: clientRequestId,
+  });
+  if (error) throw new Error(translateRepasError(error.message));
+  if (!data?.found) return null;
+  return {
+    orderId: data.order_id as string,
+    state: String(data.state),
+    fulfillment: data.fulfillment as FoodFulfillment,
+    paymentMethod: String(data.payment_method),
+    orderTotalGnf: Number(data.order_total_gnf ?? 0),
+    missionId: (data.mission_id as string | null) ?? null,
+    createdAt: String(data.created_at),
+  };
+}

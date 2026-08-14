@@ -139,6 +139,16 @@ export function RepasOrdersSection({ restaurantId }: Props) {
       if (detail?.id === o.id) setDetail({ ...detail, state: next });
     } catch (e: any) {
       toast({ title: "Erreur", description: e?.message ?? "Action impossible" });
+      // R9 — a refused action usually means this screen is stale (another
+      // device, or a double submit). Re-read canonical server truth instead of
+      // leaving the merchant on an outdated card.
+      void reload();
+      if (openId === o.id) {
+        const fresh = await getRestaurantOrderDetail(o.id).catch(() => null);
+        if (fresh) setDetail(fresh);
+        const t = await getRepasTracking(o.id).catch(() => null);
+        setTracking(t);
+      }
     } finally {
       setBusy(null);
     }
