@@ -63,7 +63,9 @@ const ERROR_FR: Record<string, string> = {
   ITEM_WRONG_RESTAURANT: "Un article ne provient pas de ce restaurant.",
   ITEM_UNAVAILABLE: "Un article n'est plus disponible.",
   INVALID_QUANTITY: "Quantité invalide.",
-  PICKUP_NOT_YET_SUPPORTED: "Le retrait sur place n'est pas encore disponible. Choisissez la livraison.",
+  PICKUP_CASH_NOT_SUPPORTED:
+    "Le retrait sur place se règle uniquement avec Chop Pay pour le moment.",
+  PICKUP_HAS_NO_COURIER_HANDOFF: "Une commande à retirer n'a pas de livreur.",
   CASH_ORDER_FUNDING_DISABLED: "Le paiement en espèces n'est pas encore activé.",
   CUSTOMER_CASH_RESTRICTED_BY_DEBT:
     "Des frais d'annulation restent dus : réglez-les avant une nouvelle commande en espèces.",
@@ -128,3 +130,47 @@ export async function listMyFoodOrders(userId: string, limit = 20): Promise<Food
 }
 
 export type { FoodPaymentMethod };
+
+/**
+ * R4.5-E — server-authoritative pre-commit quote. The client never computes
+ * the platform fee or the delivery fee itself.
+ */
+export interface RepasQuote {
+  fulfillment: FoodFulfillment;
+  merchandiseSubtotalGnf: number;
+  deliveryFeeGnf: number;
+  platformFeeGnf: number;
+  orderTotalGnf: number;
+  pickupAvailable: boolean;
+  deliveryAvailable: boolean;
+  chopPayEnabled: boolean;
+  cashEnabled: boolean;
+  cashPickupSupported: boolean;
+  transactionFeeBps: number;
+}
+
+export async function getRepasQuote(
+  restaurantId: string,
+  items: { menuItemId: string; qty: number }[],
+  fulfillment: FoodFulfillment,
+): Promise<RepasQuote> {
+  const { data, error } = await (supabase as any).rpc("repas_quote_preview", {
+    p_restaurant_id: restaurantId,
+    p_items: items.map((i) => ({ menu_item_id: i.menuItemId, qty: i.qty })),
+    p_fulfillment: fulfillment,
+  });
+  if (error) throw new Error(translateRepasError(error.message));
+  return {
+    fulfillment: data.fulfillment as FoodFulfillment,
+    merchandiseSubtotalGnf: Number(data.merchandise_subtotal_gnf ?? 0),
+    deliveryFeeGnf: Number(data.delivery_fee_gnf ?? 0),
+    platformFeeGnf: Number(data.platform_fee_gnf ?? 0),
+    orderTotalGnf: Number(data.order_total_gnf ?? 0),
+    pickupAvailable: !!data.pickup_available,
+    deliveryAvailable: !!data.delivery_available,
+    chopPayEnabled: !!data.chop_pay_enabled,
+    cashEnabled: !!data.cash_enabled,
+    cashPickupSupported: !!data.cash_pickup_supported,
+    transactionFeeBps: Number(data.transaction_fee_bps ?? 0),
+  };
+}

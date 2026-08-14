@@ -12,8 +12,8 @@ import { toast } from "@/hooks/use-toast";
 import {
   advanceRestaurantOrder,
   listRestaurantOrders,
-  RESTAURANT_NEXT_LABEL,
-  RESTAURANT_NEXT_STATE,
+  restaurantNextState,
+  restaurantNextLabel,
 } from "@/lib/merchant/operations";
 import {
   getRestaurantOrderDetail,
@@ -95,10 +95,10 @@ export function RepasOrdersSection({ restaurantId }: Props) {
   }, [openId]);
 
   const advance = async (o: FoodOrder) => {
-    if (!RESTAURANT_NEXT_STATE[o.state]) return;
+    if (!restaurantNextState(o.state, o.fulfillment)) return;
     setBusy(o.id);
     try {
-      const next = await advanceRestaurantOrder(o.id, o.state);
+      const next = await advanceRestaurantOrder(o.id, o.state, o.fulfillment);
       setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, state: next } : x)));
       if (detail?.id === o.id) setDetail({ ...detail, state: next });
     } catch (e: any) {
@@ -144,7 +144,7 @@ export function RepasOrdersSection({ restaurantId }: Props) {
         </p>
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </div>
-      {RESTAURANT_NEXT_STATE[o.state] && (
+      {restaurantNextState(o.state, o.fulfillment) && (
         <Button
           size="sm"
           className="mt-2 w-full"
@@ -154,7 +154,7 @@ export function RepasOrdersSection({ restaurantId }: Props) {
           }}
           disabled={busy === o.id}
         >
-          {RESTAURANT_NEXT_LABEL[o.state]}
+          {restaurantNextLabel(o.state, o.fulfillment)}
         </Button>
       )}
     </button>
@@ -321,13 +321,13 @@ export function RepasOrdersSection({ restaurantId }: Props) {
                 )
               )}
 
-              {RESTAURANT_NEXT_STATE[detail.state] && (
+              {restaurantNextState(detail.state, detail.fulfillment) && (
                 <Button
                   className="w-full"
                   disabled={busy === detail.id}
                   onClick={() => advance(detail)}
                 >
-                  {RESTAURANT_NEXT_LABEL[detail.state]}
+                  {restaurantNextLabel(detail.state, detail.fulfillment)}
                 </Button>
               )}
             </div>
