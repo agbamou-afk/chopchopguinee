@@ -32,6 +32,7 @@ const ALLOWED = new Set([
   "_qa_node3_repas_r5_runtime",
   "_qa_node3_repas_r6_custody",
   "_qa_node3_repas_r7_tracking_receipt",
+  "_qa_node3_repas_r8_discovery",
 ]);
 
 function json(body: unknown, status = 200) {

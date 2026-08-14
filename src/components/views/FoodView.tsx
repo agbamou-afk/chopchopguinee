@@ -1,18 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, SlidersHorizontal, Timer, Star, Flame, ChefHat } from "lucide-react";
+import { Search, ChefHat, UtensilsCrossed, AlertCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { FoodCategories } from "@/components/food/FoodCategories";
 import { RestaurantCard } from "@/components/food/RestaurantCard";
-import { RestaurantDetail, type Restaurant } from "@/components/food/RestaurantDetail";
 import { RepasRestaurantDetail } from "@/components/food/RepasRestaurantDetail";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
-import { LiveStrip } from "@/components/ui/LiveStrip";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { UtensilsCrossed } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { isLiveUser } from "@/lib/runtimeMode";
-import { listOpenRestaurants } from "@/lib/repas/restaurants";
-import type { FoodRestaurant } from "@/lib/repas/types";
+import { discoverRestaurants, type RepasDiscoveryRestaurant } from "@/lib/repas/discovery";
 import { RestaurantOnboardingSheet } from "@/components/food/RestaurantOnboardingSheet";
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 
@@ -20,157 +14,84 @@ interface FoodViewProps {
   onBack: () => void;
 }
 
-const allRestaurants: Restaurant[] = [
-  {
-    name: "Chez Mama Fatoumata",
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop",
-    rating: 4.8,
-    deliveryTime: "20-30 min",
-    distance: "1.2 km",
-    category: "Cuisine locale",
-    menu: [
-      { id: "m1", name: "Riz au gras", description: "Riz parfumé, viande mijotée, sauce tomate", price: 35000 },
-      { id: "m2", name: "Poulet braisé", description: "Demi-poulet braisé, attiéké et piment", price: 55000 },
-      { id: "m3", name: "Foutou banane", description: "Foutou banane, sauce graine traditionnelle", price: 40000 },
-    ],
-  },
-  {
-    name: "Grillades du Port",
-    image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=300&fit=crop",
-    rating: 4.6,
-    deliveryTime: "25-35 min",
-    distance: "2.1 km",
-    category: "Grillades",
-    menu: [
-      { id: "g1", name: "Brochettes de bœuf", description: "5 brochettes marinées, frites, salade", price: 45000 },
-      { id: "g2", name: "Capitaine grillé", description: "Capitaine entier, riz blanc, sauce piment", price: 70000 },
-    ],
-  },
-  {
-    name: "Le Palmier",
-    image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop",
-    rating: 4.5,
-    deliveryTime: "30-40 min",
-    distance: "3.0 km",
-    category: "Cuisine locale",
-    menu: [
-      { id: "p1", name: "Plat du jour", description: "Selon la cuisinière du jour", price: 38000 },
-    ],
-  },
-  {
-    name: "Café Conakry",
-    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop",
-    rating: 4.7,
-    deliveryTime: "15-25 min",
-    distance: "0.8 km",
-    category: "Boissons",
-    menu: [
-      { id: "c1", name: "Café noir", description: "Espresso de Guinée forestière", price: 8000 },
-      { id: "c2", name: "Jus de bissap", description: "Frais, hibiscus & gingembre", price: 12000 },
-    ],
-  },
-  {
-    name: "La Terrasse",
-    image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop",
-    rating: 4.4,
-    deliveryTime: "35-45 min",
-    distance: "4.2 km",
-    category: "Grillades",
-    menu: [
-      { id: "t1", name: "Mouton braisé", description: "Avec attiéké et oignons", price: 60000 },
-    ],
-  },
-  {
-    name: "Pâtisserie Belle Vue",
-    image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=300&fit=crop",
-    rating: 4.9,
-    deliveryTime: "20-30 min",
-    distance: "1.5 km",
-    category: "Desserts",
-    menu: [
-      { id: "b1", name: "Tarte mangue", description: "Pâte sablée, mangue de Kindia", price: 25000 },
-      { id: "b2", name: "Cookies coco", description: "Lot de 4 cookies maison", price: 15000 },
-    ],
-  },
-];
-
-type SortKey = "rating" | "time" | "distance";
-
 export function FoodView({ onBack }: FoodViewProps) {
-  const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sort, setSort] = useState<SortKey>("rating");
-  const [active, setActive] = useState<Restaurant | null>(null);
-  const [activeLive, setActiveLive] = useState<FoodRestaurant | null>(null);
-  const [liveRestaurants, setLiveRestaurants] = useState<FoodRestaurant[] | null>(null);
-  const { user, roles } = useAuth();
-  const liveUser = isLiveUser(user, roles);
+  const [cuisine, setCuisine] = useState<string | null>(null);
+  const [active, setActive] = useState<RepasDiscoveryRestaurant | null>(null);
+  const [restaurants, setRestaurants] = useState<RepasDiscoveryRestaurant[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const { user } = useAuth();
   const { restaurant: ownRestaurant, refresh: refreshMerchant } = useMerchantIdentity();
   const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    listOpenRestaurants(40)
-      .then((r) => alive && setLiveRestaurants(r))
-      .catch(() => alive && setLiveRestaurants([]));
+    setRestaurants(null);
+    setLoadError(null);
+    const t = setTimeout(() => {
+      discoverRestaurants(searchQuery, 40)
+        .then((r) => {
+          if (!alive) return;
+          setRestaurants(r);
+        })
+        .catch(() => {
+          if (!alive) return;
+          setRestaurants([]);
+          setLoadError("Impossible de charger les restaurants pour le moment.");
+        });
+    }, searchQuery ? 250 : 0);
     return () => {
       alive = false;
+      clearTimeout(t);
     };
-  }, []);
+  }, [searchQuery]);
+
+  const cuisines = useMemo(() => {
+    if (!restaurants) return [] as string[];
+    return Array.from(
+      new Set(restaurants.map((r) => r.cuisine).filter((c): c is string => !!c)),
+    ).sort();
+  }, [restaurants]);
 
   const visible = useMemo(() => {
-    const filtered = allRestaurants.filter((r) =>
-      r.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-    const parseFirst = (s: string) => parseFloat(s.replace(",", ".")) || 0;
-    return [...filtered].sort((a, b) => {
-      if (sort === "rating") return b.rating - a.rating;
-      if (sort === "time") return parseFirst(a.deliveryTime) - parseFirst(b.deliveryTime);
-      return parseFirst(a.distance) - parseFirst(b.distance);
-    });
-  }, [searchQuery, sort]);
+    if (!restaurants) return null;
+    const list = cuisine ? restaurants.filter((r) => r.cuisine === cuisine) : restaurants;
+    // Server order is preserved; orderable supply simply surfaces first.
+    return [...list].sort((a, b) => Number(b.orderable_now) - Number(a.orderable_now));
+  }, [restaurants, cuisine]);
 
-  const visibleLive = useMemo(() => {
-    if (!liveRestaurants) return null;
-    const q = searchQuery.toLowerCase();
-    return liveRestaurants.filter(
-      (r) =>
-        r.name.toLowerCase().includes(q) ||
-        (r.cuisine ?? "").toLowerCase().includes(q) ||
-        (r.district ?? "").toLowerCase().includes(q),
-    );
-  }, [liveRestaurants, searchQuery]);
+  const openCount = visible?.filter((r) => r.orderable_now).length ?? 0;
 
   return (
     <div className="max-w-md mx-auto">
       <ScreenHeader
         title="Commander un repas"
-        subtitle="Restaurants populaires à Conakry"
+        subtitle="Restaurants partenaires publiés"
         onBack={onBack}
       />
 
       <div className="px-4 mt-3 space-y-3">
-        {/* Search — premium soft style */}
+        {/* Search */}
         <div className="h-14 flex items-center gap-3 px-4 bg-card rounded-2xl shadow-soft border border-border/60">
           <div className="w-9 h-9 rounded-xl bg-[hsl(8_78%_55%/0.12)] flex items-center justify-center">
             <Search className="w-4 h-4 text-[hsl(8_78%_45%)]" />
           </div>
           <input
             type="text"
-            placeholder="Rechercher un restaurant…"
+            placeholder="Rechercher un restaurant, une cuisine, un quartier…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 bg-transparent placeholder:text-muted-foreground focus:outline-none text-sm text-foreground"
           />
         </div>
 
-        <LiveStrip
-          stats={[
-            { icon: Timer, label: "Livraison en 15 min", bg: "bg-[hsl(8_78%_55%/0.12)]", tone: "text-[hsl(8_78%_45%)]" },
-            { icon: Flame, label: "Tendance ce soir", bg: "bg-secondary/20", tone: "text-foreground" },
-            { icon: Star, label: "Restaurants notés 4.5+", bg: "bg-primary/10", tone: "text-primary" },
-          ]}
-        />
+        {visible !== null && visible.length > 0 && (
+          <p className="text-[11px] text-muted-foreground">
+            {visible.length} restaurant{visible.length > 1 ? "s" : ""} publié
+            {visible.length > 1 ? "s" : ""} · {openCount} accepte
+            {openCount > 1 ? "nt" : ""} des commandes maintenant
+          </p>
+        )}
 
         {user && !ownRestaurant && (
           <button
@@ -182,105 +103,77 @@ export function FoodView({ onBack }: FoodViewProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">Créer un restaurant</p>
-              <p className="text-[11px] text-muted-foreground">Recevez des commandes Repas en quelques minutes.</p>
+              <p className="text-[11px] text-muted-foreground">
+                Préparez votre menu, l’équipe CHOPCHOP valide la publication.
+              </p>
             </div>
             <span className="text-xs text-primary font-medium">Activer</span>
           </button>
         )}
 
-        {/* Categories */}
-        <FoodCategories
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
-
-        {/* Sort */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
-          <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-            <SlidersHorizontal className="w-3.5 h-3.5" /> Trier :
-          </span>
-          {([
-            ["rating", "Mieux notés"],
-            ["time", "Plus rapides"],
-            ["distance", "Plus proches"],
-          ] as const).map(([k, label]) => (
+        {/* Cuisine filters — derived from real published supply */}
+        {cuisines.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
             <button
-              key={k}
-              onClick={() => setSort(k)}
+              onClick={() => setCuisine(null)}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-                sort === k
+                cuisine === null
                   ? "gradient-wallet text-primary-foreground"
                   : "bg-card border border-border text-muted-foreground"
               }`}
             >
-              {label}
+              Tout
             </button>
-          ))}
-        </div>
+            {cuisines.map((c) => (
+              <button
+                key={c}
+                onClick={() => setCuisine(cuisine === c ? null : c)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                  cuisine === c
+                    ? "gradient-wallet text-primary-foreground"
+                    : "bg-card border border-border text-muted-foreground"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Restaurant list */}
       <div className="px-4 pt-4 pb-28">
-        {liveUser ? (
-          visibleLive === null ? (
-            <div className="grid grid-cols-2 gap-3">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-44 rounded-2xl bg-muted animate-pulse" />
-              ))}
-            </div>
-          ) : visibleLive.length === 0 ? (
-            <EmptyState
-              icon={UtensilsCrossed}
-              title="Repas bientôt disponible"
-              description="Les restaurants partenaires de votre zone seront affichés ici dès leur ouverture."
-            />
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {visibleLive.map((r, index) => (
-                <motion.button
-                  key={r.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => setActiveLive(r)}
-                  className="w-full bg-card rounded-2xl overflow-hidden shadow-card text-left"
-                >
-                  <div className="relative h-32 bg-muted">
-                    {(r.cover_url || r.avatar_url) && (
-                      <img
-                        src={r.cover_url || r.avatar_url || ""}
-                        alt={r.name}
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                    <div className="absolute top-2 right-2 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-full text-[10px] font-medium">
-                      {r.is_open ? "Ouvert" : "Fermé"}
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-semibold text-foreground text-sm truncate">{r.name}</h3>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {r.cuisine ?? "Cuisine locale"}
-                      {r.district ? ` · ${r.district}` : ""}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-1">~{r.prep_time_min} min</p>
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          )
+        {visible === null ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-44 rounded-2xl bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : loadError ? (
+          <div className="flex items-start gap-2 p-4 rounded-2xl bg-card border border-border text-sm text-muted-foreground">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>{loadError}</span>
+          </div>
+        ) : visible.length === 0 ? (
+          <EmptyState
+            icon={UtensilsCrossed}
+            title={searchQuery ? "Aucun résultat" : "Repas bientôt disponible"}
+            description={
+              searchQuery
+                ? "Aucun restaurant publié ne correspond à cette recherche."
+                : "Les restaurants partenaires seront affichés ici dès leur publication."
+            }
+          />
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {visible.map((restaurant, index) => (
+            {visible.map((r, index) => (
               <motion.div
-                key={restaurant.name}
+                key={r.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <RestaurantCard {...restaurant} onClick={() => setActive(restaurant)} />
+                <RestaurantCard restaurant={r} onClick={() => setActive(r)} />
               </motion.div>
             ))}
           </div>
@@ -289,10 +182,7 @@ export function FoodView({ onBack }: FoodViewProps) {
 
       <AnimatePresence>
         {active && (
-          <RestaurantDetail restaurant={active} onClose={() => setActive(null)} />
-        )}
-        {activeLive && (
-          <RepasRestaurantDetail restaurant={activeLive} onClose={() => setActiveLive(null)} />
+          <RepasRestaurantDetail restaurant={active} onClose={() => setActive(null)} />
         )}
       </AnimatePresence>
       <RestaurantOnboardingSheet

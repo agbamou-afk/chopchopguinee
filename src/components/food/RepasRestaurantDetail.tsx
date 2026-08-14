@@ -4,8 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { toast } from "sonner";
-import type { FoodMenuItem, FoodRestaurant, FoodFulfillment } from "@/lib/repas/types";
-import { listMenu } from "@/lib/repas/restaurants";
+import type { FoodMenuItem, FoodFulfillment } from "@/lib/repas/types";
+import {
+  getPublicMenu,
+  getPublicRestaurant,
+  repasBlockedLabel,
+  type RepasDiscoveryRestaurant,
+  type RepasRestaurantPublic,
+} from "@/lib/repas/discovery";
 import { useRepasCart } from "@/lib/repas/cart";
 import {
   createFoodOrder,
@@ -24,7 +30,7 @@ import { OrderMessagingPanel } from "@/components/repas/OrderMessagingPanel";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
-  restaurant: FoodRestaurant;
+  restaurant: RepasDiscoveryRestaurant;
   onClose: () => void;
 }
 
@@ -46,6 +52,8 @@ function TrustChip({ icon: Icon, label, tone = "muted" }: { icon: typeof ShieldC
 
 export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   const [menu, setMenu] = useState<FoodMenuItem[] | null>(null);
+  /** R8 — canonical, re-fetched truth wins over the discovery snapshot. */
+  const [detail, setDetail] = useState<RepasRestaurantPublic | null>(null);
   const [stage, setStage] = useState<Stage>("menu");
   const [fulfillment, setFulfillment] = useState<FoodFulfillment>("delivery");
   const [paymentMethod, setPaymentMethod] = useState<RepasTender>("cash");
@@ -75,13 +83,21 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
 
   useEffect(() => {
     let alive = true;
-    listMenu(restaurant.id)
+    getPublicRestaurant(restaurant.id)
+      .then((d) => alive && setDetail(d))
+      .catch(() => alive && setDetail(null));
+    getPublicMenu(restaurant.id)
       .then((m) => alive && setMenu(m))
       .catch(() => alive && setMenu([]));
     return () => {
       alive = false;
     };
   }, [restaurant.id]);
+
+  /** Every capability below is server-derived, never inferred client-side. */
+  const view = detail ?? restaurant;
+  const orderableNow = view.orderable_now;
+  const blockedLabel = repasBlockedLabel(view.blocked_reason);
 
   // Items in cart belonging to this restaurant
   const myCartLines = cart.restaurantId === restaurant.id ? cart.lines : [];
@@ -153,6 +169,10 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
   }, [stage, cartKey, fulfillment, restaurant.id, isLoggedIn, itemCount, deliveryCoords]);
 
   const handlePlaceOrder = async () => {
+    if (!orderableNow) {
+      toast.error(blockedLabel ?? "Ce restaurant n'accepte pas de commande pour le moment.");
+      return;
+    }
     if (!quote || !quote.deliveryEligible) {
       toast.error(
         quoteError ?? "Prix indisponible : impossible de valider cette commande.",
@@ -200,7 +220,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
     }
   };
 
-  const cover = restaurant.cover_url || restaurant.avatar_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600";
+  const cover = view.cover_url || view.avatar_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600";
 
   return (
     <motion.div
@@ -229,14 +249,14 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
               <div className="min-w-0">
                 <h1 className="text-xl font-bold text-foreground truncate">{restaurant.name}</h1>
                 <p className="text-xs text-muted-foreground">
-                  {restaurant.cuisine ?? "Cuisine locale"}
-                  {restaurant.district ? ` · ${restaurant.district}` : ""}
+                  {view.cuisine ?? "Cuisine locale"}
+                  {view.district ? ` · ${view.district}` : ""}
                 </p>
               </div>
-              {restaurant.district && (
+              {view.district && (
                 <span className="shrink-0 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
                   <MapPin className="w-3 h-3" />
-                  {restaurant.district}
+                  {view.district}
                 </span>
               )}
             </div>
@@ -244,18 +264,22 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
             {/* Trust chips — honest, no fake metrics */}
             <div className="flex flex-wrap gap-1.5 mt-3">
               <TrustChip
-                icon={restaurant.is_open ? CheckCircle2 : Clock}
-                label={restaurant.is_open ? "Ouvert" : "Fermé"}
-                tone={restaurant.is_open ? "primary" : "muted"}
+                icon={view.is_open ? CheckCircle2 : Clock}
+                label={view.is_open ? "Ouvert" : "Fermé"}
+                tone={view.is_open ? "primary" : "muted"}
               />
-              <TrustChip icon={Clock} label={`Préparation ~${restaurant.prep_time_min} min`} />
-              {restaurant.delivery_available && <TrustChip icon={Truck} label="Livraison" />}
-              {restaurant.pickup_available && <TrustChip icon={Package} label="Retrait" />}
-              {restaurant.choppay_enabled && <TrustChip icon={ShieldCheck} label="ChopPay" tone="primary" />}
-              {restaurant.verification_state === "verified" && (
-                <TrustChip icon={BadgeCheck} label="Vérifié" tone="primary" />
-              )}
+              <TrustChip icon={Clock} label={`Préparation ~${view.prep_time_min} min`} />
+              {view.delivery_available && <TrustChip icon={Truck} label="Livraison" />}
+              {view.pickup_available && <TrustChip icon={Package} label="Retrait" />}
+              {view.choppay_enabled && <TrustChip icon={ShieldCheck} label="ChopPay" tone="primary" />}
+              {view.verified && <TrustChip icon={BadgeCheck} label="Vérifié" tone="primary" />}
             </div>
+
+            {!orderableNow && blockedLabel && (
+              <p className="mt-3 text-[11px] text-muted-foreground bg-muted rounded-xl px-3 py-2">
+                {blockedLabel}
+              </p>
+            )}
           </div>
         </div>
 
@@ -278,7 +302,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                 <div className="space-y-3">
                   {group.items.map((m) => {
                     const qty = qtyFor(m.id);
-                    const disabled = !m.is_available || !restaurant.is_open;
+                    const disabled = !m.is_available || !orderableNow;
                     return (
                       <div
                         key={m.id}
@@ -411,7 +435,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                       ? deliveryPending
                         ? "Livraison à confirmer."
                         : "Livraison CHOPCHOP demandée."
-                      : `Prêt pour retrait dans ~${restaurant.prep_time_min} min.`}
+                      : `Prêt pour retrait dans ~${view.prep_time_min} min.`}
                   </p>
                   <PrimaryButton fullWidth onClick={onClose}>
                     Terminer
@@ -443,7 +467,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         relatedFoodOrderId: lastOrderId ?? undefined,
                         relatedRestaurantId: restaurant.id,
                         relatedMissionId: lastMissionId ?? undefined,
-                        district: restaurant.district ?? null,
+                        district: view.district ?? null,
                         metadata: {
                           source: "repas_order_receipt",
                           restaurant_name: restaurant.name,
@@ -482,7 +506,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         <p className="text-xs font-medium text-muted-foreground mb-1.5">Mode</p>
                         <div className="grid grid-cols-2 gap-2">
                           <button
-                            disabled={!restaurant.pickup_available}
+                            disabled={!view.pickup_ready}
                             onClick={() => {
                               setFulfillment("pickup");
                               setPaymentMethod("choppay");
@@ -492,20 +516,20 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                               fulfillment === "pickup"
                                 ? "bg-primary/10 border-primary text-primary"
                                 : "bg-card border-border text-muted-foreground",
-                              !restaurant.pickup_available && "opacity-40",
+                              !view.pickup_ready && "opacity-40",
                             )}
                           >
                             <Package className="w-4 h-4 inline mr-1.5" /> Retrait
                           </button>
                           <button
-                            disabled={!restaurant.delivery_available}
+                            disabled={!view.delivery_ready}
                             onClick={() => setFulfillment("delivery")}
                             className={cn(
                               "h-12 rounded-xl text-sm font-medium border transition",
                               fulfillment === "delivery"
                                 ? "bg-primary/10 border-primary text-primary"
                                 : "bg-card border-border text-muted-foreground",
-                              !restaurant.delivery_available && "opacity-40",
+                              !view.delivery_ready && "opacity-40",
                             )}
                           >
                             <Truck className="w-4 h-4 inline mr-1.5" /> Livraison
@@ -519,7 +543,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         {fulfillment === "pickup" && (
                           <p className="text-[11px] text-muted-foreground mt-1.5">
                             Aucun livreur : vous récupérez la commande au restaurant
-                            (~{restaurant.prep_time_min} min).
+                            (~{view.prep_time_min} min).
                           </p>
                         )}
                       </div>
@@ -588,7 +612,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         <div className="grid grid-cols-2 gap-2">
                           {(["cash", "choppay"] as RepasTender[]).map((pm) => {
                             const disabled =
-                              (pm === "choppay" && !restaurant.choppay_enabled) ||
+                              (pm === "choppay" && !view.choppay_enabled) ||
                               (pm === "cash" && fulfillment === "pickup");
                             const label = pm === "cash" ? "Espèces" : "Chop Pay";
                             return (
@@ -609,7 +633,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                             );
                           })}
                         </div>
-                        {paymentMethod === "choppay" && !restaurant.choppay_enabled && (
+                        {paymentMethod === "choppay" && !view.choppay_enabled && (
                           <p className="text-[11px] text-muted-foreground mt-1.5">
                             Chop Pay n'est pas encore activé pour ce restaurant.
                           </p>
@@ -728,6 +752,7 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                       disabled={
                         submitting ||
                         itemCount === 0 ||
+                        !orderableNow ||
                         !quote ||
                         !quote.deliveryEligible
                       }
