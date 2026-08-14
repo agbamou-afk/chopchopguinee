@@ -687,6 +687,11 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                         {repasIneligibleLabel(quote)}
                       </p>
                     )}
+                    {!quote && quoteError && stage === "checkout" && (
+                      <p className="text-[11px] text-destructive pt-0.5">
+                        {quoteError}
+                      </p>
+                    )}
                   </div>
 
                   {stage === "cart" ? (
@@ -717,7 +722,8 @@ export function RepasRestaurantDetail({ restaurant, onClose }: Props) {
                       disabled={
                         submitting ||
                         itemCount === 0 ||
-                        (!!quote && !quote.deliveryEligible)
+                        !quote ||
+                        !quote.deliveryEligible
                       }
                     >
                       {submitting ? "Envoi…" : `Commander ${formatGNF(quote?.orderTotalGnf ?? subtotal)}`}
