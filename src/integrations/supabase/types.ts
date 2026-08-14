@@ -8654,7 +8654,6 @@ export type Database = {
       _qa_node3_repas_r1_r4_fxcore: { Args: never; Returns: Json }
       _qa_node3_repas_r10_operations: { Args: never; Returns: Json }
       _qa_node3_repas_r10_operations_fxcore: { Args: never; Returns: Json }
-      _qa_node3_repas_r10_operations_fxcore_v2: { Args: never; Returns: Json }
       _qa_node3_repas_r5: {
         Args: never
         Returns: {
