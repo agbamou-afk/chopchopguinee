@@ -490,6 +490,20 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
                     Prix convenu : <b>{formatGNF(myOffer.agreed_amount_gnf)}</b>
                   </p>
                 )}
+                {myOffer.status === "accepted" && myOffer.agreed_amount_gnf != null && listing.store_id && (
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() =>
+                      requireAuth(() => {
+                        setOrderOfferId(myOffer.id);
+                        setOrderOpen(true);
+                      })
+                    }
+                  >
+                    <ShoppingBag className="w-4 h-4 mr-1" /> Commander au prix convenu
+                  </Button>
+                )}
                 {offerAwaitsBuyer(myOffer) && (
                   <div className="grid grid-cols-2 gap-2">
                     <Button
