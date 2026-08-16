@@ -4,18 +4,25 @@ import { toast } from "@/hooks/use-toast";
 import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, Loader2 } from "lucide-react";
 import { listSellerInterests, respondToInterest } from "@/lib/merchant/operations";
 import { listMerchantOffers, respondOffer, offerStatusLabel, offerAwaitsBuyer, type MarketplaceOffer } from "@/lib/marche/offers";
+import {
+  listMerchantMarcheOrders,
+  orderStatusLabel,
+  orderDisplayTotalGnf,
+  type MarcheOrder,
+} from "@/lib/marche/orders";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { formatGNF } from "@/lib/marche";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-type Section = "new" | "offers" | "prep" | "history";
+type Section = "new" | "orders" | "offers" | "prep" | "history";
 
 export function MerchantCommandesView({ merchantUserId }: { merchantUserId: string }) {
   const [tab, setTab] = useState<Section>("new");
   const [interests, setInterests] = useState<any[]>([]);
   const [offers, setOffers] = useState<MarketplaceOffer[]>([]);
+  const [orders, setOrders] = useState<MarcheOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [counterFor, setCounterFor] = useState<string | null>(null);
@@ -24,9 +31,10 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
 
   const refresh = async () => {
     setLoading(true);
-    const [iRes, oRes] = await Promise.allSettled([
+    const [iRes, oRes, cRes] = await Promise.allSettled([
       listSellerInterests(merchantUserId, 80),
       listMerchantOffers(merchantUserId),
+      listMerchantMarcheOrders(null, 80, 0),
     ]);
     if (iRes.status === "fulfilled") {
       setInterests(iRes.value);
@@ -41,6 +49,12 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
       setOffers([]);
       if (import.meta.env.DEV) console.warn("[merchant] offers load failed", oRes.reason);
     }
+    if (cRes.status === "fulfilled") {
+      setOrders(cRes.value);
+    } else {
+      setOrders([]);
+      if (import.meta.env.DEV) console.warn("[merchant] marche orders load failed", cRes.reason);
+    }
     setLoading(false);
   };
 
@@ -49,6 +63,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
   const newInterests = interests.filter((i) => i.state === "pending");
   const prepInterests = interests.filter((i) => i.state === "accepted");
   const histInterests = interests.filter((i) => ["declined", "fulfilled", "expired"].includes(i.state));
+  const openOrders = orders.filter((o) => o.status === "committed");
   const openOffers = offers.filter((o) => ["pending", "countered"].includes(o.status));
   const histOffers = offers.filter((o) => ["accepted", "rejected", "expired", "withdrawn"].includes(o.status));
 
@@ -79,6 +94,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
 
   const TABS: { key: Section; label: string; icon: typeof Inbox; badge: number }[] = [
     { key: "new", label: "Demandes", icon: Inbox, badge: newInterests.length },
+    { key: "orders", label: "Commandes", icon: ShoppingBag, badge: openOrders.length },
     { key: "offers", label: "Offres", icon: HandCoins, badge: openOffers.length },
     { key: "prep", label: "À préparer", icon: Package, badge: prepInterests.length },
     { key: "history", label: "Historique", icon: HistoryIcon, badge: 0 },
