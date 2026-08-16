@@ -4625,6 +4625,50 @@ export type Database = {
           },
         ]
       }
+      marche_fulfillment_transitions: {
+        Row: {
+          actor_id: string | null
+          actor_role: string
+          created_at: string
+          from_state: string
+          id: string
+          mission_id: string | null
+          order_id: string
+          reason: string | null
+          to_state: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role: string
+          created_at?: string
+          from_state: string
+          id?: string
+          mission_id?: string | null
+          order_id: string
+          reason?: string | null
+          to_state: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string
+          created_at?: string
+          from_state?: string
+          id?: string
+          mission_id?: string | null
+          order_id?: string
+          reason?: string | null
+          to_state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_fulfillment_transitions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marche_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marche_order_items: {
         Row: {
           category_snapshot: string | null
@@ -4691,11 +4735,13 @@ export type Database = {
       }
       marche_orders: {
         Row: {
+          accepted_at: string | null
           buyer_user_id: string
           cancel_reason: string | null
           cancelled_at: string | null
           client_request_id: string
           created_at: string
+          delivered_at: string | null
           delivery_address: string | null
           delivery_charge_gnf: number | null
           delivery_pricing_state: string
@@ -4705,6 +4751,8 @@ export type Database = {
           economics_snapshot: Json | null
           fee_policy_effective_from: string | null
           fee_policy_id: string | null
+          fulfillment_state: string
+          fulfillment_updated_at: string | null
           id: string
           item_count: number
           line_count: number
@@ -4714,18 +4762,25 @@ export type Database = {
           merchant_platform_fee_bps: number | null
           merchant_store_id: string
           merchant_user_id: string
+          mission_id: string | null
+          ready_at: string | null
+          rejected_at: string | null
           request_fingerprint: string
           reservation_expires_at: string | null
+          reservation_settled_at: string | null
+          reservation_settlement_kind: string | null
           source_offer_id: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           buyer_user_id: string
           cancel_reason?: string | null
           cancelled_at?: string | null
           client_request_id: string
           created_at?: string
+          delivered_at?: string | null
           delivery_address?: string | null
           delivery_charge_gnf?: number | null
           delivery_pricing_state?: string
@@ -4735,6 +4790,8 @@ export type Database = {
           economics_snapshot?: Json | null
           fee_policy_effective_from?: string | null
           fee_policy_id?: string | null
+          fulfillment_state?: string
+          fulfillment_updated_at?: string | null
           id?: string
           item_count: number
           line_count: number
@@ -4744,18 +4801,25 @@ export type Database = {
           merchant_platform_fee_bps?: number | null
           merchant_store_id: string
           merchant_user_id: string
+          mission_id?: string | null
+          ready_at?: string | null
+          rejected_at?: string | null
           request_fingerprint: string
           reservation_expires_at?: string | null
+          reservation_settled_at?: string | null
+          reservation_settlement_kind?: string | null
           source_offer_id?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           buyer_user_id?: string
           cancel_reason?: string | null
           cancelled_at?: string | null
           client_request_id?: string
           created_at?: string
+          delivered_at?: string | null
           delivery_address?: string | null
           delivery_charge_gnf?: number | null
           delivery_pricing_state?: string
@@ -4765,6 +4829,8 @@ export type Database = {
           economics_snapshot?: Json | null
           fee_policy_effective_from?: string | null
           fee_policy_id?: string | null
+          fulfillment_state?: string
+          fulfillment_updated_at?: string | null
           id?: string
           item_count?: number
           line_count?: number
@@ -4774,8 +4840,13 @@ export type Database = {
           merchant_platform_fee_bps?: number | null
           merchant_store_id?: string
           merchant_user_id?: string
+          mission_id?: string | null
+          ready_at?: string | null
+          rejected_at?: string | null
           request_fingerprint?: string
           reservation_expires_at?: string | null
+          reservation_settled_at?: string | null
+          reservation_settlement_kind?: string | null
           source_offer_id?: string | null
           status?: string
           updated_at?: string
@@ -4786,6 +4857,13 @@ export type Database = {
             columns: ["merchant_store_id"]
             isOneToOne: false
             referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_orders_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
             referencedColumns: ["id"]
           },
           {
@@ -8868,6 +8946,73 @@ export type Database = {
         Args: { a_lat: number; a_lng: number; b_lat: number; b_lng: number }
         Returns: number
       }
+      _marche_courier_engaged_internal: {
+        Args: { p_courier: string; p_mission_id: string; p_order_id: string }
+        Returns: undefined
+      }
+      _marche_fulfillment_apply: {
+        Args: {
+          p_actor: string
+          p_order_id: string
+          p_reason: string
+          p_role: string
+          p_to: string
+        }
+        Returns: {
+          accepted_at: string | null
+          buyer_user_id: string
+          cancel_reason: string | null
+          cancelled_at: string | null
+          client_request_id: string
+          created_at: string
+          delivered_at: string | null
+          delivery_address: string | null
+          delivery_charge_gnf: number | null
+          delivery_pricing_state: string
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          economics_resolved_at: string | null
+          economics_snapshot: Json | null
+          fee_policy_effective_from: string | null
+          fee_policy_id: string | null
+          fulfillment_state: string
+          fulfillment_updated_at: string | null
+          id: string
+          item_count: number
+          line_count: number
+          merchandise_subtotal_gnf: number
+          merchant_fee_gnf: number | null
+          merchant_payable_gnf: number | null
+          merchant_platform_fee_bps: number | null
+          merchant_store_id: string
+          merchant_user_id: string
+          mission_id: string | null
+          ready_at: string | null
+          rejected_at: string | null
+          request_fingerprint: string
+          reservation_expires_at: string | null
+          reservation_settled_at: string | null
+          reservation_settlement_kind: string | null
+          source_offer_id: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marche_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _marche_fulfillment_note: {
+        Args: {
+          p_actor: string
+          p_order_id: string
+          p_reason: string
+          p_role: string
+        }
+        Returns: undefined
+      }
       _marche_listing_assert_valid: {
         Args: { l: Database["public"]["Tables"]["marketplace_listings"]["Row"] }
         Returns: undefined
@@ -8915,6 +9060,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      _marche_reservation_settle: {
+        Args: { p_kind: string; p_order_id: string }
+        Returns: boolean
       }
       _merchant_payable_create_internal: {
         Args: {
@@ -12168,6 +12317,10 @@ export type Database = {
         Args: { p_offer_id: string; p_reason?: string }
         Returns: Json
       }
+      marche_courier_transition: {
+        Args: { p_action: string; p_order_id: string }
+        Returns: Json
+      }
       marche_create_offer_payment_intent: {
         Args: { p_offer_id: string }
         Returns: {
@@ -12215,6 +12368,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      marche_dispatch_request: { Args: { p_order_id: string }; Returns: Json }
       marche_distance_bucket: {
         Args: { p_distance_m: number }
         Returns: string
@@ -12378,6 +12532,10 @@ export type Database = {
         Args: { p_bps: number; p_subtotal_gnf: number }
         Returns: number
       }
+      marche_merchant_transition: {
+        Args: { p_action: string; p_order_id: string; p_reason?: string }
+        Returns: Json
+      }
       marche_offer_expire_due: { Args: { p_limit?: number }; Returns: Json }
       marche_offer_get: { Args: { p_offer_id: string }; Returns: Json }
       marche_offer_is_expired: {
@@ -12404,6 +12562,10 @@ export type Database = {
         Returns: Json
       }
       marche_order_commit: { Args: { p_payload: Json }; Returns: Json }
+      marche_order_fulfillment_history: {
+        Args: { p_order_id: string }
+        Returns: Json
+      }
       marche_order_get: { Args: { p_order_id: string }; Returns: Json }
       marche_order_json: {
         Args: { o: Database["public"]["Tables"]["marche_orders"]["Row"] }
