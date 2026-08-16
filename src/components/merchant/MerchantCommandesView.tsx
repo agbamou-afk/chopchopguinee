@@ -116,7 +116,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-4 gap-1 bg-muted/40 rounded-xl p-1">
+      <div className="grid grid-cols-5 gap-1 bg-muted/40 rounded-xl p-1">
         {/* R3: order commitments are shown as their own truth, never merged with offers. */}
         {TABS.map((t) => {
           const Icon = t.icon;
@@ -137,6 +137,38 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
       </div>
 
       {loading && <p className="text-sm text-muted-foreground">Chargement…</p>}
+
+      {!loading && tab === "orders" && (
+        orders.length === 0
+          ? <p className="text-sm text-muted-foreground">Aucune commande reçue.</p>
+          : <div className="space-y-2">
+              {orders.map((o) => (
+                <div key={o.id} className="rounded-xl bg-card border border-border/60 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">{formatGNF(orderDisplayTotalGnf(o))}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {o.line_count} article{o.line_count > 1 ? "s" : ""} · {o.item_count} unité{o.item_count > 1 ? "s" : ""}
+                      </p>
+                      {o.items.map((it) => (
+                        <p key={it.id} className="text-xs text-muted-foreground truncate">
+                          {it.qty} × {it.title} — {formatGNF(it.line_total_gnf)}
+                        </p>
+                      ))}
+                      {o.delivery_address && (
+                        <p className="text-[11px] text-muted-foreground mt-1">{o.delivery_address}</p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-1">{new Date(o.created_at).toLocaleString("fr-FR")}</p>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                      {orderStatusLabel(o.status)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] text-muted-foreground">Paiement et livraison : à connecter.</p>
+                </div>
+              ))}
+            </div>
+      )}
 
       {!loading && tab === "new" && (
         newInterests.length === 0
