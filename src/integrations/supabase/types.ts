@@ -9623,15 +9623,8 @@ export type Database = {
       _qa_node3_repas_r6_custody: { Args: never; Returns: Json }
       _qa_node3_repas_r6_custody_fxcore: { Args: never; Returns: Json }
       _qa_node3_repas_r7_ext: { Args: never; Returns: Json }
-      _qa_node3_repas_r7_ext_fxcore: { Args: never; Returns: Json }
-      _qa_node3_repas_r7_fixture_phone_backfill: {
-        Args: never
-        Returns: undefined
-      }
       _qa_node3_repas_r7_readtruth: { Args: never; Returns: Json }
-      _qa_node3_repas_r7_readtruth_fxcore: { Args: never; Returns: Json }
       _qa_node3_repas_r7_semantics: { Args: never; Returns: Json }
-      _qa_node3_repas_r7_semantics_fxcore: { Args: never; Returns: Json }
       _qa_node3_repas_r7_tracking_receipt: { Args: never; Returns: Json }
       _qa_node3_repas_r7_tracking_receipt_fxcore: { Args: never; Returns: Json }
       _qa_node3_repas_r8_channel: { Args: never; Returns: Json }
