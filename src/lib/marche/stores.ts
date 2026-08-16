@@ -46,6 +46,30 @@ export async function getOwnStore(userId: string) {
 }
 
 export async function listStores(opts: { q?: string; district?: string; limit?: number } = {}) {
+  return listStoresRaw(opts);
+}
+
+/**
+ * Node 4 R1.5 — approved merchant supply doctrine.
+ * Only an approved, active store owned by the user may originate Marché
+ * supply. Community / storeless selling is not a production path.
+ */
+export type SellerEligibility = {
+  store: MerchantStore | null;
+  canSell: boolean;
+  reason: "no_store" | "pending" | "not_active" | "ok";
+};
+
+export async function getSellerEligibility(userId: string): Promise<SellerEligibility> {
+  const store = await getOwnStore(userId).catch(() => null);
+  if (!store) return { store: null, canSell: false, reason: "no_store" };
+  const onboarding = (store as MerchantStore & { onboarding_status?: string }).onboarding_status;
+  if (onboarding !== "approved") return { store, canSell: false, reason: "pending" };
+  if (store.status !== "active") return { store, canSell: false, reason: "not_active" };
+  return { store, canSell: true, reason: "ok" };
+}
+
+async function listStoresRaw(opts: { q?: string; district?: string; limit?: number } = {}) {
   type Builder = {
     eq: (c: string, v: unknown) => Builder;
     ilike: (c: string, v: string) => Builder;
