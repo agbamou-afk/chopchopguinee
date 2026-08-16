@@ -40,10 +40,20 @@ export interface MarcheOrder {
   delivery_address: string | null;
   dropoff_lat: number | null;
   dropoff_lng: number | null;
-  /** R3 carries no finance: always null until a later certified pass. */
-  merchant_fee_gnf: number | null;
+  /**
+   * R4 merchant economics. Present ONLY for the merchant that owns the order
+   * and for admins; the server omits these keys for buyers. Never recomputed
+   * client-side.
+   */
+  merchant_fee_gnf?: number | null;
+  merchant_payable_gnf?: number | null;
+  merchant_platform_fee_bps?: number | null;
+  fee_policy_id?: string | null;
+  fee_policy_effective_from?: string | null;
+  economics_resolved_at?: string | null;
+  /** Customer delivery economics are a separate axis and stay unresolved. */
   delivery_charge_gnf: number | null;
-  fee_policy_id: string | null;
+  delivery_pricing_state: "unresolved" | "resolved" | "not_applicable";
   reservation_expires_at: string | null;
   cancelled_at: string | null;
   cancel_reason: string | null;
@@ -84,6 +94,10 @@ const REFUSALS: Record<string, string> = {
   INVALID_PRICE: "Prix invalide.",
   NOT_AUTHORIZED: "Action non autorisée.",
   ORDER_NOT_FOUND: "Commande introuvable.",
+  CLIENT_ECONOMICS_NOT_ALLOWED: "Montants invalides : les montants sont calculés par CHOP CHOP.",
+  MERCHANT_FEE_POLICY_MISSING: "Tarification indisponible, réessayez plus tard.",
+  NO_ACTIVE_POLICY: "Tarification indisponible, réessayez plus tard.",
+  ECONOMICS_IMMUTABLE: "Les montants de cette commande sont définitifs.",
 };
 
 export function translateOrderError(raw: string | null | undefined): string {
@@ -171,9 +185,23 @@ export function orderStatusLabel(status: MarcheOrderStatus | string): string {
 }
 
 /**
- * The ONLY amount the UI may present as the order total in R3: the server's
- * frozen merchandise subtotal. No fee, no delivery charge, no local math.
+ * The ONLY amount the UI may present to a customer as the order total: the
+ * server's frozen merchandise subtotal. Customer delivery pricing is not yet
+ * canonically known, and the merchant platform fee is never a customer amount.
  */
 export function orderDisplayTotalGnf(order: MarcheOrder): number {
   return order.merchandise_subtotal_gnf;
+}
+
+/** True when the server did not (yet) resolve customer delivery pricing. */
+export function isDeliveryPricingUnresolved(order: MarcheOrder): boolean {
+  return order.delivery_pricing_state !== "resolved";
+}
+
+/**
+ * Merchant/admin internal truth only: what the merchant is owed on merchandise,
+ * exactly as frozen by the server. Returns null for a buyer-scoped payload.
+ */
+export function merchantPayableGnf(order: MarcheOrder): number | null {
+  return order.merchant_payable_gnf ?? null;
 }
