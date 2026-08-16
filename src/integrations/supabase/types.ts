@@ -9140,10 +9140,6 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
-      _qa_n435_fixture_store_nc: {
-        Args: { p_owner: string; p_slug: string }
-        Returns: string
-      }
       _qa_node0_course: { Args: never; Returns: Json }
       _qa_node1_bonbonna: { Args: never; Returns: Json }
       _qa_node1_bonbonna_full: { Args: never; Returns: Json }
