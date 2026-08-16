@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _qa_board_run: {
+        Row: {
+          err: string | null
+          result: Json | null
+          suite: string
+        }
+        Insert: {
+          err?: string | null
+          result?: Json | null
+          suite: string
+        }
+        Update: {
+          err?: string | null
+          result?: Json | null
+          suite?: string
+        }
+        Relationships: []
+      }
       _qa_s13_results: {
         Row: {
           created_at: string
