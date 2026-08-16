@@ -4445,6 +4445,157 @@ export type Database = {
         }
         Relationships: []
       }
+      marche_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          line_total_gnf: number
+          listing_id: string
+          order_id: string
+          qty: number
+          source_offer_id: string | null
+          store_id_snapshot: string
+          title_snapshot: string
+          unit_price_gnf: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          line_total_gnf: number
+          listing_id: string
+          order_id: string
+          qty: number
+          source_offer_id?: string | null
+          store_id_snapshot: string
+          title_snapshot: string
+          unit_price_gnf: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          line_total_gnf?: number
+          listing_id?: string
+          order_id?: string
+          qty?: number
+          source_offer_id?: string | null
+          store_id_snapshot?: string
+          title_snapshot?: string
+          unit_price_gnf?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_order_items_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_order_items_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
+          },
+          {
+            foreignKeyName: "marche_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marche_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_orders: {
+        Row: {
+          buyer_user_id: string
+          cancel_reason: string | null
+          cancelled_at: string | null
+          client_request_id: string
+          created_at: string
+          delivery_address: string | null
+          delivery_charge_gnf: number | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          fee_policy_id: string | null
+          id: string
+          item_count: number
+          line_count: number
+          merchandise_subtotal_gnf: number
+          merchant_fee_gnf: number | null
+          merchant_store_id: string
+          merchant_user_id: string
+          request_fingerprint: string
+          reservation_expires_at: string | null
+          source_offer_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_user_id: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          client_request_id: string
+          created_at?: string
+          delivery_address?: string | null
+          delivery_charge_gnf?: number | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          fee_policy_id?: string | null
+          id?: string
+          item_count: number
+          line_count: number
+          merchandise_subtotal_gnf: number
+          merchant_fee_gnf?: number | null
+          merchant_store_id: string
+          merchant_user_id: string
+          request_fingerprint: string
+          reservation_expires_at?: string | null
+          source_offer_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_user_id?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          client_request_id?: string
+          created_at?: string
+          delivery_address?: string | null
+          delivery_charge_gnf?: number | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          fee_policy_id?: string | null
+          id?: string
+          item_count?: number
+          line_count?: number
+          merchandise_subtotal_gnf?: number
+          merchant_fee_gnf?: number | null
+          merchant_store_id?: string
+          merchant_user_id?: string
+          request_fingerprint?: string
+          reservation_expires_at?: string | null
+          source_offer_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_orders_merchant_store_id_fkey"
+            columns: ["merchant_store_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_orders_source_offer_id_fkey"
+            columns: ["source_offer_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_onboarding_assignments: {
         Row: {
           assigned_zone: string | null
@@ -4565,6 +4716,7 @@ export type Database = {
           pricing_mode: string
           promoted: boolean
           quantity_in_stock: number | null
+          quantity_reserved: number
           seller_id: string
           sold_count: number
           status: Database["public"]["Enums"]["listing_status"]
@@ -4599,6 +4751,7 @@ export type Database = {
           pricing_mode?: string
           promoted?: boolean
           quantity_in_stock?: number | null
+          quantity_reserved?: number
           seller_id: string
           sold_count?: number
           status?: Database["public"]["Enums"]["listing_status"]
@@ -4633,6 +4786,7 @@ export type Database = {
           pricing_mode?: string
           promoted?: boolean
           quantity_in_stock?: number | null
+          quantity_reserved?: number
           seller_id?: string
           sold_count?: number
           status?: Database["public"]["Enums"]["listing_status"]
@@ -8242,7 +8396,9 @@ export type Database = {
           photo_count: number | null
           price_gnf: number | null
           pricing_mode: string | null
+          quantity_available: number | null
           quantity_in_stock: number | null
+          quantity_reserved: number | null
           refusal_reason: string | null
           seller_banned: boolean | null
           seller_id: string | null
@@ -8542,6 +8698,7 @@ export type Database = {
           pricing_mode: string
           promoted: boolean
           quantity_in_stock: number | null
+          quantity_reserved: number
           seller_id: string
           sold_count: number
           status: Database["public"]["Enums"]["listing_status"]
@@ -8848,6 +9005,7 @@ export type Database = {
       _qa_node4_marche_r1: { Args: never; Returns: Json }
       _qa_node4_marche_r15: { Args: never; Returns: Json }
       _qa_node4_marche_r2: { Args: never; Returns: Json }
+      _qa_node4_marche_r3: { Args: never; Returns: Json }
       _qa_node4_probe: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
@@ -11401,6 +11559,7 @@ export type Database = {
           pricing_mode: string
           promoted: boolean
           quantity_in_stock: number | null
+          quantity_reserved: number
           seller_id: string
           sold_count: number
           status: Database["public"]["Enums"]["listing_status"]
@@ -11956,6 +12115,32 @@ export type Database = {
       marche_offers_for_merchant: {
         Args: { p_limit?: number }
         Returns: Json[]
+      }
+      marche_order_cancel: {
+        Args: { p_order_id: string; p_reason?: string }
+        Returns: Json
+      }
+      marche_order_commit: { Args: { p_payload: Json }; Returns: Json }
+      marche_order_get: { Args: { p_order_id: string }; Returns: Json }
+      marche_order_json: {
+        Args: { o: Database["public"]["Tables"]["marche_orders"]["Row"] }
+        Returns: Json
+      }
+      marche_order_release_expired: {
+        Args: { p_limit?: number }
+        Returns: number
+      }
+      marche_orders_admin: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      marche_orders_for_buyer: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      marche_orders_for_merchant: {
+        Args: { p_limit?: number; p_offset?: number; p_store_id?: string }
+        Returns: Json
       }
       marche_seller_banned: { Args: { p_seller_id: string }; Returns: boolean }
       marche_store_listing_previews: {
