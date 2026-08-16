@@ -84,6 +84,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
   };
 
   const actOffer = async (o: MarketplaceOffer, action: "accept" | "reject" | "counter") => {
+    // (offer flow below)
     if (action === "counter" && counterFor !== o.id) {
       setCounterFor(o.id); setCounterAmt(""); setCounterMsg("");
       return;
