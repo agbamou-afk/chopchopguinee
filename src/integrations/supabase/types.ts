@@ -4654,6 +4654,9 @@ export type Database = {
       }
       marketplace_offers: {
         Row: {
+          agreed_amount_gnf: number | null
+          agreed_at: string | null
+          agreed_by_user_id: string | null
           authorized_at: string | null
           buyer_message: string | null
           buyer_user_id: string
@@ -4661,6 +4664,8 @@ export type Database = {
           completed_at: string | null
           counter_amount_gnf: number | null
           created_at: string
+          current_proposer_role: string
+          expired_at: string | null
           expires_at: string | null
           fulfilled_at: string | null
           fulfillment_status: string
@@ -4681,6 +4686,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agreed_amount_gnf?: number | null
+          agreed_at?: string | null
+          agreed_by_user_id?: string | null
           authorized_at?: string | null
           buyer_message?: string | null
           buyer_user_id: string
@@ -4688,6 +4696,8 @@ export type Database = {
           completed_at?: string | null
           counter_amount_gnf?: number | null
           created_at?: string
+          current_proposer_role?: string
+          expired_at?: string | null
           expires_at?: string | null
           fulfilled_at?: string | null
           fulfillment_status?: string
@@ -4708,6 +4718,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agreed_amount_gnf?: number | null
+          agreed_at?: string | null
+          agreed_by_user_id?: string | null
           authorized_at?: string | null
           buyer_message?: string | null
           buyer_user_id?: string
@@ -4715,6 +4728,8 @@ export type Database = {
           completed_at?: string | null
           counter_amount_gnf?: number | null
           created_at?: string
+          current_proposer_role?: string
+          expired_at?: string | null
           expires_at?: string | null
           fulfilled_at?: string | null
           fulfillment_status?: string
@@ -8832,6 +8847,7 @@ export type Database = {
       _qa_node3_repas_r9_recovery_flows_fxcore: { Args: never; Returns: Json }
       _qa_node4_marche_r1: { Args: never; Returns: Json }
       _qa_node4_marche_r15: { Args: never; Returns: Json }
+      _qa_node4_marche_r2: { Args: never; Returns: Json }
       _qa_node4_probe: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
@@ -10023,6 +10039,10 @@ export type Database = {
           processed_summaries: number
           upserted_segments: number
         }[]
+      }
+      buyer_respond_marketplace_offer: {
+        Args: { p_action: string; p_message?: string; p_offer_id: string }
+        Returns: undefined
       }
       can_access_admin: { Args: { _user_id: string }; Returns: boolean }
       can_manage_operations: { Args: { _user_id: string }; Returns: boolean }
@@ -11916,9 +11936,26 @@ export type Database = {
           visibility: string
         }[]
       }
+      marche_offer_expire_due: { Args: { p_limit?: number }; Returns: Json }
+      marche_offer_get: { Args: { p_offer_id: string }; Returns: Json }
+      marche_offer_is_expired: {
+        Args: {
+          p_offer: Database["public"]["Tables"]["marketplace_offers"]["Row"]
+        }
+        Returns: boolean
+      }
       marche_offer_set_tender: {
         Args: { p_method: string; p_offer_id: string }
         Returns: Json
+      }
+      marche_offers_admin: { Args: { p_limit?: number }; Returns: Json[] }
+      marche_offers_for_buyer: {
+        Args: { p_limit?: number; p_listing_id?: string }
+        Returns: Json[]
+      }
+      marche_offers_for_merchant: {
+        Args: { p_limit?: number }
+        Returns: Json[]
       }
       marche_seller_banned: { Args: { p_seller_id: string }; Returns: boolean }
       marche_store_listing_previews: {
