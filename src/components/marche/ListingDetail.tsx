@@ -592,7 +592,7 @@ function AcceptedOfferPaymentBlock({
   onPaid: () => Promise<void> | void;
 }) {
   const [busy, setBusy] = useState(false);
-  const amount = offer.counter_amount_gnf ?? offer.offer_amount_gnf;
+  const amount = offerActiveAmountGnf(offer);
   const status = (offer.payment_status ?? "unpaid") as string;
 
   const canPay = status === "unpaid" || status === "failed" || status === "cancelled";
