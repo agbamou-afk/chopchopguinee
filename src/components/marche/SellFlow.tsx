@@ -529,6 +529,8 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
             </Button>
           )}
         </div>
+        </>
+        ) : null}
       </div>
     </div>
   );
