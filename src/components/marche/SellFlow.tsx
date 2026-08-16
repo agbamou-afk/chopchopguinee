@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatGNF } from "@/lib/format";
 import { ArrowLeft, Camera, X, ChevronRight, Check } from "lucide-react";
 import { motion } from "framer-motion";
@@ -18,7 +18,8 @@ import {
   type AvailabilityId,
   type FulfillmentId,
 } from "@/lib/marche";
-import { getOwnStore } from "@/lib/marche/stores";
+import { getSellerEligibility, type SellerEligibility } from "@/lib/marche/stores";
+import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -50,7 +51,26 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
   const [condition, setCondition] = useState<ConditionId | "">("");
   const [availability, setAvailability] = useState<AvailabilityId>("to_confirm");
   const [fulfillment, setFulfillment] = useState<FulfillmentId[]>(["to_confirm"]);
+  const [elig, setElig] = useState<SellerEligibility | null>(null);
+  const [eligLoading, setEligLoading] = useState(true);
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user.id;
+      const res = uid
+        ? await getSellerEligibility(uid)
+        : ({ store: null, canSell: false, reason: "no_store" } as SellerEligibility);
+      if (!alive) return;
+      setElig(res);
+      setEligLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const insertPrompt = (field: string) => {
     const tag = `${field} : `;
@@ -111,8 +131,16 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
       return;
     }
     const uid = sess.session.user.id;
-    // Auto-attach to owner's store if one exists.
-    const ownStore = await getOwnStore(uid).catch(() => null);
+    // R1.5: only an approved, active merchant store may originate supply.
+    const eligibility = await getSellerEligibility(uid).catch(() => null);
+    if (!eligibility?.canSell || !eligibility.store) {
+      toast({
+        title: "Boutique marchande requise",
+        description: "Seules les boutiques approuvées par CHOP CHOP peuvent publier sur Marché.",
+      });
+      setBusy(false);
+      return;
+    }
     const parsed = schema.safeParse({
       title,
       description: description || undefined,
@@ -134,8 +162,8 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
       }
     ).rpc("marche_listing_create", {
       p_payload: {
-        store_id: ownStore?.id ?? null,
-        kind: ownStore ? "merchant" : "community",
+        store_id: eligibility.store.id,
+        kind: "merchant",
         category: parsed.data.category,
         title: parsed.data.title,
         description: parsed.data.description ?? null,
