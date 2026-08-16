@@ -4878,6 +4878,219 @@ export type Database = {
           },
         ]
       }
+      marche_staple_categories: {
+        Row: {
+          code: string
+          created_at: string
+          is_active: boolean
+          name_fr: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          is_active?: boolean
+          name_fr: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          is_active?: boolean
+          name_fr?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marche_staple_commodities: {
+        Row: {
+          aliases: string[]
+          category_code: string
+          code: string
+          created_at: string
+          description_fr: string | null
+          icon_key: string | null
+          id: string
+          is_active: boolean
+          name_fr: string
+          short_label_fr: string | null
+          sort_order: number
+          unit_family: string
+          updated_at: string
+        }
+        Insert: {
+          aliases?: string[]
+          category_code: string
+          code: string
+          created_at?: string
+          description_fr?: string | null
+          icon_key?: string | null
+          id?: string
+          is_active?: boolean
+          name_fr: string
+          short_label_fr?: string | null
+          sort_order?: number
+          unit_family: string
+          updated_at?: string
+        }
+        Update: {
+          aliases?: string[]
+          category_code?: string
+          code?: string
+          created_at?: string
+          description_fr?: string | null
+          icon_key?: string | null
+          id?: string
+          is_active?: boolean
+          name_fr?: string
+          short_label_fr?: string | null
+          sort_order?: number
+          unit_family?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_staple_commodities_category_code_fkey"
+            columns: ["category_code"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_categories"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "marche_staple_commodities_category_code_fkey"
+            columns: ["category_code"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["category_code"]
+          },
+        ]
+      }
+      marche_staple_purchase_options: {
+        Row: {
+          canonical_base_unit: string | null
+          canonical_quantity: number | null
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label_fr: string
+          max_qty: number
+          min_qty: number
+          normalization_kind: string
+          sale_unit: string
+          sort_order: number
+          step_qty: number
+          updated_at: string
+          variant_id: string
+        }
+        Insert: {
+          canonical_base_unit?: string | null
+          canonical_quantity?: number | null
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label_fr: string
+          max_qty?: number
+          min_qty?: number
+          normalization_kind: string
+          sale_unit: string
+          sort_order?: number
+          step_qty?: number
+          updated_at?: string
+          variant_id: string
+        }
+        Update: {
+          canonical_base_unit?: string | null
+          canonical_quantity?: number | null
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label_fr?: string
+          max_qty?: number
+          min_qty?: number
+          normalization_kind?: string
+          sale_unit?: string
+          sort_order?: number
+          step_qty?: number
+          updated_at?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_staple_purchase_options_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_staple_purchase_options_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["variant_id"]
+          },
+        ]
+      }
+      marche_staple_variants: {
+        Row: {
+          code: string
+          commodity_id: string
+          created_at: string
+          grade_note_fr: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name_fr: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          commodity_id: string
+          created_at?: string
+          grade_note_fr?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name_fr: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          commodity_id?: string
+          created_at?: string
+          grade_note_fr?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name_fr?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_staple_variants_commodity_id_fkey"
+            columns: ["commodity_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_commodities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_staple_variants_commodity_id_fkey"
+            columns: ["commodity_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["commodity_id"]
+          },
+        ]
+      }
       market_onboarding_assignments: {
         Row: {
           assigned_zone: string | null
@@ -8699,6 +8912,40 @@ export type Database = {
           },
         ]
       }
+      v_marche_staple_public: {
+        Row: {
+          aliases: string[] | null
+          canonical_base_unit: string | null
+          canonical_quantity: number | null
+          category_code: string | null
+          category_name_fr: string | null
+          category_sort: number | null
+          commodity_code: string | null
+          commodity_id: string | null
+          commodity_name_fr: string | null
+          commodity_sort: number | null
+          description_fr: string | null
+          grade_note_fr: string | null
+          icon_key: string | null
+          max_qty: number | null
+          min_qty: number | null
+          normalization_kind: string | null
+          option_code: string | null
+          option_id: string | null
+          option_label_fr: string | null
+          option_sort: number | null
+          sale_unit: string | null
+          short_label_fr: string | null
+          step_qty: number | null
+          unit_family: string | null
+          variant_code: string | null
+          variant_id: string | null
+          variant_is_default: boolean | null
+          variant_name_fr: string | null
+          variant_sort: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _anonymize_user_core: {
@@ -9068,6 +9315,17 @@ export type Database = {
         Args: { p_kind: string; p_order_id: string }
         Returns: boolean
       }
+      _marche_staple_audit: {
+        Args: {
+          p_action: string
+          p_actor: string
+          p_after: Json
+          p_target_id: string
+          p_target_type: string
+        }
+        Returns: undefined
+      }
+      _marche_staple_require_admin: { Args: never; Returns: string }
       _merchant_payable_create_internal: {
         Args: {
           p_deduction_gnf?: number
@@ -9362,9 +9620,14 @@ export type Database = {
       _qa_node4_marche_r35: { Args: never; Returns: Json }
       _qa_node4_marche_r4: { Args: never; Returns: Json }
       _qa_node4_marche_r5: { Args: never; Returns: Json }
+      _qa_node4_marche_r6: { Args: never; Returns: Json }
       _qa_node4_probe: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
+      }
+      _qa_r6_err: {
+        Args: { p_role: string; p_sql: string; p_uid: string }
+        Returns: string
       }
       _qa_r6_proof: {
         Args: {
@@ -12592,6 +12855,26 @@ export type Database = {
         Returns: Json
       }
       marche_seller_banned: { Args: { p_seller_id: string }; Returns: boolean }
+      marche_staple_can_manage: { Args: { _user: string }; Returns: boolean }
+      marche_staple_categories_public: { Args: never; Returns: Json }
+      marche_staple_commodity_upsert: { Args: { p: Json }; Returns: Json }
+      marche_staple_get: { Args: { p_commodity_code: string }; Returns: Json }
+      marche_staple_option_upsert: { Args: { p: Json }; Returns: Json }
+      marche_staple_set_active: {
+        Args: { p_active: boolean; p_id: string; p_kind: string }
+        Returns: Json
+      }
+      marche_staple_variant_upsert: { Args: { p: Json }; Returns: Json }
+      marche_staples_admin: { Args: never; Returns: Json }
+      marche_staples_discover: {
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+        }
+        Returns: Json
+      }
       marche_store_listing_previews: {
         Args: { p_store_ids: string[] }
         Returns: {
