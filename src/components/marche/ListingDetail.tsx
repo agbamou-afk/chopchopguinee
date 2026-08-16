@@ -458,6 +458,44 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
                 {myOffer.merchant_message && (
                   <p className="text-xs text-muted-foreground italic">« {myOffer.merchant_message} »</p>
                 )}
+                {myOffer.status === "accepted" && myOffer.agreed_amount_gnf != null && (
+                  <p className="text-xs text-foreground">
+                    Prix convenu : <b>{formatGNF(myOffer.agreed_amount_gnf)}</b>
+                  </p>
+                )}
+                {offerAwaitsBuyer(myOffer) && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await buyerRespondOffer({ offerId: myOffer.id, action: "accept" });
+                          setMyOffer(selfId ? await getMyOfferForListing(listing.id, selfId) : null);
+                          toast({ title: "Contre-offre acceptée" });
+                        } catch (e: any) {
+                          toast({ title: "Erreur", description: e?.message });
+                        }
+                      }}
+                    >
+                      Accepter
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await buyerRespondOffer({ offerId: myOffer.id, action: "reject" });
+                          setMyOffer(selfId ? await getMyOfferForListing(listing.id, selfId) : null);
+                          toast({ title: "Contre-offre refusée" });
+                        } catch (e: any) {
+                          toast({ title: "Erreur", description: e?.message });
+                        }
+                      }}
+                    >
+                      Refuser
+                    </Button>
+                  </div>
+                )}
                 {(myOffer.status === "pending" || myOffer.status === "countered") && (
                   <Button
                     variant="outline" size="sm" className="w-full"
