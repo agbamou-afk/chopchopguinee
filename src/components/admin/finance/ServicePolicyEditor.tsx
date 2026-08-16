@@ -97,6 +97,7 @@ export function ServicePolicyEditor({ missionType, rows, canEdit, onSaved }: Pro
       p_delivery_max_distance_km: num("delivery_max_distance_km"),
       p_pickup_platform_fee_bps: num("pickup_platform_fee_bps"),
       p_courier_payout_gnf: num("courier_payout_gnf"),
+      p_merchant_platform_fee_bps: num("merchant_platform_fee_bps"),
     } as never);
     setSaving(false);
     if (error) {

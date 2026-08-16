@@ -2870,6 +2870,7 @@ export type Database = {
           fixed_commission_gnf: number
           id: string
           max_declared_value_gnf: number | null
+          merchant_platform_fee_bps: number | null
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
@@ -2904,6 +2905,7 @@ export type Database = {
           fixed_commission_gnf?: number
           id?: string
           max_declared_value_gnf?: number | null
+          merchant_platform_fee_bps?: number | null
           min_driver_balance_gnf?: number
           mission_type: string
           note?: string | null
@@ -2938,6 +2940,7 @@ export type Database = {
           fixed_commission_gnf?: number
           id?: string
           max_declared_value_gnf?: number | null
+          merchant_platform_fee_bps?: number | null
           min_driver_balance_gnf?: number
           mission_type?: string
           note?: string | null
@@ -4695,14 +4698,20 @@ export type Database = {
           created_at: string
           delivery_address: string | null
           delivery_charge_gnf: number | null
+          delivery_pricing_state: string
           dropoff_lat: number | null
           dropoff_lng: number | null
+          economics_resolved_at: string | null
+          economics_snapshot: Json | null
+          fee_policy_effective_from: string | null
           fee_policy_id: string | null
           id: string
           item_count: number
           line_count: number
           merchandise_subtotal_gnf: number
           merchant_fee_gnf: number | null
+          merchant_payable_gnf: number | null
+          merchant_platform_fee_bps: number | null
           merchant_store_id: string
           merchant_user_id: string
           request_fingerprint: string
@@ -4719,14 +4728,20 @@ export type Database = {
           created_at?: string
           delivery_address?: string | null
           delivery_charge_gnf?: number | null
+          delivery_pricing_state?: string
           dropoff_lat?: number | null
           dropoff_lng?: number | null
+          economics_resolved_at?: string | null
+          economics_snapshot?: Json | null
+          fee_policy_effective_from?: string | null
           fee_policy_id?: string | null
           id?: string
           item_count: number
           line_count: number
           merchandise_subtotal_gnf: number
           merchant_fee_gnf?: number | null
+          merchant_payable_gnf?: number | null
+          merchant_platform_fee_bps?: number | null
           merchant_store_id: string
           merchant_user_id: string
           request_fingerprint: string
@@ -4743,14 +4758,20 @@ export type Database = {
           created_at?: string
           delivery_address?: string | null
           delivery_charge_gnf?: number | null
+          delivery_pricing_state?: string
           dropoff_lat?: number | null
           dropoff_lng?: number | null
+          economics_resolved_at?: string | null
+          economics_snapshot?: Json | null
+          fee_policy_effective_from?: string | null
           fee_policy_id?: string | null
           id?: string
           item_count?: number
           line_count?: number
           merchandise_subtotal_gnf?: number
           merchant_fee_gnf?: number | null
+          merchant_payable_gnf?: number | null
+          merchant_platform_fee_bps?: number | null
           merchant_store_id?: string
           merchant_user_id?: string
           request_fingerprint?: string
@@ -9187,6 +9208,7 @@ export type Database = {
       _qa_node4_marche_r2: { Args: never; Returns: Json }
       _qa_node4_marche_r3: { Args: never; Returns: Json }
       _qa_node4_marche_r35: { Args: never; Returns: Json }
+      _qa_node4_marche_r4: { Args: never; Returns: Json }
       _qa_node4_probe: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
@@ -10143,6 +10165,7 @@ export type Database = {
           p_fee_basis?: string
           p_fixed_commission_gnf?: number
           p_max_declared_value_gnf?: number
+          p_merchant_platform_fee_bps?: number
           p_min_driver_balance_gnf?: number
           p_mission_type: string
           p_note?: string
@@ -11541,6 +11564,7 @@ export type Database = {
           fixed_commission_gnf: number
           id: string
           max_declared_value_gnf: number | null
+          merchant_platform_fee_bps: number | null
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
@@ -11584,6 +11608,7 @@ export type Database = {
           fixed_commission_gnf: number
           id: string
           max_declared_value_gnf: number | null
+          merchant_platform_fee_bps: number | null
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
@@ -11627,6 +11652,7 @@ export type Database = {
           fixed_commission_gnf: number
           id: string
           max_declared_value_gnf: number | null
+          merchant_platform_fee_bps: number | null
           min_driver_balance_gnf: number
           mission_type: string
           note: string | null
@@ -12347,6 +12373,10 @@ export type Database = {
           updated_at: string
           visibility: string
         }[]
+      }
+      marche_merchant_fee_gnf: {
+        Args: { p_bps: number; p_subtotal_gnf: number }
+        Returns: number
       }
       marche_offer_expire_due: { Args: { p_limit?: number }; Returns: Json }
       marche_offer_get: { Args: { p_offer_id: string }; Returns: Json }

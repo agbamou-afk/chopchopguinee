@@ -38,6 +38,8 @@ export interface FinancePolicyRow {
   delivery_max_distance_km: number | null;
   pickup_platform_fee_bps: number | null;
   courier_payout_gnf: number | null;
+  /** R4 — Marché merchant platform fee, in bps of the merchandise subtotal. */
+  merchant_platform_fee_bps: number | null;
   cash_funding_mode: string;
   cash_funding_pct_bps: number;
   cash_funding_max_gnf: number | null;
@@ -75,7 +77,8 @@ export type EditableField =
   | "delivery_flat_fee_gnf"
   | "delivery_max_distance_km"
   | "pickup_platform_fee_bps"
-  | "courier_payout_gnf";
+  | "courier_payout_gnf"
+  | "merchant_platform_fee_bps";
 
 export const FIELD_LABELS: Record<EditableField, string> = {
   commission_bps: "Commission chauffeur (%)",
@@ -99,6 +102,7 @@ export const FIELD_LABELS: Record<EditableField, string> = {
   delivery_max_distance_km: "Distance de livraison maximum (km)",
   pickup_platform_fee_bps: "Frais de service retrait (%)",
   courier_payout_gnf: "Rémunération coursier (GNF)",
+  merchant_platform_fee_bps: "Frais plateforme marchand Marché (%)",
 };
 
 /** bps fields are displayed as percentages. */
@@ -110,6 +114,7 @@ export const BPS_FIELDS: EditableField[] = [
   "cancel_before_dispatch_bps",
   "cancel_after_dispatch_bps",
   "pickup_platform_fee_bps",
+  "merchant_platform_fee_bps",
 ];
 
 export const BASIS_OPTIONS: Record<string, { value: string; label: string }[]> = {
@@ -166,6 +171,7 @@ export const FIELDS_BY_SERVICE: Record<MissionType, EditableField[]> = {
   ],
   marche: [
     "commission_bps", "min_driver_balance_gnf",
+    "merchant_platform_fee_bps",
     "collateral_mode", "collateral_pct_bps", "collateral_basis", "collateral_max_gnf",
     "cash_funding_mode", "cash_funding_pct_bps",
     "transaction_fee_bps", "fee_basis",
