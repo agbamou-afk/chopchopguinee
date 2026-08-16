@@ -37,6 +37,8 @@ import {
   authorizeMarcheOfferPayment,
   marchePaymentStatusLabel,
 } from "@/lib/marche/payments";
+import { MarcheOrderReview } from "./MarcheOrderReview";
+import { ShoppingBag } from "lucide-react";
 
 // Module-level guard so a single listing view counts once per session,
 // even under StrictMode double-mount or quick back/forward navigation.
@@ -66,6 +68,8 @@ interface FullListing {
   asking_price_gnf?: number | null;
   allow_offers?: boolean | null;
   quantity_in_stock?: number | null;
+  is_orderable?: boolean | null;
+  refusal_reason?: string | null;
 }
 
 export function ListingDetail({ listingId, onBack }: { listingId: string; onBack: () => void }) {
@@ -86,6 +90,8 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
   const [askedKinds, setAskedKinds] = useState<Set<InterestKind>>(new Set());
   const [offerOpen, setOfferOpen] = useState(false);
   const [myOffer, setMyOffer] = useState<MarketplaceOffer | null>(null);
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [orderOfferId, setOrderOfferId] = useState<string | null>(null);
   const { requireAuth } = useAuthGuard();
 
   useEffect(() => {
@@ -442,6 +448,24 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           </div>
         )}
 
+        {/* R3 — canonical order commitment for fixed-price approved-store supply */}
+        {selfId !== listing.seller_id &&
+          listing.store_id &&
+          listing.pricing_mode === "fixed" &&
+          listing.is_orderable && (
+            <Button
+              className="w-full"
+              onClick={() =>
+                requireAuth(() => {
+                  setOrderOfferId(null);
+                  setOrderOpen(true);
+                })
+              }
+            >
+              <ShoppingBag className="w-4 h-4 mr-1" /> Commander
+            </Button>
+          )}
+
         {/* Bargaining — only if merchant enabled it */}
         {selfId !== listing.seller_id && listing.allow_offers && listing.pricing_mode === "negotiable" && (
           <div className="rounded-2xl border border-primary/40 bg-primary/5 p-3 space-y-2">
@@ -465,6 +489,20 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
                   <p className="text-xs text-foreground">
                     Prix convenu : <b>{formatGNF(myOffer.agreed_amount_gnf)}</b>
                   </p>
+                )}
+                {myOffer.status === "accepted" && myOffer.agreed_amount_gnf != null && listing.store_id && (
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() =>
+                      requireAuth(() => {
+                        setOrderOfferId(myOffer.id);
+                        setOrderOpen(true);
+                      })
+                    }
+                  >
+                    <ShoppingBag className="w-4 h-4 mr-1" /> Commander au prix convenu
+                  </Button>
                 )}
                 {offerAwaitsBuyer(myOffer) && (
                   <div className="grid grid-cols-2 gap-2">
@@ -543,6 +581,20 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
       </div>
 
       <ReportModal listingId={listing.id} open={reportOpen} onOpenChange={setReportOpen} />
+      {listing.store_id && (
+        <MarcheOrderReview
+          open={orderOpen}
+          onOpenChange={setOrderOpen}
+          listing={{
+            id: listing.id,
+            title: listing.title,
+            store_id: listing.store_id,
+            price_gnf: listing.price_gnf,
+            quantity_in_stock: listing.quantity_in_stock,
+          }}
+          offerId={orderOfferId}
+        />
+      )}
       <OfferSheet
         open={offerOpen}
         onOpenChange={setOfferOpen}

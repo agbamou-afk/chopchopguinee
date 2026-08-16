@@ -1,21 +1,28 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, Loader2 } from "lucide-react";
+import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, Loader2, ShoppingBag } from "lucide-react";
 import { listSellerInterests, respondToInterest } from "@/lib/merchant/operations";
 import { listMerchantOffers, respondOffer, offerStatusLabel, offerAwaitsBuyer, type MarketplaceOffer } from "@/lib/marche/offers";
+import {
+  listMerchantMarcheOrders,
+  orderStatusLabel,
+  orderDisplayTotalGnf,
+  type MarcheOrder,
+} from "@/lib/marche/orders";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { formatGNF } from "@/lib/marche";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-type Section = "new" | "offers" | "prep" | "history";
+type Section = "new" | "orders" | "offers" | "prep" | "history";
 
 export function MerchantCommandesView({ merchantUserId }: { merchantUserId: string }) {
   const [tab, setTab] = useState<Section>("new");
   const [interests, setInterests] = useState<any[]>([]);
   const [offers, setOffers] = useState<MarketplaceOffer[]>([]);
+  const [orders, setOrders] = useState<MarcheOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [counterFor, setCounterFor] = useState<string | null>(null);
@@ -24,9 +31,10 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
 
   const refresh = async () => {
     setLoading(true);
-    const [iRes, oRes] = await Promise.allSettled([
+    const [iRes, oRes, cRes] = await Promise.allSettled([
       listSellerInterests(merchantUserId, 80),
       listMerchantOffers(merchantUserId),
+      listMerchantMarcheOrders(null, 80, 0),
     ]);
     if (iRes.status === "fulfilled") {
       setInterests(iRes.value);
@@ -41,6 +49,12 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
       setOffers([]);
       if (import.meta.env.DEV) console.warn("[merchant] offers load failed", oRes.reason);
     }
+    if (cRes.status === "fulfilled") {
+      setOrders(cRes.value);
+    } else {
+      setOrders([]);
+      if (import.meta.env.DEV) console.warn("[merchant] marche orders load failed", cRes.reason);
+    }
     setLoading(false);
   };
 
@@ -49,6 +63,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
   const newInterests = interests.filter((i) => i.state === "pending");
   const prepInterests = interests.filter((i) => i.state === "accepted");
   const histInterests = interests.filter((i) => ["declined", "fulfilled", "expired"].includes(i.state));
+  const openOrders = orders.filter((o) => o.status === "committed");
   const openOffers = offers.filter((o) => ["pending", "countered"].includes(o.status));
   const histOffers = offers.filter((o) => ["accepted", "rejected", "expired", "withdrawn"].includes(o.status));
 
@@ -79,6 +94,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
 
   const TABS: { key: Section; label: string; icon: typeof Inbox; badge: number }[] = [
     { key: "new", label: "Demandes", icon: Inbox, badge: newInterests.length },
+    { key: "orders", label: "Commandes", icon: ShoppingBag, badge: openOrders.length },
     { key: "offers", label: "Offres", icon: HandCoins, badge: openOffers.length },
     { key: "prep", label: "À préparer", icon: Package, badge: prepInterests.length },
     { key: "history", label: "Historique", icon: HistoryIcon, badge: 0 },
@@ -100,7 +116,8 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-4 gap-1 bg-muted/40 rounded-xl p-1">
+      <div className="grid grid-cols-5 gap-1 bg-muted/40 rounded-xl p-1">
+        {/* R3: order commitments are shown as their own truth, never merged with offers. */}
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.key;
@@ -120,6 +137,38 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
       </div>
 
       {loading && <p className="text-sm text-muted-foreground">Chargement…</p>}
+
+      {!loading && tab === "orders" && (
+        orders.length === 0
+          ? <p className="text-sm text-muted-foreground">Aucune commande reçue.</p>
+          : <div className="space-y-2">
+              {orders.map((o) => (
+                <div key={o.id} className="rounded-xl bg-card border border-border/60 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">{formatGNF(orderDisplayTotalGnf(o))}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {o.line_count} article{o.line_count > 1 ? "s" : ""} · {o.item_count} unité{o.item_count > 1 ? "s" : ""}
+                      </p>
+                      {o.items.map((it) => (
+                        <p key={it.id} className="text-xs text-muted-foreground truncate">
+                          {it.qty} × {it.title} — {formatGNF(it.line_total_gnf)}
+                        </p>
+                      ))}
+                      {o.delivery_address && (
+                        <p className="text-[11px] text-muted-foreground mt-1">{o.delivery_address}</p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-1">{new Date(o.created_at).toLocaleString("fr-FR")}</p>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                      {orderStatusLabel(o.status)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] text-muted-foreground">Paiement et livraison : à connecter.</p>
+                </div>
+              ))}
+            </div>
+      )}
 
       {!loading && tab === "new" && (
         newInterests.length === 0
