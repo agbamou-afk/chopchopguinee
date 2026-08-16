@@ -83,6 +83,21 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
     finally { setBusy(null); }
   };
 
+  /** R5 — the merchant only requests a transition; the server decides. */
+  const actOrder = async (o: MarcheOrder, action: MerchantAction) => {
+    setBusy(o.id);
+    try { await merchantTransition(o.id, action); await refresh(); }
+    catch (e: any) { toast({ title: "Erreur", description: e?.message }); }
+    finally { setBusy(null); }
+  };
+
+  const dispatchOrder = async (o: MarcheOrder) => {
+    setBusy(o.id);
+    try { await requestDispatch(o.id); await refresh(); }
+    catch (e: any) { toast({ title: "Erreur", description: e?.message }); }
+    finally { setBusy(null); }
+  };
+
   const actOffer = async (o: MarketplaceOffer, action: "accept" | "reject" | "counter") => {
     // (offer flow below)
     if (action === "counter" && counterFor !== o.id) {
@@ -172,10 +187,23 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
                       <p className="text-[10px] text-muted-foreground mt-1">{new Date(o.created_at).toLocaleString("fr-FR")}</p>
                     </div>
                     <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
-                      {orderStatusLabel(o.status)}
+                      {o.status === "committed" ? fulfillmentStateLabel(o.fulfillment_state) : orderStatusLabel(o.status)}
                     </span>
                   </div>
-                  <p className="mt-2 text-[11px] text-muted-foreground">Paiement et livraison : à connecter.</p>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {merchantActionsFor(o.fulfillment_state).map((a) => (
+                      <Button key={a} size="sm" variant={a === "reject" ? "outline" : "default"}
+                        disabled={busy === o.id} onClick={() => actOrder(o, a)}>
+                        {busy === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : MERCHANT_ACTION_LABEL[a]}
+                      </Button>
+                    ))}
+                    {canRequestDispatch(o) && (
+                      <Button size="sm" variant="outline" disabled={busy === o.id} onClick={() => dispatchOrder(o)}>
+                        Demander un coursier
+                      </Button>
+                    )}
+                  </div>
+                  <p className="mt-2 text-[11px] text-muted-foreground">Paiement : à connecter.</p>
                 </div>
               ))}
             </div>
