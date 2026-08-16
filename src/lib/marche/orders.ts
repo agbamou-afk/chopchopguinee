@@ -54,6 +54,15 @@ export interface MarcheOrder {
   /** Customer delivery economics are a separate axis and stay unresolved. */
   delivery_charge_gnf: number | null;
   delivery_pricing_state: "unresolved" | "resolved" | "not_applicable";
+  /** R5 server-derived fulfillment lifecycle. Never asserted by the client. */
+  fulfillment_state: string;
+  fulfillment_updated_at?: string | null;
+  accepted_at?: string | null;
+  ready_at?: string | null;
+  delivered_at?: string | null;
+  rejected_at?: string | null;
+  /** Merchant/admin only — buyers never receive courier mission identity. */
+  mission_id?: string | null;
   reservation_expires_at: string | null;
   cancelled_at: string | null;
   cancel_reason: string | null;
