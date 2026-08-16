@@ -103,7 +103,6 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
   };
 
   const TABS: { key: Section; label: string; icon: typeof Inbox; badge: number }[] = [
-    // (fulfillment handlers defined above the tabs)
     { key: "new", label: "Demandes", icon: Inbox, badge: newInterests.length },
     { key: "orders", label: "Commandes", icon: ShoppingBag, badge: openOrders.length },
     { key: "offers", label: "Offres", icon: HandCoins, badge: openOffers.length },
