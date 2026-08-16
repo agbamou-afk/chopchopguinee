@@ -14,7 +14,7 @@ import { StoreOnboardingSheet } from "@/components/marche/StoreOnboardingSheet";
 import { MyListingsView } from "@/components/marche/MyListingsView";
 import { PromotedSlot } from "@/components/marche/PromotedSlot";
 import { MarcheEmpty } from "@/components/marche/MarcheEmpty";
-import { listStoresWithSummary, type StoreSummary } from "@/lib/marche/stores";
+import { listStoresWithSummary, getSellerEligibility, type StoreSummary } from "@/lib/marche/stores";
 import { categoryLabel, MARCHE_CATEGORIES } from "@/lib/marche";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -23,7 +23,7 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { LiveStrip } from "@/components/ui/LiveStrip";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface MarketViewProps {
   onBack: () => void;
@@ -56,6 +56,29 @@ export function MarketView({ onBack }: MarketViewProps) {
   const [storeSort, setStoreSort] = useState<StoreSortKey>("nearby");
   const { requireAuth } = useAuthGuard();
   const geo = useGeolocation();
+  const navigate = useNavigate();
+  const [canSell, setCanSell] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user.id;
+      if (!uid) {
+        if (alive) setCanSell(false);
+        return;
+      }
+      const elig = await getSellerEligibility(uid).catch(() => null);
+      if (alive) setCanSell(!!elig?.canSell);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // R1.5: only approved active merchant stores may originate Marché supply.
+  const openSell = () =>
+    requireAuth(() => (canSell ? setScreen("sell") : navigate("/merchant/onboarding")));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -189,7 +212,7 @@ export function MarketView({ onBack }: MarketViewProps) {
     return (
       <MyListingsView
         onBack={() => setScreen("home")}
-        onCreate={() => requireAuth(() => setScreen("sell"))}
+        onCreate={openSell}
         onOpenListing={(id) => {
           setActiveListing(id);
           setScreen("detail");
@@ -506,11 +529,11 @@ export function MarketView({ onBack }: MarketViewProps) {
       {/* FAB Sell */}
       <motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={() => requireAuth(() => setScreen("sell"))}
+        onClick={openSell}
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 6.25rem)" }}
         className="fixed right-4 z-40 gradient-primary text-primary-foreground rounded-full px-5 py-3.5 shadow-elevated flex items-center gap-2 font-semibold"
       >
-        <Plus className="w-5 h-5" /> Vendre
+        <Plus className="w-5 h-5" /> {canSell ? "Vendre" : "Devenir marchand"}
       </motion.button>
 
       <StoreOnboardingSheet open={storeSheetOpen} onOpenChange={setStoreSheetOpen} />
