@@ -24,5 +24,7 @@ Locked on top of certified Node4 R1 / R1.5 / R2, Nodes 0–3 and Slice13. No dep
 
 ## Certification
 - `_qa_node4_marche_r3()` 136/136 PASS.
-- Full frozen board (Nodes 0–4 + Slice13): 1322/1322 assertions, 0 failures.
+- Full frozen board, 2639 assertions, 0 failures: Course 34, Bonbonna 78, Taxi 97, Repas R1–R4 148, Pickup 64, R5 static 71 + runtime 91, R6 171, R7 canonical 203, R8 canonical truth 202 (incl. P15.5) + companions 89/60/53/142, R9 68, R10 134, R11 116, Slice13 runs 1–7 = 507 (18/32/54/98/115/87/103), Marché R1 55, R1.5 38, R2 82, R3 136.
+- R7 fixture-dependent companions (`_qa_node3_repas_r7_semantics|readtruth|ext`) remain non-standalone (`RESTAURANT_NOT_PUBLISHED`) — pre-existing, unrelated to R3.
+- Posture: order tables RLS-on with service_role-only grants, all R3 mutations SECURITY DEFINER with `search_path=public`, `anon` excluded from every order RPC and from `has_role`, listing truth 53 rows / 5 orderable / 48 storeless quarantined, reservations 0 and non-negative, zero finance/payment/ledger/mission/courier/settlement drift, zero fixtures.
 - Client gates: tsgo clean, Vitest 90/90 (incl. 19 new R3 tests), production build OK.
