@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      _qa_board_run2: {
+        Row: {
+          err: string | null
+          failed: number | null
+          suite: string
+          total: number | null
+        }
+        Insert: {
+          err?: string | null
+          failed?: number | null
+          suite: string
+          total?: number | null
+        }
+        Update: {
+          err?: string | null
+          failed?: number | null
+          suite?: string
+          total?: number | null
+        }
+        Relationships: []
+      }
       _qa_s13_results: {
         Row: {
           created_at: string
