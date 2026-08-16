@@ -232,6 +232,29 @@ export function SellFlow({ onClose, onPosted }: { onClose: () => void; onPosted:
             <h1 className="font-semibold">Vendre sur Marché</h1>
           </div>
         </header>
+        {!eligLoading && !elig?.canSell && (
+          <div className="p-6 space-y-4">
+            <h2 className="font-semibold text-lg">Boutique marchande requise</h2>
+            <p className="text-sm text-muted-foreground">
+              Marché est réservé aux boutiques approuvées par CHOP CHOP.{" "}
+              {elig?.reason === "pending"
+                ? "Votre boutique est en cours de validation. Vous pourrez publier dès son approbation."
+                : elig?.reason === "not_active"
+                ? "Votre boutique n'est pas active actuellement. Contactez le support."
+                : "Créez votre boutique marchande pour publier des produits."}
+            </p>
+            {(!elig?.store || elig?.reason === "no_store") && (
+              <Link to="/merchant/onboarding" className="block">
+                <Button className="w-full">Devenir marchand</Button>
+              </Link>
+            )}
+            <Button variant="outline" className="w-full" onClick={onClose}>
+              Retour au Marché
+            </Button>
+          </div>
+        )}
+        {eligLoading || elig?.canSell ? (
+        <>
         <div className="h-1 bg-muted">
           <motion.div
             className="h-full bg-primary"
