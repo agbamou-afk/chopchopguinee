@@ -23,6 +23,13 @@ export interface MarketplaceOffer {
   responded_at: string | null;
   created_at: string;
   updated_at: string;
+  /** Frozen, mutually consented amount. Null until both sides agreed. */
+  agreed_amount_gnf?: number | null;
+  agreed_by_user_id?: string | null;
+  agreed_at?: string | null;
+  /** Whose proposal is currently on the table. */
+  current_proposer_role?: "buyer" | "merchant" | null;
+  expired_at?: string | null;
   payment_status?: string | null;
   payment_intent_id?: string | null;
   authorized_at?: string | null;
@@ -33,6 +40,24 @@ export interface MarketplaceOffer {
   settlement_state?: string | null;
   captured_tx_id?: string | null;
   settlement_tx_id?: string | null;
+}
+
+/** The amount currently on the table, agreement first. Never invents a price. */
+export function offerActiveAmountGnf(o: MarketplaceOffer): number {
+  return (
+    o.agreed_amount_gnf ??
+    (o.status === "countered" ? o.counter_amount_gnf ?? o.offer_amount_gnf : o.offer_amount_gnf)
+  );
+}
+
+/** True when the merchant countered and the buyer must now consent. */
+export function offerAwaitsBuyer(o: MarketplaceOffer): boolean {
+  return o.status === "countered" && o.current_proposer_role === "merchant";
+}
+
+/** True when the merchant may still act on the offer. */
+export function offerAwaitsMerchant(o: MarketplaceOffer): boolean {
+  return o.status === "pending" || (o.status === "countered" && o.current_proposer_role === "buyer");
 }
 
 export async function createOffer(input: {
@@ -70,6 +95,20 @@ export async function respondOffer(input: {
   if (error) throw new Error(translateOfferError(error.message));
 }
 
+/** Buyer consent on a merchant counter. Accept freezes the agreement server-side. */
+export async function buyerRespondOffer(input: {
+  offerId: string;
+  action: "accept" | "reject";
+  message?: string | null;
+}): Promise<void> {
+  const { error } = await (supabase as any).rpc("buyer_respond_marketplace_offer", {
+    p_offer_id: input.offerId,
+    p_action: input.action,
+    p_message: input.message ?? null,
+  });
+  if (error) throw new Error(translateOfferError(error.message));
+}
+
 export async function withdrawOffer(offerId: string): Promise<void> {
   const { error } = await (supabase as any).rpc("withdraw_marketplace_offer", {
     p_offer_id: offerId,
@@ -81,35 +120,25 @@ export async function getMyOfferForListing(
   listingId: string,
   buyerId: string,
 ): Promise<MarketplaceOffer | null> {
-  const { data, error } = await (supabase as any)
-    .from("marketplace_offers")
-    .select("*")
-    .eq("listing_id", listingId)
-    .eq("buyer_user_id", buyerId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data, error } = await (supabase as any).rpc("marche_offers_for_buyer", {
+    p_listing_id: listingId,
+    p_limit: 1,
+  });
   if (error) return null;
-  return (data as MarketplaceOffer) ?? null;
+  const rows = (data ?? []) as MarketplaceOffer[];
+  return rows[0] ?? null;
 }
 
 export async function listMerchantOffers(merchantId: string): Promise<MarketplaceOffer[]> {
-  const { data, error } = await (supabase as any)
-    .from("marketplace_offers")
-    .select("*")
-    .eq("merchant_user_id", merchantId)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  const { data, error } = await (supabase as any).rpc("marche_offers_for_merchant", {
+    p_limit: 100,
+  });
   if (error) return [];
   return (data ?? []) as MarketplaceOffer[];
 }
 
 export async function listAllOffersAdmin(): Promise<MarketplaceOffer[]> {
-  const { data, error } = await (supabase as any)
-    .from("marketplace_offers")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const { data, error } = await (supabase as any).rpc("marche_offers_admin", { p_limit: 200 });
   if (error) return [];
   return (data ?? []) as MarketplaceOffer[];
 }
@@ -128,6 +157,17 @@ export function offerStatusLabel(s: OfferStatus): string {
 function translateOfferError(msg: string): string {
   const m = (msg || "").toLowerCase();
   if (m.includes("offers not allowed")) return "Ce produit n'accepte pas d'offres.";
+  if (m.includes("merchant_store_required")) return "Ce produit n'est pas rattaché à une boutique marchande approuvée.";
+  if (m.includes("store_not_approved")) return "Boutique non approuvée.";
+  if (m.includes("demo_supply")) return "Produit de démonstration : offres indisponibles.";
+  if (m.includes("seller_not_eligible")) return "Ce vendeur n'est pas éligible.";
+  if (m.includes("out_of_stock")) return "Produit en rupture.";
+  if (m.includes("listing_paused") || m.includes("listing_private")) return "Produit indisponible.";
+  if (m.includes("counter_awaits_buyer")) return "En attente de la réponse de l'acheteur.";
+  if (m.includes("no_merchant_proposal")) return "Aucune contre-offre à accepter.";
+  if (m.includes("offer_expired")) return "Cette offre a expiré.";
+  if (m.includes("agreement_immutable") || m.includes("offer_core_immutable") || m.includes("offer_terminal"))
+    return "Cette offre est verrouillée.";
   if (m.includes("out of stock")) return "Produit en rupture.";
   if (m.includes("cannot offer on own")) return "Vous ne pouvez pas faire une offre sur votre propre produit.";
   if (m.includes("listing not available")) return "Produit indisponible.";

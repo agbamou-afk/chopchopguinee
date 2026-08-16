@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public._qa_node4_marche_r2() TO service_role;

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, Loader2 } from "lucide-react";
 import { listSellerInterests, respondToInterest } from "@/lib/merchant/operations";
-import { listMerchantOffers, respondOffer, offerStatusLabel, type MarketplaceOffer } from "@/lib/marche/offers";
+import { listMerchantOffers, respondOffer, offerStatusLabel, offerAwaitsBuyer, type MarketplaceOffer } from "@/lib/marche/offers";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { formatGNF } from "@/lib/marche";
@@ -167,6 +167,11 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
                         placeholder="Message (optionnel)" />
                     </div>
                   )}
+                  {offerAwaitsBuyer(o) ? (
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      Contre-offre envoyée — en attente de la réponse de l'acheteur.
+                    </p>
+                  ) : (
                   <div className="flex flex-wrap gap-1 mt-2">
                     <Button size="sm" disabled={busy === o.id} onClick={() => actOffer(o, "accept")}>
                       {busy === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Check className="w-3 h-3 mr-1" /> Accepter</>}
@@ -178,6 +183,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
                       <X className="w-3 h-3 mr-1" /> Refuser
                     </Button>
                   </div>
+                  )}
                 </div>
               ))}
             </div>
