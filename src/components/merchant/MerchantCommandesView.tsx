@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, Loader2 } from "lucide-react";
 import { listSellerInterests, respondToInterest } from "@/lib/merchant/operations";
-import { listMerchantOffers, respondOffer, offerStatusLabel, type MarketplaceOffer } from "@/lib/marche/offers";
+import { listMerchantOffers, respondOffer, offerStatusLabel, offerAwaitsBuyer, type MarketplaceOffer } from "@/lib/marche/offers";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { formatGNF } from "@/lib/marche";
