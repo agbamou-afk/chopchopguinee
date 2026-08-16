@@ -11,6 +11,15 @@ import {
   type MarcheOrder,
 } from "@/lib/marche/orders";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
+import {
+  fulfillmentStateLabel,
+  merchantActionsFor,
+  merchantTransition,
+  canRequestDispatch,
+  requestDispatch,
+  MERCHANT_ACTION_LABEL,
+  type MerchantAction,
+} from "@/lib/marche/fulfillment";
 import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { formatGNF } from "@/lib/marche";
 import { Input } from "@/components/ui/input";
