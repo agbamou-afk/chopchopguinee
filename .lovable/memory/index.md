@@ -38,3 +38,4 @@
 - [Repas R8 Discovery Truth — Stable](mem://milestones/node3-repas-r8-discovery-truth-stable) — Server-authoritative Repas publication/discovery: staff-only publication, no fake restaurants/ratings/ETA/distance
 - [Repas R9 Recovery Flows — Stable](mem://milestones/node3-repas-r9-recovery-flows-stable) — Durable checkout request id, read-only repas_order_resume, idempotent replay/cancel/custody proven 68/68
 - [Node 4 Marché R1 — Listing Publication Truth](mem://milestones/node4-marche-r1-listing-publication-truth-stable) — Locked 2026-08-16: canonical listing truth + orderability, single publication guard, server-only mutation RPCs, discovery read model, demo quarantine (47 hidden), anon-safe RLS (never grant has_role to anon)
+- [Node 4 Marché R1.5 — Approved Merchant Supply](mem://milestones/node4-marche-r15-approved-merchant-supply-stable) — Only approved active merchant stores may originate orderable Marché supply; storeless listings refused/quarantined
