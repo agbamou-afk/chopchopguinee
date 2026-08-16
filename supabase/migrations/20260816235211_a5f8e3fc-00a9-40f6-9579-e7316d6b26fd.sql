@@ -1,0 +1,1 @@
+SELECT (SELECT jsonb_agg(e) FROM jsonb_array_elements(to_jsonb(public._qa_node3_repas_r7_tracking_receipt())->'results') e WHERE (e->>'ok')::boolean IS NOT TRUE) AS f, (SELECT count(*) FROM storage.objects WHERE bucket_id='mission-proofs' AND name LIKE '%r7ext%') AS proofs;

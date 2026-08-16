@@ -1,0 +1,1 @@
+SELECT to_jsonb(public._qa_s13_run6()) AS r6;
