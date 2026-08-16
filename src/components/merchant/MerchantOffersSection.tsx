@@ -9,6 +9,8 @@ import {
   listMerchantOffers,
   respondOffer,
   offerStatusLabel,
+  offerAwaitsMerchant,
+  offerAwaitsBuyer,
   type MarketplaceOffer,
 } from "@/lib/marche/offers";
 import { formatGNF } from "@/lib/marche";
@@ -84,7 +86,8 @@ export function MerchantOffersSection({ merchantId }: { merchantId: string }) {
       ) : (
         <div className="space-y-2">
           {items.map((o) => {
-            const open = o.status === "pending" || o.status === "countered";
+            const open = offerAwaitsMerchant(o);
+            const waitingBuyer = offerAwaitsBuyer(o);
             return (
               <div key={o.id} className="rounded-xl bg-muted/40 border border-border/50 p-3">
                 <div className="flex items-start justify-between gap-2">
@@ -99,6 +102,11 @@ export function MerchantOffersSection({ merchantId }: { merchantId: string }) {
                     )}
                     {o.buyer_message && (
                       <p className="text-xs text-foreground italic mt-1">« {o.buyer_message} »</p>
+                    )}
+                    {o.agreed_amount_gnf != null && (
+                      <p className="text-xs text-foreground">
+                        Prix convenu : <b>{formatGNF(o.agreed_amount_gnf)}</b>
+                      </p>
                     )}
                     <p className="text-[10px] text-muted-foreground mt-1">
                       {new Date(o.created_at).toLocaleString("fr-FR")}
@@ -138,6 +146,11 @@ export function MerchantOffersSection({ merchantId }: { merchantId: string }) {
                       </Button>
                     </div>
                   </>
+                )}
+                {waitingBuyer && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Contre-offre envoyée — en attente de la réponse de l'acheteur.
+                  </p>
                 )}
                 {o.status === "accepted" && (
                   <div className="mt-2 rounded-lg bg-background/60 border border-border/60 p-2 text-[11px] space-y-0.5">
