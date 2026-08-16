@@ -4635,6 +4635,7 @@ export type Database = {
           mission_id: string | null
           order_id: string
           reason: string | null
+          seq: number
           to_state: string
         }
         Insert: {
@@ -4646,6 +4647,7 @@ export type Database = {
           mission_id?: string | null
           order_id: string
           reason?: string | null
+          seq?: number
           to_state: string
         }
         Update: {
@@ -4657,6 +4659,7 @@ export type Database = {
           mission_id?: string | null
           order_id?: string
           reason?: string | null
+          seq?: number
           to_state?: string
         }
         Relationships: [
