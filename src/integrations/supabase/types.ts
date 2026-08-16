@@ -4445,8 +4445,186 @@ export type Database = {
         }
         Relationships: []
       }
+      marche_fulfillment_events: {
+        Row: {
+          actor_role: string | null
+          created_at: string
+          event_type: string
+          id: string
+          occurred_at: string
+          order_id: string
+          source_id: string | null
+          source_key: string
+          source_type: string
+        }
+        Insert: {
+          actor_role?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          occurred_at: string
+          order_id: string
+          source_id?: string | null
+          source_key: string
+          source_type: string
+        }
+        Update: {
+          actor_role?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          occurred_at?: string
+          order_id?: string
+          source_id?: string | null
+          source_key?: string
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_fulfillment_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marche_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_fulfillment_observations: {
+        Row: {
+          basket_bucket: string
+          basket_units: number
+          created_at: string
+          distance_bucket: string
+          distance_m: number | null
+          distinct_products: number
+          duration_seconds: number
+          end_event_at: string
+          fulfillment_mode: string
+          id: string
+          merchant_store_id: string
+          metric_name: string
+          observed_at: string
+          order_id: string
+          start_event_at: string
+        }
+        Insert: {
+          basket_bucket: string
+          basket_units: number
+          created_at?: string
+          distance_bucket: string
+          distance_m?: number | null
+          distinct_products: number
+          duration_seconds: number
+          end_event_at: string
+          fulfillment_mode: string
+          id?: string
+          merchant_store_id: string
+          metric_name: string
+          observed_at: string
+          order_id: string
+          start_event_at: string
+        }
+        Update: {
+          basket_bucket?: string
+          basket_units?: number
+          created_at?: string
+          distance_bucket?: string
+          distance_m?: number | null
+          distinct_products?: number
+          duration_seconds?: number
+          end_event_at?: string
+          fulfillment_mode?: string
+          id?: string
+          merchant_store_id?: string
+          metric_name?: string
+          observed_at?: string
+          order_id?: string
+          start_event_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_fulfillment_observations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marche_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_fulfillment_profiles: {
+        Row: {
+          basket_units: number
+          bulk_complexity: string | null
+          created_at: string
+          distance_m: number | null
+          distance_method: string | null
+          distance_source: string | null
+          distinct_products: number
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          frozen_at: string
+          fulfillment_mode: string
+          fulfillment_mode_source: string | null
+          merchant_store_id: string
+          order_id: string
+          origin_lat: number | null
+          origin_lng: number | null
+          product_categories: string[]
+          weight_grams: number | null
+        }
+        Insert: {
+          basket_units: number
+          bulk_complexity?: string | null
+          created_at?: string
+          distance_m?: number | null
+          distance_method?: string | null
+          distance_source?: string | null
+          distinct_products: number
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          frozen_at?: string
+          fulfillment_mode?: string
+          fulfillment_mode_source?: string | null
+          merchant_store_id: string
+          order_id: string
+          origin_lat?: number | null
+          origin_lng?: number | null
+          product_categories?: string[]
+          weight_grams?: number | null
+        }
+        Update: {
+          basket_units?: number
+          bulk_complexity?: string | null
+          created_at?: string
+          distance_m?: number | null
+          distance_method?: string | null
+          distance_source?: string | null
+          distinct_products?: number
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          frozen_at?: string
+          fulfillment_mode?: string
+          fulfillment_mode_source?: string | null
+          merchant_store_id?: string
+          order_id?: string
+          origin_lat?: number | null
+          origin_lng?: number | null
+          product_categories?: string[]
+          weight_grams?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_fulfillment_profiles_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "marche_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marche_order_items: {
         Row: {
+          category_snapshot: string | null
           created_at: string
           id: string
           line_total_gnf: number
@@ -4459,6 +4637,7 @@ export type Database = {
           unit_price_gnf: number
         }
         Insert: {
+          category_snapshot?: string | null
           created_at?: string
           id?: string
           line_total_gnf: number
@@ -4471,6 +4650,7 @@ export type Database = {
           unit_price_gnf: number
         }
         Update: {
+          category_snapshot?: string | null
           created_at?: string
           id?: string
           line_total_gnf?: number
@@ -9006,6 +9186,7 @@ export type Database = {
       _qa_node4_marche_r15: { Args: never; Returns: Json }
       _qa_node4_marche_r2: { Args: never; Returns: Json }
       _qa_node4_marche_r3: { Args: never; Returns: Json }
+      _qa_node4_marche_r35: { Args: never; Returns: Json }
       _qa_node4_probe: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
@@ -11953,6 +12134,10 @@ export type Database = {
         }
         Returns: Json
       }
+      marche_basket_bucket: {
+        Args: { p_distinct: number; p_units: number }
+        Returns: string
+      }
       marche_complete_offer: {
         Args: { p_offer_id: string; p_reason?: string }
         Returns: Json
@@ -12003,6 +12188,74 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      marche_distance_bucket: {
+        Args: { p_distance_m: number }
+        Returns: string
+      }
+      marche_fulfillment_cohort_stats: {
+        Args: {
+          p_basket_bucket?: string
+          p_distance_bucket?: string
+          p_fulfillment_mode?: string
+          p_include_unspecified_mode?: boolean
+          p_metric_name?: string
+        }
+        Returns: Json
+      }
+      marche_fulfillment_cohorts_admin: {
+        Args: {
+          p_basket_bucket?: string
+          p_distance_bucket?: string
+          p_fulfillment_mode?: string
+          p_include_unspecified_mode?: boolean
+          p_metric_name?: string
+        }
+        Returns: Json
+      }
+      marche_fulfillment_confidence: {
+        Args: { p_latest: string; p_sample_count: number }
+        Returns: string
+      }
+      marche_fulfillment_event_append: {
+        Args: {
+          p_actor_role?: string
+          p_event_type: string
+          p_occurred_at: string
+          p_order_id: string
+          p_source_id?: string
+          p_source_key?: string
+          p_source_type: string
+        }
+        Returns: string
+      }
+      marche_fulfillment_events_admin: {
+        Args: { p_order_id: string }
+        Returns: Json
+      }
+      marche_fulfillment_freshness: {
+        Args: { p_latest: string }
+        Returns: string
+      }
+      marche_fulfillment_observations_admin: {
+        Args: { p_limit?: number; p_metric_name?: string }
+        Returns: Json
+      }
+      marche_fulfillment_profile_admin: {
+        Args: { p_order_id: string }
+        Returns: Json
+      }
+      marche_fulfillment_profile_create: {
+        Args: { p_order_id: string }
+        Returns: string
+      }
+      marche_fulfillment_recompute_observations: {
+        Args: { p_order_id: string }
+        Returns: number
+      }
+      marche_fulfillment_set_mode: {
+        Args: { p_mode: string; p_order_id: string; p_source: string }
+        Returns: undefined
       }
       marche_increment_listing_metric: {
         Args: { _kind: string; _listing_id: string }
