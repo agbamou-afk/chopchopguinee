@@ -9358,6 +9358,7 @@ export type Database = {
       _qa_node4_marche_r3: { Args: never; Returns: Json }
       _qa_node4_marche_r35: { Args: never; Returns: Json }
       _qa_node4_marche_r4: { Args: never; Returns: Json }
+      _qa_node4_marche_r5: { Args: never; Returns: Json }
       _qa_node4_probe: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
