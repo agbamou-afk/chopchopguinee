@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown, ShoppingBag, Timer, Store, ClipboardList, Navigation } from "lucide-react";
+import { Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown, ShoppingBag, Timer, Store, ClipboardList, Navigation, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryGrid } from "@/components/marche/CategoryGrid";
 import { FeaturedBanners } from "@/components/marche/FeaturedBanners";
@@ -14,6 +14,7 @@ import { StoreOnboardingSheet } from "@/components/marche/StoreOnboardingSheet";
 import { MyListingsView } from "@/components/marche/MyListingsView";
 import { PromotedSlot } from "@/components/marche/PromotedSlot";
 import { MarcheEmpty } from "@/components/marche/MarcheEmpty";
+import { StaplesView } from "@/components/marche/StaplesView";
 import { listStoresWithSummary, getSellerEligibility, type StoreSummary } from "@/lib/marche/stores";
 import { categoryLabel, MARCHE_CATEGORIES } from "@/lib/marche";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
@@ -31,7 +32,7 @@ interface MarketViewProps {
 
 type Screen = "home" | "detail" | "sell" | "inbox" | "store" | "mine";
 type SortKey = "recent" | "price_asc" | "price_desc";
-type Tab = "all" | "saved" | "stores";
+type Tab = "all" | "saved" | "stores" | "staples";
 type StoreSortKey = "nearby" | "recent";
 
 interface RawListing extends Omit<ListingCardData, "cover_url"> {
@@ -331,6 +332,14 @@ export function MarketView({ onBack }: MarketViewProps) {
             <Store className="w-4 h-4" /> Boutiques
           </button>
           <button
+            onClick={() => setTab("staples")}
+            className={`flex-1 py-2.5 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-1.5 ${
+              tab === "staples" ? "gradient-wallet text-primary-foreground" : "bg-card border border-border text-muted-foreground"
+            }`}
+          >
+            <Package className="w-4 h-4" /> Essentiels
+          </button>
+          <button
             onClick={() => requireAuth(() => setTab("saved"))}
             className={`flex-1 py-2.5 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-1.5 ${
               tab === "saved" ? "gradient-wallet text-primary-foreground" : "bg-card border border-border text-muted-foreground"
@@ -345,14 +354,16 @@ export function MarketView({ onBack }: MarketViewProps) {
           </button>
         </div>
 
-        {tab !== "stores" && (
+        {tab === "staples" && <StaplesView />}
+
+        {tab !== "stores" && tab !== "staples" && (
           <section className="pb-1">
             <h2 className="text-sm font-semibold text-foreground mb-4">Catégories</h2>
             <CategoryGrid active={category} onSelect={(id) => setCategory(category === id ? null : id)} />
           </section>
         )}
 
-        {tab !== "stores" && <FeaturedBanners />}
+        {tab !== "stores" && tab !== "staples" && <FeaturedBanners />}
 
         {tab === "stores" && (
           <section>
@@ -447,7 +458,7 @@ export function MarketView({ onBack }: MarketViewProps) {
           </section>
         )}
 
-        {tab !== "stores" && (
+        {tab !== "stores" && tab !== "staples" && (
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-foreground">
