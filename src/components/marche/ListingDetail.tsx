@@ -37,6 +37,8 @@ import {
   authorizeMarcheOfferPayment,
   marchePaymentStatusLabel,
 } from "@/lib/marche/payments";
+import { MarcheOrderReview } from "./MarcheOrderReview";
+import { ShoppingBag } from "lucide-react";
 
 // Module-level guard so a single listing view counts once per session,
 // even under StrictMode double-mount or quick back/forward navigation.
@@ -66,6 +68,8 @@ interface FullListing {
   asking_price_gnf?: number | null;
   allow_offers?: boolean | null;
   quantity_in_stock?: number | null;
+  is_orderable?: boolean | null;
+  refusal_reason?: string | null;
 }
 
 export function ListingDetail({ listingId, onBack }: { listingId: string; onBack: () => void }) {
@@ -86,6 +90,8 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
   const [askedKinds, setAskedKinds] = useState<Set<InterestKind>>(new Set());
   const [offerOpen, setOfferOpen] = useState(false);
   const [myOffer, setMyOffer] = useState<MarketplaceOffer | null>(null);
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [orderOfferId, setOrderOfferId] = useState<string | null>(null);
   const { requireAuth } = useAuthGuard();
 
   useEffect(() => {
