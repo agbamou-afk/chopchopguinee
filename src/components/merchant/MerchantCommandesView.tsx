@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, Loader2 } from "lucide-react";
+import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, Loader2, ShoppingBag } from "lucide-react";
 import { listSellerInterests, respondToInterest } from "@/lib/merchant/operations";
 import { listMerchantOffers, respondOffer, offerStatusLabel, offerAwaitsBuyer, type MarketplaceOffer } from "@/lib/marche/offers";
 import {
@@ -117,6 +117,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-4 gap-1 bg-muted/40 rounded-xl p-1">
+        {/* R3: order commitments are shown as their own truth, never merged with offers. */}
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.key;
