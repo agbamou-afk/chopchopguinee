@@ -1,0 +1,24 @@
+DO $$
+BEGIN
+  PERFORM public._qa_node3_repas_r8_discovery_truth();
+  PERFORM public._qa_node3_repas_r8_core();
+  PERFORM public._qa_node3_repas_r8_channel();
+  PERFORM public._qa_node3_repas_r8_discovery();
+  PERFORM public._qa_node3_repas_r8_extra();
+  PERFORM public._qa_node3_repas_r9_recovery_flows();
+  PERFORM public._qa_node3_repas_r10_operations();
+  PERFORM public._qa_node3_repas_r11_conakry_hardening();
+  PERFORM public._qa_s13_run1();
+  PERFORM public._qa_s13_run2();
+  PERFORM public._qa_s13_run3();
+  PERFORM public._qa_s13_run4();
+  PERFORM public._qa_s13_run5();
+  PERFORM public._qa_s13_run6();
+  PERFORM public._qa_s13_run7();
+  PERFORM public._qa_node4_marche_r1();
+  PERFORM public._qa_node4_marche_r15();
+  PERFORM public._qa_node4_marche_r2();
+  PERFORM public._qa_node4_marche_r3();
+  PERFORM public._qa_node4_marche_r35();
+  PERFORM public._qa_node4_marche_r4();
+END $$;
