@@ -1,105 +1,80 @@
-# Node 4 — Marché: Phase 1 Audit + Proposed R1
+# Node 4 — Marché R2 (audit + smallest next certification pass)
 
-Audit only. No code, DB, flag, or activation changes were made.
+## Part A — Audit findings (repo + live DB, verified this turn)
 
-## A. What Marché actually is today
+### 1. Offer / negotiation lifecycle
+- Table `public.marketplace_offers` (25 cols): `status` is a **plain text** column, default `'pending'`, **no CHECK constraint, no enum** — any string is storable at DB level.
+- Write RPCs (all SECURITY DEFINER): `create_marketplace_offer(listing,amount,message,payment_method)`, `merchant_respond_marketplace_offer(offer,action,counter,message)`, `withdraw_marketplace_offer(offer)`, `marche_offer_set_tender(offer,method)`.
+- **Defect D1 — counter has no buyer consent.** `merchant_respond_marketplace_offer` accepts actions on `status IN ('pending','countered')`. After the merchant counters, the merchant can call `accept` again on its own `countered` row and the offer becomes `accepted` at the merchant's `counter_amount_gnf`. The buyer has no `accept counter` path anywhere (RPC or UI: `ListingDetail.tsx` only shows the counter amount plus withdraw/re-offer).
+- **Defect D2 — price agreed is not frozen.** Downstream money reads `COALESCE(counter_amount_gnf, offer_amount_gnf)` at payment time (`marche_create_offer_payment_intent`, `marche_complete_offer`). There is no immutable `agreed_amount_gnf` snapshot at acceptance.
+- **Defect D3 — offer creation bypasses R1.5 doctrine.** `create_marketplace_offer` validates raw columns (`status`, `visibility`, `allow_offers`, `pricing_mode`, `quantity_in_stock`) and only checks the store when `store_id IS NOT NULL`. It never calls `marche_listing_truth()` / `v_marche_listing_truth`, so it cannot return `MERCHANT_STORE_REQUIRED`, `DEMO_SUPPLY` or `SELLER_NOT_ELIGIBLE`, and it accepts stores in `status='paused'`.
+- **Defect D4 — expiry is decorative.** `expires_at` is set to `now() + 7 days` and never enforced: no job, no guard, and the `'expired'` status is never written by any function.
+- **Defect D5 — direct table CRUD is open.** `has_table_privilege('authenticated','marketplace_offers','UPDATE') = true`, and `anon` has SELECT. RLS policies are read-only (buyer/merchant/admin SELECT), so an UPDATE currently fails only for lack of a policy — the grant posture contradicts the R1 doctrine applied to `marketplace_listings` (direct CRUD revoked, RPC-only). Only `payment_status` is trigger-protected (`prevent_unsafe_marketplace_offer_payment_status_update`); `status`, `counter_amount_gnf`, `fulfillment_status`, `settlement_state` are not.
+- Client: `src/lib/marche/offers.ts` reads `marketplace_offers` with `select("*")` directly (buyer, merchant, admin lists). UI: `OfferSheet.tsx`, `ListingDetail.tsx`, `MerchantOffersSection.tsx`, `MarcheAdmin.tsx`.
+- Live data: `marketplace_offers` is **empty (0 rows)** — no migration/backfill risk.
 
-Marché is a **real, working per-listing classifieds + merchant-catalog marketplace**, not a placeholder. It is **not** a commerce checkout node: there is no cart, no buy-now, no order object. Money only moves through a *negotiated offer* object.
+### 2. Order / cart / checkout objects
+- There is **no canonical Marché order object**. `marketplace_offers` is the de-facto commitment row (it carries `fulfillment_status`, `settlement_state`, `completed_at`). No cart, no `market_orders` table (only referenced as a future `refMarketOrderId` comment in `src/lib/marche/delivery.ts`).
 
-### 1. Customer surfaces
-- `src/components/views/MarketView.tsx` — Marché home: search (`title ilike`), category filter, tabs Annonces / Boutiques / Enregistrées, sort. Sub-screens are internal state (`detail`, `sell`, `inbox`, `store`, `mine`), not routes.
-- `src/components/marche/ListingDetail.tsx` — gallery, seller/trust chips, chat/call/WhatsApp, save, report, interest requests, offer + payment block.
-- `StoreProfile.tsx` / `StoreCard.tsx` / `StoreHeader.tsx`, `src/pages/PublicStorefront.tsx` (`/marche/boutique/:slug`), `CategoryGrid.tsx`, `InboxView.tsx`, `ChatThread.tsx`, `MyListingsView.tsx`, `SellFlow.tsx`, `OfferSheet.tsx`, `RequestMarcheDeliverySheet.tsx`, `ReportModal.tsx`.
+### 3. Money references
+- `marche_create_offer_payment_intent` → `payment_intents` (`source_module='marketplace'`) via legacy `choppay_*`; `marche_complete_offer` → `choppay_capture_payment_intent` + merchant settlement; admin `admin_marche_capture_and_settle_offer`, `admin_preview_marche_payment_intents/settlement`; OM sandbox `om_sandbox_create_marche_intent`, `om_sandbox_request_marche_refund`.
+- Slice 13 runtime tables `chop_pay_order_runtime` / `cash_order_runtime` contain **0 rows** and have **no Marché source rows**; `marche_offer_set_tender` only writes `metadata.payment_method`. So Marché money is a **parallel legacy path**, not Slice 13. Flag `om_marche_checkout_enabled` is `false`.
 
-### 2. Listing schema and publication truth
-`marketplace_listings` (32 cols) carries **four overlapping publication/availability signals with no canonical derivation**:
-- `status` (`listing_status`: active/sold/paused/removed)
-- `visibility` (free `text`: public/private)
-- `availability` (`listing_availability`: available/limited/to_confirm/reserved/sold)
-- `quantity_in_stock` (nullable; NULL for all community listings)
+### 4. Fulfillment / courier
+- Fulfillment is listing metadata only (`delivery_available`, `fulfillment_options`, `availability`). `marketplace_create_delivery_mission(offer,...)` can create a `marketplace_delivery` mission from an offer, but no dropoff address, pickup truth or fulfillment mode is stored on the offer itself. `fulfillment_status` defaults `'pending'` with no state machine.
 
-Plus `pricing_mode` / `price_gnf` / `asking_price_gnf` / `minimum_price_gnf` / `allow_offers` / `offer_increment_gnf` with no server invariant tying them together.
+### 5. Post-commitment lifecycle
+- No stock reservation or decrement on acceptance (`marche_listing_adjust_stock` is a merchant-manual RPC only). No cancellation path after `accepted`. No replay/idempotency key on offers beyond the "one open offer per buyer" guard. `marche_complete_offer` is idempotent only on the paid+settled terminal state.
 
-Two **duplicate, divergent** publication triggers both run on the same table: `enforce_listing_visibility` (forces `visibility='private'` only) and `marche_enforce_pending_merchant_privacy` (forces private **and** downgrades `active`→`paused`). Both return early when `store_id IS NULL`, so **community listings bypass publication control entirely**.
+### 6. Receipts / support / admin
+- Admin `src/pages/admin/MarcheAdmin.tsx` lists listings + offers; payments admin previews Marché intents. No Marché dispute/support object; `support_issues` has no Marché offer linkage.
 
-### 3. Seller identity and write authority
-Sellers write `marketplace_listings` **by direct table CRUD**, not through an RPC (`src/lib/marche/products.ts`, `SellFlow.tsx`, `ProductFormSheet.tsx`). `authenticated` and `anon` both hold table-level SELECT/INSERT/UPDATE/DELETE; RLS is the only gate. `prevent_seller_protected_columns` blocks `status`, `promoted`, `seller_id`, `store_id`, `kind`, `sold_count`, `view_count`, `photo_count` — but **`price_gnf`, `minimum_price_gnf`, `quantity_in_stock`, `availability`, `visibility`, `pricing_mode`, `allow_offers` remain fully client-authoritative**.
+### 7. RLS / grants posture
+- `marketplace_offers`: RLS on, 3 SELECT policies (buyer / merchant / `is_any_admin`), no write policies, but table grants remain broad (see D5).
+- `marketplace_listings` public SELECT policy still contains the pre-R1.5 clause `(store_id IS NULL) OR (approved store)`. R1.5 neutralises storeless supply through truth + guard + quarantine, so this is doctrine drift in the policy text rather than a live exposure — but it is a latent contradiction.
 
-### 4. Cart / checkout
-None. Confirmed absent — no `cart`/`panier` anywhere under `src/lib/marche` or `src/components/marche`. Purchase is one listing at a time via `OfferSheet` → `create_marketplace_offer`.
+### 8. Tests
+- Harnesses `_qa_node4_marche_r1()` (55) and `_qa_node4_marche_r15()` (38) cover listing/publication truth only. **No offer-lifecycle harness exists.** No vitest file covers Marché offers.
 
-### 5. Fulfillment
-`src/lib/marche/delivery.ts` → `createMission({ type: 'marketplace_delivery' })`, buyer types a free-text dropoff address. No landmark/quality model (Repas R11 has one), no Marché-side tracking UI, no pickup model, no ETA/fee (honest, deliberately blank).
+## Part B — Proposed R2
 
-### 6. Payment / tender
-`create_marketplace_offer` stores tender only in `metadata.payment_method`; `marche_create_offer_payment_intent` → legacy `choppay_create_payment_intent`; `marche_complete_offer` captures and settles via `wallet_pay_merchant_store`, else `settlement_state='needs_review'`. **Marché does not use the Slice 13 canonical runtime**: `chop_pay_order_runtime` and `cash_order_runtime` have **0 rows for `source_module='marche'`**, and there is no cash engine, no collateral/hold, no cancellation-debt path, no commission policy key for Marché.
+**Name:** `node4-marche-r2-offer-agreement-commitment-truth`
 
-### 7. Lifecycle
-Offer status `pending|accepted|rejected|countered|withdrawn|expired`, plus independent `payment_status`, `fulfillment_status`, `settlement_state`. Four parallel state fields, no single transition function, no event/audit timeline table (Repas has `repas_ops_events`).
+**Objective:** make the Marché negotiation a constitutionally sound, server-authoritative, mutually-consented agreement object — *before* any money, checkout or fee work. This is the narrowest prerequisite: every money path already reads an amount that no buyer ever consented to (D1/D2), so certifying checkout first would certify a broken commitment.
 
-### 8. Idempotency / recovery
-**None on the client.** No `localStorage` request id, no fingerprint, no resume RPC — unlike `src/lib/repas/checkoutRequestId.ts`. Server-side, `create_marketplace_offer` dedupes only by "a pending offer exists"; there is no unique idempotency key.
+### Constitutional laws
+1. **L1 Mutual consent.** A price becomes binding only when the party who did *not* propose it accepts it. A merchant may never accept its own counter.
+2. **L2 Frozen agreement.** On acceptance the system writes an immutable `agreed_amount_gnf` + `agreed_by` + `agreed_at`; all downstream reads use it.
+3. **L3 Supply doctrine inherited.** Offer creation must pass canonical `marche_listing_truth()` and return its machine-readable refusal reason (`MERCHANT_STORE_REQUIRED`, `DEMO_SUPPLY`, `STORE_NOT_APPROVED`, `LISTING_PAUSED`, `OUT_OF_STOCK`, `NO_PHOTO`).
+4. **L4 Server-only writes.** No client may write `marketplace_offers` directly; all transitions go through SECURITY DEFINER RPCs, mirroring the R1 listing contract.
+5. **L5 Explicit state machine.** Only declared transitions are legal; terminal states are terminal; expiry is real and derived.
+6. **L6 Money untouched.** Amount semantics change only by pointing existing money RPCs at `agreed_amount_gnf`; no rail, ledger, fee or Slice 13 change.
 
-### 9. Receipts / support / dispute
-No Marché receipt, no order history, no dispute surface. Only `ReportModal` → `listing_reports` (0 rows).
+### In-scope changes
+- DB: add `agreed_amount_gnf`, `agreed_by_user_id`, `agreed_at`, `last_actor_role`, `expired_at` to `marketplace_offers`; add a status CHECK constraint.
+- DB: new `marche_offer_transition_guard()` trigger enforcing the legal transition matrix + immutability of agreed fields.
+- DB: rewrite `create_marketplace_offer` to call `marche_listing_truth()` (L3) and keep tender persistence unchanged.
+- DB: rewrite `merchant_respond_marketplace_offer` — merchant may accept only a `pending` buyer amount, may counter, may reject; accepting a `countered` row it authored raises `COUNTER_AWAITS_BUYER`.
+- DB: new `buyer_respond_marketplace_offer(p_offer_id, p_action)` with `accept | reject | counter` (buyer counter re-opens as `pending`, capped by re-offer rules).
+- DB: `marche_offer_expire_due()` maintenance RPC (admin/service only) that moves due open offers to `expired`; read paths treat past-due open offers as expired.
+- DB: sanitized read RPCs `marche_offers_for_buyer()`, `marche_offers_for_merchant()`, `marche_offer_get(id)`; REVOKE INSERT/UPDATE/DELETE on `marketplace_offers` from `anon`/`authenticated`, and revoke `anon` SELECT.
+- DB: point `marche_create_offer_payment_intent` and `marche_complete_offer` at `agreed_amount_gnf` (falling back to the existing COALESCE only for legacy rows — table is empty, so effectively none).
+- Client (presentation + lib only): `src/lib/marche/offers.ts` switches to the sanitized RPCs and gains `buyerRespondOffer`; `ListingDetail.tsx` gains "Accepter la contre-offre" / "Refuser" / "Contre-proposer" for the buyer; `MerchantOffersSection.tsx` hides accept on merchant-authored counters and shows "En attente de l'acheteur"; `MarcheAdmin.tsx` reads through the admin RPC; French error translations extended.
+- QA: new `_qa_node4_marche_r2()` harness.
 
-### 10. Admin / ops
-`src/pages/admin/MarcheAdmin.tsx`: real listing + offer tables, but a decorative `"Recherche à connecter..."` search box, filter chips referencing a `suspended` status that is **not in the `listing_status` enum** (always 0), and **no `listing_reports` moderation UI anywhere in `src`**.
+### Hard non-goals
+No cart/checkout, no 1% or any fee, no Slice 13 adoption or migration of Marché money, no payment-rail change, no ledger/wallet/settlement change, no mission/courier change, no stock reservation, no dispute/support object, no feature-flag activation, no deploy, and no reopening of R1/R1.5 primitives (truth view, publication guard, listing mutation RPCs, discovery, media privacy, quarantine, anon `has_role` posture).
 
-### 11. RLS / grants / RPC exposure
-- Public read policy on listings is sound (`active` + `public` + approved/active store), but only when `store_id` is set.
-- `anon` holds EXECUTE on `marche_toggle_listing_save`, `marche_increment_listing_metric`, `withdraw_marketplace_offer`, `get_merchant_listing_full`, `get_listing_minimum_price` — metric inflation and a needless anon surface.
-- `get_merchant_listing_full` / `get_listing_minimum_price` are SECURITY DEFINER and anon-executable; minimum-price exposure needs review against negotiation integrity.
+### Runtime QA matrix (`_qa_node4_marche_r2()`, ~45 assertions)
+- Creation: refusals `MERCHANT_STORE_REQUIRED`, `DEMO_SUPPLY`, `STORE_NOT_APPROVED`, `LISTING_PAUSED`, `OUT_OF_STOCK`; happy path on approved store; self-offer blocked; banned/frozen blocked; duplicate open offer blocked; invalid/negative amount; invalid tender.
+- Consent: merchant accepts pending → `accepted` with `agreed_amount_gnf = offer_amount_gnf`; merchant counters → `countered`; merchant re-accept → `COUNTER_AWAITS_BUYER`; buyer accepts counter → `accepted` with `agreed_amount_gnf = counter_amount_gnf`, `agreed_by = buyer`; buyer rejects counter; buyer counters back → `pending`; third party forbidden on both sides.
+- Terminality: no transition out of `accepted|rejected|withdrawn|expired`; withdraw only while open; agreed fields immutable on later updates.
+- Expiry: due open offer expires via `marche_offer_expire_due()`; accepted offers never expire; expired offer cannot be accepted/paid.
+- Authority: direct INSERT/UPDATE/DELETE by `authenticated` denied; `anon` SELECT denied; buyer cannot read another buyer's offer; merchant cannot read another merchant's; admin reads all; sanitized RPCs expose no `minimum_price_gnf`.
+- Money linkage (assertions only, no new money): payment intent amount equals `agreed_amount_gnf`; intent refused on non-accepted/expired offers.
 
-### 12. Media
-Public bucket `marche-listings`, path `{user_id}/{listing_id}/{uuid}`, MIME + 5MB validated client-side only; `listing_images` SELECT is `true` for everyone including images of private/draft listings.
+### Frozen regression board to rerun
+`_qa_node0_course`, `_qa_node1_bonbonna`, `_qa_node2_taxi`, Repas R1–R4 / R4.5 / R5 static+runtime / R6 / R7 / R8 (P15.5) / R9 / R10 / R11, Slice 13 runs 1–7, `_qa_node4_marche_r1()` 55/55, `_qa_node4_marche_r15()` 38/38, plus anon Marché discovery probes, `has_role` anon-execute = false, quarantine count unchanged, feature flags unchanged. Client gates: `tsgo --noEmit -p tsconfig.app.json`, vitest, production+PWA build.
 
-### 13. Realtime / offline
-One realtime channel total (`ChatThread`). No offline/low-data handling anywhere in Marché.
-
-### 14. Tests / QA
-No Marché unit test, no `_qa_node4_*` harness (54 `_qa_*` functions exist, none for Marché). Only `tests/e2e/03-merchant.spec.ts` blank-screen smoke.
-
-### 15. Supply reality
-53 listings, all `active`+`public`. ~44 are **seeded demo community listings from a single seller** (`0451600f…`, batch-dated 2026-05-14: "iPhone 13 Pro", "Villa 4 chambres Kipé", …). Real merchant supply is ~5 listings across 3 sellers. 0 offers ever created, 0 reports, 2 interests, 3 conversations.
-
-## B. Proposed R1 — Canonical Listing & Publication Truth + Write Authority
-
-The root dependency is not payments: nothing downstream (orders, courier, finance) can be certified while *what a listing is, whether it is orderable, and who may change its price/stock* are client-authoritative and split across four unreconciled fields and two duplicate triggers.
-
-### Exact scope
-1. **One canonical publication/orderability derivation** — a server function deriving `is_orderable` + refusal reason (`STORE_NOT_APPROVED`, `LISTING_PAUSED`, `OUT_OF_STOCK`, `NO_PHOTO`, `SELLER_UNVERIFIED`, `DEMO_SUPPLY`) from `status`/`visibility`/`availability`/`quantity_in_stock`/store state — the Repas R8 pattern.
-2. **Collapse the duplicate triggers** into one publication guard that also covers `store_id IS NULL` community listings.
-3. **Server-authoritative listing mutation RPCs** (`marche_listing_upsert`, `marche_listing_set_stock`, `marche_listing_publish`/`unpublish`) owning price/stock/availability/visibility invariants; migrate `products.ts` and `SellFlow.tsx` to them, then revoke direct INSERT/UPDATE on `marketplace_listings` from `authenticated`/`anon`.
-4. **Canonical discovery read model** (`marche_listings_discover`, `marche_listing_public`) returning only orderable supply plus honest refusal reasons; `MarketView`/`ListingDetail`/`StoreProfile` read from it.
-5. **Demo-supply quarantine** — mark the 2026-05-14 seeded batch as non-public demo data so discovery shows only real supply.
-6. **Anon surface trim** — revoke anon EXECUTE on the save/metric/withdraw RPCs.
-7. **QA harness** `public._qa_node4_marche_r1()` recording into `_qa_s13_results`.
-
-### Server-authoritative invariants
-- A listing is publicly visible **iff** the canonical derivation says orderable; no client field alone can publish.
-- Community listings obey the same publication guard as merchant listings.
-- `price_gnf > 0`; `minimum_price_gnf <= asking_price_gnf`; `allow_offers` only with `pricing_mode in ('negotiable','quote')`; `quantity_in_stock >= 0`.
-- Only the owning seller or an admin may mutate a listing, and only via RPC.
-- Media of a non-public listing is not enumerable through `listing_images`.
-
-### Explicit non-goals (R1)
-Cart/checkout, buy-now, Marché order object, Slice 13 runtime adoption, cash tender, commission/finance policy, courier/mission changes, offer economics, receipts, dispute/ops console, realtime/offline, Repas/Course/Bonbonna/Taxi edits, any activation or deployment.
-
-### Likely files / functions / tables
-- DB: `marketplace_listings`, `listing_images`, `merchant_stores`, `listing_metrics`; triggers `enforce_listing_visibility`, `marche_enforce_pending_merchant_privacy`, `prevent_seller_protected_columns`; new `marche_listing_*` RPCs + `_qa_node4_marche_r1`.
-- Client: `src/lib/marche/products.ts`, `stores.ts`, `src/components/marche/SellFlow.tsx`, `ListingDetail.tsx`, `ListingCard.tsx`, `StoreProfile.tsx`, `src/components/views/MarketView.tsx`, `src/components/merchant/ProductCatalogSection.tsx`, `ProductFormSheet.tsx`, `src/pages/admin/MarcheAdmin.tsx` (status-chip truth only).
-
-### Proposed runtime QA matrix
-- **B — structure/privilege**: single publication trigger present; direct INSERT/UPDATE revoked; anon EXECUTE trimmed; RPC identities + SECURITY DEFINER + `search_path`.
-- **P — publication truth**: pending store → forced private/paused; approved store → publishable; community listing obeys guard; unpublish is idempotent.
-- **O — orderability**: each refusal reason reproduced from real state; out-of-stock and photoless listings excluded from discovery.
-- **W — write authority**: non-owner mutation denied; seller price/stock via RPC only; invariant violations rejected.
-- **D — discovery**: demo batch absent from `marche_listings_discover`; counts match canonical derivation.
-- **R — regression**: no listing/store rows mutated outside the RPC path; Slice 13 and Nodes 0–3 harnesses re-run unchanged.
-
-### Risks to frozen layers
-Low. R1 touches no finance primitive, no ledger, no mission, no Repas/Course/Bonbonna/Taxi path. The two real risks: (a) revoking direct table writes breaks any un-migrated seller write path — mitigated by migrating all call sites in the same pass before revoking; (b) demo-supply quarantine visibly empties the Marché grid — intended, and honest.
-
-### Recommendation
-**GO** for R1 as scoped, implemented as: migration → client migration → revoke → QA harness → full board regression.
+### Safety
+Safe to execute immediately without reopening R1/R1.5: every change is additive to the offer layer, `marketplace_offers` is empty (0 rows) so no backfill or data migration risk, and no R1/R1.5 primitive is modified. The only touch to certified surfaces is tightening grants on `marketplace_offers` in the same direction R1 already took for `marketplace_listings`.
