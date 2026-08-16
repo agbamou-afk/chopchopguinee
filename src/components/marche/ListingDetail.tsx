@@ -581,6 +581,20 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
       </div>
 
       <ReportModal listingId={listing.id} open={reportOpen} onOpenChange={setReportOpen} />
+      {listing.store_id && (
+        <MarcheOrderReview
+          open={orderOpen}
+          onOpenChange={setOrderOpen}
+          listing={{
+            id: listing.id,
+            title: listing.title,
+            store_id: listing.store_id,
+            price_gnf: listing.price_gnf,
+            quantity_in_stock: listing.quantity_in_stock,
+          }}
+          offerId={orderOfferId}
+        />
+      )}
       <OfferSheet
         open={offerOpen}
         onOpenChange={setOfferOpen}
