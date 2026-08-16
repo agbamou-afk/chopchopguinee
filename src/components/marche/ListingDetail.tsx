@@ -448,6 +448,24 @@ export function ListingDetail({ listingId, onBack }: { listingId: string; onBack
           </div>
         )}
 
+        {/* R3 — canonical order commitment for fixed-price approved-store supply */}
+        {selfId !== listing.seller_id &&
+          listing.store_id &&
+          listing.pricing_mode === "fixed" &&
+          listing.is_orderable && (
+            <Button
+              className="w-full"
+              onClick={() =>
+                requireAuth(() => {
+                  setOrderOfferId(null);
+                  setOrderOpen(true);
+                })
+              }
+            >
+              <ShoppingBag className="w-4 h-4 mr-1" /> Commander
+            </Button>
+          )}
+
         {/* Bargaining — only if merchant enabled it */}
         {selfId !== listing.seller_id && listing.allow_offers && listing.pricing_mode === "negotiable" && (
           <div className="rounded-2xl border border-primary/40 bg-primary/5 p-3 space-y-2">
