@@ -1,0 +1,23 @@
+DELETE FROM public._qa_s13_results WHERE part BETWEEN 900 AND 999;
+INSERT INTO public._qa_s13_results(part, result) VALUES
+ (900, public._qa_node0_course()),
+ (901, public._qa_node1_bonbonna_full()),
+ (902, public._qa_node2_taxi_full()),
+ (903, public._qa_node3_repas_r1_r4()),
+ (904, public._qa_node3_repas_pickup()),
+ (905, public._qa_node3_repas_r5_runtime()),
+ (906, public._qa_node3_repas_r6_custody()),
+ (907, public._qa_node3_repas_r7_tracking_receipt()),
+ (908, public._qa_node3_repas_r8_discovery_truth()),
+ (909, public._qa_node3_repas_r9_recovery_flows()),
+ (910, public._qa_node3_repas_r10_operations()),
+ (911, public._qa_node3_repas_r11_conakry_hardening()),
+ (912, public._qa_node4_marche_r1()),
+ (913, public._qa_node4_marche_r15()),
+ (920, public._qa_s13_run1()),
+ (921, public._qa_s13_run2()),
+ (922, public._qa_s13_run3()),
+ (923, public._qa_s13_run4()),
+ (924, public._qa_s13_run5()),
+ (925, public._qa_s13_run6()),
+ (926, public._qa_s13_run7());
