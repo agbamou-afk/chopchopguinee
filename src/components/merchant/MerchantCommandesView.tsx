@@ -167,6 +167,11 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
                         placeholder="Message (optionnel)" />
                     </div>
                   )}
+                  {offerAwaitsBuyer(o) ? (
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      Contre-offre envoyée — en attente de la réponse de l'acheteur.
+                    </p>
+                  ) : (
                   <div className="flex flex-wrap gap-1 mt-2">
                     <Button size="sm" disabled={busy === o.id} onClick={() => actOffer(o, "accept")}>
                       {busy === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Check className="w-3 h-3 mr-1" /> Accepter</>}
@@ -178,6 +183,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
                       <X className="w-3 h-3 mr-1" /> Refuser
                     </Button>
                   </div>
+                  )}
                 </div>
               ))}
             </div>
