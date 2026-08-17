@@ -4990,6 +4990,209 @@ export type Database = {
           },
         ]
       }
+      marche_procurement_line_resolutions: {
+        Row: {
+          actual_line_total_gnf: number | null
+          actual_normalized_quantity: number | null
+          actual_qty: number | null
+          actual_unit_price_gnf: number | null
+          canonical_base_unit: string | null
+          created_at: string
+          id: string
+          line_no: number
+          note_fr: string | null
+          proposal_version: number
+          request_id: string
+          requested_qty: number
+          resolved_at: string | null
+          resolved_by: string | null
+          state: string
+          substitute_label_fr: string | null
+          updated_at: string
+        }
+        Insert: {
+          actual_line_total_gnf?: number | null
+          actual_normalized_quantity?: number | null
+          actual_qty?: number | null
+          actual_unit_price_gnf?: number | null
+          canonical_base_unit?: string | null
+          created_at?: string
+          id?: string
+          line_no: number
+          note_fr?: string | null
+          proposal_version?: number
+          request_id: string
+          requested_qty: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          state?: string
+          substitute_label_fr?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actual_line_total_gnf?: number | null
+          actual_normalized_quantity?: number | null
+          actual_qty?: number | null
+          actual_unit_price_gnf?: number | null
+          canonical_base_unit?: string | null
+          created_at?: string
+          id?: string
+          line_no?: number
+          note_fr?: string | null
+          proposal_version?: number
+          request_id?: string
+          requested_qty?: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          state?: string
+          substitute_label_fr?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_procurement_line_resolutions_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "marche_procurement_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_procurement_mission_events: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          created_at: string
+          event: string
+          id: string
+          payload: Json
+          request_id: string
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          payload?: Json
+          request_id: string
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          payload?: Json
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_procurement_mission_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "marche_procurement_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_procurement_missions: {
+        Row: {
+          arrived_market_at: string | null
+          assigned_at: string | null
+          buyer_user_id: string
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_started_at: string | null
+          destination_address: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          id: string
+          market_id: string | null
+          mission_id: string | null
+          purchase_submitted_at: string | null
+          purchase_verified_at: string | null
+          request_id: string
+          shopper_user_id: string | null
+          shopping_started_at: string | null
+          state: string
+          updated_at: string
+          verified_spend_gnf: number | null
+        }
+        Insert: {
+          arrived_market_at?: string | null
+          assigned_at?: string | null
+          buyer_user_id: string
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_started_at?: string | null
+          destination_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          id?: string
+          market_id?: string | null
+          mission_id?: string | null
+          purchase_submitted_at?: string | null
+          purchase_verified_at?: string | null
+          request_id: string
+          shopper_user_id?: string | null
+          shopping_started_at?: string | null
+          state?: string
+          updated_at?: string
+          verified_spend_gnf?: number | null
+        }
+        Update: {
+          arrived_market_at?: string | null
+          assigned_at?: string | null
+          buyer_user_id?: string
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_started_at?: string | null
+          destination_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          id?: string
+          market_id?: string | null
+          mission_id?: string | null
+          purchase_submitted_at?: string | null
+          purchase_verified_at?: string | null
+          request_id?: string
+          shopper_user_id?: string | null
+          shopping_started_at?: string | null
+          state?: string
+          updated_at?: string
+          verified_spend_gnf?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_procurement_missions_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "physical_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_missions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_missions_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "marche_procurement_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marche_procurement_price_observations: {
         Row: {
           commodity_id: string
@@ -5079,6 +5282,94 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_marche_staple_public"
             referencedColumns: ["variant_id"]
+          },
+        ]
+      }
+      marche_procurement_proposals: {
+        Row: {
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          kind: string
+          line_no: number
+          payload: Json
+          proposed_at: string
+          proposed_by: string
+          request_id: string
+          status: string
+          version: number
+        }
+        Insert: {
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          kind: string
+          line_no: number
+          payload?: Json
+          proposed_at?: string
+          proposed_by: string
+          request_id: string
+          status?: string
+          version: number
+        }
+        Update: {
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          kind?: string
+          line_no?: number
+          payload?: Json
+          proposed_at?: string
+          proposed_by?: string
+          request_id?: string
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_procurement_proposals_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "marche_procurement_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_procurement_purchase_evidence: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          line_no: number | null
+          request_id: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          line_no?: number | null
+          request_id: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          line_no?: number | null
+          request_id?: string
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_procurement_purchase_evidence_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "marche_procurement_requests"
+            referencedColumns: ["id"]
           },
         ]
       }
