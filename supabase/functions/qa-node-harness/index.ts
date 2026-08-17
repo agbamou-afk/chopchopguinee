@@ -33,6 +33,19 @@ const ALLOWED = new Set([
   "_qa_node3_repas_r6_custody",
   "_qa_node3_repas_r7_tracking_receipt",
   "_qa_node3_repas_r8_discovery",
+  "_qa_node3_repas_r9_recovery_flows",
+  "_qa_node3_repas_r10_operations",
+  "_qa_node3_repas_r11_conakry_hardening",
+  "_qa_node4_marche_r1",
+  "_qa_node4_marche_r15",
+  "_qa_node4_marche_r2",
+  "_qa_node4_marche_r3",
+  "_qa_node4_marche_r35",
+  "_qa_node4_marche_r4",
+  "_qa_node4_marche_r5",
+  "_qa_node4_marche_r6",
+  "_qa_node4_marche_r65",
+  "_qa_node4_marche_r7",
 ]);
 
 function json(body: unknown, status = 200) {
