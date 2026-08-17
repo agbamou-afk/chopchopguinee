@@ -4899,6 +4899,413 @@ export type Database = {
           },
         ]
       }
+      marche_procurement_authorizations: {
+        Row: {
+          amount_gnf: number
+          approved_by: string
+          captured_gnf: number
+          ceiling_after_gnf: number
+          ceiling_before_gnf: number
+          client_request_id: string
+          created_at: string
+          hold_source_module: string
+          id: string
+          kind: string
+          released_gnf: number
+          request_id: string
+          seq: number
+        }
+        Insert: {
+          amount_gnf: number
+          approved_by: string
+          captured_gnf?: number
+          ceiling_after_gnf: number
+          ceiling_before_gnf: number
+          client_request_id: string
+          created_at?: string
+          hold_source_module?: string
+          id?: string
+          kind: string
+          released_gnf?: number
+          request_id: string
+          seq: number
+        }
+        Update: {
+          amount_gnf?: number
+          approved_by?: string
+          captured_gnf?: number
+          ceiling_after_gnf?: number
+          ceiling_before_gnf?: number
+          client_request_id?: string
+          created_at?: string
+          hold_source_module?: string
+          id?: string
+          kind?: string
+          released_gnf?: number
+          request_id?: string
+          seq?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_procurement_authorizations_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "marche_procurement_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_procurement_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event: string
+          id: string
+          payload: Json
+          request_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          payload?: Json
+          request_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          payload?: Json
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_procurement_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "marche_procurement_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_procurement_price_observations: {
+        Row: {
+          commodity_id: string
+          created_at: string
+          id: string
+          market_id: string | null
+          observed_at: string
+          observed_unit_price_gnf: number
+          purchase_option_id: string
+          recorded_by: string | null
+          source_kind: string
+          source_ref: string | null
+          variant_id: string
+        }
+        Insert: {
+          commodity_id: string
+          created_at?: string
+          id?: string
+          market_id?: string | null
+          observed_at?: string
+          observed_unit_price_gnf: number
+          purchase_option_id: string
+          recorded_by?: string | null
+          source_kind: string
+          source_ref?: string | null
+          variant_id: string
+        }
+        Update: {
+          commodity_id?: string
+          created_at?: string
+          id?: string
+          market_id?: string | null
+          observed_at?: string
+          observed_unit_price_gnf?: number
+          purchase_option_id?: string
+          recorded_by?: string | null
+          source_kind?: string
+          source_ref?: string | null
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_procurement_price_observations_commodity_id_fkey"
+            columns: ["commodity_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_commodities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_commodity_id_fkey"
+            columns: ["commodity_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["commodity_id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "physical_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_purchase_option_id_fkey"
+            columns: ["purchase_option_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_purchase_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_purchase_option_id_fkey"
+            columns: ["purchase_option_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["option_id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["variant_id"]
+          },
+        ]
+      }
+      marche_procurement_request_items: {
+        Row: {
+          canonical_base_unit: string | null
+          canonical_quantity: number | null
+          category_code: string
+          commodity_code: string
+          commodity_id: string
+          commodity_name_fr: string
+          created_at: string
+          estimate_observed_from: string | null
+          estimate_observed_to: string | null
+          estimate_sample_count: number | null
+          estimate_source: string
+          estimated_line_total_gnf: number | null
+          estimated_unit_price_gnf: number | null
+          grade_note_fr: string | null
+          id: string
+          line_no: number
+          normalization_kind: string
+          normalized_quantity: number | null
+          option_code: string
+          option_label_fr: string
+          purchase_option_id: string
+          request_id: string
+          requested_qty: number
+          sale_unit: string
+          variant_code: string
+          variant_id: string
+          variant_name_fr: string
+        }
+        Insert: {
+          canonical_base_unit?: string | null
+          canonical_quantity?: number | null
+          category_code: string
+          commodity_code: string
+          commodity_id: string
+          commodity_name_fr: string
+          created_at?: string
+          estimate_observed_from?: string | null
+          estimate_observed_to?: string | null
+          estimate_sample_count?: number | null
+          estimate_source: string
+          estimated_line_total_gnf?: number | null
+          estimated_unit_price_gnf?: number | null
+          grade_note_fr?: string | null
+          id?: string
+          line_no: number
+          normalization_kind: string
+          normalized_quantity?: number | null
+          option_code: string
+          option_label_fr: string
+          purchase_option_id: string
+          request_id: string
+          requested_qty: number
+          sale_unit: string
+          variant_code: string
+          variant_id: string
+          variant_name_fr: string
+        }
+        Update: {
+          canonical_base_unit?: string | null
+          canonical_quantity?: number | null
+          category_code?: string
+          commodity_code?: string
+          commodity_id?: string
+          commodity_name_fr?: string
+          created_at?: string
+          estimate_observed_from?: string | null
+          estimate_observed_to?: string | null
+          estimate_sample_count?: number | null
+          estimate_source?: string
+          estimated_line_total_gnf?: number | null
+          estimated_unit_price_gnf?: number | null
+          grade_note_fr?: string | null
+          id?: string
+          line_no?: number
+          normalization_kind?: string
+          normalized_quantity?: number | null
+          option_code?: string
+          option_label_fr?: string
+          purchase_option_id?: string
+          request_id?: string
+          requested_qty?: number
+          sale_unit?: string
+          variant_code?: string
+          variant_id?: string
+          variant_name_fr?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_procurement_request_items_commodity_id_fkey"
+            columns: ["commodity_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_commodities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_request_items_commodity_id_fkey"
+            columns: ["commodity_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["commodity_id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_request_items_purchase_option_id_fkey"
+            columns: ["purchase_option_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_purchase_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_request_items_purchase_option_id_fkey"
+            columns: ["purchase_option_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["option_id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "marche_procurement_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_request_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_request_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["variant_id"]
+          },
+        ]
+      }
+      marche_procurement_requests: {
+        Row: {
+          actual_spend_gnf: number | null
+          authorized_at: string
+          authorized_ceiling_gnf: number
+          buyer_user_id: string
+          cancelled_at: string | null
+          captured_total_gnf: number
+          client_request_id: string
+          created_at: string
+          currency: string
+          estimate_basis: string
+          estimate_confidence: string | null
+          estimate_freshness_hours: number | null
+          estimate_sample_count: number | null
+          estimate_status: string
+          estimate_unavailable_reason: string | null
+          estimated_subtotal_gnf: number | null
+          held_total_gnf: number
+          id: string
+          item_count: number
+          line_count: number
+          released_total_gnf: number
+          request_fingerprint: string
+          settled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          actual_spend_gnf?: number | null
+          authorized_at?: string
+          authorized_ceiling_gnf: number
+          buyer_user_id: string
+          cancelled_at?: string | null
+          captured_total_gnf?: number
+          client_request_id: string
+          created_at?: string
+          currency?: string
+          estimate_basis: string
+          estimate_confidence?: string | null
+          estimate_freshness_hours?: number | null
+          estimate_sample_count?: number | null
+          estimate_status: string
+          estimate_unavailable_reason?: string | null
+          estimated_subtotal_gnf?: number | null
+          held_total_gnf?: number
+          id?: string
+          item_count: number
+          line_count: number
+          released_total_gnf?: number
+          request_fingerprint: string
+          settled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          actual_spend_gnf?: number | null
+          authorized_at?: string
+          authorized_ceiling_gnf?: number
+          buyer_user_id?: string
+          cancelled_at?: string | null
+          captured_total_gnf?: number
+          client_request_id?: string
+          created_at?: string
+          currency?: string
+          estimate_basis?: string
+          estimate_confidence?: string | null
+          estimate_freshness_hours?: number | null
+          estimate_sample_count?: number | null
+          estimate_status?: string
+          estimate_unavailable_reason?: string | null
+          estimated_subtotal_gnf?: number | null
+          held_total_gnf?: number
+          id?: string
+          item_count?: number
+          line_count?: number
+          released_total_gnf?: number
+          request_fingerprint?: string
+          settled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marche_staple_categories: {
         Row: {
           code: string
@@ -9332,6 +9739,24 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _marche_procurement_capture_internal: {
+        Args: { p_actor?: string; p_amount: number; p_auth_id: string }
+        Returns: Json
+      }
+      _marche_procurement_fingerprint: {
+        Args: { p_ceiling: number; p_lines: Json }
+        Returns: string
+      }
+      _marche_procurement_option_estimate: {
+        Args: { p_option_id: string }
+        Returns: Json
+      }
+      _marche_procurement_policy: { Args: never; Returns: Json }
+      _marche_procurement_release_internal: {
+        Args: { p_actor?: string; p_auth_id: string; p_reason?: string }
+        Returns: Json
+      }
+      _marche_procurement_resolve: { Args: { p_lines: Json }; Returns: Json }
       _marche_reservation_settle: {
         Args: { p_kind: string; p_order_id: string }
         Returns: boolean
@@ -12873,6 +13298,27 @@ export type Database = {
       }
       marche_orders_for_merchant: {
         Args: { p_limit?: number; p_offset?: number; p_store_id?: string }
+        Returns: Json
+      }
+      marche_procurement_authorize: { Args: { p: Json }; Returns: Json }
+      marche_procurement_cancel: {
+        Args: { p_reason?: string; p_request_id: string }
+        Returns: Json
+      }
+      marche_procurement_get: { Args: { p_request_id: string }; Returns: Json }
+      marche_procurement_increase: { Args: { p: Json }; Returns: Json }
+      marche_procurement_list: { Args: { p_limit?: number }; Returns: Json }
+      marche_procurement_observation_record: {
+        Args: { p: Json }
+        Returns: Json
+      }
+      marche_procurement_quote: { Args: { p: Json }; Returns: Json }
+      marche_procurement_settle_internal: {
+        Args: {
+          p_actual_spend_gnf: number
+          p_evidence_ref?: string
+          p_request_id: string
+        }
         Returns: Json
       }
       marche_seller_banned: { Args: { p_seller_id: string }; Returns: boolean }
