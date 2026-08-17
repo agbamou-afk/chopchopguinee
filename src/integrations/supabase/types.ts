@@ -9532,6 +9532,37 @@ export type Database = {
         Returns: Json
       }
       _customer_cash_restricted: { Args: { p_user: string }; Returns: boolean }
+      _customer_hold_capture_internal: {
+        Args: {
+          p_action: string
+          p_actor?: string
+          p_amount: number
+          p_credit_account: string
+          p_credit_wallet_type: Database["public"]["Enums"]["party_type"]
+          p_credit_wallet_user: string
+          p_description: string
+          p_journal_key: string
+          p_ledger_party_type: Database["public"]["Enums"]["party_type"]
+          p_ledger_party_user: string
+          p_metadata?: Json
+          p_mission_type?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _customer_hold_release_internal: {
+        Args: {
+          p_action: string
+          p_actor?: string
+          p_journal_key: string
+          p_mission_type?: string
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
       _driver_exact_hold_place_internal: {
         Args: {
           p_amount: number
