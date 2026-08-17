@@ -10061,6 +10061,50 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _marche_pm_note: {
+        Args: {
+          p_actor: string
+          p_event: string
+          p_payload: Json
+          p_request_id: string
+          p_role: string
+        }
+        Returns: undefined
+      }
+      _marche_pm_rank: { Args: { p_state: string }; Returns: number }
+      _marche_pm_shopper_lock: {
+        Args: { p_request_id: string; p_uid: string }
+        Returns: {
+          arrived_market_at: string | null
+          assigned_at: string | null
+          buyer_user_id: string
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_started_at: string | null
+          destination_address: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          id: string
+          market_id: string | null
+          mission_id: string | null
+          purchase_submitted_at: string | null
+          purchase_verified_at: string | null
+          request_id: string
+          shopper_user_id: string | null
+          shopping_started_at: string | null
+          state: string
+          updated_at: string
+          verified_spend_gnf: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marche_procurement_missions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _marche_procurement_capture_internal: {
         Args: { p_actor?: string; p_amount: number; p_auth_id: string }
         Returns: Json
@@ -10083,6 +10127,7 @@ export type Database = {
         Args: { p_kind: string; p_order_id: string }
         Returns: boolean
       }
+      _marche_shopper_eligible: { Args: { _uid: string }; Returns: boolean }
       _marche_staple_audit: {
         Args: {
           p_action: string
@@ -13631,11 +13676,16 @@ export type Database = {
       marche_procurement_get: { Args: { p_request_id: string }; Returns: Json }
       marche_procurement_increase: { Args: { p: Json }; Returns: Json }
       marche_procurement_list: { Args: { p_limit?: number }; Returns: Json }
+      marche_procurement_mission_get: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
       marche_procurement_observation_record: {
         Args: { p: Json }
         Returns: Json
       }
       marche_procurement_quote: { Args: { p: Json }; Returns: Json }
+      marche_procurement_set_destination: { Args: { p: Json }; Returns: Json }
       marche_procurement_settle_internal: {
         Args: {
           p_actual_spend_gnf: number
@@ -13645,6 +13695,19 @@ export type Database = {
         Returns: Json
       }
       marche_seller_banned: { Args: { p_seller_id: string }; Returns: boolean }
+      marche_shopper_arrive_market: {
+        Args: { p_market_id?: string; p_request_id: string }
+        Returns: Json
+      }
+      marche_shopper_available_baskets: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
+      marche_shopper_claim: { Args: { p_request_id: string }; Returns: Json }
+      marche_shopper_start_shopping: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
       marche_staple_can_manage: { Args: { _user: string }; Returns: boolean }
       marche_staple_categories_public: { Args: never; Returns: Json }
       marche_staple_commodity_upsert: { Args: { p: Json }; Returns: Json }
