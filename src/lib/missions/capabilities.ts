@@ -4,7 +4,8 @@ export type DriverCapability =
   | "rides_taxi"
   | "repas_delivery"
   | "marche_delivery"
-  | "package_delivery";
+  | "package_delivery"
+  | "marche_shopper";
 
 export const CAPABILITY_LABEL: Record<DriverCapability, string> = {
   rides_moto: "Moto",
@@ -13,6 +14,7 @@ export const CAPABILITY_LABEL: Record<DriverCapability, string> = {
   repas_delivery: "Livraison Repas",
   marche_delivery: "Livraison Marché",
   package_delivery: "Colis",
+  marche_shopper: "Acheteur Marché",
 };
 
 export const ALL_CAPABILITIES: DriverCapability[] = [
@@ -22,6 +24,7 @@ export const ALL_CAPABILITIES: DriverCapability[] = [
   "repas_delivery",
   "marche_delivery",
   "package_delivery",
+  "marche_shopper",
 ];
 
 export function hasCapability(

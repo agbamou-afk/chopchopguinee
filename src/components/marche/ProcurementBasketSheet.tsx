@@ -14,6 +14,7 @@ import {
   type ProcurementQuote,
   type ProcurementRequest,
 } from "@/lib/marche/procurement";
+import { ProcurementMissionTracker } from "@/components/marche/ProcurementMissionTracker";
 
 export interface BasketLine extends ProcurementLineInput {
   label_fr: string;
@@ -124,6 +125,7 @@ export function ProcurementBasketSheet({
               Seul le montant réellement dépensé au marché sera débité, dans la limite du maximum
               autorisé. Le reste est automatiquement libéré.
             </p>
+            <ProcurementMissionTracker requestId={request.id} />
             <Button className="w-full" onClick={() => close(false)}>Fermer</Button>
           </div>
         ) : (
