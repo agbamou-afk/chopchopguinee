@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public._qa_r65_trace;
