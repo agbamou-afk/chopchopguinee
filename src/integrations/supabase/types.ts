@@ -10123,6 +10123,15 @@ export type Database = {
         Returns: Json
       }
       _marche_procurement_resolve: { Args: { p_lines: Json }; Returns: Json }
+      _marche_procurement_settle_core: {
+        Args: {
+          p_actor: string
+          p_actual_spend_gnf: number
+          p_evidence_ref: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
       _marche_reservation_settle: {
         Args: { p_kind: string; p_order_id: string }
         Returns: boolean
@@ -13449,6 +13458,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      marche_customer_decide_proposal: { Args: { p: Json }; Returns: Json }
       marche_dispatch_request: { Args: { p_order_id: string }; Returns: Json }
       marche_distance_bucket: {
         Args: { p_distance_m: number }
@@ -13699,15 +13709,26 @@ export type Database = {
         Args: { p_market_id?: string; p_request_id: string }
         Returns: Json
       }
+      marche_shopper_attach_evidence: { Args: { p: Json }; Returns: Json }
       marche_shopper_available_baskets: {
         Args: { p_limit?: number }
         Returns: Json
       }
       marche_shopper_claim: { Args: { p_request_id: string }; Returns: Json }
+      marche_shopper_complete_delivery: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
+      marche_shopper_resolve_line: { Args: { p: Json }; Returns: Json }
+      marche_shopper_start_delivery: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
       marche_shopper_start_shopping: {
         Args: { p_request_id: string }
         Returns: Json
       }
+      marche_shopper_submit_purchase: { Args: { p: Json }; Returns: Json }
       marche_staple_can_manage: { Args: { _user: string }; Returns: boolean }
       marche_staple_categories_public: { Args: never; Returns: Json }
       marche_staple_commodity_upsert: { Args: { p: Json }; Returns: Json }
