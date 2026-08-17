@@ -35,27 +35,6 @@ export type Database = {
         }
         Relationships: []
       }
-      _qa_r65_trace: {
-        Row: {
-          detail: string | null
-          label: string | null
-          ok: boolean | null
-          seq: number
-        }
-        Insert: {
-          detail?: string | null
-          label?: string | null
-          ok?: boolean | null
-          seq?: number
-        }
-        Update: {
-          detail?: string | null
-          label?: string | null
-          ok?: boolean | null
-          seq?: number
-        }
-        Relationships: []
-      }
       _qa_s13_results: {
         Row: {
           created_at: string
