@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { formatGNF } from "@/lib/format";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { MissionsPanel } from "@/components/driver/MissionsPanel";
+import { ShopperBasketsPanel } from "@/components/driver/ShopperBasketsPanel";
 import { CapabilityPicker } from "@/components/driver/CapabilityPicker";
 import { useMissionAlerts } from "@/hooks/useMissionAlerts";
 import { getDistrict, districtChipClasses } from "@/lib/districts";
@@ -292,6 +293,13 @@ export function DriverHome({ onToggleDriverMode }: DriverHomeProps) {
             userId={user.id}
             capabilities={profile?.capabilities ?? []}
             preferredDistrict={profile?.preferred_district ?? null}
+          />
+        )}
+
+        {user && (
+          <ShopperBasketsPanel
+            userId={user.id}
+            capabilities={profile?.capabilities ?? []}
           />
         )}
 
