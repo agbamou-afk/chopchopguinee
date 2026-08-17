@@ -1,0 +1,16 @@
+insert into public._qa_s13_results(part, result)
+values (950, jsonb_build_object('fn','_qa_node4_marche_r1','r',public._qa_node4_marche_r1())),
+       (951, jsonb_build_object('fn','_qa_node4_marche_r15','r',public._qa_node4_marche_r15())),
+       (952, jsonb_build_object('fn','_qa_node4_marche_r2','r',public._qa_node4_marche_r2())),
+       (953, jsonb_build_object('fn','_qa_node4_marche_r3','r',public._qa_node4_marche_r3())),
+       (954, jsonb_build_object('fn','_qa_node4_marche_r35','r',public._qa_node4_marche_r35())),
+       (955, jsonb_build_object('fn','_qa_node4_marche_r4','r',public._qa_node4_marche_r4())),
+       (956, jsonb_build_object('fn','_qa_node4_marche_r5','r',public._qa_node4_marche_r5())),
+       (957, jsonb_build_object('fn','_qa_node4_marche_r6','r',public._qa_node4_marche_r6())),
+       (958, jsonb_build_object('fn','_qa_node3_repas_r8_core','r',public._qa_node3_repas_r8_core())),
+       (959, jsonb_build_object('fn','_qa_node3_repas_r8_channel','r',public._qa_node3_repas_r8_channel())),
+       (960, jsonb_build_object('fn','_qa_node3_repas_r8_extra','r',public._qa_node3_repas_r8_extra())),
+       (961, jsonb_build_object('fn','_qa_node3_repas_r8_discovery_truth','r',public._qa_node3_repas_r8_discovery_truth())),
+       (962, jsonb_build_object('fn','_qa_node3_repas_r9_recovery_flows','r',public._qa_node3_repas_r9_recovery_flows())),
+       (963, jsonb_build_object('fn','_qa_node3_repas_r10_operations','r',public._qa_node3_repas_r10_operations())),
+       (964, jsonb_build_object('fn','_qa_node3_repas_r11_conakry_hardening','r',public._qa_node3_repas_r11_conakry_hardening()));
