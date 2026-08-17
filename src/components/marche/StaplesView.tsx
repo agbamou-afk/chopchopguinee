@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, Package, Search, X } from "lucide-react";
+import { ChevronRight, Minus, Package, Plus, Search, ShoppingBasket, X } from "lucide-react";
+import { ProcurementBasketSheet, type BasketLine } from "@/components/marche/ProcurementBasketSheet";
 import {
   discoverStaples,
   getStaple,
@@ -20,6 +21,9 @@ export function StaplesView() {
   const [items, setItems] = useState<StapleSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<StapleDetail | null>(null);
+  const [qtyByOption, setQtyByOption] = useState<Record<string, number>>({});
+  const [basket, setBasket] = useState<BasketLine[]>([]);
+  const [basketOpen, setBasketOpen] = useState(false);
 
   useEffect(() => {
     listStapleCategories().then(setCategories).catch(() => setCategories([]));
@@ -139,37 +143,102 @@ export function StaplesView() {
                 <p className="text-sm font-semibold text-foreground">{v.name_fr}</p>
                 {v.grade_note_fr && <p className="text-[11px] text-muted-foreground">{v.grade_note_fr}</p>}
                 <div className="space-y-1.5">
-                  {v.purchase_options.map((o) => (
-                    <div key={o.option_code} className="flex items-center justify-between gap-2 rounded-xl bg-muted/40 px-3 py-2">
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">{o.label_fr}</p>
-                        <p className="text-[10px] text-muted-foreground">{normalizationLabel(o)}</p>
+                  {v.purchase_options.map((o) => {
+                    const qty = qtyByOption[o.option_code] ?? o.min_qty;
+                    const setQty = (n: number) =>
+                      setQtyByOption((prev) => ({
+                        ...prev,
+                        [o.option_code]: Math.min(o.max_qty, Math.max(o.min_qty, n)),
+                      }));
+                    return (
+                      <div key={o.option_code} className="rounded-xl bg-muted/40 px-3 py-2 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-foreground truncate">{o.label_fr}</p>
+                            <p className="text-[10px] text-muted-foreground">{normalizationLabel(o)}</p>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
+                            {o.min_qty}–{o.max_qty} (pas {o.step_qty})
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            aria-label="Diminuer"
+                            onClick={() => setQty(qty - o.step_qty)}
+                            disabled={qty <= o.min_qty}
+                            className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center disabled:opacity-40"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="w-8 text-center text-xs font-semibold">{qty}</span>
+                          <button
+                            aria-label="Augmenter"
+                            onClick={() => setQty(qty + o.step_qty)}
+                            disabled={qty >= o.max_qty}
+                            className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center disabled:opacity-40"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              setBasket((b) => [
+                                ...b,
+                                {
+                                  commodity_code: detail.commodity_code,
+                                  variant_code: v.variant_code,
+                                  option_code: o.option_code,
+                                  qty,
+                                  label_fr: `${detail.name_fr} · ${v.name_fr}`,
+                                  option_label_fr: o.label_fr,
+                                },
+                              ])
+                            }
+                            className="flex-1 rounded-lg gradient-wallet px-3 py-2 text-[11px] font-semibold text-primary-foreground"
+                          >
+                            Ajouter au panier
+                          </button>
+                        </div>
                       </div>
-                      <span className="text-[10px] text-muted-foreground shrink-0">
-                        {o.min_qty}–{o.max_qty} (pas {o.step_qty})
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
             <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold text-muted-foreground">Achat assisté bientôt disponible</p>
+              <p className="text-xs font-semibold text-muted-foreground">Achat assisté ChopChop</p>
               <p className="mt-1 text-[11px] text-muted-foreground">
-                Les prix, la disponibilité et la commande ne sont pas encore connectés.
+                Ajoutez vos quantités au panier, puis autorisez un montant maximum. Le prix affiché
+                avant autorisation est une estimation, pas un prix d'achat garanti.
               </p>
               <button
                 type="button"
-                disabled
-                aria-disabled="true"
-                className="mt-2 w-full rounded-xl bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground opacity-60 cursor-not-allowed"
+                onClick={() => setDetail(null)}
+                className="mt-2 w-full rounded-xl bg-card border border-border px-3 py-2 text-xs font-semibold text-foreground"
               >
-                Commander — bientôt
+                Continuer mes achats
               </button>
             </div>
           </div>
         </div>
       )}
+      {basket.length > 0 && (
+        <button
+          onClick={() => setBasketOpen(true)}
+          data-testid="open-basket"
+          className="sticky bottom-20 z-40 w-full flex items-center justify-center gap-2 rounded-2xl gradient-wallet px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg"
+        >
+          <ShoppingBasket className="w-4 h-4" />
+          Voir le panier ({basket.length})
+        </button>
+      )}
+
+      <ProcurementBasketSheet
+        open={basketOpen}
+        onOpenChange={setBasketOpen}
+        lines={basket}
+        onRemove={(i) => setBasket((b) => b.filter((_, idx) => idx !== i))}
+        onAuthorized={() => setBasket([])}
+      />
     </section>
   );
 }
