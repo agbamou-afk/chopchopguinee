@@ -5195,43 +5195,94 @@ export type Database = {
       }
       marche_procurement_price_observations: {
         Row: {
+          canonical_base_unit: string | null
+          cohort_key: string | null
           commodity_id: string
+          comparable: boolean
           created_at: string
           id: string
+          ingested_at: string
+          listing_id: string | null
           market_id: string | null
+          normalization_kind: string | null
+          normalized_quantity: number | null
+          normalized_unit_price_gnf: number | null
           observed_at: string
           observed_unit_price_gnf: number
           purchase_option_id: string
+          raw_amount_gnf: number | null
+          raw_quantity: number | null
+          raw_unit: string | null
           recorded_by: string | null
           source_kind: string
           source_ref: string | null
+          source_type: string
+          store_id: string | null
+          superseded_by: string | null
+          superseded_reason: string | null
           variant_id: string
+          zone_commune: string | null
+          zone_label: string | null
         }
         Insert: {
+          canonical_base_unit?: string | null
+          cohort_key?: string | null
           commodity_id: string
+          comparable?: boolean
           created_at?: string
           id?: string
+          ingested_at?: string
+          listing_id?: string | null
           market_id?: string | null
+          normalization_kind?: string | null
+          normalized_quantity?: number | null
+          normalized_unit_price_gnf?: number | null
           observed_at?: string
           observed_unit_price_gnf: number
           purchase_option_id: string
+          raw_amount_gnf?: number | null
+          raw_quantity?: number | null
+          raw_unit?: string | null
           recorded_by?: string | null
           source_kind: string
           source_ref?: string | null
+          source_type?: string
+          store_id?: string | null
+          superseded_by?: string | null
+          superseded_reason?: string | null
           variant_id: string
+          zone_commune?: string | null
+          zone_label?: string | null
         }
         Update: {
+          canonical_base_unit?: string | null
+          cohort_key?: string | null
           commodity_id?: string
+          comparable?: boolean
           created_at?: string
           id?: string
+          ingested_at?: string
+          listing_id?: string | null
           market_id?: string | null
+          normalization_kind?: string | null
+          normalized_quantity?: number | null
+          normalized_unit_price_gnf?: number | null
           observed_at?: string
           observed_unit_price_gnf?: number
           purchase_option_id?: string
+          raw_amount_gnf?: number | null
+          raw_quantity?: number | null
+          raw_unit?: string | null
           recorded_by?: string | null
           source_kind?: string
           source_ref?: string | null
+          source_type?: string
+          store_id?: string | null
+          superseded_by?: string | null
+          superseded_reason?: string | null
           variant_id?: string
+          zone_commune?: string | null
+          zone_label?: string | null
         }
         Relationships: [
           {
@@ -5247,6 +5298,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_marche_staple_public"
             referencedColumns: ["commodity_id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
           },
           {
             foreignKeyName: "marche_procurement_price_observations_market_id_fkey"
@@ -5268,6 +5333,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_marche_staple_public"
             referencedColumns: ["option_id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_procurement_price_observations_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "marche_procurement_price_observations"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "marche_procurement_price_observations_variant_id_fkey"
@@ -5933,6 +6012,8 @@ export type Database = {
           quantity_reserved: number
           seller_id: string
           sold_count: number
+          staple_purchase_option_id: string | null
+          staple_variant_id: string | null
           status: Database["public"]["Enums"]["listing_status"]
           store_id: string | null
           title: string
@@ -5968,6 +6049,8 @@ export type Database = {
           quantity_reserved?: number
           seller_id: string
           sold_count?: number
+          staple_purchase_option_id?: string | null
+          staple_variant_id?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           store_id?: string | null
           title: string
@@ -6003,6 +6086,8 @@ export type Database = {
           quantity_reserved?: number
           seller_id?: string
           sold_count?: number
+          staple_purchase_option_id?: string | null
+          staple_variant_id?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           store_id?: string | null
           title?: string
@@ -6011,6 +6096,34 @@ export type Database = {
           visibility?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_staple_purchase_option_id_fkey"
+            columns: ["staple_purchase_option_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_purchase_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_staple_purchase_option_id_fkey"
+            columns: ["staple_purchase_option_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["option_id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_staple_variant_id_fkey"
+            columns: ["staple_variant_id"]
+            isOneToOne: false
+            referencedRelation: "marche_staple_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_staple_variant_id_fkey"
+            columns: ["staple_variant_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_staple_public"
+            referencedColumns: ["variant_id"]
+          },
           {
             foreignKeyName: "marketplace_listings_store_id_fkey"
             columns: ["store_id"]
@@ -10047,6 +10160,8 @@ export type Database = {
           quantity_reserved: number
           seller_id: string
           sold_count: number
+          staple_purchase_option_id: string | null
+          staple_variant_id: string | null
           status: Database["public"]["Enums"]["listing_status"]
           store_id: string | null
           title: string
@@ -10104,6 +10219,39 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      _marche_price_cohort: {
+        Args: {
+          p_base_unit: string
+          p_source_type?: string
+          p_variant_id: string
+          p_window_hours?: number
+          p_zone?: string
+        }
+        Returns: Json
+      }
+      _marche_price_normalize: {
+        Args: { p_amount_gnf: number; p_option_id: string; p_quantity: number }
+        Returns: Json
+      }
+      _marche_price_policy: { Args: never; Returns: Json }
+      _marche_price_record: {
+        Args: {
+          p_amount_gnf: number
+          p_listing_id?: string
+          p_market_id?: string
+          p_observed_at: string
+          p_option_id: string
+          p_quantity: number
+          p_recorded_by?: string
+          p_source_kind: string
+          p_source_ref: string
+          p_source_type: string
+          p_store_id?: string
+          p_zone_commune?: string
+          p_zone_label?: string
+        }
+        Returns: string
       }
       _marche_procurement_capture_internal: {
         Args: { p_actor?: string; p_amount: number; p_auth_id: string }
@@ -13019,6 +13167,8 @@ export type Database = {
           quantity_reserved: number
           seller_id: string
           sold_count: number
+          staple_purchase_option_id: string | null
+          staple_variant_id: string | null
           status: Database["public"]["Enums"]["listing_status"]
           store_id: string | null
           title: string
@@ -13560,6 +13710,10 @@ export type Database = {
         Args: { p_availability: string; p_listing_id: string }
         Returns: Json
       }
+      marche_listing_set_staple_mapping: {
+        Args: { p_listing_id: string; p_option_id: string }
+        Returns: Json
+      }
       marche_listing_set_stock: {
         Args: { p_listing_id: string; p_quantity: number }
         Returns: number
@@ -13687,6 +13841,75 @@ export type Database = {
       }
       marche_orders_for_merchant: {
         Args: { p_limit?: number; p_offset?: number; p_store_id?: string }
+        Returns: Json
+      }
+      marche_price_cohort_stats: {
+        Args: {
+          p_base_unit: string
+          p_variant_id: string
+          p_window_hours?: number
+          p_zone?: string
+        }
+        Returns: Json
+      }
+      marche_price_confidence: {
+        Args: { p_latest: string; p_sample_count: number }
+        Returns: string
+      }
+      marche_price_freshness: { Args: { p_latest: string }; Returns: string }
+      marche_price_ingest_merchant_ask: {
+        Args: { p_listing_id: string }
+        Returns: Json
+      }
+      marche_price_observations_admin: {
+        Args: { p_limit?: number; p_variant_id?: string }
+        Returns: {
+          canonical_base_unit: string | null
+          cohort_key: string | null
+          commodity_id: string
+          comparable: boolean
+          created_at: string
+          id: string
+          ingested_at: string
+          listing_id: string | null
+          market_id: string | null
+          normalization_kind: string | null
+          normalized_quantity: number | null
+          normalized_unit_price_gnf: number | null
+          observed_at: string
+          observed_unit_price_gnf: number
+          purchase_option_id: string
+          raw_amount_gnf: number | null
+          raw_quantity: number | null
+          raw_unit: string | null
+          recorded_by: string | null
+          source_kind: string
+          source_ref: string | null
+          source_type: string
+          store_id: string | null
+          superseded_by: string | null
+          superseded_reason: string | null
+          variant_id: string
+          zone_commune: string | null
+          zone_label: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "marche_procurement_price_observations"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      marche_price_observed_public: {
+        Args: { p_commodity_code: string; p_zone?: string }
+        Returns: Json
+      }
+      marche_price_supersede_observation: {
+        Args: {
+          p_observation_id: string
+          p_reason: string
+          p_replacement_id?: string
+        }
         Returns: Json
       }
       marche_procurement_authorize: { Args: { p: Json }; Returns: Json }
