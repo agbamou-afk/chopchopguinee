@@ -10603,6 +10603,7 @@ export type Database = {
       _qa_node4_marche_r7: { Args: never; Returns: Json }
       _qa_node4_marche_r7_fxcore: { Args: never; Returns: Json }
       _qa_node4_marche_r7_obs_kind: { Args: never; Returns: string }
+      _qa_node4_marche_r8: { Args: never; Returns: Json }
       _qa_node4_probe: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
