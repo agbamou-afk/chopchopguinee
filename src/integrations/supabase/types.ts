@@ -10109,6 +10109,14 @@ export type Database = {
         Args: { p_actor?: string; p_amount: number; p_auth_id: string }
         Returns: Json
       }
+      _marche_procurement_evidence_can_read: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
+      _marche_procurement_evidence_can_write: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
       _marche_procurement_fingerprint: {
         Args: { p_ceiling: number; p_lines: Json }
         Returns: string
