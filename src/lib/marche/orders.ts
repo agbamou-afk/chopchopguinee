@@ -8,6 +8,7 @@
  * and never its own arithmetic as authority.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { boundedPoll, isLostResponseError } from "@/lib/net/boundedPoll";
 import type { OrderCommitIntent } from "./orderRequestId";
 
 type Rpc = { rpc: (n: string, a?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }> };
