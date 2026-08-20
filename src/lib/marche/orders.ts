@@ -253,10 +253,57 @@ export async function commitMarcheOrder(
     ...(intent.deliveryAddress ? { delivery_address: intent.deliveryAddress } : {}),
     ...(intent.dropoffLat != null ? { dropoff_lat: intent.dropoffLat } : {}),
     ...(intent.dropoffLng != null ? { dropoff_lng: intent.dropoffLng } : {}),
+    ...(intent.destinationLabel ? { destination_label: intent.destinationLabel } : {}),
+    ...(intent.destinationLandmark ? { destination_landmark: intent.destinationLandmark } : {}),
+    ...(intent.destinationInstructions ? { destination_instructions: intent.destinationInstructions } : {}),
+    ...(intent.locationSource ? { location_source: intent.locationSource } : {}),
   };
   const { data, error } = await db.rpc("marche_order_commit", { p_payload: payload });
   if (error) throw new Error(translateOrderError(error.message));
   return asOrder(data);
+}
+
+/**
+ * R13 commitment with lost-response recovery.
+ *
+ * On an ambiguous network failure the mutation is NEVER replayed blindly:
+ * the same durable identity is used to ask the server what it recorded. Either
+ * we surface the canonical order, or we surface an honest failure.
+ */
+export async function commitMarcheOrderResilient(
+  intent: OrderCommitIntent,
+  clientRequestId: string,
+  opts?: { signal?: AbortSignal },
+): Promise<{ order: MarcheOrder; recovered: boolean }> {
+  try {
+    return { order: await commitMarcheOrder(intent, clientRequestId), recovered: false };
+  } catch (e) {
+    if (!isLostResponseError(e)) throw e;
+    const res = await boundedPoll(() => recoverMarcheOrder(clientRequestId), {
+      attempts: 4,
+      baseMs: 800,
+      maxMs: 5000,
+      deadlineMs: 20000,
+      signal: opts?.signal,
+      isDone: (o) => o != null,
+    });
+    if (res.done && res.value) return { order: res.value, recovered: true };
+    throw new Error(
+      "Connexion perdue. Nous n'avons pas pu confirmer votre commande — vérifiez « Mes commandes » avant de réessayer.",
+    );
+  }
+}
+
+/** Server verdict on how well the delivery point is actually known. */
+export function destinationQualityLabel(q: MarcheOrder["destination_quality"]): string {
+  switch (q) {
+    case "gps_verified": return "Position GPS confirmée";
+    case "manually_placed": return "Point placé à la main";
+    case "landmark_assisted": return "Repère fourni (sans GPS)";
+    case "approximate": return "Position approximative";
+    case "unverifiable": return "Lieu non vérifiable";
+    default: return "Lieu non vérifiable";
+  }
 }
 
 export async function cancelMarcheOrder(orderId: string, reason?: string | null): Promise<MarcheOrder> {
