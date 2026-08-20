@@ -111,7 +111,7 @@ export function MarketView({ onBack }: MarketViewProps) {
       condition: r.condition,
       description: r.description,
       cover_url: r.cover_url,
-      rank_reasons: sort === "recommended" ? rankReasons(r.rank_evidence, r.rank_distance_m) : null,
+      rank_reasons: sort === "recommended" ? rankReasons(r.rank_evidence) : null,
     }));
     setListings(mapped);
     setLoading(false);
