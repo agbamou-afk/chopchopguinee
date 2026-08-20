@@ -74,3 +74,39 @@ assertions fail with `permission denied for function _qa_s13_ok`. This is a prop
 runner, not of R10 law.
 
 **Status: R10 CERTIFIED / FROZEN. Edits frozen.**
+
+## Micro-corrections 8–12 re-verification (2026-08-20)
+
+Re-audited live HEAD against the five requested micro-corrections; all are already
+implemented by the closeout pass and were re-proven, not re-asserted:
+
+- (8) `_marche_rank_evidence` price cohort filters `variant_id + canonical_base_unit +
+  zone_commune IS NOT DISTINCT FROM own_zone`, bounds by `price_lookback_hours`, requires
+  `min_price_observations`, and refuses on `marche_price_confidence = insufficient` or
+  `marche_price_freshness IN ('none','stale')` → `INSUFFICIENT_PRICE_EVIDENCE`.
+  QA: D3 (zone contamination), D3b/D3c (stale/backdated), D4, D7, D9.
+- (9) `marche_shopper_performance` reports
+  `missions_cancelled_unattributed = {value, scored:false,
+  reason:'NO_CANONICAL_CANCELLATION_ATTRIBUTION'}`; no failure-rate penalty is derived.
+  QA: O5.
+- (10) Hard gate `_marche_shopper_eligible(target)` → `SHOPPER_NOT_ELIGIBLE` before any
+  representation. QA: O1, O2.
+- (11) R9 shopper cohort only (`subject_kind='shopper'`), low-N (<3) → `available:false /
+  INSUFFICIENT_REPUTATION_SAMPLE`, no rater/comment/transaction identifiers.
+  QA: O7 (surfaced), O8 (delivery-driver isolation), O9 (no buyer/basket identity).
+- (12) Defective first-pass assertions are gone: D7 now expects refusal, E1–E5 measure
+  observed-price freshness (not listing age), I3 expects unknown-distance neutrality,
+  J1–J6/L3/L4 encode true cold start, L4 asserts ordering not cancellation penalty.
+
+Board re-run after last edit (privileged path):
+- `_qa_node4_marche_r10` 127/127, 0 failed.
+- Marché R1–R10 + Nodes 0–3 + Slice 13: 0 failures across all standard harnesses.
+- Array-shaped harnesses re-counted explicitly: bonbonna_matrix 39/0, sweeper 15/0,
+  repas_r8_channel 60/0, repas_r8_extra 53/0, marche_r5 167/0, marche_r9 113/0,
+  marche_r9_backlink 18/0.
+- Known legacy (pre-R10, not part of the certified board): `_qa_node3_repas_r7_ext`,
+  `_qa_node3_repas_r7_readtruth`, `_qa_node3_repas_r7_semantics` raise
+  `RESTAURANT_NOT_PUBLISHED` because their fixtures predate Repas R8
+  `verification_state='verified'` publication law. Not a Marché regression; untouched.
+
+R10 remains CERTIFIED / FROZEN.
