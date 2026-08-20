@@ -5655,6 +5655,72 @@ export type Database = {
         }
         Relationships: []
       }
+      marche_ranking_policies: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          distance_max_m: number
+          effective_from: string
+          effective_to: string | null
+          freshness_half_life_days: number
+          id: string
+          label: string
+          min_fulfillment_history: number
+          min_price_observations: number
+          min_reputation_events: number
+          notes: string | null
+          updated_at: string
+          version: number
+          w_distance: number
+          w_freshness: number
+          w_price: number
+          w_reliability: number
+          w_reputation: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          distance_max_m?: number
+          effective_from?: string
+          effective_to?: string | null
+          freshness_half_life_days?: number
+          id?: string
+          label: string
+          min_fulfillment_history?: number
+          min_price_observations?: number
+          min_reputation_events?: number
+          notes?: string | null
+          updated_at?: string
+          version: number
+          w_distance?: number
+          w_freshness?: number
+          w_price?: number
+          w_reliability?: number
+          w_reputation?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          distance_max_m?: number
+          effective_from?: string
+          effective_to?: string | null
+          freshness_half_life_days?: number
+          id?: string
+          label?: string
+          min_fulfillment_history?: number
+          min_price_observations?: number
+          min_reputation_events?: number
+          notes?: string | null
+          updated_at?: string
+          version?: number
+          w_distance?: number
+          w_freshness?: number
+          w_price?: number
+          w_reliability?: number
+          w_reputation?: number
+        }
+        Relationships: []
+      }
       marche_reputation_dimensions: {
         Row: {
           created_at: string
@@ -10338,6 +10404,17 @@ export type Database = {
         }
         Returns: Json
       }
+      _marche_rank_evidence: {
+        Args: {
+          p_at?: string
+          p_lat?: number
+          p_listing_id: string
+          p_lng?: number
+          p_policy?: Json
+        }
+        Returns: Json
+      }
+      _marche_ranking_policy: { Args: { p_at?: string }; Returns: Json }
       _marche_reputation_resolve: {
         Args: { p_caller: string; p_kind: string; p_tx: string }
         Returns: Json
