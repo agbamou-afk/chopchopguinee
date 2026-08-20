@@ -26,6 +26,8 @@ export interface RankEvidence {
   cold_start?: boolean;
   score?: number | null;
   score_bps?: number | null;
+  /** Server-authored ranking reasons. The client never invents one. */
+  why_ranked?: RankReason[] | null;
 }
 
 export interface DiscoverRow {
@@ -102,51 +104,24 @@ export async function getRankingPolicy(): Promise<Record<string, unknown> | null
 }
 
 export interface RankReason {
-  key: string;
+  /** Server reason code, e.g. GOOD_VALUE, WELL_RATED, NEARBY. */
+  code: string;
+  /** Server-authored French label. */
   label: string;
-  tone: "price" | "trust" | "distance" | "fresh";
 }
 
-const PRICE_STRONG = 0.7;
-const TRUST_STRONG = 0.7;
-
 /**
- * Turns server evidence into short French chips.
- * Missing evidence produces NO chip — a listing is never labelled "bad"
- * for lacking history.
+ * Returns the reasons the SERVER authored for this listing.
+ * The client applies no threshold, no scoring and no judgement of its own:
+ * missing evidence simply yields no chip, and a cold-start listing is never
+ * labelled "bad" for lacking history.
  */
-export function rankReasons(ev: RankEvidence | null | undefined, distanceM?: number | null): RankReason[] {
-  const c = ev?.components;
-  if (!c) return [];
-  const out: RankReason[] = [];
-
-  const price = c.price;
-  if (price?.available && (price.score ?? 0) >= PRICE_STRONG) {
-    out.push({ key: "price", label: "Bon prix observé", tone: "price" });
-  }
-
-  const rep = c.reputation;
-  if (rep?.available && (rep.score ?? 0) >= TRUST_STRONG) {
-    out.push({ key: "reputation", label: "Bien noté", tone: "trust" });
-  }
-
-  const rel = c.reliability;
-  if (rel?.available && (rel.score ?? 0) >= TRUST_STRONG) {
-    out.push({ key: "reliability", label: "Livre de façon fiable", tone: "trust" });
-  }
-
-  const dm = distanceM ?? c.distance?.distance_m ?? null;
-  if (c.distance?.available && dm != null) {
-    out.push({
-      key: "distance",
-      label: dm < 1000 ? `À ${Math.round(dm)} m` : `À ${(dm / 1000).toFixed(1)} km`,
-      tone: "distance",
-    });
-  }
-
-  if (ev?.cold_start) {
-    out.push({ key: "new", label: "Nouvelle boutique", tone: "fresh" });
-  }
-
-  return out.slice(0, 3);
+export function rankReasons(ev: RankEvidence | null | undefined): RankReason[] {
+  const raw = ev?.why_ranked;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((r): r is RankReason =>
+      !!r && typeof r.code === "string" && r.code.length > 0 &&
+      typeof r.label === "string" && r.label.length > 0)
+    .slice(0, 2);
 }
