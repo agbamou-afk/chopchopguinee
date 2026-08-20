@@ -40,6 +40,17 @@ export interface MarcheOrder {
   delivery_address: string | null;
   dropoff_lat: number | null;
   dropoff_lng: number | null;
+  /** R13 destination truth. `destination_quality` is derived by the server. */
+  destination_label?: string | null;
+  destination_landmark?: string | null;
+  destination_instructions?: string | null;
+  destination_quality?:
+    | "gps_verified"
+    | "manually_placed"
+    | "landmark_assisted"
+    | "approximate"
+    | "unverifiable"
+    | null;
   /**
    * R4 merchant economics. Present ONLY for the merchant that owns the order
    * and for admins; the server omits these keys for buyers. Never recomputed
