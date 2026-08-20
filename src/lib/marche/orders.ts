@@ -8,6 +8,7 @@
  * and never its own arithmetic as authority.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { boundedPoll, isLostResponseError } from "@/lib/net/boundedPoll";
 import type { OrderCommitIntent } from "./orderRequestId";
 
 type Rpc = { rpc: (n: string, a?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }> };
@@ -40,6 +41,17 @@ export interface MarcheOrder {
   delivery_address: string | null;
   dropoff_lat: number | null;
   dropoff_lng: number | null;
+  /** R13 destination truth. `destination_quality` is derived by the server. */
+  destination_label?: string | null;
+  destination_landmark?: string | null;
+  destination_instructions?: string | null;
+  destination_quality?:
+    | "gps_verified"
+    | "manually_placed"
+    | "landmark_assisted"
+    | "approximate"
+    | "unverifiable"
+    | null;
   /**
    * R4 merchant economics. Present ONLY for the merchant that owns the order
    * and for admins; the server omits these keys for buyers. Never recomputed
@@ -107,11 +119,116 @@ const REFUSALS: Record<string, string> = {
   MERCHANT_FEE_POLICY_MISSING: "Tarification indisponible, réessayez plus tard.",
   NO_ACTIVE_POLICY: "Tarification indisponible, réessayez plus tard.",
   ECONOMICS_IMMUTABLE: "Les montants de cette commande sont définitifs.",
+  // R13
+  LISTING_QUARANTINED: "Article suspendu par CHOP CHOP.",
+  STORE_SUSPENDED: "Boutique momentanément suspendue.",
+  NOT_ORDERABLE: "Article indisponible à la commande.",
+  CLIENT_LOCATION_QUALITY_NOT_ALLOWED: "Adresse invalide : la précision est déterminée par CHOP CHOP.",
+  INVALID_LOCATION_SOURCE: "Origine de position invalide.",
+  DESTINATION_TEXT_TOO_LONG: "Description du lieu trop longue.",
+  LISTING_REQUIRED: "Article manquant.",
+  PRICE_CHANGED: "Le prix a changé.",
 };
 
 export function translateOrderError(raw: string | null | undefined): string {
   const code = (raw ?? "").trim();
   return REFUSALS[code] ?? code ?? "Erreur inattendue";
+}
+
+/* ------------------------------------------------------------------ *
+ * R13 — revalidation before commitment
+ * ------------------------------------------------------------------ */
+
+export type RevalidationLineStatus =
+  | "ok"
+  | "price_changed"
+  | "quantity_unavailable"
+  | "unavailable"
+  | "review_required"
+  | "not_found";
+
+export interface BasketRevalidationLine {
+  listing_id: string;
+  title: string | null;
+  store_id: string | null;
+  status: RevalidationLineStatus;
+  reason: string | null;
+  requested_qty: number;
+  available_qty: number | null;
+  unit_price_gnf: number | null;
+  cached_unit_price_gnf: number | null;
+  price_changed: boolean;
+}
+
+export interface BasketRevalidation {
+  schema: "chopchop.marche.basket_revalidation";
+  version: number;
+  revalidated_at: string;
+  ok: boolean;
+  material_change: boolean;
+  blocking_reason: string | null;
+  store_id: string | null;
+  /** Server-computed presentation subtotal; null when the basket is blocked. */
+  merchandise_subtotal_gnf: number | null;
+  item_count: number;
+  line_count: number;
+  lines: BasketRevalidationLine[];
+}
+
+/**
+ * Re-checks an offline-composed draft against live server truth right before
+ * commitment. Read-only: reserves nothing, charges nothing, promises nothing.
+ * Never send a cached total — the server refuses it.
+ */
+export async function revalidateMarcheBasket(
+  lines: { listingId: string; qty: number; offerId?: string | null; cachedUnitPriceGnf?: number | null }[],
+): Promise<BasketRevalidation> {
+  const payload = {
+    items: lines.map((l) => ({
+      listing_id: l.listingId,
+      qty: l.qty,
+      ...(l.offerId ? { offer_id: l.offerId } : {}),
+      ...(l.cachedUnitPriceGnf != null ? { cached_unit_price_gnf: l.cachedUnitPriceGnf } : {}),
+    })),
+  };
+  const { data, error } = await db.rpc("marche_basket_revalidate", { p_payload: payload });
+  if (error) throw new Error(translateOrderError(error.message));
+  return data as BasketRevalidation;
+}
+
+/** Customer-facing sentence for a revalidation outcome. Never invents numbers. */
+export function revalidationMessage(r: BasketRevalidation): string | null {
+  if (!r.ok) {
+    const line = r.lines.find((l) => l.status !== "ok" && l.status !== "price_changed");
+    const what = line?.title ? `« ${line.title} » : ` : "";
+    return `${what}${translateOrderError(r.blocking_reason ?? line?.reason ?? "NOT_ORDERABLE")}`;
+  }
+  if (r.material_change) return "Le prix a changé depuis votre dernière connexion. Vérifiez le nouveau montant.";
+  return null;
+}
+
+/* ------------------------------------------------------------------ *
+ * R13 — lost-response recovery
+ * ------------------------------------------------------------------ */
+
+export interface OrderRecovery {
+  schema: "chopchop.marche.order_recovery";
+  version: number;
+  found: boolean;
+  client_request_id: string;
+  order: MarcheOrder | null;
+}
+
+/**
+ * After an ambiguous network failure, asks the server what it actually
+ * recorded for this commitment identity. Buyer-scoped and read-only: it can
+ * never create a second order.
+ */
+export async function recoverMarcheOrder(clientRequestId: string): Promise<MarcheOrder | null> {
+  const { data, error } = await db.rpc("marche_order_recover", { p_client_request_id: clientRequestId });
+  if (error) throw new Error(translateOrderError(error.message));
+  const rec = data as OrderRecovery | null;
+  return rec?.found ? (rec.order as MarcheOrder) : null;
 }
 
 function asOrder(data: unknown): MarcheOrder {
@@ -137,10 +254,57 @@ export async function commitMarcheOrder(
     ...(intent.deliveryAddress ? { delivery_address: intent.deliveryAddress } : {}),
     ...(intent.dropoffLat != null ? { dropoff_lat: intent.dropoffLat } : {}),
     ...(intent.dropoffLng != null ? { dropoff_lng: intent.dropoffLng } : {}),
+    ...(intent.destinationLabel ? { destination_label: intent.destinationLabel } : {}),
+    ...(intent.destinationLandmark ? { destination_landmark: intent.destinationLandmark } : {}),
+    ...(intent.destinationInstructions ? { destination_instructions: intent.destinationInstructions } : {}),
+    ...(intent.locationSource ? { location_source: intent.locationSource } : {}),
   };
   const { data, error } = await db.rpc("marche_order_commit", { p_payload: payload });
   if (error) throw new Error(translateOrderError(error.message));
   return asOrder(data);
+}
+
+/**
+ * R13 commitment with lost-response recovery.
+ *
+ * On an ambiguous network failure the mutation is NEVER replayed blindly:
+ * the same durable identity is used to ask the server what it recorded. Either
+ * we surface the canonical order, or we surface an honest failure.
+ */
+export async function commitMarcheOrderResilient(
+  intent: OrderCommitIntent,
+  clientRequestId: string,
+  opts?: { signal?: AbortSignal },
+): Promise<{ order: MarcheOrder; recovered: boolean }> {
+  try {
+    return { order: await commitMarcheOrder(intent, clientRequestId), recovered: false };
+  } catch (e) {
+    if (!isLostResponseError(e)) throw e;
+    const res = await boundedPoll(() => recoverMarcheOrder(clientRequestId), {
+      attempts: 4,
+      baseMs: 800,
+      maxMs: 5000,
+      deadlineMs: 20000,
+      signal: opts?.signal,
+      isDone: (o) => o != null,
+    });
+    if (res.done && res.value) return { order: res.value, recovered: true };
+    throw new Error(
+      "Connexion perdue. Nous n'avons pas pu confirmer votre commande — vérifiez « Mes commandes » avant de réessayer.",
+    );
+  }
+}
+
+/** Server verdict on how well the delivery point is actually known. */
+export function destinationQualityLabel(q: MarcheOrder["destination_quality"]): string {
+  switch (q) {
+    case "gps_verified": return "Position GPS confirmée";
+    case "manually_placed": return "Point placé à la main";
+    case "landmark_assisted": return "Repère fourni (sans GPS)";
+    case "approximate": return "Position approximative";
+    case "unverifiable": return "Lieu non vérifiable";
+    default: return "Lieu non vérifiable";
+  }
 }
 
 export async function cancelMarcheOrder(orderId: string, reason?: string | null): Promise<MarcheOrder> {

@@ -5068,6 +5068,10 @@ export type Database = {
           delivery_address: string | null
           delivery_charge_gnf: number | null
           delivery_pricing_state: string
+          destination_instructions: string | null
+          destination_label: string | null
+          destination_landmark: string | null
+          destination_quality: string | null
           dropoff_lat: number | null
           dropoff_lng: number | null
           economics_resolved_at: string | null
@@ -5107,6 +5111,10 @@ export type Database = {
           delivery_address?: string | null
           delivery_charge_gnf?: number | null
           delivery_pricing_state?: string
+          destination_instructions?: string | null
+          destination_label?: string | null
+          destination_landmark?: string | null
+          destination_quality?: string | null
           dropoff_lat?: number | null
           dropoff_lng?: number | null
           economics_resolved_at?: string | null
@@ -5146,6 +5154,10 @@ export type Database = {
           delivery_address?: string | null
           delivery_charge_gnf?: number | null
           delivery_pricing_state?: string
+          destination_instructions?: string | null
+          destination_label?: string | null
+          destination_landmark?: string | null
+          destination_quality?: string | null
           dropoff_lat?: number | null
           dropoff_lng?: number | null
           economics_resolved_at?: string | null
@@ -10517,6 +10529,17 @@ export type Database = {
         Args: { p_courier: string; p_mission_id: string; p_order_id: string }
         Returns: undefined
       }
+      _marche_destination_quality: {
+        Args: {
+          p_instructions: string
+          p_label: string
+          p_landmark: string
+          p_lat: number
+          p_lng: number
+          p_source: string
+        }
+        Returns: string
+      }
       _marche_fulfillment_apply: {
         Args: {
           p_actor: string
@@ -10536,6 +10559,10 @@ export type Database = {
           delivery_address: string | null
           delivery_charge_gnf: number | null
           delivery_pricing_state: string
+          destination_instructions: string | null
+          destination_label: string | null
+          destination_landmark: string | null
+          destination_quality: string | null
           dropoff_lat: number | null
           dropoff_lng: number | null
           economics_resolved_at: string | null
@@ -11106,6 +11133,7 @@ export type Database = {
       _qa_node4_marche_r11: { Args: never; Returns: Json }
       _qa_node4_marche_r11_a8: { Args: never; Returns: Json }
       _qa_node4_marche_r12: { Args: never; Returns: Json }
+      _qa_node4_marche_r13: { Args: never; Returns: Json }
       _qa_node4_marche_r15: { Args: never; Returns: Json }
       _qa_node4_marche_r2: { Args: never; Returns: Json }
       _qa_node4_marche_r3: { Args: never; Returns: Json }
@@ -14092,6 +14120,7 @@ export type Database = {
         Args: { p_distinct: number; p_units: number }
         Returns: string
       }
+      marche_basket_revalidate: { Args: { p_payload: Json }; Returns: Json }
       marche_complete_offer: {
         Args: { p_offer_id: string; p_reason?: string }
         Returns: Json
@@ -14445,6 +14474,10 @@ export type Database = {
       marche_order_get: { Args: { p_order_id: string }; Returns: Json }
       marche_order_json: {
         Args: { o: Database["public"]["Tables"]["marche_orders"]["Row"] }
+        Returns: Json
+      }
+      marche_order_recover: {
+        Args: { p_client_request_id: string }
         Returns: Json
       }
       marche_order_release_expired: {
