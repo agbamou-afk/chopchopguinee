@@ -57,6 +57,9 @@ export function MarketView({ onBack }: MarketViewProps) {
   const geo = useGeolocation();
   const navigate = useNavigate();
   const [canSell, setCanSell] = useState(false);
+  // Coordinates are only ever a ranking hint; the server decides the order.
+  const rankLat = geo.isReady && geo.position ? geo.position.lat : null;
+  const rankLng = geo.isReady && geo.position ? geo.position.lng : null;
 
   useEffect(() => {
     let alive = true;
