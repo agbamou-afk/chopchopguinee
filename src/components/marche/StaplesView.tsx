@@ -12,6 +12,12 @@ import {
 } from "@/lib/marche/staples";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ObservedPriceBadge } from "@/components/marche/ObservedPriceBadge";
+import {
+  fetchObservedPrices,
+  pickVariantCohort,
+  type ObservedPriceResult,
+} from "@/lib/marche/priceIntelligence";
 
 /** R6 Essentiels — read-only reference catalog. No price, no cart, no ordering. */
 export function StaplesView() {
@@ -24,6 +30,7 @@ export function StaplesView() {
   const [qtyByOption, setQtyByOption] = useState<Record<string, number>>({});
   const [basket, setBasket] = useState<BasketLine[]>([]);
   const [basketOpen, setBasketOpen] = useState(false);
+  const [observed, setObserved] = useState<ObservedPriceResult | null>(null);
 
   useEffect(() => {
     listStapleCategories().then(setCategories).catch(() => setCategories([]));
@@ -40,6 +47,21 @@ export function StaplesView() {
     const t = setTimeout(load, 200);
     return () => clearTimeout(t);
   }, [load]);
+
+  // R8: server-observed market prices for the opened commodity (read-only).
+  useEffect(() => {
+    if (!detail) {
+      setObserved(null);
+      return;
+    }
+    let alive = true;
+    fetchObservedPrices(detail.commodity_code)
+      .then((r) => alive && setObserved(r))
+      .catch(() => alive && setObserved(null));
+    return () => {
+      alive = false;
+    };
+  }, [detail]);
 
   return (
     <section className="space-y-3">
@@ -142,6 +164,7 @@ export function StaplesView() {
               <div key={v.variant_code} className="rounded-2xl bg-card border border-border/60 p-3 space-y-2">
                 <p className="text-sm font-semibold text-foreground">{v.name_fr}</p>
                 {v.grade_note_fr && <p className="text-[11px] text-muted-foreground">{v.grade_note_fr}</p>}
+                <ObservedPriceBadge cohort={pickVariantCohort(observed, v.variant_code)} />
                 <div className="space-y-1.5">
                   {v.purchase_options.map((o) => {
                     const qty = qtyByOption[o.option_code] ?? o.min_qty;
