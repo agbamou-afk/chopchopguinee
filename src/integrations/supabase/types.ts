@@ -5662,20 +5662,26 @@ export type Database = {
           distance_max_m: number
           effective_from: string
           effective_to: string | null
-          freshness_half_life_days: number
+          fulfillment_lookback_days: number
           id: string
           label: string
           min_fulfillment_history: number
+          min_fulfillment_observations: number
           min_price_observations: number
+          min_qualified_components: number
           min_reputation_events: number
           notes: string | null
+          price_lookback_hours: number
+          reliability_lookback_days: number
           updated_at: string
           version: number
           w_distance: number
           w_freshness: number
+          w_preparation: number
           w_price: number
           w_reliability: number
           w_reputation: number
+          w_responsiveness: number
         }
         Insert: {
           created_at?: string
@@ -5683,20 +5689,26 @@ export type Database = {
           distance_max_m?: number
           effective_from?: string
           effective_to?: string | null
-          freshness_half_life_days?: number
+          fulfillment_lookback_days?: number
           id?: string
           label: string
           min_fulfillment_history?: number
+          min_fulfillment_observations?: number
           min_price_observations?: number
+          min_qualified_components?: number
           min_reputation_events?: number
           notes?: string | null
+          price_lookback_hours?: number
+          reliability_lookback_days?: number
           updated_at?: string
           version: number
           w_distance?: number
           w_freshness?: number
+          w_preparation?: number
           w_price?: number
           w_reliability?: number
           w_reputation?: number
+          w_responsiveness?: number
         }
         Update: {
           created_at?: string
@@ -5704,20 +5716,26 @@ export type Database = {
           distance_max_m?: number
           effective_from?: string
           effective_to?: string | null
-          freshness_half_life_days?: number
+          fulfillment_lookback_days?: number
           id?: string
           label?: string
           min_fulfillment_history?: number
+          min_fulfillment_observations?: number
           min_price_observations?: number
+          min_qualified_components?: number
           min_reputation_events?: number
           notes?: string | null
+          price_lookback_hours?: number
+          reliability_lookback_days?: number
           updated_at?: string
           version?: number
           w_distance?: number
           w_freshness?: number
+          w_preparation?: number
           w_price?: number
           w_reliability?: number
           w_reputation?: number
+          w_responsiveness?: number
         }
         Relationships: []
       }
