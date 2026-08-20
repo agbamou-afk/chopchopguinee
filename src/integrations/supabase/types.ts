@@ -35,6 +35,24 @@ export type Database = {
         }
         Relationships: []
       }
+      _qa_r8_out: {
+        Row: {
+          id: number
+          ran_at: string
+          res: Json | null
+        }
+        Insert: {
+          id?: number
+          ran_at?: string
+          res?: Json | null
+        }
+        Update: {
+          id?: number
+          ran_at?: string
+          res?: Json | null
+        }
+        Relationships: []
+      }
       _qa_s13_results: {
         Row: {
           created_at: string
