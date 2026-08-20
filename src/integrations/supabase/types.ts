@@ -10891,6 +10891,14 @@ export type Database = {
         }
         Returns: string
       }
+      _qa_users_count: { Args: { p_ids: string[] }; Returns: number }
+      _qa_users_count_like: { Args: { p_pattern: string }; Returns: number }
+      _qa_users_ids_like: { Args: { p_pattern: string }; Returns: string[] }
+      _qa_users_new: {
+        Args: { p_email: string; p_id: string }
+        Returns: undefined
+      }
+      _qa_users_purge: { Args: { p_ids: string[] }; Returns: undefined }
       _repas_assert_orderable_publication: {
         Args: { p_r: Database["public"]["Tables"]["food_restaurants"]["Row"] }
         Returns: undefined
