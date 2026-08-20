@@ -10661,6 +10661,8 @@ export type Database = {
       _qa_node4_marche_r8_core: { Args: never; Returns: Json }
       _qa_node4_marche_r8_j: { Args: never; Returns: Json }
       _qa_node4_marche_r9: { Args: never; Returns: Json }
+      _qa_node4_marche_r9_backlink: { Args: never; Returns: Json }
+      _qa_node4_marche_r9_core: { Args: never; Returns: Json }
       _qa_node4_probe: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
