@@ -1,103 +1,89 @@
-import { useEffect, useState } from "react";
-import { Activity, TrendingDown, TrendingUp } from "lucide-react";
-import { formatGNF } from "@/lib/marche";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import {
-  baseUnitLabel,
-  confidenceLabelFr,
-  freshnessLabelFr,
-  getObservedPrices,
-  pickVariantCohort,
-  type ObservedPriceCohort,
+  confidenceLabel,
+  formatGnf,
+  freshnessLabel,
+  zoneLabel,
+  type PriceCohort,
 } from "@/lib/marche/priceIntelligence";
 
-interface Props {
-  commodityCode: string;
-  variantCode: string;
-  /** Commune used to scope the cohort. Omit for the all-zones read. */
-  zone?: string | null;
-  className?: string;
-}
-
 /**
- * R8 — "Prix observé sur ChopChop".
- * Renders ONLY what the server observed. Never predicts, never invents a number
- * when the cohort is too thin: in that case it says so in plain French.
+ * Node 4 — Marché R8: "Prix observé sur ChopChop".
+ * Renders ONLY server-derived observation truth. Never a quote, never an
+ * estimate, never a price the customer can rely on for a purchase.
  */
-export function ObservedPriceBadge({ commodityCode, variantCode, zone, className }: Props) {
-  const [cohort, setCohort] = useState<ObservedPriceCohort | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    getObservedPrices(commodityCode, zone ?? null)
-      .then((read) => {
-        if (!alive) return;
-        setCohort(pickVariantCohort(read, variantCode));
-        setLoading(false);
-      })
-      .catch(() => {
-        if (!alive) return;
-        setCohort(null);
-        setLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [commodityCode, variantCode, zone]);
-
-  if (loading) {
+export function ObservedPriceBadge({ cohort }: { cohort: PriceCohort | null }) {
+  if (!cohort) {
     return (
-      <div className={`h-5 w-40 rounded-full bg-muted animate-pulse ${className ?? ""}`} aria-hidden />
-    );
-  }
-
-  if (!cohort || cohort.insufficient_data || cohort.median_gnf == null) {
-    return (
-      <p className={`text-[10px] leading-snug text-muted-foreground ${className ?? ""}`}>
-        Pas encore assez de relevés pour afficher un prix observé.
+      <p data-testid="observed-price-none" className="text-[10px] text-muted-foreground">
+        Prix observé sur ChopChop : pas encore d'observation.
       </p>
     );
   }
 
-  const unit = baseUnitLabel(cohort.canonical_base_unit);
+  const zone = zoneLabel(cohort.zone);
+
+  if (cohort.insufficient_data) {
+    return (
+      <div
+        data-testid="observed-price-insufficient"
+        className="rounded-xl border border-dashed border-border bg-muted/30 px-3 py-2"
+      >
+        <p className="text-[10px] font-semibold text-muted-foreground">Prix observé sur ChopChop</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">
+          Données insuffisantes pour publier un prix observé ({cohort.sample_count} observation
+          {cohort.sample_count > 1 ? "s" : ""}
+          {cohort.min_samples ? ` sur ${cohort.min_samples} requises` : ""}).
+        </p>
+        {zone && <p className="mt-0.5 text-[10px] text-muted-foreground">{zone}</p>}
+      </div>
+    );
+  }
+
+  const unit = cohort.canonical_base_unit === "l" ? "L" : cohort.canonical_base_unit;
   const mv = cohort.movement;
-  const up = (mv?.delta_gnf ?? 0) > 0;
+  const delta = mv?.comparable ? (mv.delta_gnf ?? 0) : null;
 
   return (
-    <div className={`space-y-1 ${className ?? ""}`}>
-      <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary/20 px-2.5 py-1">
-        <Activity className="w-3 h-3 text-foreground" />
-        <span className="text-[11px] font-semibold text-foreground">
-          {formatGNF(cohort.median_gnf)}
-          {unit ? ` / ${unit}` : ""}
+    <div
+      data-testid="observed-price"
+      className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2 space-y-1"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-semibold text-muted-foreground">Prix observé sur ChopChop</p>
+        <span data-testid="observed-price-confidence" className="text-[10px] text-muted-foreground">
+          {confidenceLabel(cohort.confidence)}
         </span>
-        <span className="text-[10px] text-muted-foreground">observé sur ChopChop</span>
       </div>
-      {cohort.p25_gnf != null && cohort.p75_gnf != null && (
-        <p className="text-[10px] text-muted-foreground">
-          Fourchette observée {formatGNF(cohort.p25_gnf)} – {formatGNF(cohort.p75_gnf)}
-          {unit ? ` / ${unit}` : ""}
-        </p>
-      )}
+      <p className="text-sm font-semibold text-foreground">
+        {formatGnf(cohort.median_gnf)} <span className="text-[10px] font-normal">/ {unit}</span>
+      </p>
       <p className="text-[10px] text-muted-foreground">
-        {cohort.sample_count} relevé{cohort.sample_count > 1 ? "s" : ""} ·{" "}
-        {confidenceLabelFr(cohort.confidence)} · {freshnessLabelFr(cohort.freshness)}
+        Fourchette {formatGnf(cohort.p25_gnf)} – {formatGnf(cohort.p75_gnf)} ·{" "}
+        {cohort.sample_count} observation{cohort.sample_count > 1 ? "s" : ""}
       </p>
-      {mv?.comparable && mv.delta_pct != null && (
-        <p
-          className={`inline-flex items-center gap-1 text-[10px] font-medium ${
-            up ? "text-destructive" : "text-success"
-          }`}
-        >
-          {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-          {up ? "+" : ""}
-          {mv.delta_pct}% sur la période observée
+      {zone && (
+        <p data-testid="observed-price-zone" className="text-[10px] text-muted-foreground">
+          {zone}
         </p>
       )}
-      <p className="text-[9px] italic text-muted-foreground">
-        Prix constaté, pas un prix officiel ni garanti.
+      <p data-testid="observed-price-freshness" className="text-[10px] text-muted-foreground">
+        {freshnessLabel(cohort.freshness)}
       </p>
+      {delta != null && delta !== 0 && (
+        <p
+          data-testid="observed-price-movement"
+          className="flex items-center gap-1 text-[10px] text-muted-foreground"
+        >
+          {delta > 0 ? (
+            <TrendingUp className="w-3 h-3" />
+          ) : (
+            <TrendingDown className="w-3 h-3" />
+          )}
+          {delta > 0 ? "+" : ""}
+          {formatGnf(Math.abs(delta))} sur la période
+        </p>
+      )}
     </div>
   );
 }
