@@ -17,6 +17,11 @@ export interface OrderCommitIntent {
   deliveryAddress?: string | null;
   dropoffLat?: number | null;
   dropoffLng?: number | null;
+  /** R13 landmark destination intent. Words only — never a location verdict. */
+  destinationLabel?: string | null;
+  destinationLandmark?: string | null;
+  destinationInstructions?: string | null;
+  locationSource?: "gps" | "manual_pin" | "saved_place" | "typed" | null;
 }
 
 /** RFC-4122 v4 uuid, with a safe fallback when `crypto.randomUUID` is absent. */
@@ -36,19 +41,30 @@ export function newOrderRequestUuid(): string {
  * Stable fingerprint of the commitment. Mirrors the fields the server hashes,
  * but is only used locally to decide whether a key may be reused. No price,
  * subtotal or fee ever takes part in it — money is server truth.
+ *
+ * R13: landmark destination fields join the fingerprint ONLY when present, so
+ * a key persisted before R13 (address + point only) keeps resolving to the same
+ * value and a retry after an upgrade still replays to the same order.
  */
 export function orderIntentKey(intent: OrderCommitIntent): string {
   const lines = [...intent.lines]
     .map((l) => `${l.listingId}:${l.qty}:${l.offerId ?? ""}`)
     .sort()
     .join(",");
-  return [
+  const base = [
     intent.storeId,
     lines,
     intent.deliveryAddress ?? "",
     intent.dropoffLat ?? "",
     intent.dropoffLng ?? "",
   ].join("|");
+  const extra = [
+    intent.destinationLabel ?? "",
+    intent.destinationLandmark ?? "",
+    intent.destinationInstructions ?? "",
+    intent.locationSource ?? "",
+  ].join("|");
+  return extra === "|||" ? base : `${base}|${extra}`;
 }
 
 function readStore(): Storage | null {
