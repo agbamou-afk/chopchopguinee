@@ -5665,8 +5665,8 @@ export type Database = {
           fulfillment_lookback_days: number
           id: string
           label: string
-          min_fulfillment_history: number
           min_fulfillment_observations: number
+          min_fulfillment_samples: number
           min_price_observations: number
           min_qualified_components: number
           min_reputation_events: number
@@ -5692,8 +5692,8 @@ export type Database = {
           fulfillment_lookback_days?: number
           id?: string
           label: string
-          min_fulfillment_history?: number
           min_fulfillment_observations?: number
+          min_fulfillment_samples?: number
           min_price_observations?: number
           min_qualified_components?: number
           min_reputation_events?: number
@@ -5719,8 +5719,8 @@ export type Database = {
           fulfillment_lookback_days?: number
           id?: string
           label?: string
-          min_fulfillment_history?: number
           min_fulfillment_observations?: number
+          min_fulfillment_samples?: number
           min_price_observations?: number
           min_qualified_components?: number
           min_reputation_events?: number
