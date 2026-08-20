@@ -13843,6 +13843,10 @@ export type Database = {
       }
       marche_listing_public: { Args: { p_listing_id: string }; Returns: Json }
       marche_listing_publish: { Args: { p_listing_id: string }; Returns: Json }
+      marche_listing_rank_explain: {
+        Args: { p_lat?: number; p_listing_id: string; p_lng?: number }
+        Returns: Json
+      }
       marche_listing_set_availability: {
         Args: { p_availability: string; p_listing_id: string }
         Returns: Json
@@ -13867,7 +13871,9 @@ export type Database = {
       marche_listings_discover: {
         Args: {
           p_category?: string
+          p_lat?: number
           p_limit?: number
+          p_lng?: number
           p_offset?: number
           p_search?: string
           p_sort?: string
@@ -13890,6 +13896,9 @@ export type Database = {
           neighborhood: string
           photo_count: number
           price_gnf: number
+          rank_distance_m: number
+          rank_evidence: Json
+          rank_score_bps: number
           store_id: string
           title: string
         }[]
@@ -14075,6 +14084,7 @@ export type Database = {
         }
         Returns: Json
       }
+      marche_ranking_policy_public: { Args: never; Returns: Json }
       marche_reputation_dimensions_for: {
         Args: { p_subject_kind: string }
         Returns: string[]
