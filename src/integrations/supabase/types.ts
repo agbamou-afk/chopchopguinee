@@ -10723,6 +10723,7 @@ export type Database = {
       _qa_node3_repas_r9_recovery_flows: { Args: never; Returns: Json }
       _qa_node3_repas_r9_recovery_flows_fxcore: { Args: never; Returns: Json }
       _qa_node4_marche_r1: { Args: never; Returns: Json }
+      _qa_node4_marche_r10: { Args: never; Returns: Json }
       _qa_node4_marche_r15: { Args: never; Returns: Json }
       _qa_node4_marche_r2: { Args: never; Returns: Json }
       _qa_node4_marche_r3: { Args: never; Returns: Json }
