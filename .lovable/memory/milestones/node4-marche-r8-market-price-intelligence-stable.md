@@ -23,6 +23,22 @@ provenance-linked sources only: approved merchant **asking** prices
   `none` (no observation date) · `fresh` (≤72h) · `aging` (≤168h) · `stale`.
 - Confidence vocabulary (`marche_price_confidence`):
   `insufficient` (<5 samples) · `low` (stale) · `medium` (<12 samples or aging) · `high`.
+- **Merchant-ask effective-event identity (2026-08-20 closeout).** The *current
+  effective ask* of a listing is the latest recorded `merchant_ask` observation
+  for that listing. Ingestion is a no-op (`ALREADY_OBSERVED`) when the listing's
+  ask equals that latest observed amount, so retries, lost responses, idle
+  re-saves and same-price republication stay one logical event. Any other value
+  — **including a return to a previously observed numeric price** — is a NEW
+  immutable observation with its own `observed_at` (`clock_timestamp()`) and its
+  own identity `listing:<uuid>:<monotonic event seq>`. The seq is derived from
+  the highest existing seq for that listing and is never reused. The old
+  `listing:<uuid>:<price>` identity was defective: `11 000 -> 13 000 -> 11 000`
+  silently lost the third event.
+- **Trigger discipline.** `trg_marche_price_merchant_ask` (fire-on-everything) is
+  replaced by `trg_marche_price_merchant_ask_ins` (AFTER INSERT) and
+  `trg_marche_price_merchant_ask_upd` (AFTER UPDATE ... WHEN) guarded on
+  `asking_price_gnf`, `price_gnf`, `status`, `visibility`, `store_id`, `kind`,
+  `staple_purchase_option_id`. Irrelevant listing edits observe nothing.
 - Public read: `marche_price_observed_public(commodity_code, zone)` — sanitized,
   returns `zone` (`all` when unscoped), per-variant cohorts with p25/median/p75,
   sample count, source mix, freshness, confidence, movement.
@@ -47,24 +63,30 @@ provenance-linked sources only: approved merchant **asking** prices
 `normalized_unit_price_gnf = 12,000`, exactly **one** observation
 (harness N4R8.I1–I5).
 
-## Final certification board (2026-08-20, after last edit)
+## Harness composition
+`_qa_node4_marche_r8()` is the entrypoint and returns the merged verdict of
+`_qa_node4_marche_r8_core()` (101, sections A–I) and
+`_qa_node4_marche_r8_j()` (21, section J = merchant-ask effective-event
+identity). Total **122**. No prior assertion was removed or weakened.
+
+## Final certification board (2026-08-20, provenance closeout)
 - `tsgo --noEmit -p tsconfig.app.json` → clean
-- Vitest → **16 files / 123 tests, 0 failures** (12 in `node4-marche-r8-price-client`)
+- Vitest → **16 files / 123 tests, 0 failures**
 - Production build → success; PWA `generateSW`, **134 precache entries (12,024 KiB)**,
-  `dist/sw.js` + `dist/workbox-*.js` + `dist/manifest.webmanifest` emitted
-- `_qa_node4_marche_r8()` → **101 / 101**
-- Marché R1–R8 → **1,369 assertions, 0 failures**
-  (R1 55 · R1.5 38 · R2 82 · R3 136 · R3.5 198 · R4 79 · R5 167 · R6 157 · R6.5 249 · R7 107 · R8 101)
-- Node entrypoint board (Nodes 0–4) → **31 suites, 3,208 assertions, 0 failures**
-  (Nodes 0–3 = 1,839 assertions)
+  `dist/sw.js` + `dist/workbox-5cb67add.js` + `dist/manifest.webmanifest` emitted
+- `_qa_node4_marche_r8()` → **122 / 122** (core 101 + section J 21)
+- Marché R1–R8 → **1,390 assertions, 0 failures**
+  (R1 55 · R1.5 38 · R2 82 · R3 136 · R3.5 198 · R4 79 · R5 167 · R6 157 · R6.5 249 · R7 107 · R8 122)
+- Node entrypoint board (Nodes 0–4) → **31 suites, 3,033 assertions, 0 failures**
+  (Nodes 0–3 = 1,643)
 - Slice 13 canonical finance runs 1–7 → **507 assertions, 0 failures**
   (run1 18 · run2 32 · run3 54 · run4 98 · run5 115 · run6 87 · run7 103)
-- Non-drift: wallets balance 10,703,711 · held 104,758 · wallet txns 76 ·
+- Whole board = **38 suites, 3,540 assertions, 0 failures**
+- Non-drift after the full board: wallets balance 10,703,711 · held 104,758 ·
   ledger postings 120 · ledger sum 0 · feature-flag fingerprint
-  `bbf3a7943697b978f555d32a7ec5feda` — **identical before and after the board**
-- R8 fixture residue: `marche_procurement_price_observations` count = **0**
-- Temporary QA capture tables (`_qa_r8_out`, `_qa_board_run2`, `_qa_final_board`)
-  dropped — no product residue
+  `bbf3a7943697b978f555d32a7ec5feda` — unchanged
+- R8 fixture residue: observations = **0**, `QA R8%` listings = **0**
+- No temporary QA capture tables exist
 - No deployment, no activation, no feature-flag change
 
 ## Known harness note (not a defect)
