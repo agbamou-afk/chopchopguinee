@@ -15,10 +15,13 @@ import { normalizeGuineaPhone } from "@/lib/phone/guinea";
 import { StoreLocationPicker, type StoreLocation } from "@/components/merchant/StoreLocationPicker";
 import { MERCHANT_PRODUCT_CATEGORIES } from "@/lib/merchant/categories";
 import { createOrUpdateRestaurant } from "@/lib/repas/restaurants";
+import { useProfessionalLane } from "@/hooks/useProfessionalLane";
+import { ProfessionalLaneBlocked } from "@/components/identity/ProfessionalLaneBlocked";
 
 export default function MerchantOnboarding() {
   const navigate = useNavigate();
   const { user, ready, isLoggedIn } = useAuth();
+  const { lane, loading: laneLoading, blockedFor } = useProfessionalLane();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -148,7 +151,13 @@ export default function MerchantOnboarding() {
       });
       if (error) {
         setSubmitting(false);
-        toast({ title: "Erreur", description: error.message });
+        const conflict = error.message?.includes("PROFESSIONAL_IDENTITY_CONFLICT");
+        toast({
+          title: conflict ? "Activité déjà enregistrée" : "Erreur",
+          description: conflict
+            ? "Votre compte est déjà enregistré comme chauffeur CHOPCHOP. Contactez le support pour changer d'activité."
+            : error.message,
+        });
         return;
       }
     }
@@ -187,7 +196,11 @@ export default function MerchantOnboarding() {
     navigate("/merchant/hub", { replace: true });
   };
 
-  if (!ready || loading) {
+  if (blockedFor("merchant")) {
+    return <ProfessionalLaneBlocked lane={lane} title="Création de boutique indisponible" />;
+  }
+
+  if (!ready || loading || laneLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />

@@ -8,6 +8,8 @@ import { toast } from "@/hooks/use-toast";
 import { Analytics } from "@/lib/analytics/AnalyticsService";
 import { cn } from "@/lib/utils";
 import { validateReferralCode } from "@/lib/admin/driverGroups";
+import { useProfessionalLane } from "@/hooks/useProfessionalLane";
+import { ProfessionalLaneBlocked } from "@/components/identity/ProfessionalLaneBlocked";
 
 const VEHICLE_OPTIONS: Array<{ id: DriverVehicle; label: string; sub: string; icon: typeof Bike }> = [
   { id: "moto", label: "Moto", sub: "Course rapide en ville", icon: Bike },
@@ -23,6 +25,7 @@ export default function DriverApply() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { profile, refetch } = useDriverProfile();
+  const { lane, loading: laneLoading, blockedFor } = useProfessionalLane();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
@@ -45,6 +48,18 @@ export default function DriverApply() {
   if (!user) {
     navigate("/auth?redirect=/driver/apply");
     return null;
+  }
+
+  if (laneLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (blockedFor("driver")) {
+    return <ProfessionalLaneBlocked lane={lane} title="Inscription chauffeur indisponible" />;
   }
 
   const totalSteps = 6;
@@ -89,7 +104,14 @@ export default function DriverApply() {
     });
     setSubmitting(false);
     if (error) {
-      toast({ title: "Échec de l'envoi", description: error.message, variant: "destructive" });
+      const conflict = error.message?.includes("PROFESSIONAL_IDENTITY_CONFLICT");
+      toast({
+        title: conflict ? "Activité déjà enregistrée" : "Échec de l'envoi",
+        description: conflict
+          ? "Votre compte est déjà enregistré comme marchand CHOPCHOP. Contactez le support pour changer d'activité."
+          : error.message,
+        variant: "destructive",
+      });
       return;
     }
     await refetch();
