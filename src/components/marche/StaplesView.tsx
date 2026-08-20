@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ChevronRight, Minus, Package, Plus, Search, ShoppingBasket, X } from "lucide-react";
 import { ProcurementBasketSheet, type BasketLine } from "@/components/marche/ProcurementBasketSheet";
+import { ObservedPriceBadge } from "@/components/marche/ObservedPriceBadge";
 import {
   discoverStaples,
   getStaple,
@@ -142,6 +143,10 @@ export function StaplesView() {
               <div key={v.variant_code} className="rounded-2xl bg-card border border-border/60 p-3 space-y-2">
                 <p className="text-sm font-semibold text-foreground">{v.name_fr}</p>
                 {v.grade_note_fr && <p className="text-[11px] text-muted-foreground">{v.grade_note_fr}</p>}
+                <ObservedPriceBadge
+                  commodityCode={detail.commodity_code}
+                  variantCode={v.variant_code}
+                />
                 <div className="space-y-1.5">
                   {v.purchase_options.map((o) => {
                     const qty = qtyByOption[o.option_code] ?? o.min_qty;
