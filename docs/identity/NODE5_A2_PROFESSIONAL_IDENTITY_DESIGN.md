@@ -394,3 +394,43 @@ public.professional_identities (
 | 13 | Backfill overlap appearing between design and migration | migration aborts on non-empty intersection; never auto-resolve |
 ```
 ```
+
+---
+
+## AMENDMENT — IMPLEMENTED SHAPE (A2 executed)
+
+The design's `user_id PRIMARY KEY` was replaced, per instruction, with a
+surrogate key plus a partial unique index. This preserves the invariant while
+allowing multiple *historical* claims.
+
+- `public.professional_identities(id uuid PK DEFAULT gen_random_uuid())`
+- `user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE`
+- `professional_type text CHECK (IN ('driver','merchant'))` — immutable after insert
+- `claim_state text CHECK (IN ('active','released'))` — release is terminal
+- `claimed_at`, `released_at`, `claim_source`, `release_reason`
+- **THE INVARIANT:** `CREATE UNIQUE INDEX ... ON (user_id) WHERE claim_state = 'active'`
+  A second active lane is physically impossible, even for `SECURITY DEFINER` code.
+
+Lifecycle/approval status is deliberately NOT stored here (no `status`,
+`approved_at`, `suspended_at`, `verification_state`). Operational authority
+remains `driver_profiles` / store ownership; the lane is identity only.
+
+### Surface
+- `professional_identity_current()` — caller-scoped read, raises `AUTH_REQUIRED`
+  when signed out, returns `none` when no lane is held. `authenticated` only.
+- `_professional_identity_claim(user, type, source)` — internal, `FOR UPDATE`
+  locked, idempotent on same lane, raises `PROFESSIONAL_IDENTITY_CONFLICT`.
+- `_professional_identity_release(user, reason)` — internal, tombstones the row.
+- Both primitives are `service_role` only; `anon`/`authenticated` hold no
+  EXECUTE and no table INSERT/UPDATE/DELETE/TRUNCATE (default privileges on the
+  public schema had to be explicitly revoked).
+
+### Backfill result (live)
+- Driver-derived users: 6 → 6 active driver lanes
+- Merchant-derived users: 6 → 6 active merchant lanes
+- Intersection: 0 (migration aborts on any non-zero intersection)
+- Orphan accounts: 0
+
+### Certification
+`_qa_node5_identity_a2()` — **96 / 96 PASS**, self-cleaning, zero residue.
+Regression sample: Marché R14 109/109, R13 105/105, R1 55/55, Course 34/34 — 0 failures.
