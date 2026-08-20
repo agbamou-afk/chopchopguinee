@@ -494,6 +494,7 @@ export function MarketView({ onBack }: MarketViewProps) {
                 <ArrowUpDown className="w-3 h-3" /> Trier :
               </span>
               {([
+                ["recommended", "Recommandé"],
                 ["recent", "Récents"],
                 ["price_asc", "Prix ↑"],
                 ["price_desc", "Prix ↓"],
