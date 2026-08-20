@@ -11187,6 +11187,7 @@ export type Database = {
         Returns: number
       }
       _qa_a2_cleanup: { Args: { p_ids: string[] }; Returns: undefined }
+      _qa_a3_cleanup: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_auth_user_count: { Args: never; Returns: number }
       _qa_n4r12_orphan_admins: { Args: never; Returns: number }
       _qa_node0_course: { Args: never; Returns: Json }
@@ -11260,6 +11261,7 @@ export type Database = {
         Returns: number
       }
       _qa_node5_identity_a2: { Args: never; Returns: Json }
+      _qa_node5_identity_a3: { Args: never; Returns: Json }
       _qa_r6_err: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: string
