@@ -8749,6 +8749,45 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_identities: {
+        Row: {
+          claim_source: string | null
+          claim_state: string
+          claimed_at: string
+          created_at: string
+          id: string
+          professional_type: string
+          release_reason: string | null
+          released_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          claim_source?: string | null
+          claim_state?: string
+          claimed_at?: string
+          created_at?: string
+          id?: string
+          professional_type: string
+          release_reason?: string | null
+          released_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          claim_source?: string | null
+          claim_state?: string
+          claimed_at?: string
+          created_at?: string
+          id?: string
+          professional_type?: string
+          release_reason?: string | null
+          released_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_status: string
@@ -11076,6 +11115,48 @@ export type Database = {
         Args: { p_actor: string; p_evidence_id: string; p_order_id: string }
         Returns: Json
       }
+      _professional_identity_claim: {
+        Args: { p_source?: string; p_type: string; p_user_id: string }
+        Returns: {
+          claim_source: string | null
+          claim_state: string
+          claimed_at: string
+          created_at: string
+          id: string
+          professional_type: string
+          release_reason: string | null
+          released_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "professional_identities"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _professional_identity_release: {
+        Args: { p_reason?: string; p_user_id: string }
+        Returns: {
+          claim_source: string | null
+          claim_state: string
+          claimed_at: string
+          created_at: string
+          id: string
+          professional_type: string
+          release_reason: string | null
+          released_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "professional_identities"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _promo_consume: {
         Args: { p_amount: number; p_driver: string }
         Returns: number
@@ -11156,6 +11237,7 @@ export type Database = {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
       }
+      _qa_node5_identity_a2: { Args: never; Returns: Json }
       _qa_r6_err: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: string
@@ -15672,6 +15754,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      professional_identity_current: { Args: never; Returns: Json }
       provider_fee_schedule_at: {
         Args: { p_as_of?: string; p_provider?: string }
         Returns: {
