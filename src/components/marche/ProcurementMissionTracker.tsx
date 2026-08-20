@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatGNF } from "@/lib/marche";
+import { RatingSheet } from "./RatingSheet";
 import {
   decideProposal,
   getProcurementMission,
@@ -21,6 +22,7 @@ export function ProcurementMissionTracker({ requestId }: { requestId: string }) 
   const [mission, setMission] = useState<ShopperMission | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [rating, setRating] = useState(false);
 
   const reload = useCallback(async () => {
     try {
@@ -138,6 +140,20 @@ export function ProcurementMissionTracker({ requestId }: { requestId: string }) 
         Seule la dépense réelle vérifiée est débitée, dans la limite du montant autorisé. Le reste
         est libéré automatiquement.
       </p>
+
+      {mission.state === "completed" && (
+        <>
+          <Button variant="outline" className="w-full" onClick={() => setRating(true)}>
+            <Star className="w-3.5 h-3.5 mr-1" /> Noter l'acheteur au marché
+          </Button>
+          <RatingSheet
+            open={rating}
+            onOpenChange={setRating}
+            transactionKind="procurement"
+            transactionId={requestId}
+          />
+        </>
+      )}
     </div>
   );
 }

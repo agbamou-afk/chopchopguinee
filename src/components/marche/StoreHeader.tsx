@@ -1,5 +1,6 @@
 import { ArrowLeft, BadgeCheck, MapPin, Store, Truck } from "lucide-react";
 import type { MerchantStore } from "@/lib/marche/stores";
+import { ReputationBadge } from "./ReputationBadge";
 
 export function StoreHeader({
   store,
@@ -41,6 +42,9 @@ export function StoreHeader({
               {store.verification_state === "verified" && (
                 <BadgeCheck className="w-4 h-4 text-primary" />
               )}
+            </div>
+            <div className="mt-1">
+              <ReputationBadge subjectKind="merchant_store" subjectId={store.id} withDimensions />
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
               {store.district && (
