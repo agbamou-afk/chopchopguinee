@@ -5655,6 +5655,77 @@ export type Database = {
         }
         Relationships: []
       }
+      marche_reputation_dimensions: {
+        Row: {
+          created_at: string
+          dimension: string
+          event_id: string
+          score: number
+        }
+        Insert: {
+          created_at?: string
+          dimension: string
+          event_id: string
+          score: number
+        }
+        Update: {
+          created_at?: string
+          dimension?: string
+          event_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_reputation_dimensions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "marche_reputation_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_reputation_events: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          overall_score: number
+          provenance: Json
+          rater_user_id: string
+          subject_kind: string
+          subject_store_id: string | null
+          subject_user_id: string | null
+          transaction_id: string
+          transaction_kind: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          overall_score: number
+          provenance?: Json
+          rater_user_id: string
+          subject_kind: string
+          subject_store_id?: string | null
+          subject_user_id?: string | null
+          transaction_id: string
+          transaction_kind: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          overall_score?: number
+          provenance?: Json
+          rater_user_id?: string
+          subject_kind?: string
+          subject_store_id?: string | null
+          subject_user_id?: string | null
+          transaction_id?: string
+          transaction_kind?: string
+        }
+        Relationships: []
+      }
       marche_staple_categories: {
         Row: {
           code: string
@@ -10267,6 +10338,10 @@ export type Database = {
         }
         Returns: Json
       }
+      _marche_reputation_resolve: {
+        Args: { p_caller: string; p_kind: string; p_tx: string }
+        Returns: Json
+      }
       _marche_reservation_settle: {
         Args: { p_kind: string; p_order_id: string }
         Returns: boolean
@@ -13918,6 +13993,19 @@ export type Database = {
           p_evidence_ref?: string
           p_request_id: string
         }
+        Returns: Json
+      }
+      marche_reputation_dimensions_for: {
+        Args: { p_subject_kind: string }
+        Returns: string[]
+      }
+      marche_reputation_eligibility: {
+        Args: { p_transaction_id: string; p_transaction_kind: string }
+        Returns: Json
+      }
+      marche_reputation_submit: { Args: { p_payload: Json }; Returns: Json }
+      marche_reputation_summary: {
+        Args: { p_subject_id: string; p_subject_kind: string }
         Returns: Json
       }
       marche_seller_banned: { Args: { p_seller_id: string }; Returns: boolean }
