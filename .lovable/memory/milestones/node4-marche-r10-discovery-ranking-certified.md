@@ -110,3 +110,9 @@ Board re-run after last edit (privileged path):
   `verification_state='verified'` publication law. Not a Marché regression; untouched.
 
 R10 remains CERTIFIED / FROZEN.
+
+## R10 QA fixture correction (2026-08-20)
+- Fixed harness fixtures: all `client_request_id` values in `_qa_node4_marche_r10()` are now UUID-shaped (`gen_random_uuid()::text`); `request_fingerprint` labels unchanged.
+- Re-ran from scratch on a privileged path: **R10 = 127 total / 0 failed** (no `HARNESS_R10_UNEXPECTED_ABORT`).
+- Marché board re-run: R1 56, R1.5 38, R2 82, R3 136, R3.5 200, R4 79, R5 167, R6 157, R6.5 249, R7 107, R8 122, R9 113, R9-backlink 18, R10 127 — **1651 assertions, 0 failures**.
+- Temporary QA result rows removed; no production schema or data changed.
