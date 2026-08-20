@@ -92,6 +92,7 @@ const PaymentsAdmin = lazy(() => import("./pages/admin/PaymentsAdmin"));
 const SandboxAdmin = lazy(() => import("./pages/admin/SandboxAdmin"));
 const PilotCommandCenter = lazy(() => import("./pages/admin/PilotCommandCenter"));
 const OpsCommandCenter = lazy(() => import("./pages/admin/OpsCommandCenter"));
+const MarcheOpsAdmin = lazy(() => import("./pages/admin/MarcheOpsAdmin"));
 const DriverGroupsAdmin = lazy(() => import("./pages/admin/DriverGroupsAdmin"));
 const AdminChangePassword = lazy(() => import("./pages/admin/AdminChangePassword"));
 const LeaderPortal = lazy(() => import("./pages/LeaderPortal"));
@@ -225,6 +226,7 @@ const App = () => {
             <Route path="payments/sandbox" element={<SandboxAdmin />} />
             <Route path="pilot-command" element={<PilotCommandCenter />} />
             <Route path="ops" element={<OpsCommandCenter />} />
+            <Route path="marche/ops" element={<MarcheOpsAdmin />} />
             <Route path="driver-groups" element={<DriverGroupsAdmin />} />
           </Route>
           <Route path="/agent" element={<AgentDashboard />} />
