@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.marche_listings_discover(text,text,uuid,text,integer,integer);

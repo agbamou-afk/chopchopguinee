@@ -17,6 +17,7 @@ import { MarcheEmpty } from "@/components/marche/MarcheEmpty";
 import { StaplesView } from "@/components/marche/StaplesView";
 import { MarcheMyOrdersView } from "@/components/marche/MarcheMyOrdersView";
 import { listStoresWithSummary, getSellerEligibility, type StoreSummary } from "@/lib/marche/stores";
+import { discoverListings, rankReasons, type MarcheSort } from "@/lib/marche/ranking";
 import { categoryLabel, MARCHE_CATEGORIES } from "@/lib/marche";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -32,13 +33,9 @@ interface MarketViewProps {
 }
 
 type Screen = "home" | "detail" | "sell" | "inbox" | "store" | "mine" | "orders";
-type SortKey = "recent" | "price_asc" | "price_desc";
+type SortKey = MarcheSort;
 type Tab = "all" | "saved" | "stores" | "staples";
 type StoreSortKey = "nearby" | "recent";
-
-interface RawListing extends Omit<ListingCardData, "cover_url"> {
-  listing_images?: { url: string; position: number }[];
-}
 
 export function MarketView({ onBack }: MarketViewProps) {
   const [screen, setScreen] = useState<Screen>("home");
@@ -49,7 +46,7 @@ export function MarketView({ onBack }: MarketViewProps) {
   const [search, setSearch] = useState("");
   const [listings, setListings] = useState<ListingCardData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sort, setSort] = useState<SortKey>("recent");
+  const [sort, setSort] = useState<SortKey>("recommended");
   const [tab, setTab] = useState<Tab>("all");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [stores, setStores] = useState<StoreSummary[]>([]);
@@ -60,6 +57,9 @@ export function MarketView({ onBack }: MarketViewProps) {
   const geo = useGeolocation();
   const navigate = useNavigate();
   const [canSell, setCanSell] = useState(false);
+  // Coordinates are only ever a ranking hint; the server decides the order.
+  const rankLat = geo.isReady && geo.position ? geo.position.lat : null;
+  const rankLng = geo.isReady && geo.position ? geo.position.lng : null;
 
   useEffect(() => {
     let alive = true;
@@ -84,20 +84,17 @@ export function MarketView({ onBack }: MarketViewProps) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    // Canonical discovery read model — server decides what is public/orderable.
-    const { data } = await (
-      supabase as unknown as {
-        rpc: (n: string, a: Record<string, unknown>) => Promise<{ data: unknown }>;
-      }
-    ).rpc("marche_listings_discover", {
-      p_search: search.trim() || null,
-      p_category: category,
-      p_store_id: null,
-      p_sort: sort,
-      p_limit: 60,
-      p_offset: 0,
+    // Canonical discovery read model — the server decides what is public,
+    // orderable and, for "recommended", in which order.
+    const rows = await discoverListings({
+      search,
+      category,
+      sort,
+      limit: 60,
+      lat: rankLat,
+      lng: rankLng,
     });
-    const mapped: ListingCardData[] = ((data ?? []) as unknown as RawListing[]).map((r) => ({
+    const mapped: ListingCardData[] = rows.map((r) => ({
       id: r.id,
       title: r.title,
       price_gnf: r.price_gnf,
@@ -107,18 +104,18 @@ export function MarketView({ onBack }: MarketViewProps) {
       neighborhood: r.neighborhood,
       commune: r.commune,
       created_at: r.created_at,
-      kind: r.kind,
-      availability: (r as unknown as { availability?: string }).availability ?? null,
-      fulfillment_options:
-        (r as unknown as { fulfillment_options?: string[] }).fulfillment_options ?? null,
-      photo_count: (r as unknown as { photo_count?: number }).photo_count ?? null,
-      condition: (r as unknown as { condition?: string | null }).condition ?? null,
-      description: (r as unknown as { description?: string | null }).description ?? null,
-      cover_url: (r as unknown as { cover_url?: string | null }).cover_url ?? null,
+      kind: r.kind as ListingCardData["kind"],
+      availability: r.availability,
+      fulfillment_options: r.fulfillment_options,
+      photo_count: r.photo_count,
+      condition: r.condition,
+      description: r.description,
+      cover_url: r.cover_url,
+      rank_reasons: sort === "recommended" ? rankReasons(r.rank_evidence, r.rank_distance_m) : null,
     }));
     setListings(mapped);
     setLoading(false);
-  }, [category, search, sort]);
+  }, [category, search, sort, rankLat, rankLng]);
 
   useEffect(() => {
     load();
@@ -497,6 +494,7 @@ export function MarketView({ onBack }: MarketViewProps) {
                 <ArrowUpDown className="w-3 h-3" /> Trier :
               </span>
               {([
+                ["recommended", "Recommandé"],
                 ["recent", "Récents"],
                 ["price_asc", "Prix ↑"],
                 ["price_desc", "Prix ↓"],

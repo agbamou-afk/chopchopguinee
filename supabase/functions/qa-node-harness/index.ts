@@ -46,6 +46,9 @@ const ALLOWED = new Set([
   "_qa_node4_marche_r6",
   "_qa_node4_marche_r65",
   "_qa_node4_marche_r7",
+  "_qa_node4_marche_r8",
+  "_qa_node4_marche_r9",
+  "_qa_node4_marche_r10",
 ]);
 
 function json(body: unknown, status = 200) {

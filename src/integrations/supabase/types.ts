@@ -5655,6 +5655,72 @@ export type Database = {
         }
         Relationships: []
       }
+      marche_ranking_policies: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          distance_max_m: number
+          effective_from: string
+          effective_to: string | null
+          freshness_half_life_days: number
+          id: string
+          label: string
+          min_fulfillment_history: number
+          min_price_observations: number
+          min_reputation_events: number
+          notes: string | null
+          updated_at: string
+          version: number
+          w_distance: number
+          w_freshness: number
+          w_price: number
+          w_reliability: number
+          w_reputation: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          distance_max_m?: number
+          effective_from?: string
+          effective_to?: string | null
+          freshness_half_life_days?: number
+          id?: string
+          label: string
+          min_fulfillment_history?: number
+          min_price_observations?: number
+          min_reputation_events?: number
+          notes?: string | null
+          updated_at?: string
+          version: number
+          w_distance?: number
+          w_freshness?: number
+          w_price?: number
+          w_reliability?: number
+          w_reputation?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          distance_max_m?: number
+          effective_from?: string
+          effective_to?: string | null
+          freshness_half_life_days?: number
+          id?: string
+          label?: string
+          min_fulfillment_history?: number
+          min_price_observations?: number
+          min_reputation_events?: number
+          notes?: string | null
+          updated_at?: string
+          version?: number
+          w_distance?: number
+          w_freshness?: number
+          w_price?: number
+          w_reliability?: number
+          w_reputation?: number
+        }
+        Relationships: []
+      }
       marche_reputation_dimensions: {
         Row: {
           created_at: string
@@ -10338,6 +10404,17 @@ export type Database = {
         }
         Returns: Json
       }
+      _marche_rank_evidence: {
+        Args: {
+          p_at?: string
+          p_lat?: number
+          p_listing_id: string
+          p_lng?: number
+          p_policy?: Json
+        }
+        Returns: Json
+      }
+      _marche_ranking_policy: { Args: { p_at?: string }; Returns: Json }
       _marche_reputation_resolve: {
         Args: { p_caller: string; p_kind: string; p_tx: string }
         Returns: Json
@@ -10646,6 +10723,7 @@ export type Database = {
       _qa_node3_repas_r9_recovery_flows: { Args: never; Returns: Json }
       _qa_node3_repas_r9_recovery_flows_fxcore: { Args: never; Returns: Json }
       _qa_node4_marche_r1: { Args: never; Returns: Json }
+      _qa_node4_marche_r10: { Args: never; Returns: Json }
       _qa_node4_marche_r15: { Args: never; Returns: Json }
       _qa_node4_marche_r2: { Args: never; Returns: Json }
       _qa_node4_marche_r3: { Args: never; Returns: Json }
@@ -13766,6 +13844,10 @@ export type Database = {
       }
       marche_listing_public: { Args: { p_listing_id: string }; Returns: Json }
       marche_listing_publish: { Args: { p_listing_id: string }; Returns: Json }
+      marche_listing_rank_explain: {
+        Args: { p_lat?: number; p_listing_id: string; p_lng?: number }
+        Returns: Json
+      }
       marche_listing_set_availability: {
         Args: { p_availability: string; p_listing_id: string }
         Returns: Json
@@ -13790,7 +13872,9 @@ export type Database = {
       marche_listings_discover: {
         Args: {
           p_category?: string
+          p_lat?: number
           p_limit?: number
+          p_lng?: number
           p_offset?: number
           p_search?: string
           p_sort?: string
@@ -13813,6 +13897,9 @@ export type Database = {
           neighborhood: string
           photo_count: number
           price_gnf: number
+          rank_distance_m: number
+          rank_evidence: Json
+          rank_score_bps: number
           store_id: string
           title: string
         }[]
@@ -13998,6 +14085,16 @@ export type Database = {
         }
         Returns: Json
       }
+      marche_ranking_audit_listing: {
+        Args: { p_lat?: number; p_listing_id: string; p_lng?: number }
+        Returns: Json
+      }
+      marche_ranking_policy_admin_list: { Args: never; Returns: Json }
+      marche_ranking_policy_public: { Args: never; Returns: Json }
+      marche_ranking_policy_publish: {
+        Args: { p_payload: Json }
+        Returns: Json
+      }
       marche_reputation_dimensions_for: {
         Args: { p_subject_kind: string }
         Returns: string[]
@@ -14024,6 +14121,10 @@ export type Database = {
       marche_shopper_claim: { Args: { p_request_id: string }; Returns: Json }
       marche_shopper_complete_delivery: {
         Args: { p_request_id: string }
+        Returns: Json
+      }
+      marche_shopper_performance: {
+        Args: { p_shopper_user_id?: string }
         Returns: Json
       }
       marche_shopper_resolve_line: { Args: { p: Json }; Returns: Json }
