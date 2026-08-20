@@ -1,0 +1,1 @@
+DELETE FROM public._qa_s13_results WHERE part IN (4200,4201,4202);
