@@ -35,6 +35,36 @@ export type Database = {
         }
         Relationships: []
       }
+      _qa_final_board: {
+        Row: {
+          err: string | null
+          failed: number | null
+          id: number
+          kind: string | null
+          note: string | null
+          suite: string | null
+          total: number | null
+        }
+        Insert: {
+          err?: string | null
+          failed?: number | null
+          id?: number
+          kind?: string | null
+          note?: string | null
+          suite?: string | null
+          total?: number | null
+        }
+        Update: {
+          err?: string | null
+          failed?: number | null
+          id?: number
+          kind?: string | null
+          note?: string | null
+          suite?: string | null
+          total?: number | null
+        }
+        Relationships: []
+      }
       _qa_r8_out: {
         Row: {
           id: number
