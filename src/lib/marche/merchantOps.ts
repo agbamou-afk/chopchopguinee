@@ -30,7 +30,7 @@ export interface MarcheOrderTender {
 export type MarcheSettlementState =
   | "not_yet_payable" | "pending_funding" | "funded_or_due"
   | "partially_settled" | "settled" | "settlement_held"
-  | "reversed" | "disputed" | "unknown";
+  | "reversed" | "disputed" | "verification_required" | "unknown";
 
 export interface MarcheOrderMoney {
   merchandise_subtotal_gnf: number;
@@ -44,6 +44,11 @@ export interface MarcheOrderMoney {
   funded_gnf: number;
   settled_gnf: number;
   allocated_gnf: number;
+  proven_settled_gnf?: number;
+  payable_identity?: "none" | "order_id" | "source_offer";
+  payable_source_id?: string | null;
+  payment_connected?: boolean;
+  reason?: string | null;
   outstanding_gnf: number | null;
   settlement_state: MarcheSettlementState;
   settlement_label: string;
@@ -93,8 +98,8 @@ export interface MarcheSettlementAllocation {
   allocated_at: string;
   payout_order_id: string;
   payout_status: string;
-  provider: string;
-  destination_msisdn: string;
+  provider: string | null;
+  destination_msisdn: string | null;
   settled_at: string | null;
   provider_reference: string | null;
   provider_status: string | null;
@@ -108,6 +113,7 @@ export type MarcheOrderSettlementReceipt = {
   payable_id?: string;
   receipt_available: boolean;
   settled: boolean;
+  provider_verified?: boolean;
   money: MarcheOrderMoney;
   message?: string;
   allocations?: MarcheSettlementAllocation[];
@@ -126,6 +132,8 @@ export interface MarcheFinanceOrderAudit {
   settled_gnf: number | null;
   allocated_gnf: number;
   unproven_settled_gnf: number;
+  proven_settled_gnf?: number;
+  payable_identity?: "none" | "order_id" | "source_offer";
   tender: MarcheOrderTender;
   mismatch_codes: string[];
   clean: boolean;

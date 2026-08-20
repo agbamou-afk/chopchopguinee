@@ -10333,6 +10333,10 @@ export type Database = {
         Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
         Returns: string
       }
+      _marche_order_payable_ref: {
+        Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
+        Returns: Json
+      }
       _marche_order_tender: {
         Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
         Returns: Json
