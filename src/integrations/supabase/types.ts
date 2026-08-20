@@ -11165,6 +11165,7 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_a2_cleanup: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_auth_user_count: { Args: never; Returns: number }
       _qa_n4r12_orphan_admins: { Args: never; Returns: number }
       _qa_node0_course: { Args: never; Returns: Json }
