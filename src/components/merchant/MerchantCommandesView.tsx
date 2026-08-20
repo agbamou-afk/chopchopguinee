@@ -170,10 +170,10 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
           ? <p className="text-sm text-muted-foreground">Aucune commande reçue.</p>
           : <div className="space-y-2">
               {orders.map((o) => (
-                <div key={o.id} className="rounded-xl bg-card border border-border/60 p-3">
+                <div key={o.order_id} className="rounded-xl bg-card border border-border/60 p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold">{formatGNF(orderDisplayTotalGnf(o))}</p>
+                      <p className="text-sm font-semibold">{formatGNF(o.money.merchandise_subtotal_gnf)}</p>
                       <p className="text-xs text-muted-foreground">
                         {o.line_count} article{o.line_count > 1 ? "s" : ""} · {o.item_count} unité{o.item_count > 1 ? "s" : ""}
                       </p>
@@ -188,23 +188,25 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
                       <p className="text-[10px] text-muted-foreground mt-1">{new Date(o.created_at).toLocaleString("fr-FR")}</p>
                     </div>
                     <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
-                      {o.status === "committed" ? fulfillmentStateLabel(o.fulfillment_state) : orderStatusLabel(o.status)}
+                      {o.status === "committed"
+                        ? fulfillmentStateLabel(o.fulfillment_state)
+                        : OPS_BUCKET_LABEL[o.ops_bucket]}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {merchantActionsFor(o.fulfillment_state).map((a) => (
-                      <Button key={a} size="sm" variant={a === "reject" ? "outline" : "default"}
-                        disabled={busy === o.id} onClick={() => actOrder(o, a)}>
-                        {busy === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : MERCHANT_ACTION_LABEL[a]}
+                    {o.allowed_actions.map((a) => (
+                      <Button key={a} size="sm"
+                        variant={a === "accept" ? "default" : "outline"}
+                        disabled={busy === o.order_id} onClick={() => actOrder(o, a)}>
+                        {busy === o.order_id
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : MERCHANT_ORDER_ACTION_LABEL[a]}
                       </Button>
                     ))}
-                    {canRequestDispatch(o) && (
-                      <Button size="sm" variant="outline" disabled={busy === o.id} onClick={() => dispatchOrder(o)}>
-                        Demander un coursier
-                      </Button>
-                    )}
                   </div>
-                  <p className="mt-2 text-[11px] text-muted-foreground">Paiement : à connecter.</p>
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Paiement : {o.tender.label} · Règlement : {o.money.settlement_label}
+                  </p>
                 </div>
               ))}
             </div>
