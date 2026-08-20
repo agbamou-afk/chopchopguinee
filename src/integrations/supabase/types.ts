@@ -4672,6 +4672,326 @@ export type Database = {
           },
         ]
       }
+      marche_ops_cases: {
+        Row: {
+          assigned_to: string | null
+          case_type: string
+          created_at: string
+          detector_key: string | null
+          evidence: Json
+          id: string
+          note: string
+          opened_at: string
+          opened_by: string | null
+          reason_code: string
+          resolution_code: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string
+          status: string
+          subject_customer_user_id: string | null
+          subject_listing_id: string | null
+          subject_mission_id: string | null
+          subject_order_id: string | null
+          subject_reputation_event_id: string | null
+          subject_shopper_user_id: string | null
+          subject_store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          case_type: string
+          created_at?: string
+          detector_key?: string | null
+          evidence?: Json
+          id?: string
+          note?: string
+          opened_at?: string
+          opened_by?: string | null
+          reason_code: string
+          resolution_code?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string
+          status?: string
+          subject_customer_user_id?: string | null
+          subject_listing_id?: string | null
+          subject_mission_id?: string | null
+          subject_order_id?: string | null
+          subject_reputation_event_id?: string | null
+          subject_shopper_user_id?: string | null
+          subject_store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          case_type?: string
+          created_at?: string
+          detector_key?: string | null
+          evidence?: Json
+          id?: string
+          note?: string
+          opened_at?: string
+          opened_by?: string | null
+          reason_code?: string
+          resolution_code?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string
+          status?: string
+          subject_customer_user_id?: string | null
+          subject_listing_id?: string | null
+          subject_mission_id?: string | null
+          subject_order_id?: string | null
+          subject_reputation_event_id?: string | null
+          subject_shopper_user_id?: string | null
+          subject_store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_ops_cases_subject_listing_id_fkey"
+            columns: ["subject_listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_ops_cases_subject_listing_id_fkey"
+            columns: ["subject_listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
+          },
+          {
+            foreignKeyName: "marche_ops_cases_subject_mission_id_fkey"
+            columns: ["subject_mission_id"]
+            isOneToOne: false
+            referencedRelation: "marche_procurement_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_ops_cases_subject_order_id_fkey"
+            columns: ["subject_order_id"]
+            isOneToOne: false
+            referencedRelation: "marche_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_ops_cases_subject_reputation_event_id_fkey"
+            columns: ["subject_reputation_event_id"]
+            isOneToOne: false
+            referencedRelation: "marche_reputation_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_ops_cases_subject_store_id_fkey"
+            columns: ["subject_store_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_ops_controls: {
+        Row: {
+          applied_at: string
+          applied_by: string
+          case_id: string
+          control_kind: string
+          created_at: string
+          effective_from: string
+          expires_at: string | null
+          id: string
+          lift_reason: string | null
+          lifted_at: string | null
+          lifted_by: string | null
+          note: string | null
+          reason_code: string
+          subject_listing_id: string | null
+          subject_store_id: string | null
+          subject_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string
+          applied_by: string
+          case_id: string
+          control_kind: string
+          created_at?: string
+          effective_from?: string
+          expires_at?: string | null
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          note?: string | null
+          reason_code: string
+          subject_listing_id?: string | null
+          subject_store_id?: string | null
+          subject_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string
+          applied_by?: string
+          case_id?: string
+          control_kind?: string
+          created_at?: string
+          effective_from?: string
+          expires_at?: string | null
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          note?: string | null
+          reason_code?: string
+          subject_listing_id?: string | null
+          subject_store_id?: string | null
+          subject_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_ops_controls_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marche_ops_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_ops_controls_subject_listing_id_fkey"
+            columns: ["subject_listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_ops_controls_subject_listing_id_fkey"
+            columns: ["subject_listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_marche_listing_truth"
+            referencedColumns: ["listing_id"]
+          },
+          {
+            foreignKeyName: "marche_ops_controls_subject_store_id_fkey"
+            columns: ["subject_store_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_ops_events: {
+        Row: {
+          action: string
+          actor_role: string
+          actor_user_id: string | null
+          after_state: Json | null
+          before_state: Json | null
+          case_id: string
+          created_at: string
+          finance_ref: Json | null
+          id: string
+          metadata: Json
+          note: string | null
+          reason_code: string | null
+          request_id: string
+        }
+        Insert: {
+          action: string
+          actor_role: string
+          actor_user_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          case_id: string
+          created_at?: string
+          finance_ref?: Json | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          reason_code?: string | null
+          request_id: string
+        }
+        Update: {
+          action?: string
+          actor_role?: string
+          actor_user_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          case_id?: string
+          created_at?: string
+          finance_ref?: Json | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          reason_code?: string | null
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_ops_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marche_ops_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marche_ops_reputation_moderations: {
+        Row: {
+          case_id: string
+          event_id: string
+          moderated_at: string
+          moderated_by: string
+          note: string | null
+          reason_code: string
+          restore_reason: string | null
+          restored_at: string | null
+          restored_by: string | null
+        }
+        Insert: {
+          case_id: string
+          event_id: string
+          moderated_at?: string
+          moderated_by: string
+          note?: string | null
+          reason_code: string
+          restore_reason?: string | null
+          restored_at?: string | null
+          restored_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          event_id?: string
+          moderated_at?: string
+          moderated_by?: string
+          note?: string | null
+          reason_code?: string
+          restore_reason?: string | null
+          restored_at?: string | null
+          restored_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marche_ops_reputation_moderations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marche_ops_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marche_ops_reputation_moderations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "marche_reputation_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marche_order_items: {
         Row: {
           category_snapshot: string | null
@@ -10321,6 +10641,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      _marche_ops_actor_role: { Args: { p_uid: string }; Returns: string }
+      _marche_ops_allowed_actions: {
+        Args: {
+          p_case: Database["public"]["Tables"]["marche_ops_cases"]["Row"]
+          p_role: string
+        }
+        Returns: Json
+      }
       _marche_order_finance_bridge: {
         Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
         Returns: Json
@@ -10729,6 +11057,8 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_auth_user_count: { Args: never; Returns: number }
+      _qa_n4r12_orphan_admins: { Args: never; Returns: number }
       _qa_node0_course: { Args: never; Returns: Json }
       _qa_node1_bonbonna: { Args: never; Returns: Json }
       _qa_node1_bonbonna_full: { Args: never; Returns: Json }
@@ -10775,6 +11105,7 @@ export type Database = {
       _qa_node4_marche_r10: { Args: never; Returns: Json }
       _qa_node4_marche_r11: { Args: never; Returns: Json }
       _qa_node4_marche_r11_a8: { Args: never; Returns: Json }
+      _qa_node4_marche_r12: { Args: never; Returns: Json }
       _qa_node4_marche_r15: { Args: never; Returns: Json }
       _qa_node4_marche_r2: { Args: never; Returns: Json }
       _qa_node4_marche_r3: { Args: never; Returns: Json }
@@ -14066,6 +14397,41 @@ export type Database = {
       marche_offers_for_merchant: {
         Args: { p_limit?: number }
         Returns: Json[]
+      }
+      marche_ops_case_detail: { Args: { p_case_id: string }; Returns: Json }
+      marche_ops_case_open: { Args: { p_payload: Json }; Returns: Json }
+      marche_ops_command: {
+        Args: {
+          p_action: string
+          p_case_id: string
+          p_note?: string
+          p_params?: Json
+          p_reason_code?: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
+      marche_ops_listing_quarantined: {
+        Args: { p_listing_id: string }
+        Returns: boolean
+      }
+      marche_ops_queue: {
+        Args: {
+          p_limit?: number
+          p_search?: string
+          p_status?: string
+          p_type?: string
+        }
+        Returns: Json
+      }
+      marche_ops_signal: { Args: { p_payload: Json }; Returns: Json }
+      marche_ops_store_suspended: {
+        Args: { p_store_id: string }
+        Returns: boolean
+      }
+      marche_ops_user_restricted: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       marche_order_cancel: {
         Args: { p_order_id: string; p_reason?: string }
