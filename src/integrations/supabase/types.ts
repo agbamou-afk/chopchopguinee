@@ -14084,7 +14084,16 @@ export type Database = {
         }
         Returns: Json
       }
+      marche_ranking_audit_listing: {
+        Args: { p_lat?: number; p_listing_id: string; p_lng?: number }
+        Returns: Json
+      }
+      marche_ranking_policy_admin_list: { Args: never; Returns: Json }
       marche_ranking_policy_public: { Args: never; Returns: Json }
+      marche_ranking_policy_publish: {
+        Args: { p_payload: Json }
+        Returns: Json
+      }
       marche_reputation_dimensions_for: {
         Args: { p_subject_kind: string }
         Returns: string[]
@@ -14111,6 +14120,10 @@ export type Database = {
       marche_shopper_claim: { Args: { p_request_id: string }; Returns: Json }
       marche_shopper_complete_delivery: {
         Args: { p_request_id: string }
+        Returns: Json
+      }
+      marche_shopper_performance: {
+        Args: { p_shopper_user_id?: string }
         Returns: Json
       }
       marche_shopper_resolve_line: { Args: { p: Json }; Returns: Json }
