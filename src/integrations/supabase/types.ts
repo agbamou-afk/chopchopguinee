@@ -5662,20 +5662,26 @@ export type Database = {
           distance_max_m: number
           effective_from: string
           effective_to: string | null
-          freshness_half_life_days: number
+          fulfillment_lookback_days: number
           id: string
           label: string
           min_fulfillment_history: number
+          min_fulfillment_observations: number
           min_price_observations: number
+          min_qualified_components: number
           min_reputation_events: number
           notes: string | null
+          price_lookback_hours: number
+          reliability_lookback_days: number
           updated_at: string
           version: number
           w_distance: number
           w_freshness: number
+          w_preparation: number
           w_price: number
           w_reliability: number
           w_reputation: number
+          w_responsiveness: number
         }
         Insert: {
           created_at?: string
@@ -5683,20 +5689,26 @@ export type Database = {
           distance_max_m?: number
           effective_from?: string
           effective_to?: string | null
-          freshness_half_life_days?: number
+          fulfillment_lookback_days?: number
           id?: string
           label: string
           min_fulfillment_history?: number
+          min_fulfillment_observations?: number
           min_price_observations?: number
+          min_qualified_components?: number
           min_reputation_events?: number
           notes?: string | null
+          price_lookback_hours?: number
+          reliability_lookback_days?: number
           updated_at?: string
           version: number
           w_distance?: number
           w_freshness?: number
+          w_preparation?: number
           w_price?: number
           w_reliability?: number
           w_reputation?: number
+          w_responsiveness?: number
         }
         Update: {
           created_at?: string
@@ -5704,20 +5716,26 @@ export type Database = {
           distance_max_m?: number
           effective_from?: string
           effective_to?: string | null
-          freshness_half_life_days?: number
+          fulfillment_lookback_days?: number
           id?: string
           label?: string
           min_fulfillment_history?: number
+          min_fulfillment_observations?: number
           min_price_observations?: number
+          min_qualified_components?: number
           min_reputation_events?: number
           notes?: string | null
+          price_lookback_hours?: number
+          reliability_lookback_days?: number
           updated_at?: string
           version?: number
           w_distance?: number
           w_freshness?: number
+          w_preparation?: number
           w_price?: number
           w_reliability?: number
           w_reputation?: number
+          w_responsiveness?: number
         }
         Relationships: []
       }
@@ -13869,41 +13887,75 @@ export type Database = {
         Args: { p_listing_id: string; p_payload: Json }
         Returns: Json
       }
-      marche_listings_discover: {
-        Args: {
-          p_category?: string
-          p_lat?: number
-          p_limit?: number
-          p_lng?: number
-          p_offset?: number
-          p_search?: string
-          p_sort?: string
-          p_store_id?: string
-        }
-        Returns: {
-          availability: string
-          category: string
-          commune: string
-          condition: string
-          cover_url: string
-          created_at: string
-          delivery_available: boolean
-          description: string
-          fulfillment_options: string[]
-          id: string
-          is_negotiable: boolean
-          is_urgent: boolean
-          kind: string
-          neighborhood: string
-          photo_count: number
-          price_gnf: number
-          rank_distance_m: number
-          rank_evidence: Json
-          rank_score_bps: number
-          store_id: string
-          title: string
-        }[]
-      }
+      marche_listings_discover:
+        | {
+            Args: {
+              p_category?: string
+              p_limit?: number
+              p_offset?: number
+              p_search?: string
+              p_sort?: string
+              p_store_id?: string
+            }
+            Returns: {
+              availability: string
+              category: string
+              commune: string
+              condition: string
+              cover_url: string
+              created_at: string
+              delivery_available: boolean
+              description: string
+              fulfillment_options: string[]
+              id: string
+              is_negotiable: boolean
+              is_urgent: boolean
+              kind: string
+              neighborhood: string
+              photo_count: number
+              price_gnf: number
+              rank_distance_m: number
+              rank_evidence: Json
+              rank_score_bps: number
+              store_id: string
+              title: string
+            }[]
+          }
+        | {
+            Args: {
+              p_category: string
+              p_lat: number
+              p_limit: number
+              p_lng: number
+              p_offset: number
+              p_search: string
+              p_sort: string
+              p_store_id: string
+            }
+            Returns: {
+              availability: string
+              category: string
+              commune: string
+              condition: string
+              cover_url: string
+              created_at: string
+              delivery_available: boolean
+              description: string
+              fulfillment_options: string[]
+              id: string
+              is_negotiable: boolean
+              is_urgent: boolean
+              kind: string
+              neighborhood: string
+              photo_count: number
+              price_gnf: number
+              rank_distance_m: number
+              rank_evidence: Json
+              rank_score_bps: number
+              store_id: string
+              title: string
+            }[]
+          }
       marche_listings_owner: {
         Args: { p_limit?: number }
         Returns: {
