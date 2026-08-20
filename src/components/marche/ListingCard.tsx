@@ -3,6 +3,8 @@ import { MapPin, Truck, Flame, Eye, Heart } from "lucide-react";
 import { formatGNF, timeAgo, isListingComplete, type SellerKind, type FulfillmentId } from "@/lib/marche";
 import { SellerBadge } from "./SellerBadge";
 import { AvailabilityChip, CompleteListingChip } from "./TrustChips";
+import { RankReasonChips } from "./RankReasonChips";
+import type { RankReason } from "@/lib/marche/ranking";
 
 export interface ListingCardData {
   id: string;
@@ -23,6 +25,8 @@ export interface ListingCardData {
   photo_count?: number | null;
   condition?: string | null;
   description?: string | null;
+  /** Server-derived ranking reasons (R10). Absent when discovery is not ranked. */
+  rank_reasons?: RankReason[] | null;
 }
 
 export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () => void }) {
@@ -98,6 +102,7 @@ export function ListingCard({ l, onClick }: { l: ListingCardData; onClick: () =>
             <CompleteListingChip />
           </div>
         )}
+        <RankReasonChips reasons={l.rank_reasons ?? []} />
         {showMetrics && (
           <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
             {(l.views ?? 0) > 0 && (
