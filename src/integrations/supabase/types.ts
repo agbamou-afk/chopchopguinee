@@ -10321,6 +10321,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      _marche_order_finance_bridge: {
+        Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
+        Returns: Json
+      }
       _marche_order_money: {
         Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
         Returns: Json
@@ -10330,7 +10334,7 @@ export type Database = {
         Returns: string
       }
       _marche_order_tender: {
-        Args: { p_offer_id: string; p_order_id: string }
+        Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
         Returns: Json
       }
       _marche_pm_note: {
