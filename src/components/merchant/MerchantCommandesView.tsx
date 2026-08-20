@@ -5,20 +5,18 @@ import { Inbox, HandCoins, Package, History as HistoryIcon, Check, X, Repeat2, L
 import { listSellerInterests, respondToInterest } from "@/lib/merchant/operations";
 import { listMerchantOffers, respondOffer, offerStatusLabel, offerAwaitsBuyer, type MarketplaceOffer } from "@/lib/marche/offers";
 import {
-  listMerchantMarcheOrders,
-  orderStatusLabel,
-  orderDisplayTotalGnf,
-  type MarcheOrder,
-} from "@/lib/marche/orders";
+  fetchMarcheMerchantCockpit,
+  MERCHANT_ORDER_ACTION_LABEL,
+  OPS_BUCKET_LABEL,
+  type MarcheOrderOps,
+  type MarcheOpsBucket,
+  type MerchantOrderAction,
+} from "@/lib/marche/merchantOps";
 import { CashOrderPanel } from "@/components/cash/CashOrderPanel";
 import {
   fulfillmentStateLabel,
-  merchantActionsFor,
   merchantTransition,
-  canRequestDispatch,
   requestDispatch,
-  MERCHANT_ACTION_LABEL,
-  type MerchantAction,
 } from "@/lib/marche/fulfillment";
 import { ChopPayOrderPanel } from "@/components/chopPay/ChopPayOrderPanel";
 import { formatGNF } from "@/lib/marche";
@@ -31,7 +29,8 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
   const [tab, setTab] = useState<Section>("new");
   const [interests, setInterests] = useState<any[]>([]);
   const [offers, setOffers] = useState<MarketplaceOffer[]>([]);
-  const [orders, setOrders] = useState<MarcheOrder[]>([]);
+  const [orders, setOrders] = useState<MarcheOrderOps[]>([]);
+  const [opsCounts, setOpsCounts] = useState<Partial<Record<MarcheOpsBucket, number>>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [counterFor, setCounterFor] = useState<string | null>(null);
@@ -43,7 +42,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
     const [iRes, oRes, cRes] = await Promise.allSettled([
       listSellerInterests(merchantUserId, 80),
       listMerchantOffers(merchantUserId),
-      listMerchantMarcheOrders(null, 80, 0),
+      fetchMarcheMerchantCockpit({ limit: 80 }),
     ]);
     if (iRes.status === "fulfilled") {
       setInterests(iRes.value);
@@ -59,9 +58,11 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
       if (import.meta.env.DEV) console.warn("[merchant] offers load failed", oRes.reason);
     }
     if (cRes.status === "fulfilled") {
-      setOrders(cRes.value);
+      setOrders(cRes.value.items ?? []);
+      setOpsCounts(cRes.value.counts ?? {});
     } else {
       setOrders([]);
+      setOpsCounts({});
       if (import.meta.env.DEV) console.warn("[merchant] marche orders load failed", cRes.reason);
     }
     setLoading(false);
@@ -72,7 +73,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
   const newInterests = interests.filter((i) => i.state === "pending");
   const prepInterests = interests.filter((i) => i.state === "accepted");
   const histInterests = interests.filter((i) => ["declined", "fulfilled", "expired"].includes(i.state));
-  const openOrders = orders.filter((o) => o.status === "committed");
+  const openOrders = opsCounts.action_required ?? 0;
   const openOffers = offers.filter((o) => ["pending", "countered"].includes(o.status));
   const histOffers = offers.filter((o) => ["accepted", "rejected", "expired", "withdrawn"].includes(o.status));
 
@@ -83,17 +84,17 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
     finally { setBusy(null); }
   };
 
-  /** R5 — the merchant only requests a transition; the server decides. */
-  const actOrder = async (o: MarcheOrder, action: MerchantAction) => {
-    setBusy(o.id);
-    try { await merchantTransition(o.id, action); await refresh(); }
-    catch (e: any) { toast({ title: "Erreur", description: e?.message }); }
-    finally { setBusy(null); }
-  };
-
-  const dispatchOrder = async (o: MarcheOrder) => {
-    setBusy(o.id);
-    try { await requestDispatch(o.id); await refresh(); }
+  /**
+   * R5 + R11 — the merchant only requests an action the SERVER already
+   * declared allowed for this order. The client never infers a lifecycle.
+   */
+  const actOrder = async (o: MarcheOrderOps, action: MerchantOrderAction) => {
+    setBusy(o.order_id);
+    try {
+      if (action === "request_dispatch") await requestDispatch(o.order_id);
+      else await merchantTransition(o.order_id, action);
+      await refresh();
+    }
     catch (e: any) { toast({ title: "Erreur", description: e?.message }); }
     finally { setBusy(null); }
   };
@@ -120,7 +121,7 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
   const TABS: { key: Section; label: string; icon: typeof Inbox; badge: number }[] = [
     // Fulfillment actions live on each order row (see the "orders" tab).
     { key: "new", label: "Demandes", icon: Inbox, badge: newInterests.length },
-    { key: "orders", label: "Commandes", icon: ShoppingBag, badge: openOrders.length },
+    { key: "orders", label: "Commandes", icon: ShoppingBag, badge: openOrders },
     { key: "offers", label: "Offres", icon: HandCoins, badge: openOffers.length },
     { key: "prep", label: "À préparer", icon: Package, badge: prepInterests.length },
     { key: "history", label: "Historique", icon: HistoryIcon, badge: 0 },
@@ -169,10 +170,10 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
           ? <p className="text-sm text-muted-foreground">Aucune commande reçue.</p>
           : <div className="space-y-2">
               {orders.map((o) => (
-                <div key={o.id} className="rounded-xl bg-card border border-border/60 p-3">
+                <div key={o.order_id} className="rounded-xl bg-card border border-border/60 p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold">{formatGNF(orderDisplayTotalGnf(o))}</p>
+                      <p className="text-sm font-semibold">{formatGNF(o.money.merchandise_subtotal_gnf)}</p>
                       <p className="text-xs text-muted-foreground">
                         {o.line_count} article{o.line_count > 1 ? "s" : ""} · {o.item_count} unité{o.item_count > 1 ? "s" : ""}
                       </p>
@@ -187,23 +188,25 @@ export function MerchantCommandesView({ merchantUserId }: { merchantUserId: stri
                       <p className="text-[10px] text-muted-foreground mt-1">{new Date(o.created_at).toLocaleString("fr-FR")}</p>
                     </div>
                     <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
-                      {o.status === "committed" ? fulfillmentStateLabel(o.fulfillment_state) : orderStatusLabel(o.status)}
+                      {o.status === "committed"
+                        ? fulfillmentStateLabel(o.fulfillment_state)
+                        : OPS_BUCKET_LABEL[o.ops_bucket]}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {merchantActionsFor(o.fulfillment_state).map((a) => (
-                      <Button key={a} size="sm" variant={a === "reject" ? "outline" : "default"}
-                        disabled={busy === o.id} onClick={() => actOrder(o, a)}>
-                        {busy === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : MERCHANT_ACTION_LABEL[a]}
+                    {o.allowed_actions.map((a) => (
+                      <Button key={a} size="sm"
+                        variant={a === "accept" ? "default" : "outline"}
+                        disabled={busy === o.order_id} onClick={() => actOrder(o, a)}>
+                        {busy === o.order_id
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : MERCHANT_ORDER_ACTION_LABEL[a]}
                       </Button>
                     ))}
-                    {canRequestDispatch(o) && (
-                      <Button size="sm" variant="outline" disabled={busy === o.id} onClick={() => dispatchOrder(o)}>
-                        Demander un coursier
-                      </Button>
-                    )}
                   </div>
-                  <p className="mt-2 text-[11px] text-muted-foreground">Paiement : à connecter.</p>
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Paiement : {o.tender.label} · Règlement : {o.money.settlement_label}
+                  </p>
                 </div>
               ))}
             </div>

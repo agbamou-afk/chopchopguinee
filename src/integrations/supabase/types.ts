@@ -10310,6 +10310,29 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _marche_merchant_allowed_actions: {
+        Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
+        Returns: string[]
+      }
+      _marche_merchant_ops_authorized: {
+        Args: {
+          p_caller: string
+          p_order: Database["public"]["Tables"]["marche_orders"]["Row"]
+        }
+        Returns: boolean
+      }
+      _marche_order_money: {
+        Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
+        Returns: Json
+      }
+      _marche_order_ops_bucket: {
+        Args: { p_order: Database["public"]["Tables"]["marche_orders"]["Row"] }
+        Returns: string
+      }
+      _marche_order_tender: {
+        Args: { p_offer_id: string; p_order_id: string }
+        Returns: Json
+      }
       _marche_pm_note: {
         Args: {
           p_actor: string
@@ -10742,6 +10765,8 @@ export type Database = {
       _qa_node3_repas_r9_recovery_flows_fxcore: { Args: never; Returns: Json }
       _qa_node4_marche_r1: { Args: never; Returns: Json }
       _qa_node4_marche_r10: { Args: never; Returns: Json }
+      _qa_node4_marche_r11: { Args: never; Returns: Json }
+      _qa_node4_marche_r11_a8: { Args: never; Returns: Json }
       _qa_node4_marche_r15: { Args: never; Returns: Json }
       _qa_node4_marche_r2: { Args: never; Returns: Json }
       _qa_node4_marche_r3: { Args: never; Returns: Json }
@@ -13781,6 +13806,10 @@ export type Database = {
         Args: { p_distance_m: number }
         Returns: string
       }
+      marche_finance_order_audit: {
+        Args: { p_order_id: string }
+        Returns: Json
+      }
       marche_fulfillment_cohort_stats: {
         Args: {
           p_basket_bucket?: string
@@ -13987,6 +14016,16 @@ export type Database = {
         Args: { p_bps: number; p_subtotal_gnf: number }
         Returns: number
       }
+      marche_merchant_order_ops: { Args: { p_order_id: string }; Returns: Json }
+      marche_merchant_orders_cockpit: {
+        Args: {
+          p_bucket?: string
+          p_limit?: number
+          p_offset?: number
+          p_store_id?: string
+        }
+        Returns: Json
+      }
       marche_merchant_transition: {
         Args: { p_action: string; p_order_id: string; p_reason?: string }
         Returns: Json
@@ -14029,6 +14068,10 @@ export type Database = {
       marche_order_release_expired: {
         Args: { p_limit?: number }
         Returns: number
+      }
+      marche_order_settlement_receipt: {
+        Args: { p_order_id: string }
+        Returns: Json
       }
       marche_orders_admin: {
         Args: { p_limit?: number; p_offset?: number }
