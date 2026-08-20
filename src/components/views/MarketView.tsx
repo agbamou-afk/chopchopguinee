@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown, ShoppingBag, Timer, Store, ClipboardList, Navigation, Package } from "lucide-react";
+import { Search, MapPin, Bell, Plus, MessageSquare, X, Heart, ArrowUpDown, ShoppingBag, Timer, Store, ClipboardList, Navigation, Package, Receipt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryGrid } from "@/components/marche/CategoryGrid";
 import { FeaturedBanners } from "@/components/marche/FeaturedBanners";
@@ -15,6 +15,7 @@ import { MyListingsView } from "@/components/marche/MyListingsView";
 import { PromotedSlot } from "@/components/marche/PromotedSlot";
 import { MarcheEmpty } from "@/components/marche/MarcheEmpty";
 import { StaplesView } from "@/components/marche/StaplesView";
+import { MarcheMyOrdersView } from "@/components/marche/MarcheMyOrdersView";
 import { listStoresWithSummary, getSellerEligibility, type StoreSummary } from "@/lib/marche/stores";
 import { categoryLabel, MARCHE_CATEGORIES } from "@/lib/marche";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
@@ -30,7 +31,7 @@ interface MarketViewProps {
   onBack: () => void;
 }
 
-type Screen = "home" | "detail" | "sell" | "inbox" | "store" | "mine";
+type Screen = "home" | "detail" | "sell" | "inbox" | "store" | "mine" | "orders";
 type SortKey = "recent" | "price_asc" | "price_desc";
 type Tab = "all" | "saved" | "stores" | "staples";
 type StoreSortKey = "nearby" | "recent";
@@ -237,6 +238,9 @@ export function MarketView({ onBack }: MarketViewProps) {
   if (screen === "inbox") {
     return <InboxView onBack={() => setScreen("home")} />;
   }
+  if (screen === "orders") {
+    return <MarcheMyOrdersView onBack={() => setScreen("home")} />;
+  }
 
   const visible = tab === "saved" ? listings.filter((l) => savedIds.has(l.id)) : listings;
 
@@ -248,6 +252,9 @@ export function MarketView({ onBack }: MarketViewProps) {
         onBack={onBack}
         right={
           <div className="flex items-center gap-1">
+            <button onClick={() => requireAuth(() => setScreen("orders"))} aria-label="Mes commandes" className="w-10 h-10 rounded-full bg-card border border-border/60 hover:bg-muted flex items-center justify-center">
+              <Receipt className="w-5 h-5 text-foreground" />
+            </button>
             <button onClick={() => requireAuth(() => setScreen("mine"))} aria-label="Mes annonces" className="w-10 h-10 rounded-full bg-card border border-border/60 hover:bg-muted flex items-center justify-center">
               <ClipboardList className="w-5 h-5 text-foreground" />
             </button>
