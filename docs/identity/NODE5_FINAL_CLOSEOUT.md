@@ -227,3 +227,58 @@ credential, or live user row was changed in this Step E edit.
 - After this edit, the only modified file is `docs/identity/NODE5_FINAL_CLOSEOUT.md`.
 - `git status` is expected to be clean after the platform commits this docs-only change.
 - **A15 not started.**
+
+---
+
+## 8. Final finance-law remediation (dormant closed-account liability)
+
+**Frozen law (approved by the product owner):** a closed account with a positive
+balance becomes a **dormant closed-account liability**. The balance remains owed
+to the original canonical UUID until a lawful, evidenced payout/recovery rail
+settles it. Closure removes access and present authority; it does not extinguish
+the debt.
+
+Codified in the database as:
+
+- `public.dormant_closed_account_liabilities` — one row per wallet, immutable
+  `user_id` / `wallet_id` / `amount_gnf` / `currency`, `state ∈ {dormant, settled}`,
+  staff-read-only (ops/god/finance admin), no anon access, no customer writes.
+- `_dormant_liability_classify(uuid,text)` — internal only; records the liability
+  and freezes the wallet **in place**. No transfer, sweep, payout or write-off.
+- `_account_closure_core` and `admin_account_closure_reconcile` now classify on
+  closure; a positive available balance no longer blocks identity closure.
+- Still blocking: `WALLET_BALANCE_NEGATIVE`, `WALLET_FUNDS_HELD`,
+  `OPEN_FINANCIAL_HOLD`, `PENDING_TOPUP`, `DRIVER_CASH_DEBT_OUTSTANDING`,
+  `DRIVER_CASHOUT_IN_FLIGHT`, merchant payables/settlements, active
+  rides/missions/orders/deliveries, freezes, open support, governance authority.
+- Settlement is **fail-closed**: flag `dormant_liability_settlement_enabled` is
+  OFF and no evidence mechanism exists, so no row can be marked settled today.
+
+**Live result.** The legacy closed account `fb8fcfb5…` was reconciled once
+(idempotent, governed). Its driver wallet `68d5cc86…` now reads
+`balance_gnf = 29 448`, `held_gnf = 0`, `status = frozen`, with a matching
+`dormant` liability of exactly **29 448 GNF** anchored to the original UUID.
+No ledger posting, wallet transaction or balance change occurred.
+
+**Certification measured after the last edit.**
+
+| Gate | Result |
+| --- | --- |
+| `_qa_node5_finance_dormant_liability` (new) | **61 / 0** |
+| `_qa_node5_identity_final_remediation` | **100 / 0** |
+| `_qa_node5_identity_a14` | 114 total, **15 failed** |
+| Full board | 59 suites, 6 113 raw, **15 failures** |
+| DB/security linter | 663 (+1 vs 662: `admin_dormant_liabilities`, staff read RPC) |
+
+### Remaining blocker (verdict stays HOLD)
+
+`_qa_node5_identity_a14` still encodes the **pre-approval** law — its
+blocked-closure fixture relies on a positive wallet balance being a blocker
+(`N5A14.B2/B3`, `C1–C6`, `C8`, `C11/C12`, `D1`, `D12/D13`, `D19`). These are
+stale assertions, not a regression of the new law: no A14 authority, provenance
+or anonymization guarantee failed. The suite must be re-expressed against the
+approved doctrine (blocked fixture switched to held funds / other active
+obligation) before Node 5 can be locked.
+
+**VERDICT: HOLD — finance law implemented and live-reconciled; A14 suite
+alignment outstanding.**
