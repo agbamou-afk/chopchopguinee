@@ -11305,6 +11305,7 @@ export type Database = {
       _qa_node5_identity_a6: { Args: never; Returns: Json }
       _qa_node5_identity_a7: { Args: never; Returns: Json }
       _qa_node5_identity_a8: { Args: never; Returns: Json }
+      _qa_node5_identity_a9: { Args: never; Returns: Json }
       _qa_r6_err: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: string
