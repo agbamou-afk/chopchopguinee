@@ -11372,6 +11372,25 @@ export type Database = {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
       }
+      _qa_node5_fr_cleanup: {
+        Args: { p_ids: string[]; p_ride: string }
+        Returns: undefined
+      }
+      _qa_node5_fr_fixtures: {
+        Args: {
+          p_d: string
+          p_fin: string
+          p_god: string
+          p_ids: string[]
+          p_liv: string
+          p_m: string
+          p_phone: string
+          p_ride: string
+          p_store: string
+          p_x: string
+        }
+        Returns: undefined
+      }
       _qa_node5_fr_profiles: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_node5_fr_seed: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_node5_identity_a10: { Args: never; Returns: Json }
