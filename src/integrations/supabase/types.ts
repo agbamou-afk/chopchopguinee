@@ -11391,7 +11391,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      _qa_node5_fr_live_reconcile: { Args: never; Returns: Json }
       _qa_node5_fr_profiles: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_node5_fr_seed: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_node5_identity_a10: { Args: never; Returns: Json }
