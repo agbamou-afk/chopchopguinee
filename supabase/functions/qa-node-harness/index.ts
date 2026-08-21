@@ -70,6 +70,7 @@ const ALLOWED = new Set([
   "_qa_node5_identity_a12",
   "_qa_node5_identity_a13",
   "_qa_node5_identity_a14",
+  "_qa_node5_identity_final_remediation",
 
 ]);
 
@@ -94,6 +95,7 @@ Deno.serve(async (req) => {
     (Deno.env.get("QA_NODE_HARNESS_TOKEN") ?? "").trim(),
     (Deno.env.get("QA_NODE_HARNESS_TOKEN_ALT") ?? "").trim(),
     (Deno.env.get("QA_NODE_HARNESS_TOKEN_CERT") ?? "").trim(),
+    (Deno.env.get("QA_NODE_HARNESS_TOKEN_RUN") ?? "").trim(),
   ].filter((t) => t.length > 0);
   const presented = (req.headers.get("x-qa-token") ?? "").trim();
   const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
