@@ -30,6 +30,26 @@ interface Props {
  * surfaces. Wallet and audit history are preserved by design. After success
  * the user is signed out and sent to /auth.
  */
+const BLOCKER_LABELS: Record<string, string> = {
+  WALLET_BALANCE_NONZERO: "Votre portefeuille contient encore un solde.",
+  WALLET_FUNDS_HELD: "Des fonds sont encore bloqués sur votre portefeuille.",
+  OPEN_FINANCIAL_HOLD: "Une retenue financière est encore ouverte.",
+  CUSTOMER_CANCELLATION_DEBT: "Vous avez des frais d'annulation impayés.",
+  PENDING_TOPUP: "Une recharge est en cours de traitement.",
+  DRIVER_CASH_DEBT_OUTSTANDING: "Vous avez une dette cash chauffeur à régler.",
+  DRIVER_CASHOUT_IN_FLIGHT: "Un retrait chauffeur est en cours.",
+  MERCHANT_UNSETTLED_PAYABLE: "Un versement marchand est encore dû.",
+  MERCHANT_SETTLEMENT_IN_FLIGHT: "Un règlement marchand est en cours.",
+  ACTIVE_RIDE: "Une course est encore en cours.",
+  ACTIVE_MISSION: "Une mission est encore en cours.",
+  ACTIVE_FOOD_ORDER: "Une commande Repas est encore en cours.",
+  ACTIVE_MARCHE_ORDER: "Une commande Marché est encore en cours.",
+  ACTIVE_PACKAGE_DELIVERY: "Une livraison de colis est encore en cours.",
+  ACCOUNT_FREEZE_ACTIVE: "Votre compte est actuellement gelé.",
+  OPEN_SUPPORT_ISSUE: "Un dossier support est encore ouvert.",
+  GOVERNANCE_AUTHORITY_ACTIVE: "Un compte staff actif ne peut pas être supprimé en libre-service.",
+};
+
 export function SelfDeleteAccountSheet({ open, onOpenChange }: Props) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
