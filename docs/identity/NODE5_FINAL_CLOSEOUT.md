@@ -12,10 +12,13 @@ row was changed in this pass.
 | A13 closeout report commit | `80b5e406f0f73081e4bf18621e7bdc8ab5a0852d` | Lovable closeout edit |
 | A13 bookkeeping correction | `20aabd91dc322e0735816fa1522e07b2da875b95` | docs-only; also A14 starting HEAD |
 | A14 certification code HEAD | `fe72ef0df7137c36bc805e06eb51b481cf693cc8` | A14 implementation + docs |
-| **Node 5 final-closeout starting HEAD (this pass)** | `fe72ef0df7137c36bc805e06eb51b481cf693cc8` | `git status --porcelain` clean |
+| **Node 5 final-closeout starting HEAD (code certification)** | `fe72ef0df7137c36bc805e06eb51b481cf693cc8` | `git status --porcelain` clean |
+| First closeout report commit | `9e6f4260…` | docs-only; **superseded** by the correction below |
+| This docs-only correction | recorded in §8 | docs-only; no product/DB/migration/function/policy/live-row change |
 
 This document is a docs-only artifact created **after** `fe72ef0d`. Its own commit SHA is by
 definition later than the code-certification HEAD and must never be quoted as the certification HEAD.
+
 
 ## 1. Node 5 constitutional charter (frozen)
 
