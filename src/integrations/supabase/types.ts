@@ -10539,6 +10539,7 @@ export type Database = {
       _finance_privileged: { Args: { p_caller: string }; Returns: boolean }
       _finance_treasury_facts: { Args: never; Returns: Json }
       _finance_treasury_gate: { Args: never; Returns: string }
+      _governance_role_allowed: { Args: { _role: string }; Returns: boolean }
       _hold_account: { Args: { p_kind: string }; Returns: string }
       _is_approved_service_agent: {
         Args: { _user_id: string }
@@ -11319,6 +11320,7 @@ export type Database = {
       }
       _qa_node5_identity_a10: { Args: never; Returns: Json }
       _qa_node5_identity_a11: { Args: never; Returns: Json }
+      _qa_node5_identity_a12: { Args: never; Returns: Json }
       _qa_node5_identity_a2: { Args: never; Returns: Json }
       _qa_node5_identity_a3: { Args: never; Returns: Json }
       _qa_node5_identity_a4: { Args: never; Returns: Json }
@@ -11690,6 +11692,10 @@ export type Database = {
       }
       admin_get_driver_application_detail: {
         Args: { p_user_id: string }
+        Returns: Json
+      }
+      admin_governance_set_status: {
+        Args: { _reason?: string; _status: string; _target: string }
         Returns: Json
       }
       admin_group_risk_scorecard: {
@@ -12172,6 +12178,14 @@ export type Database = {
           transaction_id: string
         }[]
       }
+      admin_professional_offboard: {
+        Args: { _reason?: string; _target: string }
+        Returns: Json
+      }
+      admin_professional_restore: {
+        Args: { _reason?: string; _target: string; _type?: string }
+        Returns: Json
+      }
       admin_promotional_credit_treasury: { Args: never; Returns: Json }
       admin_record_om_receipt: {
         Args: {
@@ -12452,6 +12466,14 @@ export type Database = {
       admin_set_statement_status: {
         Args: { p_notes?: string; p_statement: string; p_status: string }
         Returns: undefined
+      }
+      admin_staff_role_grant: {
+        Args: { _reason?: string; _role: string; _target: string }
+        Returns: Json
+      }
+      admin_staff_role_revoke: {
+        Args: { _reason?: string; _role: string; _target: string }
+        Returns: Json
       }
       admin_unban_user:
         | {
@@ -15863,6 +15885,7 @@ export type Database = {
         Returns: Json
       }
       professional_merchant_active: { Args: { _uid: string }; Returns: boolean }
+      professional_offboard_blockers: { Args: { _user: string }; Returns: Json }
       provider_fee_schedule_at: {
         Args: { p_as_of?: string; p_provider?: string }
         Returns: {
