@@ -71,6 +71,7 @@ const ALLOWED = new Set([
   "_qa_node5_identity_a13",
   "_qa_node5_identity_a14",
   "_qa_node5_identity_final_remediation",
+  "_qa_node5_fr_live_reconcile",
 
 ]);
 
