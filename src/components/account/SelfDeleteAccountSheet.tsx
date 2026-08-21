@@ -57,7 +57,20 @@ export function SelfDeleteAccountSheet({ open, onOpenChange }: Props) {
     });
     setBusy(false);
     if (error) {
-      toast({ title: "Erreur", description: error.message });
+      const raw = error.message || "";
+      if (raw.includes("ACCOUNT_CLOSURE_BLOCKED")) {
+        const reasons = Object.entries(BLOCKER_LABELS)
+          .filter(([token]) => raw.includes(token))
+          .map(([, label]) => label);
+        toast({
+          title: "Suppression impossible pour le moment",
+          description: reasons.length
+            ? reasons.join(" · ")
+            : "Votre compte a encore des obligations en cours.",
+        });
+        return;
+      }
+      toast({ title: "Erreur", description: raw });
       return;
     }
     toast({ title: "Votre compte a été supprimé." });
