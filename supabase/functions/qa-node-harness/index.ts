@@ -92,6 +92,7 @@ Deno.serve(async (req) => {
   const qaTokens = [
     (Deno.env.get("QA_NODE_HARNESS_TOKEN") ?? "").trim(),
     (Deno.env.get("QA_NODE_HARNESS_TOKEN_ALT") ?? "").trim(),
+    (Deno.env.get("QA_NODE_HARNESS_TOKEN_CERT") ?? "").trim(),
   ].filter((t) => t.length > 0);
   const presented = (req.headers.get("x-qa-token") ?? "").trim();
   const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
