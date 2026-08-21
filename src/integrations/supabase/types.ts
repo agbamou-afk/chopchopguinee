@@ -1202,6 +1202,62 @@ export type Database = {
         }
         Relationships: []
       }
+      dormant_closed_account_liabilities: {
+        Row: {
+          amount_gnf: number
+          classification_reason: string | null
+          classified_at: string
+          created_at: string
+          currency: string
+          id: string
+          party_type: Database["public"]["Enums"]["party_type"]
+          settled_at: string | null
+          settlement_evidence_ref: string | null
+          state: string
+          updated_at: string
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          amount_gnf: number
+          classification_reason?: string | null
+          classified_at?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          party_type: Database["public"]["Enums"]["party_type"]
+          settled_at?: string | null
+          settlement_evidence_ref?: string | null
+          state?: string
+          updated_at?: string
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          amount_gnf?: number
+          classification_reason?: string | null
+          classified_at?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          party_type?: Database["public"]["Enums"]["party_type"]
+          settled_at?: string | null
+          settlement_evidence_ref?: string | null
+          state?: string
+          updated_at?: string
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dormant_closed_account_liabilities_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: true
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_applications: {
         Row: {
           created_at: string
@@ -10526,6 +10582,10 @@ export type Database = {
         }
         Returns: Json
       }
+      _dormant_liability_classify: {
+        Args: { _reason: string; _user: string }
+        Returns: Json
+      }
       _driver_capability_lane_gate: {
         Args: { _user: string }
         Returns: undefined
@@ -11372,6 +11432,7 @@ export type Database = {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
       }
+      _qa_node5_finance_dormant_liability: { Args: never; Returns: Json }
       _qa_node5_fr_cleanup: {
         Args: { p_ids: string[]; p_ride: string }
         Returns: undefined
@@ -11737,6 +11798,19 @@ export type Database = {
       admin_disable_repas_promotion: {
         Args: { p_id: string; p_reason: string }
         Returns: Json
+      }
+      admin_dormant_liabilities: {
+        Args: never
+        Returns: {
+          amount_gnf: number
+          classified_at: string
+          currency: string
+          party_type: Database["public"]["Enums"]["party_type"]
+          settled_at: string
+          state: string
+          user_id: string
+          wallet_id: string
+        }[]
       }
       admin_driver_group_stats: {
         Args: { p_from?: string; p_group?: string; p_to?: string }
