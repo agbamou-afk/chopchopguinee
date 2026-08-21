@@ -15835,6 +15835,7 @@ export type Database = {
         Args: { _reason?: string }
         Returns: Json
       }
+      professional_merchant_active: { Args: { _uid: string }; Returns: boolean }
       provider_fee_schedule_at: {
         Args: { p_as_of?: string; p_provider?: string }
         Returns: {

@@ -62,6 +62,7 @@ const ALLOWED = new Set([
   "_qa_node5_identity_a4",
   "_qa_node5_identity_a5",
   "_qa_node5_identity_a6",
+  "_qa_node5_identity_a7",
 ]);
 
 
