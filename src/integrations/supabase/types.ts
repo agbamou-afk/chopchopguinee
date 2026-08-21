@@ -35,6 +35,48 @@ export type Database = {
         }
         Relationships: []
       }
+      account_access_terminations: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          reason: string | null
+          requested_at: string
+          source: string
+          status: string
+          terminated_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          reason?: string | null
+          requested_at?: string
+          source: string
+          status?: string
+          terminated_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          reason?: string | null
+          requested_at?: string
+          source?: string
+          status?: string
+          terminated_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       account_bans: {
         Row: {
           banned_at: string
@@ -10285,6 +10327,10 @@ export type Database = {
       }
     }
     Functions: {
+      _account_access_terminate_enqueue: {
+        Args: { _reason?: string; _source: string; _target: string }
+        Returns: undefined
+      }
       _account_closure_blockers: {
         Args: { _mode: string; _user: string }
         Returns: Json
@@ -11326,6 +11372,27 @@ export type Database = {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
       }
+      _qa_node5_fr_cleanup: {
+        Args: { p_ids: string[]; p_ride: string }
+        Returns: undefined
+      }
+      _qa_node5_fr_fixtures: {
+        Args: {
+          p_d: string
+          p_fin: string
+          p_god: string
+          p_ids: string[]
+          p_liv: string
+          p_m: string
+          p_phone: string
+          p_ride: string
+          p_store: string
+          p_x: string
+        }
+        Returns: undefined
+      }
+      _qa_node5_fr_profiles: { Args: { p_ids: string[] }; Returns: undefined }
+      _qa_node5_fr_seed: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_node5_identity_a10: { Args: never; Returns: Json }
       _qa_node5_identity_a11: { Args: never; Returns: Json }
       _qa_node5_identity_a12: { Args: never; Returns: Json }
@@ -11339,6 +11406,7 @@ export type Database = {
       _qa_node5_identity_a7: { Args: never; Returns: Json }
       _qa_node5_identity_a8: { Args: never; Returns: Json }
       _qa_node5_identity_a9: { Args: never; Returns: Json }
+      _qa_node5_identity_final_remediation: { Args: never; Returns: Json }
       _qa_r6_err: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: string
@@ -11536,10 +11604,18 @@ export type Database = {
         }
         Returns: string
       }
+      account_access_termination_record: {
+        Args: { _error?: string; _ok: boolean; _target: string }
+        Returns: Json
+      }
       account_available_modes: { Args: { p_user: string }; Returns: string[] }
       account_closure_blockers: { Args: { _user?: string }; Returns: Json }
       account_mode_context: { Args: never; Returns: Json }
       account_mode_set: { Args: { p_mode: string }; Returns: Json }
+      admin_account_closure_reconcile: {
+        Args: { _reason?: string; _target: string }
+        Returns: Json
+      }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
@@ -12564,6 +12640,7 @@ export type Database = {
           upserted_segments: number
         }[]
       }
+      auth_uid_active: { Args: never; Returns: string }
       buyer_respond_marketplace_offer: {
         Args: { p_action: string; p_message?: string; p_offer_id: string }
         Returns: undefined
