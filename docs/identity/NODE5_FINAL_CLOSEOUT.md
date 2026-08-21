@@ -260,25 +260,83 @@ Codified in the database as:
 `dormant` liability of exactly **29 448 GNF** anchored to the original UUID.
 No ledger posting, wallet transaction or balance change occurred.
 
-**Certification measured after the last edit.**
+### A14 alignment (completed)
+
+`_qa_node5_identity_a14` previously encoded the pre-approval law (positive balance
+blocks closure). It has been re-expressed against the approved doctrine:
+
+- **N5A14.B2/B3** now assert that a positive balance is preserved as a dormant
+  liability and does **not** block closure.
+- **C2 / C7 / C11** unsafe-closure probes now use **held funds** (`held_gnf > 0`),
+  a currently canonical blocker, instead of a plain positive balance.
+- **D1** successful-closure scenario now closes an account holding 7 000 GNF with
+  zero held funds, proving the classification loop end-to-end.
+- Fixture cleanup purges `dormant_closed_account_liabilities` rows before wallets
+  so FK provenance (`ON DELETE RESTRICT`) is respected.
+
+No A14 authority, provenance or anonymization guarantee was weakened; only the
+finance-blocker fixture changed.
+
+### Pre-lock audit of the dormant-liability implementation
+
+- `anon` has **zero** access: no table grant, no execute on
+  `_dormant_liability_classify`, `_dcal_guard`, or `admin_dormant_liabilities`.
+- `authenticated` has read-only, staff-scoped access (ops/god/finance admin) via
+  RLS + the `admin_dormant_liabilities` RPC; no customer can read or write rows.
+- `trg_dcal_guard` rejects UPDATE/DELETE on liability rows (immutable provenance).
+- Real spend paths refuse dormant wallets: `_block_if_frozen`,
+  `_chop_pay_customer_hold_internal` and `_driver_exact_hold_place_internal` all
+  raise (`WALLET_NOT_ACTIVE` / `Wallet not active` / `ACCOUNT_RESTRICTED`).
+  New assertions **N5DL.F12/F13** prove a real hold attempt on the dormant wallet
+  is refused and leaves 29 448 GNF / held 0 exactly intact.
+- Settlement remains fail-closed (`dormant_liability_settlement_enabled` OFF, no
+  evidence rail): no row can move to `settled` today, by design.
+
+### Final certification (measured after the last edit)
 
 | Gate | Result |
 | --- | --- |
-| `_qa_node5_finance_dormant_liability` (new) | **61 / 0** |
+| `_qa_node5_finance_dormant_liability` | **63 / 0** |
+| `_qa_node5_identity_a14` | **114 / 0** |
 | `_qa_node5_identity_final_remediation` | **100 / 0** |
-| `_qa_node5_identity_a14` | 114 total, **15 failed** |
-| Full board | 59 suites, 6 113 raw, **15 failures** |
-| DB/security linter | 663 (+1 vs 662: `admin_dormant_liabilities`, staff read RPC) |
+| Full board | **59 suites, 6 115 raw / 6 037 canonical, 0 failures** |
+| `tsgo --noEmit` | exit 0 |
+| Vitest | 19 files / 155 tests pass |
+| Production build + PWA | built OK; 136 precache entries |
+| DB/security linter | **663** (+1 vs 662: `admin_dormant_liabilities` staff read RPC — accepted SD-executable class, no new exposure class) |
 
-### Remaining blocker (verdict stays HOLD)
+### Final live census (read-only)
 
-`_qa_node5_identity_a14` still encodes the **pre-approval** law — its
-blocked-closure fixture relies on a positive wallet balance being a blocker
-(`N5A14.B2/B3`, `C1–C6`, `C8`, `C11/C12`, `D1`, `D12/D13`, `D19`). These are
-stale assertions, not a regression of the new law: no A14 authority, provenance
-or anonymization guarantee failed. The suite must be re-expressed against the
-approved doctrine (blocked fixture switched to held funds / other active
-obligation) before Node 5 can be locked.
+| Metric | Measured |
+| --- | --- |
+| profiles / closed profiles | 1 534 / 6 |
+| active professional lanes | 8 (driver 2 / merchant 6) |
+| active governance accounts | 1 |
+| merchant stores / driver_profiles / wallets | 6 / 6 / 71 |
+| ledger postings / sum | 120 / 0 |
+| duplicate wallets / lanes / phones | 0 / 0 / 0 |
+| dormant liabilities | 1 dormant, 29 448 GNF, 0 settled |
+| closed accounts banned (sessions / refresh tokens) | 6 (0 / 0) |
+| enabled feature flags | 11 |
 
-**VERDICT: HOLD — finance law implemented and live-reconciled; A14 suite
-alignment outstanding.**
+**Queue hygiene (non-blocking).** `account_access_terminations` holds 34 rows:
+6 `terminated` for the real closed accounts, plus 28 inert QA-fixture rows
+(20 `pending`, 8 `failed`) whose `user_id` has no `profiles` or `auth.users`
+record. They carry no authority or access and are intentionally not deleted.
+
+## 9. FINAL VERDICT
+
+**NODE 5 — LOCKED.**
+
+Both closeout blockers are closed:
+
+1. **Auth termination — CLOSED.** 6 closed accounts banned until 2126-07-28,
+   0 sessions, 0 refresh tokens, `pgrst_pre_request` + `auth_uid_active()` bound.
+2. **Positive balance on a closed account — CLOSED by approved law.** The
+   29 448 GNF is recorded as an immutable dormant closed-account liability on the
+   original UUID, the wallet is frozen in place, no money moved, and no lawful
+   settlement rail is falsely claimed.
+
+This supersedes the earlier **HOLD** verdicts in §6 and §7 of this document,
+which are retained for chronology only. **A15 not started.**
+
