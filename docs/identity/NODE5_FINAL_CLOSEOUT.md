@@ -65,16 +65,22 @@ not a certification result.
 | `tsgo --noEmit` | exit 0 |
 | Vitest | 19 files / 155 tests, all pass |
 | Production build + PWA | built OK, generateSW, **136 precache entries** |
-| ESLint | **666 errors / 113 warnings (779 problems)** |
+| ESLint (frontend, informational) | 666 errors / 113 warnings (779 problems) |
 
-**Linter delta: +8 errors vs the accepted 658 baseline.** The delta is *not* attributable to
-any file A14 touched — `src/components/account/SelfDeleteAccountSheet.tsx`,
+**Linter category correction.** The accepted `658` baseline carried through A12–A14 is the
+**database/security linter** finding count (the known signed-in-executable `SECURITY DEFINER`
+finding class). It is **not** an `eslint` error count, and the two are **incomparable** — no
+`+8` delta exists or should ever be quoted. Because this closeout changed no DB object,
+function, policy or migration, the last certified DB-security-linter measurement stands at
+**A14 = 658**; it was **not re-run** in this session.
+
+The ESLint figure above is a separate, purely informational frontend measurement. None of it
+is attributable to A14: `src/components/account/SelfDeleteAccountSheet.tsx`,
 `src/integrations/supabase/types.ts` and `supabase/functions/qa-node-harness/index.ts` all lint
 clean (0 problems). Highest-error files are pre-existing:
 `src/lib/marche/products.ts` 22, `src/lib/merchant/operations.ts` 22,
 `src/components/admin/DriverGroupsV3Panels.tsx` 20, `src/lib/packages/api.ts` 19,
-`src/components/driver/DriverActiveTrip.tsx` 18. The +8 is recorded as an open bookkeeping
-delta (most likely a baseline counting-convention difference), not a Node 5 regression.
+`src/components/driver/DriverActiveTrip.tsx` 18.
 
 ## 4. Live census / non-drift (task F) — read-only
 
@@ -93,9 +99,16 @@ delta (most likely a baseline counting-convention difference), not a Node 5 regr
 | duplicate phones / non-canonical phones | 0 / 0 | 0 / 0 |
 | Node 5 QA fixture residue | 0 | 0 |
 | enabled feature flags | 11 | — |
-| wallets with held funds / total held | 3 / 104,758 GNF | operational, none on closed accounts |
 
-**No drift.**
+**No identity-axis drift.**
+
+**Held funds — concurrent operational state, not drift and not a Node 5 artifact.** The live
+database currently shows **3 CLIENT wallets holding 104,758 GNF total**. None belong to a
+closed account. This is ordinary operational finance activity occurring *after* A14; it must
+not be presented as identical to an A14 snapshot, as Node 5 fixture residue, or as a
+closed-account blocker. Pending `mission_financial_holds` attributable to the 6 deleted users
+remain **0**.
+
 
 ## 5. Closed-account audit (task G) — read-only, no PII
 
