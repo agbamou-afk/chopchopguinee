@@ -10891,6 +10891,11 @@ export type Database = {
         Returns: undefined
       }
       _marche_staple_require_admin: { Args: never; Returns: string }
+      _merchant_class_active: { Args: { _uid: string }; Returns: boolean }
+      _merchant_class_require: {
+        Args: { _ctx?: string; _uid: string }
+        Returns: undefined
+      }
       _merchant_payable_create_internal: {
         Args: {
           p_deduction_gnf?: number
@@ -10925,6 +10930,15 @@ export type Database = {
         }
         Returns: Json
       }
+      _merchant_restaurant_require: {
+        Args: {
+          _ctx?: string
+          _require_operational?: boolean
+          _restaurant_id: string
+          _uid: string
+        }
+        Returns: undefined
+      }
       _merchant_settlement_request_queue_internal: {
         Args: {
           p_amount_gnf: number
@@ -10957,6 +10971,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      _merchant_store_require: {
+        Args: {
+          _ctx?: string
+          _require_operational?: boolean
+          _store_id: string
+          _uid: string
+        }
+        Returns: undefined
       }
       _mission_cash_source: {
         Args: { _m: Database["public"]["Tables"]["missions"]["Row"] }
@@ -11280,6 +11303,7 @@ export type Database = {
       _qa_node5_identity_a4: { Args: never; Returns: Json }
       _qa_node5_identity_a5: { Args: never; Returns: Json }
       _qa_node5_identity_a6: { Args: never; Returns: Json }
+      _qa_node5_identity_a7: { Args: never; Returns: Json }
       _qa_r6_err: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: string
