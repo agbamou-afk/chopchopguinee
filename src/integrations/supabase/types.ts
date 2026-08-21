@@ -11432,6 +11432,7 @@ export type Database = {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
       }
+      _qa_node5_finance_dormant_liability: { Args: never; Returns: Json }
       _qa_node5_fr_cleanup: {
         Args: { p_ids: string[]; p_ride: string }
         Returns: undefined
