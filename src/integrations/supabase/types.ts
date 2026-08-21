@@ -15935,6 +15935,7 @@ export type Database = {
         Args: { p_payout_order_id: string; p_reason: string }
         Returns: Json
       }
+      pgrst_pre_request: { Args: never; Returns: undefined }
       process_driver_referral_milestone_jobs: {
         Args: { p_limit?: number }
         Returns: {
