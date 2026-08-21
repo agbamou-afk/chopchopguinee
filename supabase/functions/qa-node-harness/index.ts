@@ -78,12 +78,18 @@ Deno.serve(async (req) => {
   const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
   const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  const qaToken = (Deno.env.get("QA_NODE_HARNESS_TOKEN") ?? "").trim();
+  // Two accepted QA tokens so the certification runner can be rotated without
+  // invalidating the existing operator token.
+  const qaTokens = [
+    (Deno.env.get("QA_NODE_HARNESS_TOKEN") ?? "").trim(),
+    (Deno.env.get("QA_NODE_HARNESS_TOKEN_ALT") ?? "").trim(),
+  ].filter((t) => t.length > 0);
   const presented = (req.headers.get("x-qa-token") ?? "").trim();
   const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
 
   const admin = createClient(SUPABASE_URL, SERVICE);
-  let authorized = qaToken.length > 0 && presented === qaToken;
+  let authorized = presented.length > 0 && qaTokens.includes(presented);
+
   if (!authorized && !token) return json({ error: "Unauthorized" }, 401);
   authorized = authorized || token === SERVICE;
   if (!authorized) {
