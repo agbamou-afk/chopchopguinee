@@ -215,4 +215,17 @@ parallel subsystem and do **not** hand-edit rows.
 
 
 
+## 8. Docs-only correction record
+
+This revision corrects proof/remediation inaccuracies in the first closeout report
+(`9e6f4260…`), which is superseded. Corrections: linter category error (658 is the DB-security
+linter baseline, not ESLint — no `+8` delta); stale presence is not an active trip; the pending
+ride offer belongs to `fb8fcfb5`; authority stand-down must not wait on wallet settlement;
+no invented money disposition; closure-core re-run is blocked by `ACCOUNT_ALREADY_CLOSED` and is
+a design seam; auth-layer access termination is a required law; held funds are concurrent
+operational state. Verdict unchanged.
+
+No product code, DB schema, migration, function, policy, harness or live user row was changed.
+Commit SHA of this docs-only correction: recorded on commit; `git status --porcelain` clean.
+
 **A15 not started. Node 5 remains open at HOLD.**
