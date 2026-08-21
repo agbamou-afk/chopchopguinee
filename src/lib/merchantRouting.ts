@@ -33,10 +33,12 @@ export function clearMerchantIntent(): void {
   }
 }
 
-export async function persistMerchantAppMode(userId: string): Promise<void> {
-  await (supabase as any)
-    .from("user_preferences")
-    .upsert({ user_id: userId, app_mode: "merchant" }, { onConflict: "user_id" });
+/**
+ * Node 5 · A8: preference persistence goes through the validated RPC.
+ * The server degrades an unlawful merchant preference to "client".
+ */
+export async function persistMerchantAppMode(_userId: string): Promise<void> {
+  await (supabase as any).rpc("account_mode_set", { p_mode: "merchant" });
 }
 
 export async function resolveMerchantPostAuthRoute(

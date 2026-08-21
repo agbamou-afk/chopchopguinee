@@ -28,6 +28,8 @@ import { DRIVER_ONBOARDING_DONE_KEY, DRIVER_ONBOARDING_REPLAY_EVENT } from "@/co
 import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 import { SelfDeleteAccountSheet } from "@/components/account/SelfDeleteAccountSheet";
 import { useSwitchAppMode } from "@/hooks/useAppMode";
+import { ModeSwitcher } from "@/components/identity/ModeSwitcher";
+import { useAccountMode } from "@/hooks/useAccountMode";
 
 interface ProfileViewProps {
   isDriverMode: boolean;
@@ -56,6 +58,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
   const navigate = useNavigate();
   const { hasAny: isMerchant, store: merchantStore } = useMerchantIdentity();
   const switchAppMode = useSwitchAppMode();
+  const { canSwitch: canSwitchWorkspace } = useAccountMode();
   const isAuthed = !!user;
   const [deletionOpen, setDeletionOpen] = useState(false);
 
@@ -155,27 +158,35 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
         </motion.div>
       </div>
 
-      {/* Driver mode toggle */}
+      {/* Node 5 · A8 — single canonical workspace switcher (server-derived) */}
       <div className="px-4 mt-4 mb-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl p-4 shadow-card border border-border/60 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl gradient-wallet">
-              <Car className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="font-bold text-foreground">Mode Chauffeur</p>
-              <p className="text-sm text-muted-foreground">
-                {isDriver ? (isDriverMode ? "Activé" : "Désactivé") : "Rôle chauffeur requis"}
-              </p>
-            </div>
-          </div>
-          <Switch checked={isDriverMode} onCheckedChange={handleDriverToggle} disabled={!isDriver && !isDriverMode} />
-        </motion.div>
+        <ModeSwitcher />
       </div>
+
+      {/* Legacy driver toggle — only for accounts without a professional lane
+          switcher (kept so existing driver sessions never lose the control). */}
+      {!canSwitchWorkspace && (
+        <div className="px-4 mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl p-4 shadow-card border border-border/60 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl gradient-wallet">
+                <Car className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div>
+                <p className="font-bold text-foreground">Mode Chauffeur</p>
+                <p className="text-sm text-muted-foreground">
+                  {isDriver ? (isDriverMode ? "Activé" : "Désactivé") : "Rôle chauffeur requis"}
+                </p>
+              </div>
+            </div>
+            <Switch checked={isDriverMode} onCheckedChange={handleDriverToggle} disabled={!isDriver && !isDriverMode} />
+          </motion.div>
+        </div>
+      )}
 
       {/* Low-data mode toggle */}
       <div className="px-4 mb-4">
@@ -202,7 +213,7 @@ export function ProfileView({ isDriverMode, onToggleDriverMode }: ProfileViewPro
       {/* Menu */}
       <div className="px-4 pb-44">
         <div className="bg-card rounded-2xl shadow-card border border-border/60 overflow-hidden">
-          {isAuthed && (() => {
+          {isAuthed && !canSwitchWorkspace && (() => {
             const pending = isMerchant && merchantStore?.onboarding_status && merchantStore.onboarding_status !== "approved";
             const approved = isMerchant && merchantStore?.onboarding_status === "approved";
             const label = !isMerchant

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { clearMerchantIntent, hasStoredMerchantIntent } from "@/lib/merchantRouting";
+import { fetchAccountModeContext, setAccountMode } from "@/lib/identity/accountMode";
 import { toast } from "@/hooks/use-toast";
 
 export type AppMode = "client" | "merchant" | "driver";
@@ -47,17 +47,18 @@ export function useAppMode() {
       return;
     }
     (async () => {
-      const { data } = await (supabase as any)
-        .from("user_preferences")
-        .select("app_mode")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (data?.app_mode === "merchant" || data?.app_mode === "client" || data?.app_mode === "driver") {
-        setPersistedMode(data.app_mode);
-        setModeState(data.app_mode);
-        try { window.localStorage.setItem(LS_KEY, data.app_mode); } catch { /* noop */ }
-      } else {
-        setPersistedMode(null);
+      // Node 5 · A8: the server returns the EFFECTIVE mode, i.e. the stored
+      // preference already validated against the active professional lane.
+      // A stale professional preference degrades to "client" server-side.
+      const ctx = await fetchAccountModeContext();
+      const effective = ctx.effectiveMode;
+      setPersistedMode(effective);
+      setModeState(effective);
+      try { window.localStorage.setItem(LS_KEY, effective); } catch { /* noop */ }
+      if (readSessionOverride() && !ctx.availableModes.includes(readSessionOverride() as AppMode)) {
+        // an unlawful local override can never survive a server read
+        clearAppModeSessionOverride();
+        setSessionOverride(null);
       }
       setLoading(false);
     })();
@@ -72,9 +73,15 @@ export function useAppMode() {
     setSessionOverride(next);
     try { window.localStorage.setItem(LS_KEY, next); } catch { /* noop */ }
     if (!user) return;
-    await (supabase as any)
-      .from("user_preferences")
-      .upsert({ user_id: user.id, app_mode: next }, { onConflict: "user_id" });
+    const res = await setAccountMode(next);
+    if (res.refused) {
+      // server refused the professional workspace — realign the client
+      setModeState(res.effectiveMode);
+      setPersistedMode(res.effectiveMode);
+      setSessionOverride(res.effectiveMode);
+      try { window.sessionStorage.setItem(SESSION_OVERRIDE_KEY, res.effectiveMode); } catch { /* noop */ }
+      try { window.localStorage.setItem(LS_KEY, res.effectiveMode); } catch { /* noop */ }
+    }
   }, [user]);
 
   // Effective mode used by routing/redirect logic. Override wins until cleared
@@ -99,11 +106,15 @@ export function clearAppModeSessionOverride() {
  *   2. clear merchant signup intent SYNC
  *   3. align driver-mode choice SYNC
  *   4. update local React caches SYNC
- *   5. fire-and-forget backend upsert (no await before navigation)
+ *   5. fire-and-forget validated backend write (no await before navigation)
  *   6. navigate with explicit `?mode=` query (Index defensively honors it)
  *
- * The navigation MUST NOT wait on Supabase. The session override + URL
+ * The navigation MUST NOT wait on the backend. The session override + URL
  * query are enough to keep Index from bouncing back to /merchant/hub.
+ *
+ * Node 5 · A8: persistence goes through the validated server RPC, never a
+ * direct preference write — an unlawful professional mode is degraded to
+ * "client" by the server and by the preference guard.
  */
 export function switchAppModeSync(next: AppMode, userId: string | null | undefined) {
   try { window.sessionStorage.setItem(SESSION_OVERRIDE_KEY, next); } catch { /* noop */ }
@@ -116,9 +127,11 @@ export function switchAppModeSync(next: AppMode, userId: string | null | undefin
   }
   if (userId) {
     // fire-and-forget — UI must not wait on the round-trip
-    void (supabase as any)
-      .from("user_preferences")
-      .upsert({ user_id: userId, app_mode: next }, { onConflict: "user_id" });
+    void setAccountMode(next).then((res) => {
+      if (!res.refused) return;
+      try { window.sessionStorage.setItem(SESSION_OVERRIDE_KEY, res.effectiveMode); } catch { /* noop */ }
+      try { window.localStorage.setItem(LS_KEY, res.effectiveMode); } catch { /* noop */ }
+    });
   }
   if (import.meta.env.DEV) {
     // eslint-disable-next-line no-console
