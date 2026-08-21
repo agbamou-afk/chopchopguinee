@@ -11151,6 +11151,23 @@ export type Database = {
         Args: { p_actor: string; p_evidence_id: string; p_order_id: string }
         Returns: Json
       }
+      _professional_actor_class: { Args: { _user: string }; Returns: string }
+      _professional_conflict_scan: {
+        Args: never
+        Returns: {
+          active_type: string
+          classification: string
+          conflict_code: string
+          driver_artifacts: Json
+          finance: Json
+          merchant_assets: Json
+          recommended_action: string
+          released_types: string[]
+          role_signals: string[]
+          severity: string
+          subject_user_id: string
+        }[]
+      }
       _professional_identity_claim: {
         Args: { p_source?: string; p_type: string; p_user_id: string }
         Returns: {
@@ -11222,6 +11239,7 @@ export type Database = {
         Args: { p_amount: number; p_driver: string }
         Returns: number
       }
+      _qa_a10_codes: { Args: { p_user: string }; Returns: string[] }
       _qa_a2_cleanup: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_a3_cleanup: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_a4_cleanup: { Args: { p_ids: string[] }; Returns: undefined }
@@ -11299,6 +11317,7 @@ export type Database = {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: number
       }
+      _qa_node5_identity_a10: { Args: never; Returns: Json }
       _qa_node5_identity_a2: { Args: never; Returns: Json }
       _qa_node5_identity_a3: { Args: never; Returns: Json }
       _qa_node5_identity_a4: { Args: never; Returns: Json }
@@ -15832,6 +15851,7 @@ export type Database = {
         }
       }
       professional_active_type: { Args: { _user: string }; Returns: string }
+      professional_identity_conflict_audit: { Args: never; Returns: Json }
       professional_identity_current: { Args: never; Returns: Json }
       professional_identity_release_eligibility: {
         Args: { _user?: string }
