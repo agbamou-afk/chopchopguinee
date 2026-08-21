@@ -11304,6 +11304,7 @@ export type Database = {
       _qa_node5_identity_a5: { Args: never; Returns: Json }
       _qa_node5_identity_a6: { Args: never; Returns: Json }
       _qa_node5_identity_a7: { Args: never; Returns: Json }
+      _qa_node5_identity_a8: { Args: never; Returns: Json }
       _qa_r6_err: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: string
@@ -11501,6 +11502,9 @@ export type Database = {
         }
         Returns: string
       }
+      account_available_modes: { Args: { p_user: string }; Returns: string[] }
+      account_mode_context: { Args: never; Returns: Json }
+      account_mode_set: { Args: { p_mode: string }; Returns: Json }
       admin_adjust_agent_float: {
         Args: {
           p_agent_user_id: string
