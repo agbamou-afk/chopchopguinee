@@ -39,3 +39,20 @@ through Node 5 A3): **4,723 assertions · 0 failed**. Vitest 155/155, typecheck 
 with honest French copy. Client gating is convenience only — the server is the authority.
 
 Docs: `docs/identity/NODE5_A3_PROFESSIONAL_LANE_CLAIM.md`
+
+## Post-A4 QA compatibility note (2026-08-21)
+
+A3's governing law is unchanged. A4 superseded two *implementation details* A3 had
+asserted, so exactly two A3 assertions were refreshed (QA only, no product change):
+
+- Driver claim provenance moved from the artifact-trigger path to an explicit
+  `driver_apply` composition (`_professional_lane_require(uid,'driver','driver_apply')`
+  runs before the artifact write, so re-entry after release reclaims correctly).
+  `N5A3.B6` now proves provenance + `claimed_at <= driver_profiles.created_at`.
+- Merchant store ownership uniqueness moved from full uniqueness
+  (`merchant_stores_owner_user_id_key`) to partial uniqueness
+  (`merchant_stores_owner_active_uidx`, `WHERE status <> 'archived'`), preserving
+  abandoned store history. `N5A3.D5` now asserts the partial predicate semantically,
+  and new `N5A3.D5c` proves archived history never blocks lawful re-entry.
+
+A3 total: 118 → 119 (one added assertion, none removed). Board through A4: 4,779 / 0.
