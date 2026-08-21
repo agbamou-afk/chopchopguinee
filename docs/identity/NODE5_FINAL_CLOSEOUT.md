@@ -1,22 +1,21 @@
 # NODE 5 — FINAL CLOSEOUT / CONSTITUTIONAL CHARTER
 
-Closeout pass type: **Step A docs-only refresh**. No product code, DB schema, migration,
+Closeout pass type: **Step E final verdict + documentation**. No product code, DB schema, migration,
 policy, function, flag, pricing, payout law, harness credential or live user row was changed
 in this edit. Only `docs/identity/NODE5_FINAL_CLOSEOUT.md` is mutated.
 
 ## 0. Chronology (do not conflate)
 
-| Marker | SHA | Meaning |
+| Marker | SHA / Date | Meaning |
 | --- | --- | --- |
 | A13 certification code HEAD | `a12a999dc5b46ae0674f4b64c767bf8349884566` | pre-documentation/internal closeout |
 | A13 closeout report commit | `80b5e406f0f73081e4bf18621e7bdc8ab5a0852d` | Lovable closeout edit |
 | A13 bookkeeping correction | `20aabd91dc322e0735816fa1522e07b2da875b95` | docs-only; also A14 starting HEAD |
 | A14 certification code HEAD | `fe72ef0df7137c36bc805e06eb51b481cf693cc8` | A14 implementation + docs |
-| **Node 5 final-closeout starting HEAD (code certification)** | `fe72ef0df7137c36bc805e06eb51b481cf693cc8` | `git status --porcelain` clean |
-| First closeout report commit | `9e6f4260…` | docs-only; **superseded** by the correction below |
-| Docs-only correction commit | `20aabd91dc322e0735816fa1522e07b2da875b95` | superseded correction; verdict HOLD |
-| **Final remediation code HEAD** | recorded in §8 | remediation pass: `auth_uid_active()`, `pgrst_pre_request`, `account_access_terminations`, `admin_account_closure_reconcile()` |
-| **This Step A docs-only refresh** | recorded in §8 | current document; verdict still HOLD |
+| Node 5 final-closeout starting HEAD | `fe72ef0df7137c36bc805e06eb51b481cf693cc8` | code certified; `git status --porcelain` clean |
+| Step A docs-only refresh | `5ee357d32df5421e9d1fb34012f568e5964177aa` | superseded pre-remediation closeout update |
+| Step D certification HEAD | `9a16d119…` | 58 suites, 6,052/0 PASS; no new blocker beyond known finance-law gap |
+| **Step E final verdict edit** | after `9a16d119…` | current document; verdict **HOLD** |
 
 This document is a docs-only artifact created **after** `fe72ef0d`. Its own commit SHA is by
 definition later than the code-certification HEAD and must never be quoted as the certification HEAD.
@@ -59,50 +58,61 @@ The final remediation pass introduced:
 
 Measured results:
 - `_qa_node5_identity_final_remediation` — **100 / 100 PASS**.
-- Full board — **6,052 assertions / 0 failures**.
+- Full board — **6,052 raw assertions / 5,974 canonical assertions / 0 failures**.
 - `tsgo --noEmit` — exit 0.
-- Production build + PWA — built OK.
+- Production build + PWA — built OK; generateSW produced 136 precache entries.
 - Temporary QA `RUN` harness token slot and one-time reconciliation runner — **removed**.
 
-## 3. Local gates / security linter (measured this pass)
+## 3. Local gates / security linter (Step D audit complete)
 
 | Gate | Result |
 | --- | --- |
 | `tsgo --noEmit` | exit 0 |
 | Vitest | 19 files / 155 tests, all pass |
-| Production build + PWA | built OK |
+| Production build + PWA | built OK; 136 precache entries |
 | DB / security linter | **662 findings** |
 
 **Linter baseline.** The accepted A14 baseline is **658 findings**. The current remediation
-surface added **+4 findings**, yielding **662**. This +4 delta is **not yet accepted as a new
-baseline**. Step D will audit the delta and decide acceptance or reduction before any LOCK.
+surface added **+4 findings**, yielding **662**. Step D audited the exact attribution:
+
+1. `public.auth_uid_active()` — signed-in SECURITY DEFINER executable.
+2. `public.admin_account_closure_reconcile(uuid, text)` — signed-in SECURITY DEFINER executable.
+3. `public.pgrst_pre_request()` — anonymous SECURITY DEFINER executable.
+4. `public.pgrst_pre_request()` — signed-in SECURITY DEFINER executable.
+
+All four are in the previously accepted SECURITY DEFINER-executable warning class and are
+required by the remediation design. No new exposure class was introduced. Therefore,
+**662 is recorded as the post-remediation measured/accepted security-linter baseline for this
+frozen remediation state**. This acceptance does not change the Node 5 verdict, which remains
+**HOLD** on the separate finance-law blocker described below.
 
 The ESLint 666/113 figure is a separate, purely informational frontend measurement and is not
 the same metric as the DB/security linter.
 
 ## 4. Live census / non-drift (read-only, post-remediation)
 
-| Metric | Measured | Baseline |
+| Metric | Measured | Notes |
 | --- | --- | --- |
-| profiles | 1,534 | 1,534 |
-| active professional lanes | 12 (driver 6 / merchant 6) | 12 (6/6) |
-| active governance accounts | 1 | 1 |
-| lawful overlap (governance ∧ lane) | 0 | 0 |
-| merchant stores | 6 | 6 |
-| driver_profiles | 6 | 6 |
-| wallets | 71 (client 61 / driver 5 / merchant 4 / master 1) | identical |
-| ledger postings / sum | 120 / 0 | 120 / 0 |
-| duplicate canonical wallets | 0 | 0 |
-| duplicate active lanes | 0 | 0 |
-| duplicate phones / non-canonical phones | 0 / 0 | 0 / 0 |
-| Node 5 QA fixture residue | 0 | 0 |
+| profiles | 1,534 | — |
+| closed profiles | 6 | — |
+| active professional lanes | **8** (driver **2** / merchant **6**) | 4 legacy closed driver lanes were lawfully released; expected remediation reduction, not drift |
+| active governance accounts | 1 | — |
+| lawful overlap (governance ∧ lane) | 0 | — |
+| merchant stores | 6 | — |
+| driver_profiles | 6 | — |
+| wallets | 71 (incl. master 1) | — |
+| ledger postings / sum | 120 / 0 | — |
+| duplicate canonical wallets | 0 | — |
+| duplicate active lanes | 0 | — |
+| duplicate phones / non-canonical phones | 0 / 0 | — |
 | enabled feature flags | 11 | — |
-| active professional lanes on closed accounts | **0** | — |
-| capability roles on closed accounts | **0** | — |
-| approved/non-offline driver rows on closed accounts | **0** | — |
-| pending ride offers on closed accounts | **0** | — |
-| recovery material on closed accounts | **0** | — |
-| active governance rows on closed accounts | **0** | — |
+| active professional lanes on closed accounts | 0 | — |
+| capability roles on closed accounts | 0 | — |
+| approved/non-offline driver rows on closed accounts | 0 | — |
+| pending ride offers on closed accounts | 0 | — |
+| recovery material on closed accounts | 0 | — |
+| active governance rows on closed accounts | 0 | — |
+| banned closed accounts with 0 sessions / 0 refresh tokens | 6 / 6 / 6 | Step B proven |
 
 **No identity-axis drift.** The live database currently shows 3 CLIENT wallets holding
 104,758 GNF total. None belong to a closed account. Pending `mission_financial_holds`
@@ -110,87 +120,110 @@ attributable to the 6 deleted users remain **0**.
 
 ## 5. Closed-account audit (read-only, no PII, post-remediation)
 
-6 profiles carry `account_status='deleted'`. After the final remediation pass:
+6 profiles carry `account_status='deleted'`. After the final remediation pass and Step B auth
+termination:
 
-| Ref (UUID prefix) | Lane | Driver status | Presence | user_roles | Wallet balance | Held | auth user | Banned |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `19fe6432` | none | — | `offline` | 0 | 0 | 0 | exists | **unproven** |
-| `fb8fcfb5` | none | — | `offline` | 0 | **29,448 GNF** | 0 | exists | **unproven** |
-| `4c32b26c` | none | — | `offline` | 0 | 0 | 0 | exists | **unproven** |
-| `8e8023b5` | none | — | `offline` | 0 | 0 | 0 | exists | **unproven** |
-| `691afc07` | none | — | — | 0 | 0 | 0 | exists | **unproven** |
-| `d980534f` | none | — | — | 0 | 0 | 0 | exists | **unproven** |
+| Ref (UUID prefix) | Lane | Driver status | Presence | user_roles | Wallet balance | Held | auth user | Sessions | Refresh tokens | Banned |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `19fe6432` | none | — | `offline` | 0 | 0 | 0 | exists | 0 | 0 | until 2126-07-28 |
+| `fb8fcfb5` | none | — | `offline` | 0 | **29,448 GNF** | 0 | exists | 0 | 0 | until 2126-07-28 |
+| `4c32b26c` | none | — | `offline` | 0 | 0 | 0 | exists | 0 | 0 | until 2126-07-28 |
+| `8e8023b5` | none | — | `offline` | 0 | 0 | 0 | exists | 0 | 0 | until 2126-07-28 |
+| `691afc07` | none | — | — | 0 | 0 | 0 | exists | 0 | 0 | until 2126-07-28 |
+| `d980534f` | none | — | — | 0 | 0 | 0 | exists | 0 | 0 | until 2126-07-28 |
 
 All active professional lanes, capability roles, approved driver statuses, and pending ride
 offers for these 6 accounts have been released through the remediation RPCs. Four professional
 identities were released with timestamps; history and provenance remain intact. The ledger
 posting count (120) and sum (0) are unchanged.
 
-**Auth layer.** The 6 `auth.users` rows still exist and carry credentials. The `account-access-
-termination-worker` is the designated mechanism to ban the accounts and revoke sessions. That
-step has **not yet been executed or proven** in this closeout; the "Banned" column above is
-therefore marked **unproven**.
+**Auth layer (Blocker 1 — CLOSED).** The `account-access-termination-worker` was invoked via
+the sanctioned service-role path for the 6 real closed accounts. Each `auth.users` row is now
+banned until `2126-07-28`, with **0 active sessions** and **0 live refresh tokens**. The
+`account_access_terminations` queue rows for these 6 users are `status = 'terminated'`,
+`attempts = 1`, `last_error = null`. `pgrst_pre_request` remains bound and `auth_uid_active()`
+remains present. No live, non-deleted account is banned.
 
-**Queue hygiene.** `account_access_terminations` currently has **14 pending rows**: 6 rows for
-the real closed accounts, plus **8 profile-less rows** left by QA fixture teardown. These 8 rows
-have no corresponding `profiles` record and therefore cannot hold any active authority or
-access. They are a queue-cleanliness artifact, not a third architectural blocker, unless analysis
-in Step B proves they create active access. The worker must handle them as already inaccessible
-and resolve them without treating missing profiles as an error.
+**Finance layer (Blocker 2 — OPEN).** The `fb8fcfb5…` driver wallet retains exactly **29,448 GNF**
+(held 0). The balance is the sum of two completed ride-earning backfill credits posted on
+2026-06-11: 4,299 GNF + 25,149 GNF. Current canonical policy classifies driver operating
+balance as a customer liability. Driver cashout/payout and reconciliation rails are OFF;
+payout origination is self-service; no escheat/dormant/unclaimed balance doctrine exists. The
+Step C audit concluded **NO_LAWFUL_EXISTING_PATH**: no existing finance primitive can clear this
+balance without violating current finance law or impersonating a banned user. No money was moved.
 
-## 6. Verdict (task H)
+**Queue hygiene.** `account_access_terminations` currently has **18 total rows**: 6 terminated
+rows for the real closed accounts, plus 12 inert profile-less/no-auth-user QA artifacts (8 marked
+`failed` + 4 new pending from certification fixture enqueue behavior). These 12 rows have no
+corresponding `profiles` or `auth.users` record and therefore hold no authority or access. They
+are **QA hygiene debt**, not a security blocker, and must be corrected in future QA maintenance
+without reopening Node 5 law. They are intentionally **not deleted** in this closeout.
 
-**HOLD — NODE 5 IS NOT LOCKED.**
+## 6. Verdict (Step E)
 
-Two blockers remain after the final remediation pass:
+**HOLD — NODE 5 SECURITY/AUTHORITY CLEAN; ONE FINANCE-LAW BLOCKER REMAINS.**
 
-1. **Auth termination unproven.** The 6 closed accounts have not yet been proven banned and
-   their sessions/refresh tokens revoked. `pgrst_pre_request` and `auth_uid_active()` close the
-   already-issued access-token window for RLS/RPC surfaces, but the canonical Supabase auth layer
-   termination step is not yet executed or evidenced.
-2. **29,448 GNF balance on `fb8fcfb5` with no proven lawful disposition.** This one closed
-   account still holds a wallet balance. No existing finance primitive has been proven as a lawful
-   path for this specific involuntary balance. The balance remains correctly blocked from full
-   closure.
+Blocker status after Steps A–D:
+
+1. **Auth termination — CLOSED.** Step B proved the 6 closed accounts are banned in Supabase
+   auth until 2126-07-28 with zero sessions and zero live refresh tokens. The queue reflects
+   `terminated` for all 6 real users.
+2. **29,448 GNF balance on `fb8fcfb5…` — OPEN.** No existing finance primitive provides a
+   lawful path for this involuntary positive balance under current canonical policy. The balance
+   is a real customer liability that cannot be written off, swept, or paid out without a new
+   finance-law doctrine.
 
 Explicitly NOT blockers: no active professional lanes, roles, approved drivers, pending ride
 offers, recovery material, governance rows, holds, cashouts, freezes, cancellation debts, or
-in-flight orders exist for the 6 closed users. The 8 profile-less queue rows are hygiene, not
-active authority, unless Step B proves otherwise.
+in-flight orders exist for the 6 closed users. The 12 inert queue rows are QA hygiene, not active
+authority.
 
-## 7. Next sequential steps (B → E)
+## 7. Condition to unlock Node 5
 
-Follow the accepted plan. Do not start A15.
+Node 5 can be **LOCKED** only after the following, executed in the finance domain:
 
-- **Step B — Prove auth termination.** Invoke the `account-access-termination-worker` against the
-  6 real closed accounts using a sanctioned service-role or god_admin/operations_admin session.
-  Capture evidence: ban status, zero sessions/refresh tokens per UUID, and queue resolution. If
-  invocation is impossible, Blocker 1 stays open.
-- **Step C — Finance-law audit (audit-only).** Examine the 29,448 GNF against existing primitives
-  (`wallet_internal_transfer`, `wallet_admin_credit`, refund paths). Identify a lawful disposition
-  only if it satisfies ledger balance, provenance, and involuntary-authority requirements. If no
-  existing path is lawful, Blocker 2 stays open.
-- **Step D — Final micro-certification.** Rerun the full board (6,052 assertions) and audit the
-  DB/security linter 662 vs 658 delta. Accept the +4 as a new baseline only if it represents
-  unavoidable remediation-surface exposure and no reductions are possible.
-- **Step E — Verdict.** **LOCK** only if B and C are proven closed and D is green. Otherwise
-  **HOLD** with residual blockers documented.
+- Adopt a deliberate finance policy/law for positive balances on closed accounts (or another
+  lawful resolution path) that is approved by project governance.
+- Implement that policy with balanced ledger entries, full provenance, and appropriate QA
+  coverage.
+- Rerun only the necessary Node 5 closeout verification to confirm the finance blocker is closed
+  and no new identity-axis drift was introduced.
 
-## 8. Docs-only correction record (Step A)
+This document does not propose or invent that policy. Until it is implemented and proven, the
+Node 5 verdict remains **HOLD**.
 
-This revision refreshes the closeout document to reflect the post-remediation state:
-- Added final remediation certification (§2) and updated suite counts (100/100, 6,052/0).
-- Updated live census (§4) with zero active authority on closed accounts.
-- Updated closed-account table (§5) to show released lanes, unproven auth termination, and the
-  14-row queue hygiene note.
-- Updated verdict (§6) to two residual blockers, removing stale pre-remediation items.
-- Added next steps B→E (§7).
-- Kept linter at 662 with the explicit note that the +4 delta is **not yet accepted**.
+## 8. Next steps beyond Node 5
 
-No product code, DB schema, migration, function, policy, harness, harness credential, or live
-user row was changed in this Step A refresh.
+- **A15 not started.** Node 5 is the current final identity milestone.
+- QA hygiene cleanup of the 12 inert `account_access_terminations` rows should be performed as
+  routine maintenance, without reopening Node 5 law.
 
-Commit SHA of this Step A refresh: recorded on commit; `git status --porcelain` expected clean
-except for this document.
+## 9. Docs-only correction record (Step E)
 
-**A15 not started. Node 5 remains open at HOLD.**
+This final revision updates the closeout document to reflect the post-Step B/C/D state:
+- Marked Blocker 1 (auth termination) **CLOSED** with exact proof boundary.
+- Recorded Step C finance provenance and the `NO_LAWFUL_EXISTING_PATH` conclusion without
+  proposing or implementing an unapproved finance law.
+- Recorded Step D certification board (58 suites, 6,052 raw / 5,974 canonical / 0 failures),
+  `tsgo` clean, Vitest 155/155, build + PWA 136 precache entries.
+- Recorded the DB/security linter at 662 with exact +4 attribution and accepted it as the
+  post-remediation baseline for the frozen remediation state.
+- Updated the live census to **8 active lanes (driver 2 / merchant 6)** and explained the
+  4-lane reduction as intended legacy closed-account reconciliation.
+- Updated the closed-account table to show banned-until-2126-07-28, 0 sessions, 0 refresh tokens.
+- Recorded queue hygiene separately: 18 total rows (6 terminated + 12 inert QA artifacts).
+- Set final verdict to **HOLD — NODE 5 SECURITY/AUTHORITY CLEAN; ONE FINANCE-LAW BLOCKER REMAINS**.
+- Documented the exact unlock condition in §7.
+- Confirmed A15 not started.
+
+No product code, DB schema, migration, function, policy, edge function, harness, harness
+credential, or live user row was changed in this Step E edit.
+
+## 10. Repo state at Step E
+
+- Working HEAD at start of this edit: `9a16d119…` ("Update plan"), clean tree.
+- Files changed since Step A (`5ee357d3…`) before this edit: only Lovable plan metadata/docs
+  chronology; no product/DB/DB files changed.
+- After this edit, the only modified file is `docs/identity/NODE5_FINAL_CLOSEOUT.md`.
+- `git status` is expected to be clean after the platform commits this docs-only change.
+- **A15 not started.**
