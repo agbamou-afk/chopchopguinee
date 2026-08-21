@@ -10476,6 +10476,11 @@ export type Database = {
         Args: { _user: string }
         Returns: undefined
       }
+      _driver_class_active: { Args: { _uid: string }; Returns: boolean }
+      _driver_class_require: {
+        Args: { _ctx?: string; _uid: string }
+        Returns: undefined
+      }
       _driver_exact_hold_place_internal: {
         Args: {
           p_amount: number
@@ -10514,6 +10519,10 @@ export type Database = {
           p_source_module: string
         }
         Returns: Json
+      }
+      _driver_operational_require: {
+        Args: { _capability?: string; _ctx?: string; _uid: string }
+        Returns: undefined
       }
       _envoyer_enabled: { Args: never; Returns: boolean }
       _finance_evidence_claim: {
@@ -11270,6 +11279,7 @@ export type Database = {
       _qa_node5_identity_a3: { Args: never; Returns: Json }
       _qa_node5_identity_a4: { Args: never; Returns: Json }
       _qa_node5_identity_a5: { Args: never; Returns: Json }
+      _qa_node5_identity_a6: { Args: never; Returns: Json }
       _qa_r6_err: {
         Args: { p_role: string; p_sql: string; p_uid: string }
         Returns: string
