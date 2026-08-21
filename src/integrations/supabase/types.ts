@@ -10285,6 +10285,14 @@ export type Database = {
       }
     }
     Functions: {
+      _account_closure_blockers: {
+        Args: { _mode: string; _user: string }
+        Returns: Json
+      }
+      _account_closure_core: {
+        Args: { _mode: string; _reason: string; _target: string }
+        Returns: Json
+      }
       _anonymize_user_core: {
         Args: { _suspended_reason: string; _target: string }
         Returns: Json
@@ -11322,6 +11330,7 @@ export type Database = {
       _qa_node5_identity_a11: { Args: never; Returns: Json }
       _qa_node5_identity_a12: { Args: never; Returns: Json }
       _qa_node5_identity_a13: { Args: never; Returns: Json }
+      _qa_node5_identity_a14: { Args: never; Returns: Json }
       _qa_node5_identity_a2: { Args: never; Returns: Json }
       _qa_node5_identity_a3: { Args: never; Returns: Json }
       _qa_node5_identity_a4: { Args: never; Returns: Json }
@@ -11528,6 +11537,7 @@ export type Database = {
         Returns: string
       }
       account_available_modes: { Args: { p_user: string }; Returns: string[] }
+      account_closure_blockers: { Args: { _user?: string }; Returns: Json }
       account_mode_context: { Args: never; Returns: Json }
       account_mode_set: { Args: { p_mode: string }; Returns: Json }
       admin_adjust_agent_float: {
