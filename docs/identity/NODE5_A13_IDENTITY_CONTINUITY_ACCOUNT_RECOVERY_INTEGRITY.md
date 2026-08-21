@@ -3,8 +3,8 @@
 **Status:** CERTIFIED / LOCKED
 **Verdict:** READY
 **Closeout date:** 2026-08-21
-**Starting HEAD (closeout):** `156972d1` — *Fixed A13 phone bridge defect*
-**Final HEAD:** `a12a999dc5b46ae0674f4b64c767bf8349884566`
+**Certification code HEAD (pre-documentation/internal closeout):** `a12a999dc5b46ae0674f4b64c767bf8349884566`
+**Lovable closeout edit commit:** `80b5e406f0f73081e4bf18621e7bdc8ab5a0852d`
 **Working tree:** `git status --porcelain` → empty (clean)
 **Scope:** A13 only. A14 not started.
 
@@ -311,7 +311,7 @@ the platform treasury wallet and was already inside the 71 total at A12.)
 One migration attempt failed with `S13_PATCH_NO_MATCH` (guarded no-op, whitespace
 mismatch against live `prosrc`) and applied nothing.
 
-**Commits:** `156972d1` (A13 phone bridge defect fix) → `a12a999d` (final).
+**Commits:** `156972d1` (A13 phone bridge defect fix) → `a12a999d` (certification code HEAD, pre-documentation) → `80b5e406` (Lovable closeout edit commit).
 Working tree clean.
 
 ---
