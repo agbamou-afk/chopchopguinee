@@ -10472,6 +10472,10 @@ export type Database = {
         }
         Returns: Json
       }
+      _driver_capability_lane_gate: {
+        Args: { _user: string }
+        Returns: undefined
+      }
       _driver_exact_hold_place_internal: {
         Args: {
           p_amount: number
@@ -13003,6 +13007,11 @@ export type Database = {
         }
       }
       driver_balance_summary: { Args: { p_driver?: string }; Returns: Json }
+      driver_capability_assigned: {
+        Args: { _capability: string; _user_id: string }
+        Returns: boolean
+      }
+      driver_capability_vocabulary: { Args: never; Returns: string[] }
       driver_cash_settle: {
         Args: {
           p_amount_gnf: number
@@ -15780,6 +15789,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      professional_active_type: { Args: { _user: string }; Returns: string }
       professional_identity_current: { Args: never; Returns: Json }
       professional_identity_release_eligibility: {
         Args: { _user?: string }
