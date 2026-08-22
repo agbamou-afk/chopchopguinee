@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
-import walletIcon from "@/assets/icons/wallet.png";
-import motoIcon from "@/assets/icons/moto.png";
-import repasIcon from "@/assets/icons/repas.png";
-import marcheIcon from "@/assets/icons/marche.png";
+import { ServiceIcon } from "@/components/services/ServiceIcon";
+import { getServiceIconAsset } from "@/lib/services/serviceIcons";
 import {
   usePublicWalletEnabled,
   usePublicPaymentProductName,
@@ -16,58 +14,54 @@ interface Props {
 }
 
 /**
- * Uniform tile treatment: same card surface, same halo system. All tiles use
- * the canonical CHOPCHOP service icon family (raster PNGs) so the grid reads as
- * one authored set instead of mixed Lucide/PNG glyphs.
+ * Uniform tile treatment: same card surface, same halo system. All tiles are
+ * Family A (transactional services) and render through the canonical
+ * `ServiceIcon`, so artwork and optical tuning come from the shared registry.
  */
 type ActionDef = {
   id: PrimaryAction;
+  /** Canonical service icon id in `@/lib/services/serviceIcons`. */
+  iconId: string;
   label: string;
   subtitle: string;
-  img: string;
-  alt: string;
   halo: string;
 };
 
 const WALLET_TILE: ActionDef = {
   id: "topup",
+  iconId: "wallet",
   label: "ChopWallet",
   subtitle: "Recharger en quelques secondes",
-  img: walletIcon,
-  alt: "Recharger ChopWallet",
-  halo: "bg-primary/12 ring-1 ring-primary/15",
+  halo: "w-11 h-11 rounded-xl bg-primary/12 ring-1 ring-primary/15 flex items-center justify-center overflow-hidden shrink-0",
 };
 
-const OM_TILE_BASE: Omit<ActionDef, "label" | "subtitle" | "alt"> = {
+const OM_TILE_BASE: Omit<ActionDef, "label" | "subtitle"> = {
   id: "topup",
-  img: walletIcon,
-  halo: "bg-primary/12 ring-1 ring-primary/15",
+  iconId: "wallet",
+  halo: "w-11 h-11 rounded-xl bg-primary/12 ring-1 ring-primary/15 flex items-center justify-center overflow-hidden shrink-0",
 };
 
 const RIDE_TILES: ActionDef[] = [
   {
     id: "ride",
+    iconId: "moto",
     label: "Course",
     subtitle: "Moto ou Bonbonna",
-    img: motoIcon,
-    alt: "Réserver une course",
-    halo: "bg-secondary/22 ring-1 ring-secondary/25",
+    halo: "w-11 h-11 rounded-xl bg-secondary/22 ring-1 ring-secondary/25 flex items-center justify-center overflow-hidden shrink-0",
   },
   {
     id: "order",
+    iconId: "food",
     label: "Repas",
     subtitle: "Livraison rapide",
-    img: repasIcon,
-    alt: "Commander un repas",
-    halo: "bg-[hsl(var(--accent-repas)/0.14)] ring-1 ring-[hsl(var(--accent-repas)/0.20)]",
+    halo: "w-11 h-11 rounded-xl bg-[hsl(var(--accent-repas)/0.14)] ring-1 ring-[hsl(var(--accent-repas)/0.20)] flex items-center justify-center overflow-hidden shrink-0",
   },
   {
     id: "market",
+    iconId: "market",
     label: "Marché",
     subtitle: "Annonces près de vous",
-    img: marcheIcon,
-    alt: "Explorer le Marché",
-    halo: "bg-[hsl(var(--accent-marche)/0.14)] ring-1 ring-[hsl(var(--accent-marche)/0.20)]",
+    halo: "w-11 h-11 rounded-xl bg-[hsl(var(--accent-marche)/0.14)] ring-1 ring-[hsl(var(--accent-marche)/0.20)] flex items-center justify-center overflow-hidden shrink-0",
   },
 ];
 
@@ -79,7 +73,6 @@ export function PrimaryActionGrid({ onAction }: Props) {
     ...OM_TILE_BASE,
     label: publicName,
     subtitle: publicSubtitle,
-    alt: `Ouvrir ${publicName}`,
   };
   const actions: ActionDef[] = [
     publicWalletEnabled ? WALLET_TILE : omTile,
@@ -87,26 +80,20 @@ export function PrimaryActionGrid({ onAction }: Props) {
   ];
   return (
     <div className="grid grid-cols-2 gap-3">
-      {actions.map(({ id, label, subtitle, img, alt, halo }) => (
+      {actions.map(({ id, iconId, label, subtitle, halo }) => (
         <motion.button
           key={id}
           whileTap={{ scale: 0.985 }}
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           onClick={() => onAction(id)}
           aria-label={label}
+          data-service-id={iconId}
+          data-icon-family="service"
+          data-icon-asset={getServiceIconAsset(iconId) ? "branded" : "glyph"}
           className="relative flex flex-col items-start gap-2.5 rounded-2xl card-warm p-4 min-h-[116px] text-left active:shadow-soft transition-shadow overflow-hidden"
         >
           <div className="pointer-events-none absolute inset-x-3 top-0 h-px saffron-seam opacity-70" aria-hidden />
-          <div className={`w-11 h-11 rounded-xl ${halo} flex items-center justify-center overflow-hidden`}>
-            <img
-              src={img}
-              alt={alt}
-              loading="lazy"
-              width={1024}
-              height={1024}
-              className="w-11 h-11 object-contain scale-[1.45] float-soft"
-            />
-          </div>
+          <ServiceIcon id={iconId} family="service" chipClassName={halo} imgClassName="w-11 h-11 float-soft" />
           <div className="space-y-0.5">
             <p className="text-[14px] font-semibold text-foreground leading-tight tracking-tight">{label}</p>
             <p className="text-[11px] text-muted-foreground leading-snug">{subtitle}</p>
