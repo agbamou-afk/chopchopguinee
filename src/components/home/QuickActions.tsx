@@ -60,7 +60,6 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
         className="flex gap-3 overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory scrollbar-hide px-4 pb-1 pr-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-2xl"
       >
         {HOME_RAIL.map((action) => {
-          const t = SERVICE_ICON_TUNING[action.id] ?? { scale: 1, x: 0, y: 0 };
           // Envoyer stays visible but honestly gated, exactly like Services.
           const disabledReason =
             action.id === "parcel" && !envoyerOn ? "Bientôt disponible" : undefined;
@@ -75,21 +74,20 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
               onClick={disabled ? undefined : () => onActionClick(action.id)}
               aria-disabled={disabled}
               aria-label={disabled ? `${action.label} — ${disabledReason}` : action.aria}
+              data-service-id={action.id}
+              data-icon-family="service"
+              data-icon-asset={getServiceIconAsset(action.id) ? "branded" : "glyph"}
               className={`snap-start shrink-0 w-[96px] min-h-[96px] flex flex-col items-center gap-1.5 rounded-2xl py-1 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${
                 disabled ? "opacity-60" : "group"
               }`}
             >
-              <div className="service-icon-holder">
-                <img
-                  src={action.img}
-                  alt={action.alt}
-                  loading="lazy"
-                  width={1024}
-                  height={1024}
-                  className="service-icon-asset float-soft my-0 pl-0 ml-0 border-0 mb-0 mr-0 pr-0 object-contain"
-                  style={{ transform: `translate(${t.x}px, ${t.y}px) scale(${t.scale})` }}
-                />
-              </div>
+              <ServiceIcon
+                id={action.id}
+                family="service"
+                chipClassName="service-icon-holder"
+                imgClassName="service-icon-asset float-soft"
+              />
+
               <span className="text-[12.5px] font-semibold text-foreground text-center leading-tight">
                 {action.label}
               </span>
