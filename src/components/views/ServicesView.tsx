@@ -6,9 +6,8 @@ import { useNavigate } from "react-router-dom";
 import {
   usePublicPaymentProductName,
   usePublicPaymentProductSubtitle,
-  useEnvoyerEnabled,
-  useTaxiEnabled,
 } from "@/lib/flags/useFeatureFlag";
+import { useServiceExposure } from "@/lib/services/serviceExposure";
 import { ServiceIcon, type GlyphComponent } from "@/components/services/ServiceIcon";
 import { getServiceIconAsset, type IconFamily } from "@/lib/services/serviceIcons";
 
@@ -27,8 +26,8 @@ type ServiceTile = {
   desc: string;
   /** Lucide glyph — Family B always, Family A only as a marked placeholder. */
   Icon?: GlyphComponent;
-  /** Honest unavailable copy when the service is gated off. */
-  disabledReason?: string;
+  /** Canonical exposure action id (defaults to `id`). */
+  exposureId?: string;
   onSelect: () => void;
 };
 
@@ -43,8 +42,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
   const navigate = useNavigate();
   const omName = usePublicPaymentProductName();
   const omSubtitle = usePublicPaymentProductSubtitle();
-  const envoyerOn = useEnvoyerEnabled();
-  const taxiOn = useTaxiEnabled();
+  const exposure = useServiceExposure();
 
   const tiles: ServiceTile[] = [
     {
@@ -71,7 +69,6 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
       desc: "Voiture fermée, bagages, tout confort",
       // PASS 1: no branded taxi.png yet — Family-A chip + glyph placeholder.
       Icon: Car,
-      disabledReason: taxiOn ? undefined : "Bientôt disponible",
       onSelect: () => onActionClick("auto"),
     },
     {
@@ -80,7 +77,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
       family: "service",
       label: "Envoyer",
       desc: "Documents et petits colis en Guinée",
-      disabledReason: envoyerOn ? undefined : "Bientôt disponible",
+      exposureId: "parcel",
       onSelect: () => onActionClick("parcel"),
     },
     {
@@ -117,6 +114,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     },
     {
       id: "merchant",
+      exposureId: "merchant",
       family: "entry",
       label: "Devenir marchand",
       desc: "Vendez sur Marché ou Repas",
@@ -125,6 +123,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     },
     {
       id: "driver",
+      exposureId: "driver",
       family: "entry",
       label: "Devenir chauffeur",
       desc: "Roulez avec CHOPCHOP",
@@ -133,6 +132,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     },
     {
       id: "help",
+      exposureId: "help",
       family: "entry",
       label: "Aide",
       desc: "Support, litiges et FAQ",
