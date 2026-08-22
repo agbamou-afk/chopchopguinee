@@ -104,6 +104,9 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
   const [step, setStep] = useState<Step>(1);
   const [pickup, setPickup] = useState<PickedLocation | null>(null);
   const [destination, setDestination] = useState<PickedLocation | null>(null);
+  /** Which endpoint map taps/drags write to. One canonical coordinate each. */
+  const [activePoint, setActivePoint] = useState<EndpointKey>("pickup");
+
   const [recipientName, setRecipientName] = useState("");
   const [recipientLocal, setRecipientLocal] = useState("");
   const [instructions, setInstructions] = useState("");
