@@ -10,7 +10,7 @@ import {
   type IconFamily,
 } from "@/lib/services/serviceIcons";
 
-export type GlyphComponent = ComponentType<{ className?: string; strokeWidth?: number }>;
+export type GlyphComponent = ComponentType<{ className?: string; strokeWidth?: number | string }>;
 
 interface ServiceIconProps {
   /** Canonical service/action id — drives asset + optical tuning lookup. */

@@ -1,4 +1,4 @@
-import { type ComponentType } from "react";
+
 import { motion } from "framer-motion";
 import { ScanLine, Store, LifeBuoy, Car } from "lucide-react";
 import { SteeringWheel } from "@/components/icons/SteeringWheel";
@@ -9,7 +9,7 @@ import {
   useEnvoyerEnabled,
   useTaxiEnabled,
 } from "@/lib/flags/useFeatureFlag";
-import { ServiceIcon } from "@/components/services/ServiceIcon";
+import { ServiceIcon, type GlyphComponent } from "@/components/services/ServiceIcon";
 import { getServiceIconAsset, type IconFamily } from "@/lib/services/serviceIcons";
 
 interface ServicesViewProps {
@@ -26,7 +26,7 @@ type ServiceTile = {
   label: string;
   desc: string;
   /** Lucide glyph — Family B always, Family A only as a marked placeholder. */
-  Icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
+  Icon?: GlyphComponent;
   /** Honest unavailable copy when the service is gated off. */
   disabledReason?: string;
   onSelect: () => void;
