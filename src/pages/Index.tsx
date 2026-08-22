@@ -39,6 +39,7 @@ import {
   DRIVER_ONBOARDING_REPLAY_EVENT,
 } from "@/components/onboarding/DriverOnboarding";
 import { isAdminUser, isLiveUser, isSandboxMode } from "@/lib/runtimeMode";
+import { isActionExposed } from "@/lib/services/serviceExposure";
 import { ConversionGateSheet, type ConversionIntent } from "@/components/onboarding/ConversionGateSheet";
 import { EnvoyerComposer } from "@/components/envoyer/EnvoyerComposer";
 import {
@@ -719,6 +720,10 @@ const Index = () => {
   };
 
   const handleAction = (action: string, params?: { destination?: string }) => {
+    // PASS 2 bypass guard: a product whose exposure flag is OFF cannot be
+    // reached through the central action router, even from stale UI, deep
+    // links, voice/AI commands or cached surfaces.
+    if (!isActionExposed(action)) return;
     // Public exploration: ride booking, food and market browsing are allowed
     // without an account. Signup is enforced later at commitment points
     // (real wallet hold / real ride creation) via the conversion gate.
