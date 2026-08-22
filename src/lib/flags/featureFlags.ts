@@ -259,3 +259,97 @@ export function __resetFeatureFlagsForTests(next?: Partial<Record<FlagKey, boole
   inflight = null;
   emit();
 }
+/* ------------------------------------------------------------------ *
+ * LIVE PROPAGATION — Realtime on public.feature_flags
+ *
+ * A God-Admin toggle must reach already-open customer UIs without a
+ * reload. This is the SAME store: Realtime only writes into `cache`
+ * and emits, so every `useFeatureFlag` / `useServiceExposure` consumer
+ * rerenders. Realtime loss never breaks the UI: cached truth stays and
+ * a resubscribe triggers a full refresh so missed changes reconcile.
+ * ------------------------------------------------------------------ */
+
+type FlagRealtimePayload = {
+  eventType?: string;
+  new?: { key?: string; enabled?: boolean } | null;
+  old?: { key?: string; enabled?: boolean } | null;
+};
+
+function isKnown(key: unknown): key is FlagKey {
+  return typeof key === "string" && (KNOWN_FLAGS as string[]).includes(key);
+}
+
+/**
+ * Deterministically apply one `feature_flags` row change to the cache.
+ * Exported for tests. Unknown keys are ignored; DELETE (or a row that no
+ * longer carries a value) reverts to the compiled DEFAULT for that key.
+ */
+export function applyFlagRealtimeEvent(payload: FlagRealtimePayload): boolean {
+  const evt = (payload?.eventType ?? "").toUpperCase();
+  const key = payload?.new?.key ?? payload?.old?.key;
+  if (!isKnown(key)) return false;
+
+  const nextValue =
+    evt === "DELETE" || payload?.new == null || typeof payload.new.enabled !== "boolean"
+      ? DEFAULTS[key]
+      : !!payload.new.enabled;
+
+  if (cache[key] === nextValue) return false;
+  cache = { ...cache, [key]: nextValue };
+  emit();
+  return true;
+}
+
+let flagChannel: { unsubscribe?: () => void } | null = null;
+let sawDisconnect = false;
+
+/** Exported for tests: current subscription status handler. */
+export function handleFlagChannelStatus(status: string): void {
+  const s = (status ?? "").toUpperCase();
+  if (s === "CHANNEL_ERROR" || s === "TIMED_OUT" || s === "CLOSED") {
+    sawDisconnect = true;
+    return;
+  }
+  if (s === "SUBSCRIBED" && sawDisconnect) {
+    sawDisconnect = false;
+    // Reconnect: reconcile anything missed while the socket was down.
+    void refreshFeatureFlags();
+  }
+}
+
+/**
+ * Idempotent. Safe across HMR / remounts / duplicate boot calls: only one
+ * effective channel is ever created.
+ */
+export function initFeatureFlagsRealtime(): () => void {
+  if (flagChannel) return teardownFeatureFlagsRealtime;
+  try {
+    const channel = supabase
+      .channel("feature-flags-live")
+      .on(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        "postgres_changes" as any,
+        { event: "*", schema: "public", table: "feature_flags" },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload: any) => { applyFlagRealtimeEvent(payload as FlagRealtimePayload); },
+      )
+      .subscribe((status: string) => handleFlagChannelStatus(status));
+    flagChannel = channel as unknown as { unsubscribe?: () => void };
+  } catch {
+    flagChannel = null; // Realtime unavailable — cached truth still governs.
+  }
+  return teardownFeatureFlagsRealtime;
+}
+
+export function teardownFeatureFlagsRealtime(): void {
+  const ch = flagChannel;
+  flagChannel = null;
+  sawDisconnect = false;
+  if (!ch) return;
+  try { supabase.removeChannel(ch as never); } catch { /* ignore */ }
+}
+
+/** Test-only: is a channel currently held by the store? */
+export function __flagsRealtimeActiveForTests(): boolean {
+  return flagChannel !== null;
+}
