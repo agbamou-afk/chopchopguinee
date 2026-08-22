@@ -9,13 +9,8 @@ import {
   useEnvoyerEnabled,
   useTaxiEnabled,
 } from "@/lib/flags/useFeatureFlag";
-import motoIcon from "@/assets/icons/moto.png";
-import toktokIcon from "@/assets/icons/toktok.png";
-import envoyerIcon from "@/assets/icons/envoyer.png";
-import repasIcon from "@/assets/icons/repas.png";
-import marcheIcon from "@/assets/icons/marche.png";
-import walletIcon from "@/assets/icons/wallet.png";
-import scannerIcon from "@/assets/icons/scanner.png";
+import { ServiceIcon } from "@/components/services/ServiceIcon";
+import { getServiceIconAsset, type IconFamily } from "@/lib/services/serviceIcons";
 
 interface ServicesViewProps {
   /** Reuses the exact same action router as Home. */
@@ -24,14 +19,19 @@ interface ServicesViewProps {
 
 type ServiceTile = {
   id: string;
+  /** Canonical icon id in `@/lib/services/serviceIcons` (Family A only). */
+  iconId?: string;
+  /** Family A = transactional product, Family B = entry/utility action. */
+  family: IconFamily;
   label: string;
   desc: string;
-  img?: string;
-  Icon?: ComponentType<{ className?: string }>;
+  /** Lucide glyph — Family B always, Family A only as a marked placeholder. */
+  Icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
   /** Honest unavailable copy when the service is gated off. */
   disabledReason?: string;
   onSelect: () => void;
 };
+
 
 /**
  * Client "Services" destination — the full CHOPCHOP service directory.
