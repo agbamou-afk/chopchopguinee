@@ -1164,7 +1164,6 @@ const Index = () => {
         onOpenChange={setSignupInviteOpen}
         onDismiss={markSignupInviteDismissed}
       />
-      <UnderConstructionModal open={ucOpen} onClose={ucClose} />
     </div>
   );
 };
