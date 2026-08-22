@@ -19,6 +19,13 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEnvoyerDeclaredValueEnabled, useEnvoyerEnabled } from "@/lib/flags/useFeatureFlag";
 import { LocationField, type PickedLocation } from "./LocationField";
+import { RouteMapPicker } from "./RouteMapPicker";
+import {
+  SAME_POINT_MESSAGE,
+  canAdvanceItinerary,
+  isSamePoint,
+  type EndpointKey,
+} from "@/lib/envoyer/routePoints";
 import {
   createPackageCheckout,
   getPackageDelivery,
@@ -225,7 +232,8 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
     }
   };
 
-  const canStep1 = !!pickup && !!destination;
+  const sameSpot = isSamePoint(pickup, destination);
+  const canStep1 = canAdvanceItinerary(pickup, destination);
   const canStep2 = recipientName.trim().length >= 2 && isValidGuineaLocal(extractGuineaLocal(recipientLocal));
   const declaredOk =
     !declaredEngine ||
