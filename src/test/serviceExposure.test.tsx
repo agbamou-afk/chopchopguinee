@@ -135,7 +135,10 @@ describe("PASS 2 — discovery surfaces hide disabled products", () => {
   it("hides Marché entirely — no placeholder, no disabled tile — when its flag is OFF", () => {
     setFlags({ service_marche_enabled: false });
     renderServices();
-    expect(screen.queryByText(/Marché/i)).toBeNull();
+    // The Marché product entry itself is gone (the recruitment copy that
+    // merely mentions Marché is a different, independently-flagged surface).
+    expect(screen.queryByText(/^Marché$/i)).toBeNull();
+    expect(screen.queryByText(/Achetez au marché/i)).toBeNull();
     expect(screen.queryByText(/Bientôt disponible/i)).toBeNull();
     expect(document.querySelector('[aria-disabled="true"]')).toBeNull();
   });
