@@ -48,8 +48,6 @@ import {
   markSignupInviteSeenSession,
 } from "@/components/onboarding/SignupInviteSheet";
 import { useDriverProfile } from "@/hooks/useDriverProfile";
-import { UnderConstructionModal } from "@/components/announcements/UnderConstructionModal";
-import { useUnderConstructionAnnouncement } from "@/hooks/useUnderConstructionAnnouncement";
 import { ACTIVE_CLIENT_RIDE_STATUSES, isActiveClientRideStatus } from "@/lib/rides/status";
 import { rideQaDebug } from "@/lib/rides/debug";
 import { createBookingRequestIdStore } from "@/lib/rides/bookingRequestId";
@@ -849,43 +847,23 @@ const Index = () => {
     setActiveTab("home");
   };
 
-  // "CHOPCHOP arrive bientôt" announcement. Only schedules once the user is
-  // truly in the product shell: onboarding finished, no blocking sheet, no
-  // trip/booking/scanner open. The hook itself enforces the 1s delay and
-  // localStorage dismissal persistence.
-  const announcementCanShow =
-    ready &&
-    !onboardingBlocksApp &&
-    !bookingRide &&
-    !activeTrip &&
-    !showScanner &&
-    !conversionGate.open &&
-    !signupInviteOpen;
-  const { open: ucOpen, close: ucClose, willShow: ucWillShow } = useUnderConstructionAnnouncement({
-    canShow: announcementCanShow,
-    userId: user?.id ?? null,
-  });
+  const SIGNUP_NUDGE_DELAY_MS = 10000;
 
-  const SIGNUP_NUDGE_AFTER_UC_MS = 10000;
-
-  // Signup nudge scheduler. Runs after Under Construction is dismissed
-  // (or immediately when UC won't show this session), with a 10s delay.
-  // Eligible only for public guests who are fully inside the product shell
-  // and haven't already dismissed.
+  // Signup nudge scheduler. Eligible only for public guests who are fully
+  // inside the product shell and haven't already dismissed.
   useEffect(() => {
     if (!publicUser || adminUser) return;
     if (!ready || onboardingBlocksApp) return;
     if (bookingRide || activeTrip || showScanner) return;
     if (conversionGate.open) return;
     if (signupInviteOpen) return;
-    if (ucOpen || ucWillShow) return; // wait for UC to finish first
     if (shouldSkipSignupInvite()) return;
-    const t = window.setTimeout(() => setSignupInviteOpen(true), SIGNUP_NUDGE_AFTER_UC_MS);
+    const t = window.setTimeout(() => setSignupInviteOpen(true), SIGNUP_NUDGE_DELAY_MS);
     return () => window.clearTimeout(t);
   }, [
     publicUser, adminUser, ready, onboardingBlocksApp,
     bookingRide, activeTrip, showScanner,
-    conversionGate.open, signupInviteOpen, ucOpen, ucWillShow,
+    conversionGate.open, signupInviteOpen,
   ]);
 
   const renderUserView = () => {
@@ -1186,7 +1164,6 @@ const Index = () => {
         onOpenChange={setSignupInviteOpen}
         onDismiss={markSignupInviteDismissed}
       />
-      <UnderConstructionModal open={ucOpen} onClose={ucClose} />
     </div>
   );
 };
