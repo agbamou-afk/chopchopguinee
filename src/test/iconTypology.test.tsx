@@ -17,6 +17,8 @@ vi.mock("@/lib/flags/useFeatureFlag", () => ({
   useEnvoyerEnabled: () => true,
   useTaxiEnabled: () => true,
   usePublicWalletEnabled: () => true,
+  useFlagsReady: () => true,
+  useFeatureFlag: () => true,
 }));
 
 const TRANSACTIONAL = ["moto", "toktok", "auto", "parcel", "food", "market", "wallet", "scan"];
