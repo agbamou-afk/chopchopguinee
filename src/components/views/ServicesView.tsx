@@ -141,6 +141,8 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     },
   ];
 
+  // Exposure law: hide, never disable. Ordering among survivors preserved.
+  const visible = exposure.filter(tiles, (t) => t.exposureId ?? t.id);
 
   return (
     <div className="max-w-3xl mx-auto pb-6">
@@ -152,6 +154,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
               Que voulez-vous faire aujourd’hui ?
             </p>
           </div>
+          {exposure.ready && exposure.isExposed("scan") && (
           <button
             type="button"
             onClick={() => onActionClick("scan")}
@@ -160,24 +163,36 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
           >
             <ScanLine className="w-5 h-5 text-primary" />
           </button>
+          )}
         </div>
       </header>
 
-      <div className="px-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {tiles.map((t, i) => {
-          const disabled = !!t.disabledReason;
-          return (
+      {!exposure.ready ? (
+        // Anti-flicker: never paint a possibly-disabled product before the
+        // live flag rows resolve. Neutral skeleton keeps layout stable.
+        <div
+          className="px-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+          aria-busy="true"
+          data-testid="services-skeleton"
+        >
+          {[0, 1, 2, 3, 4, 5].map((k) => (
+            <div key={k} className="rounded-2xl card-warm p-3.5 min-h-[124px] animate-pulse" aria-hidden />
+          ))}
+        </div>
+      ) : (
+        <div className="px-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {visible.map((t, i) => (
             <motion.button
               key={t.id}
               type="button"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.24, delay: Math.min(i * 0.025, 0.2), ease: [0.22, 1, 0.36, 1] }}
-              whileTap={disabled ? undefined : { scale: 0.985 }}
-              onClick={disabled ? undefined : t.onSelect}
-              aria-disabled={disabled}
-              aria-label={disabled ? `${t.label} — ${t.disabledReason}` : t.label}
+              whileTap={{ scale: 0.985 }}
+              onClick={t.onSelect}
+              aria-label={t.label}
               data-service-id={t.iconId ?? t.id}
+              data-exposure-id={t.exposureId ?? t.id}
               data-icon-family={t.family}
               data-icon-asset={
                 t.family === "entry"
@@ -186,9 +201,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
                     ? "branded"
                     : "glyph"
               }
-              className={`relative flex flex-col items-start gap-2.5 rounded-2xl card-warm p-3.5 min-h-[124px] text-left overflow-hidden transition-shadow ${
-                disabled ? "opacity-60" : "active:shadow-soft"
-              }`}
+              className="relative flex flex-col items-start gap-2.5 rounded-2xl card-warm p-3.5 min-h-[124px] text-left overflow-hidden transition-shadow active:shadow-soft"
             >
               <div className="pointer-events-none absolute inset-x-3 top-0 h-px saffron-seam opacity-70" aria-hidden />
               <ServiceIcon id={t.iconId ?? t.id} family={t.family} Glyph={t.Icon} />
@@ -197,14 +210,12 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
                 <p className="text-[13.5px] font-semibold text-foreground leading-tight tracking-tight break-words">
                   {t.label}
                 </p>
-                <p className="text-[11px] text-muted-foreground leading-snug break-words">
-                  {disabled ? t.disabledReason : t.desc}
-                </p>
+                <p className="text-[11px] text-muted-foreground leading-snug break-words">{t.desc}</p>
               </div>
             </motion.button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
     </div>
   );
