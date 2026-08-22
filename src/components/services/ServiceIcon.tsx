@@ -56,7 +56,7 @@ export function ServiceIcon({ id, family, Glyph, chipClassName, imgClassName }: 
           loading="lazy"
           width={1024}
           height={1024}
-          className={`w-11 h-11 object-contain ${imgClassName ?? ""}`}
+          className={`${imgClassName ?? "w-11 h-11"} object-contain`}
           style={{ transform: `translate(${t.x}px, ${t.y}px) scale(${t.scale})` }}
         />
       ) : Glyph ? (
