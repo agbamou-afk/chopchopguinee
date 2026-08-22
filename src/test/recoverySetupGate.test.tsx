@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 
 /**
@@ -83,7 +82,7 @@ describe("recovery setup gate", () => {
     statusQueue = [NOT_CONFIGURED, CONFIGURED];
     renderApp("/account/recovery-setup?next=%2Fmerchant%2Fhub");
     await screen.findByText("stub-confirm");
-    await userEvent.click(screen.getByText("stub-confirm"));
+    await act(async () => { fireEvent.click(screen.getByText("stub-confirm")); });
     await screen.findByText("hub");
     await new Promise((r) => setTimeout(r, 30));
     expect(visits.filter((v) => v === "hub:/merchant/hub")).toHaveLength(1);
@@ -95,7 +94,7 @@ describe("recovery setup gate", () => {
     statusDelay = 60;
     renderApp("/account/recovery-setup?next=%2Fmerchant%2Fhub");
     await screen.findByText("stub-confirm");
-    await userEvent.click(screen.getByText("stub-confirm"));
+    await act(async () => { fireEvent.click(screen.getByText("stub-confirm")); });
     expect(await screen.findByText(/Finalisation/)).toBeInTheDocument();
     expect(screen.queryByText("stub-confirm")).toBeNull();
     expect(visits).toHaveLength(0);
@@ -106,7 +105,7 @@ describe("recovery setup gate", () => {
     statusQueue = [NOT_CONFIGURED];
     renderApp("/account/recovery-setup?next=%2Fmerchant%2Fhub");
     await screen.findByText("stub-confirm");
-    await userEvent.click(screen.getByText("stub-confirm"));
+    await act(async () => { fireEvent.click(screen.getByText("stub-confirm")); });
     expect(await screen.findByText("Réessayer")).toBeInTheDocument();
     expect(visits).toHaveLength(0);
   });
@@ -133,7 +132,7 @@ describe("recovery setup gate", () => {
     statusQueue = [NOT_CONFIGURED, CONFIGURED];
     renderApp("/account/recovery-setup?next=%2Fdriver%2Fapply");
     await screen.findByText("stub-confirm");
-    await userEvent.click(screen.getByText("stub-confirm"));
+    await act(async () => { fireEvent.click(screen.getByText("stub-confirm")); });
     await screen.findByText("apply");
     expect(visits.filter((v) => v === "apply:/driver/apply")).toHaveLength(1);
   });
