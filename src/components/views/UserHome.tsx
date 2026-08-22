@@ -9,6 +9,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAppEnv } from "@/contexts/AppEnvContext";
 import { useServiceExposure } from "@/lib/services/serviceExposure";
+import { ServiceIcon } from "@/components/services/ServiceIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WalletHero } from "@/components/home/WalletHero";
 import { RecentActivityPeek } from "@/components/activity/RecentActivityPeek";
@@ -131,7 +132,11 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
             Bon retour sur CHOPCHOP — vos services sont prêts à {userLocation}.
           </div>
         )}
-        {/* 1 — Wallet hero (trust anchor) */}
+        {/* 1 — Wallet hero (trust anchor). PASS 2 exposure law: when the
+            public payment product is OFF, the entry does not exist for the
+            customer — no degraded card, no skeleton flash. Wallet hooks and
+            finance behaviour are untouched. */}
+        {exposure.ready && exposure.isExposed("wallet") && (
         <WalletHero
           balance={walletBalance}
           loading={walletLoading}
@@ -140,6 +145,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
           onTopUp={handleTopUp}
           onHistory={() => onActionClick("wallet")}
         />
+        )}
 
         {/* Ecosystem continuity — last operational event */}
         <RecentActivityPeek onSeeAll={() => onActionClick("orders")} />
@@ -307,9 +313,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               to="/merchant/apply"
               className="rounded-2xl card-warm p-4 flex flex-col gap-2 active:scale-[0.99] transition-transform"
             >
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Store className="w-5 h-5 text-primary" />
-              </div>
+              <ServiceIcon id="merchant" family="entry" Glyph={Store} />
               <div>
                 <p className="text-sm font-semibold text-foreground leading-tight">Devenir marchand</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
@@ -326,9 +330,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
               to="/driver/apply"
               className="rounded-2xl card-warm p-4 flex flex-col gap-2 active:scale-[0.99] transition-transform"
             >
-              <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center">
-                <SteeringIcon className="w-5 h-5 text-foreground" />
-              </div>
+              <ServiceIcon id="driver" family="entry" Glyph={SteeringIcon} />
               <div>
                 <p className="text-sm font-semibold text-foreground leading-tight">Devenir chauffeur</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">

@@ -23,7 +23,11 @@ let ready = true;
 
 vi.mock("@/lib/flags/featureFlags", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/flags/featureFlags")>();
-  return { ...actual, getFlag: (k: string) => flags[k] ?? false };
+  return {
+    ...actual,
+    getFlag: (k: string) => flags[k] ?? false,
+    flagsReady: () => ready,
+  };
 });
 
 vi.mock("@/lib/flags/useFeatureFlag", () => ({
@@ -76,7 +80,7 @@ describe("PASS 2 — exposure registry law", () => {
   it("declares an exposure rule for every canonical customer action", () => {
     const ids: ExposureActionId[] = [
       "moto", "toktok", "auto", "parcel", "food", "market",
-      "wallet", "scan", "merchant", "driver", "help",
+      "wallet", "scan", "merchant", "driver", "help", "ride",
     ];
     for (const id of ids) expect(SERVICE_EXPOSURE_RULES[id]).toBeDefined();
   });
@@ -249,6 +253,61 @@ describe("PASS 2 — anti-flicker and deep-link guards", () => {
     expect(isActionExposed("market")).toBe(false);
     expect(isActionExposed("marche")).toBe(false);
     expect(isActionExposed("parcel")).toBe(false);
+    expect(isActionExposed("moto")).toBe(true);
+  });
+});
+
+
+describe("PASS 2 micro-closeout — SEAM 1: composite umbrella ride entry", () => {
+  it("keeps the Course umbrella card when only Bonbonna is live", () => {
+    setFlags({ service_moto_enabled: false, service_toktok_enabled: true });
+    render(<PrimaryActionGrid onAction={vi.fn()} />);
+    expect(screen.getByText("Course")).toBeTruthy();
+    expect(screen.getByText("Moto ou Bonbonna")).toBeTruthy();
+  });
+
+  it("keeps the Course umbrella card when only Moto is live", () => {
+    setFlags({ service_moto_enabled: true, service_toktok_enabled: false });
+    render(<PrimaryActionGrid onAction={vi.fn()} />);
+    expect(screen.getByText("Course")).toBeTruthy();
+  });
+
+  it("hides the Course umbrella card only when BOTH ride products are OFF", () => {
+    setFlags({ service_moto_enabled: false, service_toktok_enabled: false });
+    render(<PrimaryActionGrid onAction={vi.fn()} />);
+    expect(screen.queryByText("Course")).toBeNull();
+  });
+
+  it("does not alter the individual Moto / Bonbonna exposure laws", () => {
+    setFlags({ service_moto_enabled: false, service_toktok_enabled: true });
+    expect(isActionExposed("moto")).toBe(false);
+    expect(isActionExposed("toktok")).toBe(true);
+    expect(isActionExposed("ride")).toBe(true);
+  });
+});
+
+describe("PASS 2 micro-closeout — SEAM 2: action guard fails closed before readiness", () => {
+  it("refuses known gated product actions while flags are unresolved", () => {
+    ready = false;
+    setFlags();
+    for (const a of ["moto", "toktok", "food", "market", "parcel", "scan", "wallet", "ride", "merchant", "driver"]) {
+      expect(isActionExposed(a), `${a} must fail closed`).toBe(false);
+    }
+  });
+
+  it("keeps Aide/support and unrelated router actions available before readiness", () => {
+    ready = false;
+    setFlags();
+    expect(isActionExposed("help")).toBe(true);
+    expect(isActionExposed("support")).toBe(true);
+    expect(isActionExposed("services")).toBe(true);
+    expect(isActionExposed("orders")).toBe(true);
+  });
+
+  it("evaluates exactly as before once flags are ready", () => {
+    ready = true;
+    setFlags({ service_marche_enabled: false });
+    expect(isActionExposed("market")).toBe(false);
     expect(isActionExposed("moto")).toBe(true);
   });
 });
