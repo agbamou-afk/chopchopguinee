@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Loader2, ShieldAlert } from "lucide-react";
+import { refreshFeatureFlags } from "@/lib/flags/featureFlags";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -48,6 +49,9 @@ export default function FlagsAdmin() {
     toast({ title: `${pending.flag.key} — ${pending.value ? "activé" : "désactivé"}` });
     setPending(null); setReason("");
     void load();
+    // Reflect the audited verdict in THIS browser's shared flag cache
+    // immediately, without waiting for the Realtime round-trip.
+    void refreshFeatureFlags();
   };
 
   return (
