@@ -8,6 +8,7 @@ import { SmartSearchBar } from "@/components/ui/SmartSearchBar";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAppEnv } from "@/contexts/AppEnvContext";
+import { useServiceExposure } from "@/lib/services/serviceExposure";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WalletHero } from "@/components/home/WalletHero";
 import { RecentActivityPeek } from "@/components/activity/RecentActivityPeek";
@@ -27,6 +28,9 @@ interface UserHomeProps {
 }
 
 export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
+  // PASS 2 exposure law: product sections whose top-level flag is OFF are
+  // not rendered at all (no placeholder, no disabled state).
+  const exposure = useServiceExposure();
   /** R8 — the home rail shows real published supply only. */
   const [popularRestaurants, setPopularRestaurants] = useState<RepasDiscoveryRestaurant[]>([]);
 
@@ -165,6 +169,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
         </section>
 
         {/* Nearby drivers — live map preview */}
+        {exposure.ready && exposure.isExposed("moto") && (
         <section>
           <div className="flex items-center justify-between mb-2 px-0.5">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -251,8 +256,10 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
             )}
           </button>
         </section>
+        )}
 
         {/* Recent destinations */}
+        {exposure.ready && exposure.isExposed("moto") && (
         <section>
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2 px-0.5">
             Récents
@@ -275,6 +282,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
             ))}
           </div>
         </section>
+        )}
 
         {/* Promos */}
         <section>
@@ -287,12 +295,14 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
           <PromoCarousel />
         </section>
 
-        {/* Partner acquisition — public, always visible */}
+        {/* Partner acquisition — public, gated by recruitment exposure flags. */}
+        {exposure.ready && (exposure.isExposed("merchant") || exposure.isExposed("driver")) && (
         <section aria-label="Rejoindre CHOPCHOP">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2 px-0.5">
             Rejoindre CHOPCHOP
           </h2>
           <div className="grid grid-cols-2 gap-3">
+            {exposure.isExposed("merchant") && (
             <Link
               to="/merchant/apply"
               className="rounded-2xl card-warm p-4 flex flex-col gap-2 active:scale-[0.99] transition-transform"
@@ -310,6 +320,8 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
                 Créer ma boutique <ArrowRight className="w-3 h-3" />
               </span>
             </Link>
+            )}
+            {exposure.isExposed("driver") && (
             <Link
               to="/driver/apply"
               className="rounded-2xl card-warm p-4 flex flex-col gap-2 active:scale-[0.99] transition-transform"
@@ -327,10 +339,13 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
                 Postuler <ArrowRight className="w-3 h-3" />
               </span>
             </Link>
+            )}
           </div>
         </section>
+        )}
 
         {/* Popular restaurants */}
+        {exposure.ready && exposure.isExposed("food") && (
         <section className="pb-28">
           <div className="flex items-center justify-between mb-2 px-0.5">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -377,6 +392,7 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
             CHOPCHOP · Conakry
           </p>
         </section>
+        )}
       </div>
     </div>
   );
