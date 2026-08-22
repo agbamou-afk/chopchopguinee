@@ -1,7 +1,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ServiceIcon } from "@/components/services/ServiceIcon";
 import { getServiceIconAsset } from "@/lib/services/serviceIcons";
-import { useEnvoyerEnabled } from "@/lib/flags/useFeatureFlag";
+import { useServiceExposure } from "@/lib/services/serviceExposure";
 
 interface QuickActionsProps {
   onActionClick: (action: string) => void;
@@ -45,8 +45,23 @@ const item = {
 };
 
 export function QuickActions({ onActionClick }: QuickActionsProps) {
-  const envoyerOn = useEnvoyerEnabled();
+  const exposure = useServiceExposure();
   const reduceMotion = useReducedMotion();
+  // Exposure law: a product whose flag is OFF is not rendered at all.
+  const visible = exposure.filter(HOME_RAIL, (a) => a.id);
+
+  if (!exposure.ready) {
+    // Anti-flicker: neutral rail skeleton until live flags resolve.
+    return (
+      <div className="relative -mx-4" aria-busy="true" data-testid="quick-actions-skeleton">
+        <div className="flex gap-3 px-4 pb-1">
+          {[0, 1, 2, 3].map((k) => (
+            <div key={k} className="shrink-0 w-[96px] h-[96px] rounded-2xl bg-white/15 animate-pulse" aria-hidden />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative -mx-4">
@@ -59,27 +74,20 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
         tabIndex={0}
         className="flex gap-3 overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory scrollbar-hide px-4 pb-1 pr-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-2xl"
       >
-        {HOME_RAIL.map((action) => {
-          // Envoyer stays visible but honestly gated, exactly like Services.
-          const disabledReason =
-            action.id === "parcel" && !envoyerOn ? "Bientôt disponible" : undefined;
-          const disabled = !!disabledReason;
+        {visible.map((action) => {
           return (
             <motion.button
               key={action.id}
               type="button"
               role="listitem"
               variants={reduceMotion ? undefined : item}
-              whileTap={disabled || reduceMotion ? undefined : { scale: 0.95 }}
-              onClick={disabled ? undefined : () => onActionClick(action.id)}
-              aria-disabled={disabled}
-              aria-label={disabled ? `${action.label} — ${disabledReason}` : action.aria}
+              whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+              onClick={() => onActionClick(action.id)}
+              aria-label={action.aria}
               data-service-id={action.id}
               data-icon-family="service"
               data-icon-asset={getServiceIconAsset(action.id) ? "branded" : "glyph"}
-              className={`snap-start shrink-0 w-[96px] min-h-[96px] flex flex-col items-center gap-1.5 rounded-2xl py-1 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${
-                disabled ? "opacity-60" : "group"
-              }`}
+              className="group snap-start shrink-0 w-[96px] min-h-[96px] flex flex-col items-center gap-1.5 rounded-2xl py-1 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
             >
               <ServiceIcon
                 id={action.id}
@@ -91,11 +99,6 @@ export function QuickActions({ onActionClick }: QuickActionsProps) {
               <span className="text-[12.5px] font-semibold text-foreground text-center leading-tight">
                 {action.label}
               </span>
-              {disabled && (
-                <span className="text-[10px] text-foreground/70 leading-none text-center">
-                  {disabledReason}
-                </span>
-              )}
             </motion.button>
           );
         })}

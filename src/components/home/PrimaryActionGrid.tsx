@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { ServiceIcon } from "@/components/services/ServiceIcon";
 import { getServiceIconAsset } from "@/lib/services/serviceIcons";
 import {
-  usePublicWalletEnabled,
   usePublicPaymentProductName,
   usePublicPaymentProductSubtitle,
 } from "@/lib/flags/useFeatureFlag";
+import { useServiceExposure } from "@/lib/services/serviceExposure";
 
 export type PrimaryAction = "topup" | "ride" | "order" | "market";
 
@@ -20,6 +20,8 @@ interface Props {
  */
 type ActionDef = {
   id: PrimaryAction;
+  /** Canonical exposure action id (PASS 2 law). */
+  exposureId: string;
   /** Canonical service icon id in `@/lib/services/serviceIcons`. */
   iconId: string;
   label: string;
@@ -29,6 +31,7 @@ type ActionDef = {
 
 const WALLET_TILE: ActionDef = {
   id: "topup",
+  exposureId: "wallet",
   iconId: "wallet",
   label: "ChopWallet",
   subtitle: "Recharger en quelques secondes",
@@ -37,6 +40,7 @@ const WALLET_TILE: ActionDef = {
 
 const OM_TILE_BASE: Omit<ActionDef, "label" | "subtitle"> = {
   id: "topup",
+  exposureId: "wallet",
   iconId: "wallet",
   halo: "w-11 h-11 rounded-xl bg-primary/12 ring-1 ring-primary/15 flex items-center justify-center overflow-hidden shrink-0",
 };
@@ -44,6 +48,7 @@ const OM_TILE_BASE: Omit<ActionDef, "label" | "subtitle"> = {
 const RIDE_TILES: ActionDef[] = [
   {
     id: "ride",
+    exposureId: "moto",
     iconId: "moto",
     label: "Course",
     subtitle: "Moto ou Bonbonna",
@@ -51,6 +56,7 @@ const RIDE_TILES: ActionDef[] = [
   },
   {
     id: "order",
+    exposureId: "food",
     iconId: "food",
     label: "Repas",
     subtitle: "Livraison rapide",
@@ -58,6 +64,7 @@ const RIDE_TILES: ActionDef[] = [
   },
   {
     id: "market",
+    exposureId: "market",
     iconId: "market",
     label: "Marché",
     subtitle: "Annonces près de vous",
@@ -66,28 +73,44 @@ const RIDE_TILES: ActionDef[] = [
 ];
 
 export function PrimaryActionGrid({ onAction }: Props) {
-  const publicWalletEnabled = usePublicWalletEnabled();
+  const exposure = useServiceExposure();
   const publicName = usePublicPaymentProductName();
   const publicSubtitle = usePublicPaymentProductSubtitle();
-  const omTile: ActionDef = {
+  // PASS 2: the public payment tile appears only when the PUBLIC Chop Pay /
+  // wallet product itself is exposed. `om_*` provider readiness never
+  // controls this tile. Otherwise it is not rendered at all.
+  const walletTile: ActionDef = {
+    ...WALLET_TILE,
     ...OM_TILE_BASE,
     label: publicName,
     subtitle: publicSubtitle,
   };
-  const actions: ActionDef[] = [
-    publicWalletEnabled ? WALLET_TILE : omTile,
-    ...RIDE_TILES,
-  ];
+  const actions: ActionDef[] = exposure.filter(
+    [walletTile, ...RIDE_TILES],
+    (a) => a.exposureId,
+  );
+
+  if (!exposure.ready) {
+    return (
+      <div className="grid grid-cols-2 gap-3" aria-busy="true" data-testid="primary-actions-skeleton">
+        {[0, 1].map((k) => (
+          <div key={k} className="rounded-2xl card-warm p-4 min-h-[116px] animate-pulse" aria-hidden />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 gap-3">
-      {actions.map(({ id, iconId, label, subtitle, halo }) => (
+      {actions.map(({ id, exposureId, iconId, label, subtitle, halo }) => (
         <motion.button
-          key={id}
+          key={exposureId}
           whileTap={{ scale: 0.985 }}
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           onClick={() => onAction(id)}
           aria-label={label}
           data-service-id={iconId}
+          data-exposure-id={exposureId}
           data-icon-family="service"
           data-icon-asset={getServiceIconAsset(iconId) ? "branded" : "glyph"}
           className="relative flex flex-col items-start gap-2.5 rounded-2xl card-warm p-4 min-h-[116px] text-left active:shadow-soft transition-shadow overflow-hidden"

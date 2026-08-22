@@ -10,6 +10,7 @@ import {
   isDriverBalanceGateEnabled,
   CHOP_PAY_NAME,
   loadFeatureFlags,
+  flagsReady,
   subscribeFlags,
   publicPaymentProductName,
   publicPaymentProductSubtitle,
@@ -26,6 +27,16 @@ function useFlag(key: FlagKey): boolean {
 
 export function useFeatureFlag(key: FlagKey): boolean {
   return useFlag(key);
+}
+
+/**
+ * True once the live `feature_flags` rows have resolved (or definitively
+ * failed and fallen back to defaults). Customer discovery surfaces gate
+ * their first paint on this so a disabled product is never flashed.
+ */
+export function useFlagsReady(): boolean {
+  useEffect(() => { void loadFeatureFlags(); }, []);
+  return useSyncExternalStore(subscribeFlags, flagsReady, flagsReady);
 }
 
 /**
@@ -131,4 +142,5 @@ export {
   publicPaymentProductName,
   publicPaymentProductSubtitle,
   loadFeatureFlags,
+  flagsReady,
 };

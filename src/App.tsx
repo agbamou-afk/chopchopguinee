@@ -96,6 +96,8 @@ const MarcheOpsAdmin = lazy(() => import("./pages/admin/MarcheOpsAdmin"));
 const DriverGroupsAdmin = lazy(() => import("./pages/admin/DriverGroupsAdmin"));
 const AdminChangePassword = lazy(() => import("./pages/admin/AdminChangePassword"));
 const LeaderPortal = lazy(() => import("./pages/LeaderPortal"));
+import { ExposureRouteGuard } from "@/components/services/ExposureRouteGuard";
+
 const DriverApply = lazy(() => import("./pages/DriverApply"));
 const MerchantQR = lazy(() => import("./pages/MerchantQR"));
 const Merchant = lazy(() => import("./pages/Merchant"));
@@ -243,13 +245,13 @@ const App = () => {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/offline" element={<OfflinePage />} />
-          <Route path="/driver/apply" element={<Suspense fallback={null}><DriverApply /></Suspense>} />
+          <Route path="/driver/apply" element={<ExposureRouteGuard action="driver"><Suspense fallback={null}><DriverApply /></Suspense></ExposureRouteGuard>} />
           <Route path="/merchant" element={<Suspense fallback={null}><MerchantQR /></Suspense>} />
           <Route path="/merchant/hub" element={<Suspense fallback={null}><Merchant /></Suspense>} />
           <Route path="/merchant/onboarding" element={<Suspense fallback={null}><MerchantOnboarding /></Suspense>} />
           <Route path="/merchant/onboarding-slides" element={<Suspense fallback={null}><MerchantOnboardingSlides /></Suspense>} />
-          <Route path="/merchant/apply" element={<Suspense fallback={null}><MerchantApply /></Suspense>} />
-          <Route path="/devenir-marchand" element={<Suspense fallback={null}><MerchantApply /></Suspense>} />
+          <Route path="/merchant/apply" element={<ExposureRouteGuard action="merchant"><Suspense fallback={null}><MerchantApply /></Suspense></ExposureRouteGuard>} />
+          <Route path="/devenir-marchand" element={<ExposureRouteGuard action="merchant"><Suspense fallback={null}><MerchantApply /></Suspense></ExposureRouteGuard>} />
           <Route path="/marche/boutique/:slug" element={<Suspense fallback={null}><PublicStorefront /></Suspense>} />
           <Route path="/leader" element={<Suspense fallback={null}><LeaderPortal /></Suspense>} />
           <Route path="/field/captain" element={<Suspense fallback={null}><FieldCaptain /></Suspense>} />
