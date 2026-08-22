@@ -31,3 +31,5 @@ project_id = "azbhteplbdwuqdlzadjx"
     verify_jwt = false
   [functions.account-recovery]
     verify_jwt = false
+  [functions.maps-token-probe]
+    verify_jwt = false
