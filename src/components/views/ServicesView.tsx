@@ -49,64 +49,75 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
   const tiles: ServiceTile[] = [
     {
       id: "moto",
+      iconId: "moto",
+      family: "service",
       label: "Course Moto",
       desc: "Moto-taxi rapide à Conakry",
-      img: motoIcon,
       onSelect: () => onActionClick("moto"),
     },
     {
       id: "toktok",
+      iconId: "toktok",
+      family: "service",
       label: "Course Bonbonna",
       desc: "Plus de place, bagages, abrité de la pluie",
-      img: toktokIcon,
       onSelect: () => onActionClick("toktok"),
     },
     {
       id: "auto",
+      iconId: "auto",
+      family: "service",
       label: "Course Taxi",
       desc: "Voiture fermée, bagages, tout confort",
+      // PASS 1: no branded taxi.png yet — Family-A chip + glyph placeholder.
       Icon: Car,
       disabledReason: taxiOn ? undefined : "Bientôt disponible",
       onSelect: () => onActionClick("auto"),
     },
     {
       id: "envoyer",
+      iconId: "parcel",
+      family: "service",
       label: "Envoyer",
       desc: "Documents et petits colis en Guinée",
-      img: envoyerIcon,
       disabledReason: envoyerOn ? undefined : "Bientôt disponible",
       onSelect: () => onActionClick("parcel"),
     },
     {
       id: "food",
+      iconId: "food",
+      family: "service",
       label: "Repas",
       desc: "Commandez auprès des restaurants",
-      img: repasIcon,
       onSelect: () => onActionClick("food"),
     },
     {
       id: "market",
+      iconId: "market",
+      family: "service",
       label: "Marché",
       desc: "Boutiques et annonces près de vous",
-      img: marcheIcon,
       onSelect: () => onActionClick("market"),
     },
     {
       id: "wallet",
+      iconId: "wallet",
+      family: "service",
       label: omName,
       desc: omSubtitle,
-      img: walletIcon,
       onSelect: () => onActionClick("wallet"),
     },
     {
       id: "scan",
+      iconId: "scan",
+      family: "service",
       label: "Scanner",
       desc: "QR course, paiement ou marchand",
-      img: scannerIcon,
       onSelect: () => onActionClick("scan"),
     },
     {
       id: "merchant",
+      family: "entry",
       label: "Devenir marchand",
       desc: "Vendez sur Marché ou Repas",
       Icon: Store,
@@ -114,6 +125,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     },
     {
       id: "driver",
+      family: "entry",
       label: "Devenir chauffeur",
       desc: "Roulez avec CHOPCHOP",
       Icon: SteeringWheel,
@@ -121,12 +133,14 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     },
     {
       id: "help",
+      family: "entry",
       label: "Aide",
       desc: "Support, litiges et FAQ",
       Icon: LifeBuoy,
       onSelect: () => onActionClick("support"),
     },
   ];
+
 
   return (
     <div className="max-w-3xl mx-auto pb-6">
