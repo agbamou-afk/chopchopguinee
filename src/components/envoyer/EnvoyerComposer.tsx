@@ -19,6 +19,13 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEnvoyerDeclaredValueEnabled, useEnvoyerEnabled } from "@/lib/flags/useFeatureFlag";
 import { LocationField, type PickedLocation } from "./LocationField";
+import { RouteMapPicker } from "./RouteMapPicker";
+import {
+  SAME_POINT_MESSAGE,
+  canAdvanceItinerary,
+  isSamePoint,
+  type EndpointKey,
+} from "@/lib/envoyer/routePoints";
 import {
   createPackageCheckout,
   getPackageDelivery,
@@ -97,6 +104,9 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
   const [step, setStep] = useState<Step>(1);
   const [pickup, setPickup] = useState<PickedLocation | null>(null);
   const [destination, setDestination] = useState<PickedLocation | null>(null);
+  /** Which endpoint map taps/drags write to. One canonical coordinate each. */
+  const [activePoint, setActivePoint] = useState<EndpointKey>("pickup");
+
   const [recipientName, setRecipientName] = useState("");
   const [recipientLocal, setRecipientLocal] = useState("");
   const [instructions, setInstructions] = useState("");
@@ -225,7 +235,8 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
     }
   };
 
-  const canStep1 = !!pickup && !!destination;
+  const sameSpot = isSamePoint(pickup, destination);
+  const canStep1 = canAdvanceItinerary(pickup, destination);
   const canStep2 = recipientName.trim().length >= 2 && isValidGuineaLocal(extractGuineaLocal(recipientLocal));
   const declaredOk =
     !declaredEngine ||
@@ -311,12 +322,37 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
 
           {step === 1 && (
             <>
+              <div
+                className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1"
+                role="group"
+                aria-label="Point actif sur la carte"
+              >
+                {(["pickup", "destination"] as const).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    aria-pressed={activePoint === k}
+                    onClick={() => setActivePoint(k)}
+                    className={`h-10 rounded-lg text-[13px] font-semibold transition ${
+                      activePoint === k
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {k === "pickup" ? "Retrait" : "Destination"}
+                  </button>
+                ))}
+              </div>
+
               <LocationField
                 id="pkg-pickup"
                 title="Point de retrait"
                 placeholder="Où récupérer le colis ?"
                 value={pickup}
-                onChange={setPickup}
+                onChange={(loc) => {
+                  setActivePoint("pickup");
+                  setPickup(loc);
+                }}
                 allowCurrentPosition
               />
               <LocationField
@@ -324,14 +360,31 @@ export function EnvoyerComposer({ open, onOpenChange, onCreated }: EnvoyerCompos
                 title="Destination"
                 placeholder="Où livrer le colis ?"
                 value={destination}
-                onChange={setDestination}
+                onChange={(loc) => {
+                  setActivePoint("destination");
+                  setDestination(loc);
+                }}
               />
+
+              <RouteMapPicker
+                pickup={pickup}
+                destination={destination}
+                active={activePoint}
+                onChange={(key, loc) => (key === "pickup" ? setPickup(loc) : setDestination(loc))}
+              />
+
+              {sameSpot && (
+                <p className="text-[12px] text-destructive">{SAME_POINT_MESSAGE}</p>
+              )}
+
               <p className="text-[12px] text-muted-foreground">
                 Un seul retrait et une seule destination par envoi. Les arrêts multiples ne sont
-                pas encore disponibles.
+                pas encore disponibles. Le trait sur la carte indique la direction, pas un
+                itinéraire routier.
               </p>
             </>
           )}
+
 
           {step === 2 && (
             <>
