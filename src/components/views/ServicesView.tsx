@@ -1,4 +1,4 @@
-import { type ComponentType } from "react";
+
 import { motion } from "framer-motion";
 import { ScanLine, Store, LifeBuoy, Car } from "lucide-react";
 import { SteeringWheel } from "@/components/icons/SteeringWheel";
@@ -9,13 +9,8 @@ import {
   useEnvoyerEnabled,
   useTaxiEnabled,
 } from "@/lib/flags/useFeatureFlag";
-import motoIcon from "@/assets/icons/moto.png";
-import toktokIcon from "@/assets/icons/toktok.png";
-import envoyerIcon from "@/assets/icons/envoyer.png";
-import repasIcon from "@/assets/icons/repas.png";
-import marcheIcon from "@/assets/icons/marche.png";
-import walletIcon from "@/assets/icons/wallet.png";
-import scannerIcon from "@/assets/icons/scanner.png";
+import { ServiceIcon, type GlyphComponent } from "@/components/services/ServiceIcon";
+import { getServiceIconAsset, type IconFamily } from "@/lib/services/serviceIcons";
 
 interface ServicesViewProps {
   /** Reuses the exact same action router as Home. */
@@ -24,14 +19,19 @@ interface ServicesViewProps {
 
 type ServiceTile = {
   id: string;
+  /** Canonical icon id in `@/lib/services/serviceIcons` (Family A only). */
+  iconId?: string;
+  /** Family A = transactional product, Family B = entry/utility action. */
+  family: IconFamily;
   label: string;
   desc: string;
-  img?: string;
-  Icon?: ComponentType<{ className?: string }>;
+  /** Lucide glyph — Family B always, Family A only as a marked placeholder. */
+  Icon?: GlyphComponent;
   /** Honest unavailable copy when the service is gated off. */
   disabledReason?: string;
   onSelect: () => void;
 };
+
 
 /**
  * Client "Services" destination — the full CHOPCHOP service directory.
@@ -49,64 +49,75 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
   const tiles: ServiceTile[] = [
     {
       id: "moto",
+      iconId: "moto",
+      family: "service",
       label: "Course Moto",
       desc: "Moto-taxi rapide à Conakry",
-      img: motoIcon,
       onSelect: () => onActionClick("moto"),
     },
     {
       id: "toktok",
+      iconId: "toktok",
+      family: "service",
       label: "Course Bonbonna",
       desc: "Plus de place, bagages, abrité de la pluie",
-      img: toktokIcon,
       onSelect: () => onActionClick("toktok"),
     },
     {
       id: "auto",
+      iconId: "auto",
+      family: "service",
       label: "Course Taxi",
       desc: "Voiture fermée, bagages, tout confort",
+      // PASS 1: no branded taxi.png yet — Family-A chip + glyph placeholder.
       Icon: Car,
       disabledReason: taxiOn ? undefined : "Bientôt disponible",
       onSelect: () => onActionClick("auto"),
     },
     {
       id: "envoyer",
+      iconId: "parcel",
+      family: "service",
       label: "Envoyer",
       desc: "Documents et petits colis en Guinée",
-      img: envoyerIcon,
       disabledReason: envoyerOn ? undefined : "Bientôt disponible",
       onSelect: () => onActionClick("parcel"),
     },
     {
       id: "food",
+      iconId: "food",
+      family: "service",
       label: "Repas",
       desc: "Commandez auprès des restaurants",
-      img: repasIcon,
       onSelect: () => onActionClick("food"),
     },
     {
       id: "market",
+      iconId: "market",
+      family: "service",
       label: "Marché",
       desc: "Boutiques et annonces près de vous",
-      img: marcheIcon,
       onSelect: () => onActionClick("market"),
     },
     {
       id: "wallet",
+      iconId: "wallet",
+      family: "service",
       label: omName,
       desc: omSubtitle,
-      img: walletIcon,
       onSelect: () => onActionClick("wallet"),
     },
     {
       id: "scan",
+      iconId: "scan",
+      family: "service",
       label: "Scanner",
       desc: "QR course, paiement ou marchand",
-      img: scannerIcon,
       onSelect: () => onActionClick("scan"),
     },
     {
       id: "merchant",
+      family: "entry",
       label: "Devenir marchand",
       desc: "Vendez sur Marché ou Repas",
       Icon: Store,
@@ -114,6 +125,7 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     },
     {
       id: "driver",
+      family: "entry",
       label: "Devenir chauffeur",
       desc: "Roulez avec CHOPCHOP",
       Icon: SteeringWheel,
@@ -121,12 +133,14 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
     },
     {
       id: "help",
+      family: "entry",
       label: "Aide",
       desc: "Support, litiges et FAQ",
       Icon: LifeBuoy,
       onSelect: () => onActionClick("support"),
     },
   ];
+
 
   return (
     <div className="max-w-3xl mx-auto pb-6">
@@ -163,26 +177,22 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
               onClick={disabled ? undefined : t.onSelect}
               aria-disabled={disabled}
               aria-label={disabled ? `${t.label} — ${t.disabledReason}` : t.label}
+              data-service-id={t.iconId ?? t.id}
+              data-icon-family={t.family}
+              data-icon-asset={
+                t.family === "entry"
+                  ? "glyph"
+                  : getServiceIconAsset(t.iconId ?? t.id)
+                    ? "branded"
+                    : "glyph"
+              }
               className={`relative flex flex-col items-start gap-2.5 rounded-2xl card-warm p-3.5 min-h-[124px] text-left overflow-hidden transition-shadow ${
                 disabled ? "opacity-60" : "active:shadow-soft"
               }`}
             >
               <div className="pointer-events-none absolute inset-x-3 top-0 h-px saffron-seam opacity-70" aria-hidden />
-              <div className="w-11 h-11 rounded-xl bg-primary/10 ring-1 ring-primary/15 flex items-center justify-center overflow-hidden shrink-0">
-                {t.img ? (
-                  <img
-                    src={t.img}
-                    alt=""
-                    aria-hidden
-                    loading="lazy"
-                    width={1024}
-                    height={1024}
-                    className="w-11 h-11 object-contain scale-[1.4]"
-                  />
-                ) : t.Icon ? (
-                  <t.Icon className="w-5 h-5 text-primary" />
-                ) : null}
-              </div>
+              <ServiceIcon id={t.iconId ?? t.id} family={t.family} Glyph={t.Icon} />
+
               <div className="space-y-0.5 min-w-0">
                 <p className="text-[13.5px] font-semibold text-foreground leading-tight tracking-tight break-words">
                   {t.label}
