@@ -27,7 +27,17 @@ export type FlagKey =
   | "om_marche_checkout_enabled"
   | "om_sandbox_enabled"
   | "om_environment"
-  | "taxi";
+  | "taxi"
+  // PASS 2 — customer product-exposure flags. Presentation/entry law only:
+  // OFF means the entry is NOT rendered in customer discovery surfaces
+  // (no placeholder, no disabled card). They never replace server law.
+  | "service_moto_enabled"
+  | "service_toktok_enabled"
+  | "service_repas_enabled"
+  | "service_marche_enabled"
+  | "service_scan_enabled"
+  | "merchant_recruitment_enabled"
+  | "driver_recruitment_enabled";
 
 const DEFAULTS: Record<FlagKey, boolean> = {
   // Orange Money First pivot: public CHOP Wallet UI is archived until
@@ -66,6 +76,15 @@ const DEFAULTS: Record<FlagKey, boolean> = {
   // Node 2 — Taxi (`auto`) passenger-car rides. OFF until real approved
   // Taxi drivers exist; the tile renders an honest "bientôt" state.
   taxi: false,
+  // PASS 2 exposure flags — default ON because these products are already
+  // live. The live `public.feature_flags` rows are the source of truth.
+  service_moto_enabled: true,
+  service_toktok_enabled: true,
+  service_repas_enabled: true,
+  service_marche_enabled: true,
+  service_scan_enabled: true,
+  merchant_recruitment_enabled: true,
+  driver_recruitment_enabled: true,
 };
 
 const KNOWN_FLAGS: FlagKey[] = [
@@ -85,7 +104,18 @@ const KNOWN_FLAGS: FlagKey[] = [
   "om_sandbox_enabled",
   "om_environment",
   "taxi",
+  "service_moto_enabled",
+  "service_toktok_enabled",
+  "service_repas_enabled",
+  "service_marche_enabled",
+  "service_scan_enabled",
+  "merchant_recruitment_enabled",
+  "driver_recruitment_enabled",
 ];
+
+/** Exported for tests/admin tooling: the exact flag keys the client reads. */
+export const CLIENT_KNOWN_FLAGS: readonly FlagKey[] = KNOWN_FLAGS;
+export const CLIENT_FLAG_DEFAULTS: Readonly<Record<FlagKey, boolean>> = DEFAULTS;
 
 let cache: Record<FlagKey, boolean> = { ...DEFAULTS };
 let loaded = false;
@@ -197,4 +227,21 @@ export function subscribeFlags(cb: () => void): () => void {
 
 export function flagsLoaded(): boolean {
   return loaded;
+}
+
+/**
+ * PASS 2 anti-flicker primitive. Customer discovery surfaces must not paint
+ * a possibly-disabled product tile before the live flag rows have resolved.
+ * Same single store — no second flag subsystem.
+ */
+export function flagsReady(): boolean {
+  return loaded;
+}
+
+/** Test-only: reset the runtime cache so a suite can simulate cold load. */
+export function __resetFeatureFlagsForTests(next?: Partial<Record<FlagKey, boolean>>, ready = true): void {
+  cache = { ...DEFAULTS, ...(next ?? {}) };
+  loaded = ready;
+  inflight = null;
+  emit();
 }
