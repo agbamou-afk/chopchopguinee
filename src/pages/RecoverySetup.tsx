@@ -42,7 +42,7 @@ export default function RecoverySetup() {
   // never a reset back to a blank step 1.
   const finalize = useCallback(async () => {
     setPhase("finalizing");
-    const fresh = await reload();
+    const fresh = await reload(true);
     if (fresh?.configured === true) return; // effect above performs the single redirect
     setPhase("stalled");
   }, [reload]);

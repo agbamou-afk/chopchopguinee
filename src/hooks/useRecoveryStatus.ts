@@ -37,10 +37,12 @@ function getSnapshot() {
 }
 
 /** Fetches a fresh status and publishes it to every consumer. */
-export async function refreshRecoveryStatus(): Promise<RecoveryStatus | null> {
-  if (inflight) return inflight;
+export async function refreshRecoveryStatus(force = false): Promise<RecoveryStatus | null> {
+  if (inflight && !force) return inflight;
+  const previous = inflight;
   emit({ ...state, loading: true });
   inflight = (async () => {
+    if (previous) await previous.catch(() => null);
     const res = await fetchRecoveryStatus();
     emit({ status: res, loading: false });
     return res;
@@ -62,13 +64,16 @@ export function useRecoveryStatus() {
   const { isLoggedIn, ready } = useAuth();
   const snapshot = useSyncExternalStore(subscribe, getSnapshot);
 
-  const reload = useCallback(async (): Promise<RecoveryStatus | null> => {
-    if (!isLoggedIn) {
-      resetRecoveryStatus();
-      return null;
-    }
-    return refreshRecoveryStatus();
-  }, [isLoggedIn]);
+  const reload = useCallback(
+    async (force = false): Promise<RecoveryStatus | null> => {
+      if (!isLoggedIn) {
+        resetRecoveryStatus();
+        return null;
+      }
+      return refreshRecoveryStatus(force);
+    },
+    [isLoggedIn],
+  );
 
   useEffect(() => {
     if (!ready) return;
