@@ -128,34 +128,48 @@ function emit() {
   }
 }
 
+async function fetchAndApply(): Promise<void> {
+  try {
+    const { data, error } = await supabase
+      .from("feature_flags")
+      .select("key, enabled")
+      .in("key", KNOWN_FLAGS);
+    if (!error && Array.isArray(data)) {
+      const next: Record<FlagKey, boolean> = { ...DEFAULTS };
+      for (const row of data as { key: string; enabled: boolean }[]) {
+        if ((KNOWN_FLAGS as string[]).includes(row.key)) {
+          next[row.key as FlagKey] = !!row.enabled;
+        }
+      }
+      cache = next;
+    }
+  } catch {
+    // keep last known truth (or DEFAULTS on cold boot)
+  } finally {
+    loaded = true;
+    inflight = null;
+    emit();
+  }
+}
+
 export async function loadFeatureFlags(): Promise<void> {
   if (loaded) return;
   if (inflight) return inflight;
-  inflight = (async () => {
-    try {
-      const { data, error } = await supabase
-        .from("feature_flags")
-        .select("key, enabled")
-        .in("key", KNOWN_FLAGS);
-      if (!error && Array.isArray(data)) {
-        const next: Record<FlagKey, boolean> = { ...DEFAULTS };
-        for (const row of data as { key: string; enabled: boolean }[]) {
-          if ((KNOWN_FLAGS as string[]).includes(row.key)) {
-            next[row.key as FlagKey] = !!row.enabled;
-          }
-        }
-        cache = next;
-      }
-    } catch {
-      // keep DEFAULTS
-    } finally {
-      loaded = true;
-      inflight = null;
-      emit();
-    }
-  })();
+  inflight = fetchAndApply();
   return inflight;
 }
+
+/**
+ * Force a re-read of `public.feature_flags` into the SAME shared cache.
+ * Used by (a) the God-Admin surface right after an audited toggle RPC and
+ * (b) Realtime (re)subscription recovery so missed changes reconcile.
+ */
+export async function refreshFeatureFlags(): Promise<void> {
+  if (inflight) return inflight;
+  inflight = fetchAndApply();
+  return inflight;
+}
+
 
 export function getFlag(key: FlagKey): boolean {
   return cache[key];
