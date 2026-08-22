@@ -1,52 +1,38 @@
 import { motion, useReducedMotion } from "framer-motion";
-import motoIcon from "@/assets/icons/moto.png";
-import toktokIcon from "@/assets/icons/toktok.png";
-import repasIcon from "@/assets/icons/repas.png";
-import marcheIcon from "@/assets/icons/marche.png";
-import envoyerIcon from "@/assets/icons/envoyer.png";
-import scannerIcon from "@/assets/icons/scanner.png";
+import { ServiceIcon } from "@/components/services/ServiceIcon";
+import { getServiceIconAsset } from "@/lib/services/serviceIcons";
 import { useEnvoyerEnabled } from "@/lib/flags/useFeatureFlag";
 
 interface QuickActionsProps {
   onActionClick: (action: string) => void;
 }
 
-// Per-icon optical tuning. Each artwork has a slightly different inner
-// bounding box, so we balance the family by adjusting scale + nudges
-// inside the shared holder. Values tuned visually, not mathematically.
-type IconTuning = { scale: number; x: number; y: number };
-const SERVICE_ICON_TUNING: Record<string, IconTuning> = {
-  moto:    { scale: 1.57, x: 0, y: 0 },
-  toktok:  { scale: 1.5,  x: 0, y: 0 },
-  food:    { scale: 1.59, x: 0, y: 0 },
-  market:  { scale: 1.49, x: 0, y: 0 },
-  parcel:  { scale: 1.42, x: 0, y: 0 },
-  scan:    { scale: 1.42, x: 0, y: 0 },
-};
-
 /**
  * Single source of truth for the Home quick-service rail. Every entry maps
  * to a canonical `Index.handleAction` id — the exact same router the bottom
  * Services destination uses, so Home and Services can never diverge.
  * The archived public wallet is intentionally absent.
+ *
+ * Artwork and optical tuning come from `@/lib/services/serviceIcons` — never
+ * inline here — so this rail can never drift from Services / PrimaryActionGrid.
  */
 type RailService = {
   id: string;
   label: string;
-  img: string;
   alt: string;
   /** Accessible action label, e.g. "Ouvrir Envoyer". */
   aria: string;
 };
 
 const HOME_RAIL: RailService[] = [
-  { id: "moto",   img: motoIcon,    label: "Course",   alt: "Réserver une course moto",       aria: "Ouvrir Course" },
-  { id: "toktok", img: toktokIcon,  label: "Bonbonna", alt: "Réserver un tricycle Bonbonna",  aria: "Ouvrir Bonbonna" },
-  { id: "food",   img: repasIcon,   label: "Repas",    alt: "Commander un repas à domicile",  aria: "Ouvrir Repas" },
-  { id: "market", img: marcheIcon,  label: "Marché",   alt: "Acheter au marché en ligne",     aria: "Ouvrir Marché" },
-  { id: "parcel", img: envoyerIcon, label: "Envoyer",  alt: "Envoyer un colis ou un pli",     aria: "Ouvrir Envoyer" },
-  { id: "scan",   img: scannerIcon, label: "Scanner",  alt: "Scanner un QR CHOPCHOP",         aria: "Ouvrir Scanner" },
+  { id: "moto",   label: "Course",   alt: "Réserver une course moto",       aria: "Ouvrir Course" },
+  { id: "toktok", label: "Bonbonna", alt: "Réserver un tricycle Bonbonna",  aria: "Ouvrir Bonbonna" },
+  { id: "food",   label: "Repas",    alt: "Commander un repas à domicile",  aria: "Ouvrir Repas" },
+  { id: "market", label: "Marché",   alt: "Acheter au marché en ligne",     aria: "Ouvrir Marché" },
+  { id: "parcel", label: "Envoyer",  alt: "Envoyer un colis ou un pli",     aria: "Ouvrir Envoyer" },
+  { id: "scan",   label: "Scanner",  alt: "Scanner un QR CHOPCHOP",         aria: "Ouvrir Scanner" },
 ];
+
 
 const container = {
   hidden: { opacity: 0 },
