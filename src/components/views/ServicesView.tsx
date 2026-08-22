@@ -177,26 +177,22 @@ export function ServicesView({ onActionClick }: ServicesViewProps) {
               onClick={disabled ? undefined : t.onSelect}
               aria-disabled={disabled}
               aria-label={disabled ? `${t.label} — ${t.disabledReason}` : t.label}
+              data-service-id={t.iconId ?? t.id}
+              data-icon-family={t.family}
+              data-icon-asset={
+                t.family === "entry"
+                  ? "glyph"
+                  : getServiceIconAsset(t.iconId ?? t.id)
+                    ? "branded"
+                    : "glyph"
+              }
               className={`relative flex flex-col items-start gap-2.5 rounded-2xl card-warm p-3.5 min-h-[124px] text-left overflow-hidden transition-shadow ${
                 disabled ? "opacity-60" : "active:shadow-soft"
               }`}
             >
               <div className="pointer-events-none absolute inset-x-3 top-0 h-px saffron-seam opacity-70" aria-hidden />
-              <div className="w-11 h-11 rounded-xl bg-primary/10 ring-1 ring-primary/15 flex items-center justify-center overflow-hidden shrink-0">
-                {t.img ? (
-                  <img
-                    src={t.img}
-                    alt=""
-                    aria-hidden
-                    loading="lazy"
-                    width={1024}
-                    height={1024}
-                    className="w-11 h-11 object-contain scale-[1.4]"
-                  />
-                ) : t.Icon ? (
-                  <t.Icon className="w-5 h-5 text-primary" />
-                ) : null}
-              </div>
+              <ServiceIcon id={t.iconId ?? t.id} family={t.family} Glyph={t.Icon} />
+
               <div className="space-y-0.5 min-w-0">
                 <p className="text-[13.5px] font-semibold text-foreground leading-tight tracking-tight break-words">
                   {t.label}
