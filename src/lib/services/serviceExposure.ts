@@ -14,7 +14,7 @@
  *    replace server authorization, finance or service gates.
  */
 import { useMemo } from "react";
-import { type FlagKey, getFlag } from "@/lib/flags/featureFlags";
+import { type FlagKey, flagsReady, getFlag } from "@/lib/flags/featureFlags";
 import { useFeatureFlag, useFlagsReady } from "@/lib/flags/useFeatureFlag";
 
 /** Canonical customer action ids routed by `Index.handleAction` + nav. */
@@ -29,7 +29,9 @@ export type ExposureActionId =
   | "scan"
   | "merchant"
   | "driver"
-  | "help";
+  | "help"
+  /** Umbrella "Course" entry: Moto OR Bonbonna. */
+  | "ride";
 
 /**
  * Action -> flags that expose it. `any: true` means at least one flag is
@@ -40,6 +42,10 @@ type ExposureRule = { flags: FlagKey[]; any?: boolean };
 
 export const SERVICE_EXPOSURE_RULES: Record<ExposureActionId, ExposureRule> = {
   moto: { flags: ["service_moto_enabled"] },
+  // Composite umbrella entry ("Course — Moto ou Bonbonna"): visible while at
+  // least one of the two ride products is live. It never changes the
+  // individual Moto / Bonbonna exposure laws.
+  ride: { flags: ["service_moto_enabled", "service_toktok_enabled"], any: true },
   toktok: { flags: ["service_toktok_enabled"] },
   auto: { flags: ["taxi"] },
   parcel: { flags: ["envoyer_enabled"] },
@@ -81,8 +87,17 @@ function evaluate(rule: ExposureRule, read: (k: FlagKey) => boolean): boolean {
  */
 export function isActionExposed(action: string): boolean {
   const id = resolveExposureAction(action);
+  // Unknown / non-product router actions (`services`, `orders`, …) are never
+  // gated by product exposure.
   if (!id) return true;
-  return evaluate(SERVICE_EXPOSURE_RULES[id], getFlag);
+  const rule = SERVICE_EXPOSURE_RULES[id];
+  // Support/Aide is a safety surface: always reachable, even cold.
+  if (rule.flags.length === 0) return true;
+  // FAIL CLOSED: before the live flag rows resolve, a known gated product
+  // action cannot be routed (stale UI, deep link, AI/voice command). We reuse
+  // the one existing flag store's readiness — no second readiness subsystem.
+  if (!flagsReady()) return false;
+  return evaluate(rule, getFlag);
 }
 
 export type ServiceExposure = {
@@ -125,6 +140,7 @@ export function useServiceExposure(): ServiceExposure {
       merchant: merchantRecruit,
       driver: driverRecruit,
       help: true,
+      ride: moto || toktok,
     };
     const isExposed = (action: string) => {
       const id = resolveExposureAction(action);

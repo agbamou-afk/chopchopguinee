@@ -48,7 +48,8 @@ const OM_TILE_BASE: Omit<ActionDef, "label" | "subtitle"> = {
 const RIDE_TILES: ActionDef[] = [
   {
     id: "ride",
-    exposureId: "moto",
+    // Umbrella card — represents Moto OR Bonbonna (composite exposure rule).
+    exposureId: "ride",
     iconId: "moto",
     label: "Course",
     subtitle: "Moto ou Bonbonna",
