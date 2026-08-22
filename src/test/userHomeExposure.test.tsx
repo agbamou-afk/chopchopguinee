@@ -86,13 +86,16 @@ describe("SEAM 3 — WalletHero obeys public payment exposure", () => {
   it("renders nothing for the wallet entry when both public payment flags are OFF", () => {
     setFlags({ chop_pay_enabled: false, wallet_public_enabled: false });
     renderHome();
-    expect(screen.queryByText(/Solde disponible|Recharger|portefeuille/i)).toBeNull();
+    expect(document.querySelector('[aria-label="Solde ChopWallet"]')).toBeNull();
+    expect(document.querySelector('[aria-label="Paiement Orange Money"]')).toBeNull();
   });
 
   it("renders the wallet hero when chop_pay_enabled is ON", () => {
     setFlags({ chop_pay_enabled: true });
     renderHome();
-    expect(screen.getAllByText(/Recharger/i).length).toBeGreaterThan(0);
+    // Exposure only decides whether the entry exists; the hero's own internal
+    // Chop Pay vs Orange Money presentation is unchanged by this pass.
+    expect(document.querySelector('[aria-label="Paiement Orange Money"]')).toBeTruthy();
   });
 
   it("renders the wallet hero when only the legacy wallet_public_enabled alias is ON", () => {
@@ -105,7 +108,8 @@ describe("SEAM 3 — WalletHero obeys public payment exposure", () => {
     ready = false;
     setFlags({ chop_pay_enabled: true });
     renderHome();
-    expect(screen.queryByText(/Recharger/i)).toBeNull();
+    expect(document.querySelector('[aria-label="Paiement Orange Money"]')).toBeNull();
+    expect(document.querySelector('[aria-label="Solde ChopWallet"]')).toBeNull();
   });
 });
 
