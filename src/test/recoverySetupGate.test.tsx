@@ -13,6 +13,7 @@ import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 // ── Auth: signed-in, complete profile, non-admin ─────────────────────────────
 const auth = {
   ready: true,
+  user: { id: "user-a" },
   isLoggedIn: true,
   isProfileComplete: true,
   profileLoading: false,
