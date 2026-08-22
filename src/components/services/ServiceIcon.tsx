@@ -21,8 +21,9 @@ interface ServiceIconProps {
   Glyph?: GlyphComponent;
   /** Optional halo override for Family A (home surfaces use per-service halos). */
   chipClassName?: string;
-  /** Extra classes on the <img> (e.g. `float-soft`). */
+  /** Image sizing/animation classes. Defaults to the standard `w-11 h-11` badge. */
   imgClassName?: string;
+
 }
 
 /**
