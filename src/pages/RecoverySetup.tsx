@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecoveryStatus } from "@/hooks/useRecoveryStatus";
 import { RecoverySetupWizard } from "@/components/recovery/RecoverySetupWizard";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 
 /**
@@ -13,14 +14,20 @@ import { Seo } from "@/components/Seo";
  * Reached by (a) legacy accounts that signed in without recovery material and
  * (b) new accounts whose enrollment did not complete. Never a dead end: the
  * user keeps their session, their data and their intended destination.
+ *
+ * Completion is *revalidated against the server* before navigating. The page
+ * never leaves on a fire-and-forget refresh, so the globally mounted
+ * `RecoverySetupRedirect` can never bounce a just-enrolled user back here.
  */
 export default function RecoverySetup() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const nextParam = params.get("next");
-  const safeNext = nextParam && nextParam.startsWith("/") ? nextParam : "/";
+  const safeNext =
+    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
   const { ready, isLoggedIn } = useAuth();
   const { configured, loading, reload } = useRecoveryStatus();
+  const [phase, setPhase] = useState<"setup" | "finalizing" | "stalled">("setup");
 
   useEffect(() => {
     if (ready && !isLoggedIn) navigate("/auth", { replace: true });
@@ -29,6 +36,16 @@ export default function RecoverySetup() {
   useEffect(() => {
     if (!loading && configured) navigate(safeNext, { replace: true });
   }, [loading, configured, safeNext, navigate]);
+
+  // Revalidate against the server; only a fresh `configured=true` releases the
+  // gate. Anything else keeps the user here with a retry, never a dead end and
+  // never a reset back to a blank step 1.
+  const finalize = useCallback(async () => {
+    setPhase("finalizing");
+    const fresh = await reload();
+    if (fresh?.configured === true) return; // effect above performs the single redirect
+    setPhase("stalled");
+  }, [reload]);
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 flex justify-center">
@@ -52,7 +69,35 @@ export default function RecoverySetup() {
         </div>
 
         <div className="bg-card rounded-3xl shadow-elevated p-5">
-          <RecoverySetupWizard mode="enroll" onComplete={() => { void reload(); navigate(safeNext, { replace: true }); }} />
+          {phase === "setup" ? (
+            <RecoverySetupWizard mode="enroll" onComplete={() => void finalize()} />
+          ) : phase === "finalizing" ? (
+            <div
+              className="flex flex-col items-center gap-3 py-6 text-center"
+              role="status"
+              aria-live="polite"
+            >
+              <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden />
+              <p className="text-sm text-muted-foreground">Finalisation de la sécurisation…</p>
+            </div>
+          ) : (
+            <div className="space-y-3 text-center py-2" role="alert">
+              <p className="text-sm font-semibold text-foreground">
+                Configuration enregistrée, vérification impossible
+              </p>
+              <p className="text-[12px] text-muted-foreground leading-snug">
+                Votre clé a bien été confirmée. Nous n'avons pas pu vérifier l'état de votre compte.
+                Vérifiez votre connexion puis réessayez.
+              </p>
+              <Button
+                type="button"
+                onClick={() => void finalize()}
+                className="w-full h-11 gradient-primary"
+              >
+                Réessayer
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
