@@ -379,7 +379,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
       })
       .finally(() => { if (!cancelled) setRouting(false); });
     return () => { cancelled = true; };
-  }, [pickupCoords, destCoords, type, option.speedKmh]);
+  }, [pickupCoords, destCoords, type, option.speedKmh, routeAttempt]);
 
   // Recenter map when pickup changes alone (no destination yet)
   useEffect(() => {
@@ -388,14 +388,18 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
     }
   }, [pickupCoords, destCoords]);
 
-  const previewState: "idle" | "calculating" | "ready" | "unavailable" | "network" =
+  // Failure domains stay separate: a fare problem is never reported as a
+  // routing problem, and a signed-out session is reported as such.
+  const previewState: PreviewState =
     !destCoords ? "idle"
+    : !isLoggedIn ? "auth-required"
     : routing || quoting ? "calculating"
-    : quoteError ? "unavailable"
-    : routeError && distanceKm == null ? "unavailable"
+    : routeError && distanceKm == null ? "route-unavailable"
+    : quoteError ? "fare-unavailable"
     : routeError ? "network"
     : serverQuoteGnf != null ? "ready"
     : "calculating";
+
 
   return (
     <motion.div
