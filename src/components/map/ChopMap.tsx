@@ -12,6 +12,8 @@ export interface ChopMapHandle {
   flyTo: (lng: number, lat: number, zoom?: number) => void;
   fitBounds: (bbox: [number, number, number, number], padding?: number) => void;
 }
+export type MapDegradeReason = 'config' | 'tiles' | 'low-data';
+
 interface Props {
   initialView?: Partial<ViewState>;
   className?: string;
@@ -20,12 +22,11 @@ interface Props {
   onLoad?: () => void;
   onClick?: (lngLat: { lng: number; lat: number }) => void;
   /**
-   * Optional render prop used when tiles/config fail or low-data mode is
-   * active. Receives a retry callback. Callers should return a
-   * context-rich surface (e.g. DegradedMapPanel) so the user keeps
-   * pickup/dropoff/ETA info instead of a blank fallback.
+   * Optional render prop used when config/tiles fail, or when low-data mode
+   * suppresses a non-interactive map. Receives a retry callback and the exact
+   * reason so callers never confuse "mode éco" with a real failure.
    */
-  degradedFallback?: (ctx: { retry: () => void; reason: 'error' | 'low-data' }) => React.ReactNode;
+  degradedFallback?: (ctx: { retry: () => void; reason: MapDegradeReason }) => React.ReactNode;
 }
 export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
   { initialView, className, children, interactive = true, onLoad, onClick, degradedFallback }, ref,
