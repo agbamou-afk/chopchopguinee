@@ -1,41 +1,23 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
+/**
+ * Returns publishable map configuration only: a Mapbox `pk.` token (safe for
+ * the browser by design) and the public style / default viewport. No private
+ * data, so anonymous visitors are allowed — privacy layers (driver signals,
+ * nearby drivers) remain authenticated elsewhere.
+ */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
-    // Require authenticated caller — Mapbox token is quota-sensitive.
-    const authHeader = req.headers.get('Authorization') ?? '';
-    if (!authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'unauthorized', message: 'Authentication required for map configuration.' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    const userClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    let userId: string | null = null;
-    try {
-      const { data: userRes, error: authErr } = await userClient.auth.getUser(
-        authHeader.replace('Bearer ', ''),
-      );
-      if (authErr || !userRes?.user?.id) {
-        return new Response(
-          JSON.stringify({ error: 'unauthorized', message: 'Authentication required for map configuration.' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-        );
-      }
-      userId = userRes.user.id;
-    } catch {
-      return new Response(
-        JSON.stringify({ error: 'unauthorized', message: 'Authentication required for map configuration.' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
     const token = Deno.env.get('MAPBOX_PUBLIC_TOKEN') ?? '';
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: 'map_token_missing', message: 'Map token is not configured.' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -45,6 +27,7 @@ Deno.serve(async (req) => {
       .select('*')
       .eq('id', 1)
       .maybeSingle();
+
     return new Response(
       JSON.stringify({
         mapboxToken: token,
@@ -62,7 +45,7 @@ Deno.serve(async (req) => {
         },
       },
     );
-  } catch (e) {
+  } catch (_e) {
     return new Response(JSON.stringify({ error: 'maps_config_error', message: 'Map configuration unavailable.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
