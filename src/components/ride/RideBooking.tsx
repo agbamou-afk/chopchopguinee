@@ -175,9 +175,11 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
   }, [live.isRealLocation, live.coords?.lat, live.coords?.lng]);
 
   // Server-authoritative quote. The same function the commitment RPC uses,
-  // so the displayed price is exactly what will be charged.
+  // so the displayed price is exactly what will be charged. It is an
+  // authenticated-only surface: signed-out visitors get an explicit
+  // "connexion requise" state instead of a misleading routing error.
   useEffect(() => {
-    if (!pickupCoords || !destCoords) {
+    if (!pickupCoords || !destCoords || !isLoggedIn) {
       setServerQuoteGnf(null);
       setServerHoldGnf(null);
       setQuoteError(null);
@@ -210,7 +212,8 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
         setQuoting(false);
       });
     return () => { cancelled = true; };
-  }, [type, pickupCoords, destCoords]);
+  }, [type, pickupCoords, destCoords, isLoggedIn, quoteAttempt]);
+
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
