@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
         }
       }
       await logMapsRequest(admin, {
-        user_id: user.id, provider, action: 'search',
+        user_id: userId, provider, action: 'search',
         input: { q_len: q.length, has_proximity: !!body.proximity },
         output_summary: { count: results.length },
         status: results.length > 0 ? 'ok' : 'error',
@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
         try { label = await nominatimReverse(lat, lng); provider = 'nominatim'; } catch {}
       }
       await logMapsRequest(admin, {
-        user_id: user.id, provider, action: 'reverse',
+        user_id: userId, provider, action: 'reverse',
         input: { lat, lng },
         output_summary: { has_label: !!label },
         status: label ? 'ok' : 'error',
