@@ -114,8 +114,30 @@ export function EtaPricePreview({
         </div>
       </div>
 
-      {(state === "unavailable" || state === "network") && (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+      {state === "auth-required" && (
+        <div
+          data-testid="preview-auth-required"
+          className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground"
+        >
+          <LogIn className="h-3.5 w-3.5 shrink-0" />
+          <span className="flex-1">Connectez-vous pour voir le prix.</span>
+          {onSignIn && (
+            <button
+              type="button"
+              onClick={onSignIn}
+              className="font-semibold underline-offset-2 hover:underline"
+            >
+              Se connecter
+            </button>
+          )}
+        </div>
+      )}
+
+      {(state === "route-unavailable" || state === "fare-unavailable" || state === "network") && (
+        <div
+          data-testid={`preview-${state}`}
+          className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400"
+        >
           {state === "network" ? (
             <WifiOff className="h-3.5 w-3.5 shrink-0" />
           ) : (
@@ -124,7 +146,9 @@ export function EtaPricePreview({
           <span className="flex-1">
             {state === "network"
               ? "Connexion instable. Réessayez dans un instant."
-              : "Aucun itinéraire trouvé. Vérifiez la destination."}
+              : state === "fare-unavailable"
+                ? "Tarif indisponible pour le moment."
+                : "Aucun itinéraire trouvé. Vérifiez la destination."}
           </span>
           {onRetry && (
             <button
@@ -137,6 +161,7 @@ export function EtaPricePreview({
           )}
         </div>
       )}
+
 
       {state === "calculating" && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
