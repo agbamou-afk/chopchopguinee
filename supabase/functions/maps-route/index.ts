@@ -1,6 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { checkMapsRateLimit, logMapsRequest } from '../_shared/maps-rate-limit.ts';
+import { checkMapsRateLimit, checkAnonRateLimit, logMapsRequest } from '../_shared/maps-rate-limit.ts';
 
 interface LatLng { lat: number; lng: number }
 interface Body {
