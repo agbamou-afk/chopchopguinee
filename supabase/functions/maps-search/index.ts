@@ -150,17 +150,19 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
+  // Anonymous visitors can search (the map is public) under a stricter per-IP
+  // quota; signed-in callers keep the per-user DB quota.
   const authHeader = req.headers.get('Authorization') ?? '';
-  if (!authHeader.startsWith('Bearer ')) {
-    return bad(401, 'unauthorized', 'Authentication required.');
+  let userId: string | null = null;
+  if (authHeader.startsWith('Bearer ')) {
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: { user } } = await userClient.auth.getUser();
+    userId = user?.id ?? null;
   }
-  const userClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } },
-  );
-  const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return bad(401, 'unauthorized', 'Authentication required.');
 
   let body: Body;
   try {
@@ -170,8 +172,11 @@ Deno.serve(async (req) => {
   }
 
   // Rate limit: 90 calls / minute / user covers both search and reverse.
-  const rl = await checkMapsRateLimit(admin, user.id, 'eta', 90);
-  if (!rl.allowed) return bad(429, 'rate_limited', 'Trop de requêtes. Réessayez dans une minute.');
+  const allowed = userId
+    ? (await checkMapsRateLimit(admin, userId, 'eta', 90)).allowed
+    : checkAnonRateLimit(req, 'search', 30);
+  if (!allowed) return bad(429, 'rate_limited', 'Trop de requêtes. Réessayez dans une minute.');
+
 
   const key = Deno.env.get('GOOGLE_MAPS_SERVER_KEY') ?? '';
 
