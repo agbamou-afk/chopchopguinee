@@ -2,36 +2,33 @@
 
 ## What is confirmed
 
-- `ChopMap` shows a fallback in three different situations, and all three look identical to the user when a caller passes `degradedFallback` (Envoyer does):
+- The new Mapbox public token you provided is valid: a direct call to the Mapbox style endpoint with it returns HTTP 200.
+- `ChopMap` shows a fallback in three different situations, and all three look identical to the user when a caller passes `degradedFallback` (the Envoyer itinerary does):
   1. config error (`useMapConfig` failed),
-  2. tile runtime error (bad/expired Mapbox token, network),
+  2. tile runtime error (bad/expired token, network),
   3. low-data mode (`useLowDataMode`) — the map is intentionally never rendered, even when everything works.
-- `useMapConfig` refuses to even call the backend when there is no session, so signed-out visitors always get the fallback.
-- Once the config fetch fails, the failure is effectively sticky for the page: retry only happens on an auth state change, and a page reload is the only user-facing recovery.
-- `MAPBOX_PUBLIC_TOKEN` exists in backend secrets. Its validity is NOT verified — the current fallback hides whether Mapbox rejects it.
-- The signed-in root cause is not yet proven. It is one of: invalid/restricted Mapbox token, `maps-config` returning an error for the signed-in session, or low-data mode auto-triggering.
+- `useMapConfig` refuses to call the backend at all when there is no session, so signed-out visitors always get the fallback.
+- Once the config fetch fails, the failure is sticky for the page: it only retries on an auth state change, so a full reload is the only recovery.
+- `MAPBOX_PUBLIC_TOKEN` exists in backend secrets, but the value in there is not necessarily the valid token above — the signed-in failure is consistent with a stale/invalid stored token, and that is the first thing to correct.
 
-## Step 1 — Prove the cause before changing behaviour
+## Step 1 — Replace the stored token and re-test
 
-- Call `maps-config` with a real signed-in session and inspect the exact status/body and whether `mapboxToken` comes back non-empty.
-- If a token is returned, validate it directly against Mapbox's style endpoint to see if Mapbox itself rejects it (401/403).
-- Load the app signed in with the browser harness and read the console/network to see which of the three fallback paths fires.
+- Store the provided public token as `MAPBOX_PUBLIC_TOKEN` (it is a publishable `pk.` token, safe for the browser) and redeploy `maps-config` so it serves the new value.
+- Re-open the app signed in and confirm tiles render on home and in the Envoyer itinerary step.
 
-Outcome of Step 1 decides Step 3.
+If tiles now render signed in, the remaining work is Steps 2 and 3.
 
-## Step 2 — Make the failure modes distinguishable (regardless of cause)
+## Step 2 — Make failure modes distinguishable and recoverable
 
-- Give `ChopMap` an explicit `reason` (`'config' | 'tiles' | 'low-data' | 'unauthenticated'`) and pass it to `degradedFallback`.
+- Give `ChopMap` an explicit reason (`'config' | 'tiles' | 'low-data' | 'unauthenticated'`) and pass it to `degradedFallback`, so a stale token never again looks the same as "mode éco".
 - Log the real reason to console/analytics instead of collapsing everything into one silent card.
-- Add an in-place "Réessayer" that re-fetches config instead of forcing a full page reload, and clear the module-level failure so the retry can succeed.
-- Stop low-data mode from silently blanking interactive pickers (Envoyer, ride pickup): in low-data show the map but with a lighter style / reduced effects, or show a fallback that clearly says "mode éco" with a one-tap "Afficher la carte".
+- Add an in-place "Réessayer" that clears the cached failure and re-fetches config, instead of forcing a page reload.
+- Stop low-data mode from silently blanking interactive pickers (Envoyer, ride pickup): show the map with reduced effects, or a fallback that clearly says "mode éco" with a one-tap "Afficher la carte".
 
-## Step 3 — Fix the actual cause
+## Step 3 — Signed-out visitors
 
-Depending on Step 1:
-- Invalid or URL-restricted token → replace/repair `MAPBOX_PUBLIC_TOKEN` (and confirm the preview and published domains are allowed on the token).
-- Backend error → fix `maps-config`.
-- Signed-out gating → let `maps-config` serve the public style + publishable token to anonymous callers (rate-limited), and drop the client-side `unauthenticated` short-circuit. Privacy layers (driver signals, nearby drivers) stay authenticated.
+- Let `maps-config` serve the public style + publishable token to anonymous callers (rate-limited), and drop the client-side `unauthenticated` short-circuit.
+- Privacy layers (driver signals, nearby drivers) stay authenticated and unchanged.
 
 ## Step 4 — Certify
 
