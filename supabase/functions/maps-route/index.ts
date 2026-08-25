@@ -80,27 +80,19 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  // Require authentication — these endpoints incur paid Google Maps API costs.
+  // Signed-in callers get the per-user DB quota; anonymous visitors (the map is
+  // public) get a stricter per-IP quota instead of a hard 401.
   const authHeader = req.headers.get('Authorization') ?? '';
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  let userId: string | null = null;
+  if (authHeader.startsWith('Bearer ')) {
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: { user } } = await userClient.auth.getUser();
+    userId = user?.id ?? null;
   }
-  const userClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } },
-  );
-  const { data: { user } } = await userClient.auth.getUser();
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-  const userId: string = user.id;
 
   try {
     const body = await req.json();
@@ -111,13 +103,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    const rl = await checkMapsRateLimit(admin, userId, 'route', 60);
-    if (!rl.allowed) {
+    const allowed = userId
+      ? (await checkMapsRateLimit(admin, userId, 'route', 60)).allowed
+      : checkAnonRateLimit(req, 'route', 20);
+    if (!allowed) {
       return new Response(JSON.stringify({ error: 'Rate limited' }), {
         status: 429,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
     const key = Deno.env.get('GOOGLE_MAPS_SERVER_KEY');
     if (!key) throw new Error('GOOGLE_MAPS_SERVER_KEY not configured');
