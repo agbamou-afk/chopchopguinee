@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 export interface MapConfig {
   mapboxToken: string; styleUrl: string;
@@ -9,19 +9,17 @@ export interface MapConfig {
 }
 let cached: MapConfig | null = null;
 let inflight: Promise<MapConfig> | null = null;
+
 async function fetchConfig(): Promise<MapConfig> {
   if (cached) return cached;
   if (inflight) return inflight;
   inflight = (async () => {
     try {
-      // maps-config requires JWT — bail early if no session, so we don't
-      // produce a noisy 401 and the caller can render a fallback.
-      const { data: sess } = await supabase.auth.getSession();
-      if (!sess?.session?.access_token) {
-        throw new Error('unauthenticated');
-      }
+      // maps-config serves only publishable values (style + pk. token), so it
+      // works for signed-out visitors too. Privacy layers stay authenticated.
       const { data, error } = await supabase.functions.invoke('maps-config');
       if (error) throw error;
+      if (!data?.mapboxToken) throw new Error('map_token_missing');
       cached = data as MapConfig;
       return cached!;
     } finally {
@@ -30,11 +28,26 @@ async function fetchConfig(): Promise<MapConfig> {
   })();
   return inflight;
 }
+
+/** Clears the cached config so the next fetch hits the backend again. */
+export function resetMapConfigCache() {
+  cached = null;
+  inflight = null;
+}
+
 export function useMapConfig() {
   const [config, setConfig] = useState<MapConfig | null>(cached);
   const [error, setError] = useState<Error | null>(null);
+  const [nonce, setNonce] = useState(0);
+
+  const retry = useCallback(() => {
+    resetMapConfigCache();
+    setError(null);
+    setConfig(null);
+    setNonce((n) => n + 1);
+  }, []);
+
   useEffect(() => {
-    if (cached) return;
     let cancelled = false;
     const attempt = async () => {
       try {
@@ -44,15 +57,17 @@ export function useMapConfig() {
         if (!cancelled) setError(e as Error);
       }
     };
+    if (cached) { setConfig(cached); return; }
     attempt();
-    // Retry once auth becomes available (e.g. user logs in after mount).
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
-      if (session?.access_token && !cached && !cancelled) {
+    // Re-attempt when auth state changes (config may become richer once signed in).
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      if (!cached && !cancelled) {
         setError(null);
         attempt();
       }
     });
     return () => { cancelled = true; sub.subscription.unsubscribe(); };
-  }, []);
-  return { config, error, loading: !config && !error };
+  }, [nonce]);
+
+  return { config, error, loading: !config && !error, retry };
 }

@@ -12,6 +12,8 @@ export interface ChopMapHandle {
   flyTo: (lng: number, lat: number, zoom?: number) => void;
   fitBounds: (bbox: [number, number, number, number], padding?: number) => void;
 }
+export type MapDegradeReason = 'config' | 'tiles' | 'low-data';
+
 interface Props {
   initialView?: Partial<ViewState>;
   className?: string;
@@ -20,24 +22,25 @@ interface Props {
   onLoad?: () => void;
   onClick?: (lngLat: { lng: number; lat: number }) => void;
   /**
-   * Optional render prop used when tiles/config fail or low-data mode is
-   * active. Receives a retry callback. Callers should return a
-   * context-rich surface (e.g. DegradedMapPanel) so the user keeps
-   * pickup/dropoff/ETA info instead of a blank fallback.
+   * Optional render prop used when config/tiles fail, or when low-data mode
+   * suppresses a non-interactive map. Receives a retry callback and the exact
+   * reason so callers never confuse "mode éco" with a real failure.
    */
-  degradedFallback?: (ctx: { retry: () => void; reason: 'error' | 'low-data' }) => React.ReactNode;
+  degradedFallback?: (ctx: { retry: () => void; reason: MapDegradeReason }) => React.ReactNode;
 }
 export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
   { initialView, className, children, interactive = true, onLoad, onClick, degradedFallback }, ref,
 ) {
-  const { config, error } = useMapConfig();
+  const { config, error, retry: retryConfig } = useMapConfig();
   const mapRef = useRef<MapRef>(null);
   const loadedRef = useRef(false);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const { low } = useLowDataMode();
   React.useEffect(() => {
     if (error) {
-      try { Analytics.track('map.load.failed' as any, { metadata: { reason: String(error?.message ?? error) } }); } catch {}
+      const reason = String((error as any)?.message ?? error);
+      console.warn('[ChopMap] map config unavailable:', reason);
+      try { Analytics.track('map.load.failed' as any, { metadata: { stage: 'config', reason } }); } catch {}
       reportTileStatus('failed');
     }
   }, [error]);
@@ -49,23 +52,32 @@ export const ChopMap = forwardRef<ChopMapHandle, Props>(function ChopMap(
     flyTo: (lng, lat, zoom = 14) => mapRef.current?.flyTo({ center: [lng, lat], zoom, essential: true }),
     fitBounds: (b, padding = 60) => mapRef.current?.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding, duration: 600 }),
   }));
+
+  const retry = () => {
+    setRuntimeError(null);
+    loadedRef.current = false;
+    retryConfig();
+  };
+
   if (error || runtimeError) {
-    const retry = () => { try { window.location.reload(); } catch {} };
+    const reason: MapDegradeReason = runtimeError ? 'tiles' : 'config';
     if (degradedFallback) {
-      return <div className={className}>{degradedFallback({ retry, reason: 'error' })}</div>;
+      return <div className={className}>{degradedFallback({ retry, reason })}</div>;
     }
     return (
       <MapFallbackCard
         className={className}
-        message={runtimeError ?? "Mode hors-ligne — vérifiez votre connexion."}
+        message={runtimeError ?? "Carte indisponible — vérifiez votre connexion."}
         onRetry={retry}
       />
     );
   }
   if (!config) return <Skeleton className={`rounded-2xl ${className ?? ''}`} />;
-  if (low) {
+  // Low-data mode never blanks an interactive map — users must still be able
+  // to pick points. It only simplifies rendering (see maxPitch/fadeDuration).
+  if (low && !interactive) {
     if (degradedFallback) {
-      return <div className={className}>{degradedFallback({ retry: () => {}, reason: 'low-data' })}</div>;
+      return <div className={className}>{degradedFallback({ retry, reason: 'low-data' })}</div>;
     }
     return (
       <div className={`relative chop-map-fallback rounded-2xl ${className ?? ''}`}>

@@ -63,16 +63,24 @@ export function RouteMapPicker({ pickup, destination, active, onChange, classNam
     });
   };
 
-  const fallback = (
+  const fallback = (reason: 'config' | 'tiles' | 'low-data', retry: () => void) => (
     <div
       className="h-full w-full rounded-2xl border border-border bg-muted/40 flex flex-col items-center justify-center gap-2 px-4 text-center"
       data-testid="envoyer-map-fallback"
     >
       <MapPinOff className="w-5 h-5 text-muted-foreground" aria-hidden />
       <p className="text-[12px] text-muted-foreground leading-snug">
-        Carte temporairement indisponible. Vous pouvez toujours choisir vos points par recherche
-        ci-dessus.
+        {reason === 'low-data'
+          ? "Mode éco activé — la carte est masquée pour économiser vos données."
+          : "Carte temporairement indisponible. Vous pouvez toujours choisir vos points par recherche ci-dessus."}
       </p>
+      <button
+        type="button"
+        onClick={retry}
+        className="mt-1 h-8 px-3 rounded-full border border-border/60 bg-card/80 text-xs font-semibold text-foreground hover:bg-card transition"
+      >
+        {reason === 'low-data' ? 'Afficher la carte' : 'Réessayer'}
+      </button>
     </div>
   );
 
@@ -93,7 +101,7 @@ export function RouteMapPicker({ pickup, destination, active, onChange, classNam
           zoom: pickup || destination ? 14 : 12,
         }}
         onClick={({ lng, lat }) => commit(active, lat, lng)}
-        degradedFallback={() => fallback}
+        degradedFallback={({ reason, retry }) => fallback(reason, retry)}
       >
         {pickup && (
           <Marker
