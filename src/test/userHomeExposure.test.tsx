@@ -131,3 +131,31 @@ describe("SEAM 3 — Home recruitment cards use canonical Family-B typology", ()
     expect(screen.queryByText("Devenir chauffeur")).toBeNull();
   });
 });
+
+describe("HOME MAP — commerce directory exposure law", () => {
+  it("shows the directory map when ride flags are OFF but commerce is ON (J)", () => {
+    setFlags({ service_moto_enabled: false, service_toktok_enabled: false, taxi: false });
+    renderHome();
+    expect(screen.getByTestId("home-commerce-map")).toBeTruthy();
+    expect(screen.getByText("Commerces près de vous")).toBeTruthy();
+  });
+
+  it("hides the directory section when both commerce flags are OFF (K)", () => {
+    setFlags({ service_repas_enabled: false, service_marche_enabled: false });
+    renderHome();
+    expect(screen.queryByTestId("home-commerce-map")).toBeNull();
+  });
+
+  it("keeps the directory map when only Marché is exposed (I)", () => {
+    setFlags({ service_repas_enabled: false });
+    renderHome();
+    expect(screen.getByTestId("home-commerce-map")).toBeTruthy();
+  });
+
+  it("never turns the home map into a Moto booking control (E)", () => {
+    renderHome();
+    expect(screen.queryByText("Chauffeurs près de vous")).toBeNull();
+    expect(screen.queryByText("Chauffeurs disponibles")).toBeNull();
+    expect(document.querySelector('[aria-label="Voir les chauffeurs disponibles"]')).toBeNull();
+  });
+});
