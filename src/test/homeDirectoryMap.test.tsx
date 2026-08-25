@@ -41,8 +41,13 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 // ---------------------------------------------------------------- map stack
 vi.mock("react-map-gl", () => ({
-  Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
+  Marker: ({ children, onClick }: any) => (
+    <div data-testid="marker" onClick={() => onClick?.({ originalEvent: { stopPropagation() {} } })}>
+      {children}
+    </div>
+  ),
   Popup: ({ children }: any) => <div data-testid="popup">{children}</div>,
+
 }));
 vi.mock("mapbox-gl/dist/mapbox-gl.css", () => ({}));
 
