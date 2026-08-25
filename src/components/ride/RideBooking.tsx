@@ -9,7 +9,9 @@ import { ChopMap, type ChopMapHandle, RoutePolyline, NearbyAvailableDrivers, Dra
 import { Marker } from "react-map-gl";
 import { MapMarker } from "@/components/map/MapMarker";
 import { RoutingService, formatDistance, formatDuration, searchPlaces, reverseGeocode } from "@/lib/maps";
-import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
+import { EtaPricePreview, type PreviewState } from "@/components/booking/EtaPricePreview";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { searchConakryPlaces, categoryLabel, confidenceLabel } from "@/lib/locations/searchPlaces";
 import { useLiveUserLocation, CONAKRY_FALLBACK } from "@/lib/location/useLiveUserLocation";
 import { logLocationSearchEvent } from "@/lib/locations/locationSearchTelemetry";
@@ -93,6 +95,8 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
   // user picks a place. The Conakry fallback is ONLY a visual map center —
   // never a pickup coordinate (see CHOPCHOP_MAP_STRATEGY.md).
   const live = useLiveUserLocation();
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   const [pickupCoords, setPickupCoords] = useState<[number, number] | null>(
     initialIntent?.pickupCoords ?? null,
   );
@@ -121,9 +125,13 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
   const [serverHoldGnf, setServerHoldGnf] = useState<number | null>(null);
   const [quoting, setQuoting] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  // Retry counters so a failing domain can be re-attempted on its own.
+  const [quoteAttempt, setQuoteAttempt] = useState(0);
+  const [routeAttempt, setRouteAttempt] = useState(0);
   const [paymentMode, setPaymentMode] = useState<"chop_pay" | "cash">("chop_pay");
   const debounceRef = useRef<number | null>(null);
   const mapRef = useRef<ChopMapHandle>(null);
+
   const option = rideOptions[type];
   const Icon = option.icon;
   // Product differentiation (capacity / cargo / weather) so Bonbonna is not
@@ -175,9 +183,11 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
   }, [live.isRealLocation, live.coords?.lat, live.coords?.lng]);
 
   // Server-authoritative quote. The same function the commitment RPC uses,
-  // so the displayed price is exactly what will be charged.
+  // so the displayed price is exactly what will be charged. It is an
+  // authenticated-only surface: signed-out visitors get an explicit
+  // "connexion requise" state instead of a misleading routing error.
   useEffect(() => {
-    if (!pickupCoords || !destCoords) {
+    if (!pickupCoords || !destCoords || !isLoggedIn) {
       setServerQuoteGnf(null);
       setServerHoldGnf(null);
       setQuoteError(null);
@@ -210,7 +220,8 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
         setQuoting(false);
       });
     return () => { cancelled = true; };
-  }, [type, pickupCoords, destCoords]);
+  }, [type, pickupCoords, destCoords, isLoggedIn, quoteAttempt]);
+
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
@@ -372,7 +383,7 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
       })
       .finally(() => { if (!cancelled) setRouting(false); });
     return () => { cancelled = true; };
-  }, [pickupCoords, destCoords, type, option.speedKmh]);
+  }, [pickupCoords, destCoords, type, option.speedKmh, routeAttempt]);
 
   // Recenter map when pickup changes alone (no destination yet)
   useEffect(() => {
@@ -381,14 +392,18 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
     }
   }, [pickupCoords, destCoords]);
 
-  const previewState: "idle" | "calculating" | "ready" | "unavailable" | "network" =
+  // Failure domains stay separate: a fare problem is never reported as a
+  // routing problem, and a signed-out session is reported as such.
+  const previewState: PreviewState =
     !destCoords ? "idle"
+    : !isLoggedIn ? "auth-required"
     : routing || quoting ? "calculating"
-    : quoteError ? "unavailable"
-    : routeError && distanceKm == null ? "unavailable"
+    : routeError && distanceKm == null ? "route-unavailable"
+    : quoteError ? "fare-unavailable"
     : routeError ? "network"
     : serverQuoteGnf != null ? "ready"
     : "calculating";
+
 
   return (
     <motion.div
@@ -640,7 +655,11 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
           fareLowGnf={previewState === "ready" && serverQuoteGnf != null ? serverQuoteGnf : undefined}
           fareHighGnf={previewState === "ready" && serverQuoteGnf != null ? serverQuoteGnf : undefined}
           paymentMethod={paymentMode === "cash" ? "cash" : "wallet"}
-          onRetry={() => destCoords && setDestCoords([...destCoords] as [number, number])}
+          onRetry={() => {
+            if (previewState === "fare-unavailable") setQuoteAttempt((n) => n + 1);
+            else setRouteAttempt((n) => n + 1);
+          }}
+          onSignIn={() => navigate("/auth?next=/")}
         />
 
         {/* CRS-G3: explicit customer payment choice. */}
@@ -692,7 +711,14 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
           )}
         </div>
 
-        {!confirmed ? (
+        {!isLoggedIn ? (
+          <Button
+            onClick={() => navigate("/auth?next=/")}
+            className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
+          >
+            Se connecter pour réserver
+          </Button>
+        ) : !confirmed ? (
           <Button
             onClick={() => {
               if (!pickupCoords) {

@@ -1,8 +1,19 @@
-import { Bike, Car, Clock, Wallet, AlertTriangle, Loader2, WifiOff } from "lucide-react";
+import { Bike, Car, Clock, Wallet, AlertTriangle, Loader2, WifiOff, LogIn } from "lucide-react";
 import { formatGNF } from "@/lib/format";
 import { formatDistance, formatDuration } from "@/lib/maps";
 
-export type PreviewState = "idle" | "calculating" | "ready" | "unavailable" | "network";
+/**
+ * Distinct failure domains. A fare failure must never be reported as a
+ * routing failure (and vice-versa): the copy tells the customer what to fix.
+ */
+export type PreviewState =
+  | "idle"
+  | "calculating"
+  | "ready"
+  | "route-unavailable"
+  | "fare-unavailable"
+  | "auth-required"
+  | "network";
 
 interface Props {
   state: PreviewState;
@@ -16,8 +27,12 @@ interface Props {
   fareHighGnf?: number;
   paymentMethod?: "wallet" | "cash";
   onChangePayment?: () => void;
+  /** Retry the failing domain only (route or fare). */
   onRetry?: () => void;
+  /** Sign-in action, shown only for the auth-required state. */
+  onSignIn?: () => void;
 }
+
 
 const SERVICE_LABEL = { moto: "Moto", toktok: "Bonbonna", auto: "Taxi", livraison: "Livraison" } as const;
 const SERVICE_ICON = { moto: Bike, toktok: Car, auto: Car, livraison: Bike } as const;
@@ -37,6 +52,7 @@ export function EtaPricePreview({
   paymentMethod = "wallet",
   onChangePayment,
   onRetry,
+  onSignIn,
 }: Props) {
   const Icon = SERVICE_ICON[serviceType];
   const showSkeleton = state === "calculating";
@@ -52,12 +68,15 @@ export function EtaPricePreview({
           <p className="text-xs text-muted-foreground">
             {state === "calculating" && "Calcul en cours…"}
             {state === "ready" && distanceM != null && formatDistance(distanceM)}
-            {state === "unavailable" && "Itinéraire indisponible"}
+            {state === "route-unavailable" && "Itinéraire indisponible"}
+            {state === "fare-unavailable" && "Tarif indisponible"}
+            {state === "auth-required" && "Connexion requise"}
             {state === "network" && "Réseau instable"}
             {state === "idle" && "Choisissez votre destination"}
           </p>
         </div>
       </div>
+
 
       <div className="grid grid-cols-2 gap-2">
         {/* ETA */}
@@ -95,8 +114,30 @@ export function EtaPricePreview({
         </div>
       </div>
 
-      {(state === "unavailable" || state === "network") && (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+      {state === "auth-required" && (
+        <div
+          data-testid="preview-auth-required"
+          className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground"
+        >
+          <LogIn className="h-3.5 w-3.5 shrink-0" />
+          <span className="flex-1">Connectez-vous pour voir le prix.</span>
+          {onSignIn && (
+            <button
+              type="button"
+              onClick={onSignIn}
+              className="font-semibold underline-offset-2 hover:underline"
+            >
+              Se connecter
+            </button>
+          )}
+        </div>
+      )}
+
+      {(state === "route-unavailable" || state === "fare-unavailable" || state === "network") && (
+        <div
+          data-testid={`preview-${state}`}
+          className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400"
+        >
           {state === "network" ? (
             <WifiOff className="h-3.5 w-3.5 shrink-0" />
           ) : (
@@ -105,7 +146,9 @@ export function EtaPricePreview({
           <span className="flex-1">
             {state === "network"
               ? "Connexion instable. Réessayez dans un instant."
-              : "Aucun itinéraire trouvé. Vérifiez la destination."}
+              : state === "fare-unavailable"
+                ? "Tarif indisponible pour le moment."
+                : "Aucun itinéraire trouvé. Vérifiez la destination."}
           </span>
           {onRetry && (
             <button
@@ -118,6 +161,7 @@ export function EtaPricePreview({
           )}
         </div>
       )}
+
 
       {state === "calculating" && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
