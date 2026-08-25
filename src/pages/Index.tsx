@@ -128,6 +128,9 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [activeView, setActiveView] = useState<ActiveView>(initialView);
   const [bookingRide, setBookingRide] = useState<RideType>(null);
+  /** Repas deep-selection coming from a directory map pin (no ride semantics). */
+  const [foodRestaurantId, setFoodRestaurantId] = useState<string | null>(null);
+
   // One persisted uuid per booking commitment attempt (retry idempotency).
   const bookingRequestIds = useRef(createBookingRequestIdStore());
   const [bookingDestination, setBookingDestination] = useState<string | undefined>(undefined);
@@ -719,7 +722,7 @@ const Index = () => {
     setDriverMode(true);
   };
 
-  const handleAction = (action: string, params?: { destination?: string }) => {
+  const handleAction = (action: string, params?: { destination?: string; restaurantId?: string }) => {
     // PASS 2 bypass guard: a product whose exposure flag is OFF cannot be
     // reached through the central action router, even from stale UI, deep
     // links, voice/AI commands or cached surfaces.
@@ -756,6 +759,7 @@ const Index = () => {
         setActiveTab("services");
         break;
       case "food":
+        setFoodRestaurantId(params?.restaurantId ?? null);
         setActiveView("food");
         break;
       case "market":
@@ -876,7 +880,7 @@ const Index = () => {
       case "services":
         return <ServicesView onActionClick={handleAction} />;
       case "food":
-        return <FoodView onBack={handleBackToHome} />;
+        return <FoodView onBack={handleBackToHome} initialRestaurantId={foodRestaurantId} />;
       case "market":
         return <MarketView onBack={handleBackToHome} />;
       case "wallet":

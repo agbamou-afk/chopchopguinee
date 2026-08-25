@@ -12,9 +12,11 @@ import { useMerchantIdentity } from "@/hooks/useMerchantIdentity";
 
 interface FoodViewProps {
   onBack: () => void;
+  /** Preselect a restaurant (e.g. opened from a Home directory map pin). */
+  initialRestaurantId?: string | null;
 }
 
-export function FoodView({ onBack }: FoodViewProps) {
+export function FoodView({ onBack, initialRestaurantId = null }: FoodViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [active, setActive] = useState<RepasDiscoveryRestaurant | null>(null);
@@ -45,6 +47,19 @@ export function FoodView({ onBack }: FoodViewProps) {
       clearTimeout(t);
     };
   }, [searchQuery]);
+
+  // Directory map click-through: open the existing detail sheet once the
+  // canonical discovery row for that restaurant is loaded. No parallel page.
+  const [pendingRestaurantId, setPendingRestaurantId] = useState<string | null>(initialRestaurantId);
+  useEffect(() => { setPendingRestaurantId(initialRestaurantId); }, [initialRestaurantId]);
+  useEffect(() => {
+    if (!pendingRestaurantId || !restaurants) return;
+    const match = restaurants.find((r) => r.id === pendingRestaurantId);
+    if (match) {
+      setActive(match);
+      setPendingRestaurantId(null);
+    }
+  }, [pendingRestaurantId, restaurants]);
 
   const cuisines = useMemo(() => {
     if (!restaurants) return [] as string[];

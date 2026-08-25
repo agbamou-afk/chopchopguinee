@@ -1,12 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Marker, Popup } from 'react-map-gl';
 import { ChopPin } from './ChopPin';
-import { useVendorDiscovery, type VendorDiscoveryFilters } from '@/lib/locations/useVendorDiscovery';
+import { useVendorDiscovery, type VendorDiscoveryFilters, type DiscoveryVendor } from '@/lib/locations/useVendorDiscovery';
 
 interface Props {
   /** Only show in customer-facing surfaces. Driver-mode callers must pass false. */
   enabled?: boolean;
   filters?: VendorDiscoveryFilters;
+  /**
+   * Click-through into the existing public commerce surfaces
+   * (`/marche/boutique/:slug` for stores, Repas detail for restaurants).
+   * When omitted the layer keeps the read-only popup behaviour.
+   */
+  onSelect?: (vendor: DiscoveryVendor) => void;
 }
 
 /**
@@ -20,11 +26,12 @@ interface Props {
  *
  * TODO(discovery): add hub/agent/Chop point pins once those tables ship.
  */
-export function VendorDiscoveryLayer({ enabled = true, filters = {} }: Props) {
+export function VendorDiscoveryLayer({ enabled = true, filters = {}, onSelect }: Props) {
   const { vendors } = useVendorDiscovery(filters, { enabled });
   const [openId, setOpenId] = useState<string | null>(null);
   const open = useMemo(() => vendors.find((v) => v.id === openId) ?? null, [vendors, openId]);
   if (!enabled || vendors.length === 0) return null;
+
   return (
     <>
       {vendors.map((v) => (
@@ -58,7 +65,18 @@ export function VendorDiscoveryLayer({ enabled = true, filters = {} }: Props) {
             {open.deliveryAvailable && (
               <p className="text-[10px] text-primary mt-0.5">Livraison disponible</p>
             )}
+            {onSelect && (
+              <button
+                type="button"
+                data-testid={`vendor-open-${open.kind}`}
+                onClick={() => onSelect(open)}
+                className="mt-1.5 text-[11px] font-semibold text-primary"
+              >
+                {open.kind === 'restaurant' ? 'Voir le menu' : 'Voir la boutique'}
+              </button>
+            )}
           </div>
+
         </Popup>
       )}
     </>
