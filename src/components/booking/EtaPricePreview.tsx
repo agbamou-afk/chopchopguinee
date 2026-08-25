@@ -1,8 +1,19 @@
-import { Bike, Car, Clock, Wallet, AlertTriangle, Loader2, WifiOff } from "lucide-react";
+import { Bike, Car, Clock, Wallet, AlertTriangle, Loader2, WifiOff, LogIn } from "lucide-react";
 import { formatGNF } from "@/lib/format";
 import { formatDistance, formatDuration } from "@/lib/maps";
 
-export type PreviewState = "idle" | "calculating" | "ready" | "unavailable" | "network";
+/**
+ * Distinct failure domains. A fare failure must never be reported as a
+ * routing failure (and vice-versa): the copy tells the customer what to fix.
+ */
+export type PreviewState =
+  | "idle"
+  | "calculating"
+  | "ready"
+  | "route-unavailable"
+  | "fare-unavailable"
+  | "auth-required"
+  | "network";
 
 interface Props {
   state: PreviewState;
@@ -16,8 +27,12 @@ interface Props {
   fareHighGnf?: number;
   paymentMethod?: "wallet" | "cash";
   onChangePayment?: () => void;
+  /** Retry the failing domain only (route or fare). */
   onRetry?: () => void;
+  /** Sign-in action, shown only for the auth-required state. */
+  onSignIn?: () => void;
 }
+
 
 const SERVICE_LABEL = { moto: "Moto", toktok: "Bonbonna", auto: "Taxi", livraison: "Livraison" } as const;
 const SERVICE_ICON = { moto: Bike, toktok: Car, auto: Car, livraison: Bike } as const;
