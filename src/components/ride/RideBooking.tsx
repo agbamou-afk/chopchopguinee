@@ -121,9 +121,13 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
   const [serverHoldGnf, setServerHoldGnf] = useState<number | null>(null);
   const [quoting, setQuoting] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  // Retry counters so a failing domain can be re-attempted on its own.
+  const [quoteAttempt, setQuoteAttempt] = useState(0);
+  const [routeAttempt, setRouteAttempt] = useState(0);
   const [paymentMode, setPaymentMode] = useState<"chop_pay" | "cash">("chop_pay");
   const debounceRef = useRef<number | null>(null);
   const mapRef = useRef<ChopMapHandle>(null);
+
   const option = rideOptions[type];
   const Icon = option.icon;
   // Product differentiation (capacity / cargo / weather) so Bonbonna is not
