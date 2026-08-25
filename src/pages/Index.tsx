@@ -128,6 +128,9 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [activeView, setActiveView] = useState<ActiveView>(initialView);
   const [bookingRide, setBookingRide] = useState<RideType>(null);
+  /** Repas deep-selection coming from a directory map pin (no ride semantics). */
+  const [foodRestaurantId, setFoodRestaurantId] = useState<string | null>(null);
+
   // One persisted uuid per booking commitment attempt (retry idempotency).
   const bookingRequestIds = useRef(createBookingRequestIdStore());
   const [bookingDestination, setBookingDestination] = useState<string | undefined>(undefined);
