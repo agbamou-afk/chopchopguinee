@@ -711,7 +711,14 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
           )}
         </div>
 
-        {!confirmed ? (
+        {!isLoggedIn ? (
+          <Button
+            onClick={() => navigate("/auth?next=/")}
+            className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
+          >
+            Se connecter pour réserver
+          </Button>
+        ) : !confirmed ? (
           <Button
             onClick={() => {
               if (!pickupCoords) {
