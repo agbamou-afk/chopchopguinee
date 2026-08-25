@@ -20,11 +20,11 @@ import { useLiveUserLocation } from "@/lib/location/useLiveUserLocation";
 import { MapPin } from "lucide-react";
 import { useNearbyAvailableDrivers } from "@/hooks/useNearbyAvailableDrivers";
 
-const NearbyDriversMap = lazy(() => import("@/components/home/NearbyDriversMap"));
+import { LocalCommerceMap } from "@/components/home/LocalCommerceMap";
 import { discoverRestaurants, type RepasDiscoveryRestaurant } from "@/lib/repas/discovery";
 
 interface UserHomeProps {
-  onActionClick: (action: string, params?: { destination?: string }) => void;
+  onActionClick: (action: string, params?: { destination?: string; restaurantId?: string }) => void;
   onToggleDriverMode: () => void;
 }
 
