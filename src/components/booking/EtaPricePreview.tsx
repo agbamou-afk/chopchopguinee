@@ -52,6 +52,7 @@ export function EtaPricePreview({
   paymentMethod = "wallet",
   onChangePayment,
   onRetry,
+  onSignIn,
 }: Props) {
   const Icon = SERVICE_ICON[serviceType];
   const showSkeleton = state === "calculating";
@@ -67,12 +68,15 @@ export function EtaPricePreview({
           <p className="text-xs text-muted-foreground">
             {state === "calculating" && "Calcul en cours…"}
             {state === "ready" && distanceM != null && formatDistance(distanceM)}
-            {state === "unavailable" && "Itinéraire indisponible"}
+            {state === "route-unavailable" && "Itinéraire indisponible"}
+            {state === "fare-unavailable" && "Tarif indisponible"}
+            {state === "auth-required" && "Connexion requise"}
             {state === "network" && "Réseau instable"}
             {state === "idle" && "Choisissez votre destination"}
           </p>
         </div>
       </div>
+
 
       <div className="grid grid-cols-2 gap-2">
         {/* ETA */}
