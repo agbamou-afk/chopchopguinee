@@ -174,95 +174,21 @@ export function UserHome({ onActionClick, onToggleDriverMode }: UserHomeProps) {
           </div>
         </section>
 
-        {/* Nearby drivers — live map preview */}
-        {exposure.ready && exposure.isExposed("moto") && (
-        <section>
-          <div className="flex items-center justify-between mb-2 px-0.5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              {live.isRealLocation ? "Chauffeurs près de vous" : "Chauffeurs disponibles"}
-            </h2>
-            <button
-              onClick={() => onActionClick("moto")}
-              className="text-xs font-semibold text-primary"
-            >
-              Réserver
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => onActionClick("moto")}
-            className="relative block w-full h-44 rounded-3xl overflow-hidden shadow-card border border-border/60 active:scale-[0.99] transition-transform"
-            aria-label="Voir les chauffeurs disponibles"
-          >
-            {lowDataMode ? (
-              <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/15 via-muted to-secondary/20 flex items-center justify-center">
-                <span className="text-xs font-semibold text-foreground/80">Carte désactivée — mode données réduites</span>
-              </div>
-            ) : (
-              <Suspense fallback={<Skeleton className="absolute inset-0 w-full h-full" />}>
-                <NearbyDriversMap
-                  lng={mapCenter.lng}
-                  lat={mapCenter.lat}
-                  userPresent={live.isRealLocation}
-                />
-              </Suspense>
-            )}
-            <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-card/95 backdrop-blur rounded-full px-2.5 py-1 shadow-card">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-70 pulse-dot" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success" />
-              </span>
-              <Bike className="w-3 h-3 text-primary" />
-              <span className="text-[11px] font-semibold text-foreground">En direct</span>
-            </div>
-            {live.isRealLocation && !lowDataMode && (
-              <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 bg-card/95 backdrop-blur rounded-full px-2.5 py-1 shadow-card">
-                <span className="text-[11px] font-semibold text-foreground">
-                  {nearby.loading && nearby.drivers.length === 0
-                    ? "Recherche…"
-                    : nearby.drivers.length === 0
-                      ? "Aucun chauffeur proche"
-                      : `${nearby.drivers.length} ${nearby.drivers.length > 1 ? "chauffeurs" : "chauffeur"}${closestDriverMin ? ` · ~${closestDriverMin} min` : ""}`}
-                </span>
-              </div>
-            )}
-            {!live.isRealLocation && !lowDataMode && (
-              <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 bg-card/95 backdrop-blur rounded-2xl px-3 py-2 shadow-card">
-                <div className="flex items-center gap-2 text-left min-w-0">
-                  <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold text-foreground truncate">
-                      Position non activée
-                    </p>
-                    <p className="text-[10px] text-muted-foreground truncate">
-                      Carte centrée sur Conakry
-                    </p>
-                  </div>
-                </div>
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    void live.requestLocation();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      void live.requestLocation();
-                    }
-                  }}
-                  className="text-[11px] font-semibold text-primary shrink-0 px-2 py-1 rounded-full bg-primary/10"
-                >
-                  Activer
-                </span>
-              </div>
-            )}
-          </button>
-        </section>
+        {/* Local commerce directory — NOT a ride surface. Exposed by Repas OR
+            Marché only; ride flags never suppress business pins. */}
+        {exposure.ready && (exposure.isExposed("food") || exposure.isExposed("market")) && (
+          <LocalCommerceMap
+            lng={mapCenter.lng}
+            lat={mapCenter.lat}
+            userPresent={live.isRealLocation}
+            lowDataMode={lowDataMode}
+            showRestaurants={exposure.isExposed("food")}
+            showStores={exposure.isExposed("market")}
+            onOpenRestaurant={(restaurantId) => onActionClick("food", { restaurantId })}
+            onRequestLocation={() => void live.requestLocation()}
+          />
         )}
+
 
         {/* Recent destinations */}
         {exposure.ready && exposure.isExposed("moto") && (
