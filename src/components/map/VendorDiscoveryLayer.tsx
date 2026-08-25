@@ -65,7 +65,18 @@ export function VendorDiscoveryLayer({ enabled = true, filters = {}, onSelect }:
             {open.deliveryAvailable && (
               <p className="text-[10px] text-primary mt-0.5">Livraison disponible</p>
             )}
+            {onSelect && (
+              <button
+                type="button"
+                data-testid={`vendor-open-${open.kind}`}
+                onClick={() => onSelect(open)}
+                className="mt-1.5 text-[11px] font-semibold text-primary"
+              >
+                {open.kind === 'restaurant' ? 'Voir le menu' : 'Voir la boutique'}
+              </button>
+            )}
           </div>
+
         </Popup>
       )}
     </>
