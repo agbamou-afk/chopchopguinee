@@ -1,66 +1,82 @@
-# Home Map — Diagnosis and Surgical Remediation Plan
+# Moto Booking — "Aucun itinéraire trouvé" Audit (read-only)
 
-Audit only; nothing was changed.
+## Verdict
 
-## Root causes (verified)
+The route did NOT fail. Routing returned a valid itinerary for the reported destination. The blank ETA/price and the "Aucun itinéraire trouvé. Vérifiez la destination." card come from a **fare-quote authorization failure that the UI misclassifies as a routing failure**.
 
-**1. Anonymous discovery query dies on the first request, so ALL pins disappear.**
-`useVendorDiscovery` queries `food_restaurants` first, then `merchant_stores`, inside a single `try`. Live anon REST check returns:
+Two independent defects, one cosmetic-but-serious config defect:
+
+1. **Primary (client UX + auth gating)** — `ride_get_quote` is not executable by signed-out visitors, and `RideBooking` collapses every quote error into the same `unavailable` state as a route error, whose copy blames the destination.
+2. **Secondary (provider config)** — the Google Routes API key is returning `PERMISSION_DENIED` on 100% of calls; every route in production is silently served by the public OSRM demo router.
+3. **Not a bug** — the "New Broad Street, Purdys Grove" label is correct: the reproduction happened from a real GPS fix in Purdys, New York, not from a coordinate-order error.
+
+## Evidence (all read-only, gathered this turn)
+
+- `maps_request_log`, the exact reproduction attempts:
+  - `01:56:09` route origin `40.99920, -73.65909` → dest `40.99843, -73.67429`, `status = ok`, `provider = osrm`, `user_id = NULL`
+  - `02:32:35` route origin `40.99920, -73.65901` → dest `40.99890, -73.66676`, `status = ok`, `provider = osrm`, `user_id = NULL`
+  - Both preceded by a successful `reverse` (nominatim) — the label resolved fine.
+- Control probe, known-routable Conakry pair (`9.5370,-13.6785` → `9.6412,-13.5784`): HTTP 200, `distanceM 18149`, `durationS 934`, full polyline + steps, `provider: "osrm"`. Routing works for both arbitrary NY points and Conakry points.
+- Anonymous RPC probe (both a NY pair and a Conakry pair):
+  `POST /rest/v1/rpc/ride_get_quote` → `42501 permission denied for function ride_get_quote`.
+- `fare_settings` has rows for `moto` (500 / 1000), `toktok`, `auto` — no missing-tariff cause.
+- `ride_get_quote` itself also raises `NOT_AUTHENTICATED` when `auth.uid()` is NULL, so even with EXECUTE granted a signed-out quote is refused by design.
+- Every `route` row logs `fallback_reason: PERMISSION_DENIED` (Google Routes), and `search` rows log `google_places_403`.
+
+## Failure chain
 
 ```text
-food_restaurants  -> 42501 "permission denied for function has_role"
-merchant_stores   -> 200, 4 rows
+map tap -> reverse geocode (OK, nominatim) -> destCoords set
+   |-> RoutingService.route -> maps-route -> Google PERMISSION_DENIED -> OSRM fallback -> 200 OK route
+   |-> supabase.rpc('ride_get_quote') -> 42501 permission denied (anon)
+             -> quoteError = "Tarif indisponible"
+             -> previewState = "unavailable"      (quoteError checked BEFORE routeError)
+             -> EtaPricePreview renders "Aucun itinéraire trouvé. Vérifiez la destination."
 ```
 
-The restaurant policy `Published restaurants are publicly readable` is granted to role `public` and its `USING` clause calls `has_role(auth.uid(), 'admin')`. `EXECUTE` on `has_role` was granted to `anon` in an older migration but is no longer in effect (revoked during the Marché R14 privilege tightening). The thrown error aborts the whole `try` block **before** the store loop runs, so signed-out visitors get zero pins even though stores are readable. This is the main "businesses vanished" cause, and it is unrelated to the Mapbox token change.
+`RideBooking.tsx:384-391` ranks `quoteError` first and maps it onto the same `unavailable` state the route uses; `EtaPricePreview.tsx` has only one message for `unavailable`, and it names the destination as the suspect.
 
-**2. There is no orderable geography to pin, for Repas.**
-Read-only census:
+## Classification
 
-| Source | Total | With coords | Active | Pinnable today |
-|---|---|---|---|---|
-| `food_restaurants` | 1 | 0 | 1 | **0** |
-| `merchant_stores` | 6 | 5 | 5 | 4 |
-| `map_places` | 1 | 1 | — | — |
+| Question | Answer |
+| --- | --- |
+| Client, edge, provider, data, or UX? | UX/error-classification (primary) + auth gating (primary) + provider config (secondary) |
+| Edge function at fault? | No — `maps-route` returned 200 with a valid route both times |
+| Coordinate order wrong anywhere? | No — `{lat,lng}` client → `latLng` Google → `lng,lat` OSRM → `[1]=lat` decode all verified correct |
+| Off-road / unroutable point? | No — OSRM snapped and routed the arbitrary NY clicks fine |
+| Service-area constraint? | None enforced in routing or `ride_compute_quote_gnf` (pure haversine, no zone gate) |
+| Did the public map/search/route change cause it? | Indirectly: making the map public exposed ride booking to signed-out users, where the quote RPC was always going to fail. `verify_jwt`, rate limits, and `userId` handling in `maps-route` are correct (anon → per-IP bucket, no 401) |
+| All arbitrary destinations or only some? | **All** destinations, for **every signed-out session**, regardless of location. Signed-in sessions are unaffected |
 
-Of the 4 pinnable stores, 2 (`Cona`, `American Classics Guinee`) carry coordinates at 40.99 / -73.65 — New York, not Conakry — so only 2 stores (`Chicha Store Chez Parisien`, `Kam's chop`) can ever appear near a Conakry viewport. No data loss occurred; no coordinates will be invented or duplicated by this plan.
+## Affected files / functions
 
-**3. The home map is wired as a ride surface, not a directory.**
-`UserHome.tsx` renders the map section only when `exposure.isExposed("moto")`, wraps the entire map in a `<button onClick={() => onActionClick("moto")}>`, labels it "Chauffeurs près de vous", and passes `interactive={false}` to `ChopMap`. `NearbyDriversMap` mounts `NearbyAvailableDrivers` first and `VendorDiscoveryLayer` second. Consequence: business pins are unreachable — every tap becomes ride intent, and the map cannot pan, zoom, or expand. This is existing wiring, not a regression from the Mapbox change.
+- `src/components/ride/RideBooking.tsx` — quote effect (179-213), `previewState` (384-391), route effect (338-375)
+- `src/components/booking/EtaPricePreview.tsx` — single `unavailable` message
+- `public.ride_get_quote` (EXECUTE grant + `NOT_AUTHENTICATED` guard)
+- `supabase/functions/maps-route/index.ts` — Google `PERMISSION_DENIED` never surfaced to operators beyond the log row
+- Google Cloud key `GOOGLE_MAPS_SERVER_KEY` — Routes API and Places API not enabled/authorized
 
-**4. The Mapbox/public-routing change is clean.** `maps-config`, `maps-search`, `maps-route` now serve anonymous callers with public style/token and per-IP limits. No shared route helper injects ride semantics into the home map, and no DB mutation authority was broadened.
+## Surgical remediation plan (not executed)
 
-## Canonical sources and targets to reuse (no new subsystems)
+**Step 1 — Stop lying about the cause (client only).**
+Split `previewState` into distinct outcomes: `route-unavailable`, `fare-unavailable`, `auth-required`, `network`. Give `EtaPricePreview` one message per outcome:
+- fare failure → "Tarif indisponible pour le moment." (no "vérifiez la destination")
+- auth failure → "Connectez-vous pour voir le prix." with a sign-in action
+- route failure → keep the current destination-focused copy
+Keep the retry button wired to the failing domain only.
 
-- Repas geography: `food_restaurants` (`latitude`, `longitude`, `status='active'`, `verification_state='verified'`). Detail surface: `RepasRestaurantDetail`, opened as a sheet from `FoodView` — there is no standalone restaurant route.
-- Marché geography: `merchant_stores` (`status='active'`, `onboarding_status='approved'`). Public target route already exists: `/marche/boutique/:slug` (`PublicStorefront`).
-- Preferred verified coordinates: `resolveTrustedMerchantLocation` / `map_places` layer (used at order time today, not for discovery).
-- Discovery hook: `useVendorDiscovery`; layer: `VendorDiscoveryLayer`; map shell: `ChopMap`.
+**Step 2 — Decide the signed-out ride policy explicitly.**
+Either (a) gate the ride booking entry point behind sign-in when `moto`/`toktok` is opened by an anonymous visitor, or (b) allow an anonymous *estimate* by adding a sanitized, rate-limited quote path. Option (a) is the smaller and safer change and matches the existing "no anonymous commitment" law; option (b) requires a new SECURITY DEFINER preview RPC — it must not reuse `ride_get_quote`, and must not create any ride state. Owner decision required before implementation.
 
-## Remediation plan
+**Step 3 — Fix the routing provider config.**
+Enable/authorize the Routes API (and Places API) for `GOOGLE_MAPS_SERVER_KEY`, or formally accept OSRM as the production router. Today every trip estimate is computed by a public demo server with no SLA, no traffic model, and no real `TWO_WHEELER` profile — that is a live production risk independent of this bug.
 
-**Step 1 — Restore anonymous discovery (root cause 1).**
-Split `useVendorDiscovery` so each vertical has its own `try/catch`: a restaurant failure must never suppress store pins, and vice versa. Separately, fix the RLS asymmetry by rewriting the `food_restaurants` public SELECT policy the same way `merchant_stores` was split in Marché R1: an `anon` policy limited to `status='active' AND verification_state='verified'` (no `has_role` call), and an `authenticated` policy keeping owner/admin visibility. Do **not** grant `has_role` to `anon` — that would violate the Repas R8 P15.5 invariant.
+**Step 4 — Make provider degradation visible.**
+Return the fallback reason in the `maps-route` payload (non-PII, e.g. `degraded: 'google_permission_denied'`) so the client can log it and ops can alert, instead of it only living in `maps_request_log`.
 
-**Step 2 — Make the home map a directory map by default.**
-In `UserHome.tsx`: ungate the map section from the `moto` flag; expose it when `service_repas_enabled` OR `service_marche_enabled` is on. Replace the ride-CTA wrapper button with a non-ride "Commerces près de vous" header plus an explicit expand affordance. Ride overlay (`NearbyAvailableDrivers`) becomes opt-in via an explicit prop, rendered only in ride mode.
+**Step 5 — Regression proof.**
+Add tests asserting: a quote failure never renders route-failure copy; a route failure never renders fare copy; anonymous ride entry follows the Step 2 decision. Then run the full Vitest board, typecheck, build, and a linter census with zero delta.
 
-**Step 3 — Introduce a minimal map context, reusing existing components.**
-Add a `mode: 'directory' | 'ride'` prop to `NearbyDriversMap` (rename to a neutral name if cheap). `directory` renders `VendorDiscoveryLayer` and no ride markers, and treats map taps as pin selection only. `ride` keeps today's behaviour. No new map subsystem, no second Mapbox wrapper.
+## Non-goals
 
-**Step 4 — Expandable map + pin click-through.**
-Add a fullscreen sheet that mounts the same `ChopMap` with `interactive`, `VendorDiscoveryLayer`, and pin popups. Pin tap targets: store -> `/marche/boutique/:slug`; restaurant -> Repas view with the restaurant pre-selected (reuse `FoodView`'s existing selection state; no parallel page). Anonymous users may browse and open both; commitment gates stay untouched.
-
-**Step 5 — Exposure filtering.**
-Pass `{ restaurants: repasExposed, stores: marcheExposed }` into `VendorDiscoveryLayer`. Ride flags must not hide business pins.
-
-**Step 6 — Data hygiene (report, do not silently patch).**
-Surface the two out-of-country store coordinates to admin (Map Places / Merchants admin) for correction by their owners. No coordinate is invented or copied.
-
-## Tests to add after remediation
-
-Anon store pins present when the restaurant query fails; anon restaurant read returns 200 post-policy split; directory mode renders no driver markers and no ride toggle; explicit ride mode still renders drivers; pin tap resolves to `/marche/boutique/:slug` and to Repas detail; exposure flags filter the correct vertical; ride flags do not suppress pins.
-
-## Must remain untouched
-
-Node 5 identity/auth architecture; Marché R1–R14 laws and `v_marche_listing_truth`; `has_role` grants; all order/commit RPCs and finance rails; `maps-config` / `maps-route` / `maps-search` behaviour; `src/integrations/supabase/*` generated files.
+No Node 5 identity/auth architecture changes, no RLS loosening, no fare formula changes, no new provider integration, no changes to the Home directory map work just certified.
