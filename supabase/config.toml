@@ -20,11 +20,11 @@ project_id = "azbhteplbdwuqdlzadjx"
   [functions.send-message]
     verify_jwt = true
   [functions.maps-route]
-    verify_jwt = true
+    verify_jwt = false
   [functions.maps-eta]
     verify_jwt = true
   [functions.maps-config]
-    verify_jwt = true
+    verify_jwt = false
   [functions.admin-email-resend]
     verify_jwt = true
   [functions.qa-merchant-harness]

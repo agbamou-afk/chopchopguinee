@@ -59,3 +59,21 @@ export async function logMapsRequest(
     // best-effort
   }
 }
+/**
+ * In-memory per-IP limiter for anonymous callers. The DB limiter is keyed by
+ * auth user id, so anonymous traffic is bounded here instead (per isolate).
+ */
+const anonBuckets = new Map<string, { minute: number; count: number }>();
+
+export function checkAnonRateLimit(req: Request, kind: string, limit: number): boolean {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const minute = Math.floor(Date.now() / 60000);
+  const key = `${kind}:${ip}`;
+  const bucket = anonBuckets.get(key);
+  if (!bucket || bucket.minute !== minute) {
+    anonBuckets.set(key, { minute, count: 1 });
+    return true;
+  }
+  bucket.count += 1;
+  return bucket.count <= limit;
+}

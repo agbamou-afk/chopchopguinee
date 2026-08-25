@@ -1,6 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { checkMapsRateLimit, logMapsRequest } from '../_shared/maps-rate-limit.ts';
+import { checkMapsRateLimit, checkAnonRateLimit, logMapsRequest } from '../_shared/maps-rate-limit.ts';
 
 /**
  * maps-search — server-side place search & reverse geocoding for CHOPCHOP.
@@ -150,17 +150,19 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
+  // Anonymous visitors can search (the map is public) under a stricter per-IP
+  // quota; signed-in callers keep the per-user DB quota.
   const authHeader = req.headers.get('Authorization') ?? '';
-  if (!authHeader.startsWith('Bearer ')) {
-    return bad(401, 'unauthorized', 'Authentication required.');
+  let userId: string | null = null;
+  if (authHeader.startsWith('Bearer ')) {
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: { user } } = await userClient.auth.getUser();
+    userId = user?.id ?? null;
   }
-  const userClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } },
-  );
-  const { data: { user } } = await userClient.auth.getUser();
-  if (!user) return bad(401, 'unauthorized', 'Authentication required.');
 
   let body: Body;
   try {
@@ -170,8 +172,11 @@ Deno.serve(async (req) => {
   }
 
   // Rate limit: 90 calls / minute / user covers both search and reverse.
-  const rl = await checkMapsRateLimit(admin, user.id, 'eta', 90);
-  if (!rl.allowed) return bad(429, 'rate_limited', 'Trop de requêtes. Réessayez dans une minute.');
+  const allowed = userId
+    ? (await checkMapsRateLimit(admin, userId, 'eta', 90)).allowed
+    : checkAnonRateLimit(req, 'search', 30);
+  if (!allowed) return bad(429, 'rate_limited', 'Trop de requêtes. Réessayez dans une minute.');
+
 
   const key = Deno.env.get('GOOGLE_MAPS_SERVER_KEY') ?? '';
 
@@ -204,7 +209,7 @@ Deno.serve(async (req) => {
         }
       }
       await logMapsRequest(admin, {
-        user_id: user.id, provider, action: 'search',
+        user_id: userId, provider, action: 'search',
         input: { q_len: q.length, has_proximity: !!body.proximity },
         output_summary: { count: results.length },
         status: results.length > 0 ? 'ok' : 'error',
@@ -230,7 +235,7 @@ Deno.serve(async (req) => {
         try { label = await nominatimReverse(lat, lng); provider = 'nominatim'; } catch {}
       }
       await logMapsRequest(admin, {
-        user_id: user.id, provider, action: 'reverse',
+        user_id: userId, provider, action: 'reverse',
         input: { lat, lng },
         output_summary: { has_label: !!label },
         status: label ? 'ok' : 'error',
