@@ -9,7 +9,9 @@ import { ChopMap, type ChopMapHandle, RoutePolyline, NearbyAvailableDrivers, Dra
 import { Marker } from "react-map-gl";
 import { MapMarker } from "@/components/map/MapMarker";
 import { RoutingService, formatDistance, formatDuration, searchPlaces, reverseGeocode } from "@/lib/maps";
-import { EtaPricePreview } from "@/components/booking/EtaPricePreview";
+import { EtaPricePreview, type PreviewState } from "@/components/booking/EtaPricePreview";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { searchConakryPlaces, categoryLabel, confidenceLabel } from "@/lib/locations/searchPlaces";
 import { useLiveUserLocation, CONAKRY_FALLBACK } from "@/lib/location/useLiveUserLocation";
 import { logLocationSearchEvent } from "@/lib/locations/locationSearchTelemetry";
@@ -93,6 +95,8 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
   // user picks a place. The Conakry fallback is ONLY a visual map center —
   // never a pickup coordinate (see CHOPCHOP_MAP_STRATEGY.md).
   const live = useLiveUserLocation();
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   const [pickupCoords, setPickupCoords] = useState<[number, number] | null>(
     initialIntent?.pickupCoords ?? null,
   );
@@ -651,7 +655,11 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
           fareLowGnf={previewState === "ready" && serverQuoteGnf != null ? serverQuoteGnf : undefined}
           fareHighGnf={previewState === "ready" && serverQuoteGnf != null ? serverQuoteGnf : undefined}
           paymentMethod={paymentMode === "cash" ? "cash" : "wallet"}
-          onRetry={() => destCoords && setDestCoords([...destCoords] as [number, number])}
+          onRetry={() => {
+            if (previewState === "fare-unavailable") setQuoteAttempt((n) => n + 1);
+            else setRouteAttempt((n) => n + 1);
+          }}
+          onSignIn={() => navigate("/auth?next=/")}
         />
 
         {/* CRS-G3: explicit customer payment choice. */}
