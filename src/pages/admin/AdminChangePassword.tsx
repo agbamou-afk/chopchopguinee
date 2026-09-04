@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { Loader2, ShieldAlert, KeyRound, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -105,8 +106,7 @@ export default function AdminChangePassword() {
         <form className="space-y-3" onSubmit={onSubmit}>
           <div>
             <Label className="text-xs">Nouveau mot de passe</Label>
-            <Input
-              type="password"
+            <PasswordInput
               autoComplete="new-password"
               value={pw1}
               onChange={(e) => setPw1(e.target.value)}
@@ -116,8 +116,7 @@ export default function AdminChangePassword() {
           </div>
           <div>
             <Label className="text-xs">Confirmer le nouveau mot de passe</Label>
-            <Input
-              type="password"
+            <PasswordInput
               autoComplete="new-password"
               value={pw2}
               onChange={(e) => setPw2(e.target.value)}

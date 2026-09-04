@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, KeyRound, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Seo } from "@/components/Seo";
@@ -82,9 +83,8 @@ export default function AccountSecurity() {
           <form onSubmit={submitPassword} className="space-y-3">
             <div>
               <Label htmlFor="cur">Mot de passe actuel</Label>
-              <Input
+              <PasswordInput
                 id="cur"
-                type="password"
                 autoComplete="current-password"
                 value={current}
                 onChange={(e) => setCurrent(e.target.value)}
@@ -93,9 +93,8 @@ export default function AccountSecurity() {
             </div>
             <div>
               <Label htmlFor="nx">Nouveau mot de passe</Label>
-              <Input
+              <PasswordInput
                 id="nx"
-                type="password"
                 autoComplete="new-password"
                 value={next}
                 onChange={(e) => setNext(e.target.value)}
@@ -104,9 +103,8 @@ export default function AccountSecurity() {
             </div>
             <div>
               <Label htmlFor="nx2">Confirmer</Label>
-              <Input
+              <PasswordInput
                 id="nx2"
-                type="password"
                 autoComplete="new-password"
                 value={next2}
                 onChange={(e) => setNext2(e.target.value)}

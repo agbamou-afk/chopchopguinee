@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Seo } from "@/components/Seo";
@@ -537,9 +538,8 @@ export default function Auth() {
 
           <div>
             <Label htmlFor="password">Mot de passe</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}

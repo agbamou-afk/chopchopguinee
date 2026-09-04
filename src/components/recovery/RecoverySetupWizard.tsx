@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -104,9 +105,8 @@ export function RecoverySetupWizard({
           {mode === "rotate" && (
             <div>
               <Label htmlFor="reauth-password">Mot de passe actuel</Label>
-              <Input
+              <PasswordInput
                 id="reauth-password"
-                type="password"
                 autoComplete="current-password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
