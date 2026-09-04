@@ -565,8 +565,13 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
       <div
         data-testid="ride-map-surface"
         data-pick-mode={mapPickMode ?? 'off'}
-        className={`bg-muted relative overflow-hidden touch-none ${
-          mapPickMode ? 'fixed inset-0 z-[1500]' : 'flex-1 min-h-0'
+        style={
+          mapPickMode
+            ? { position: 'fixed', inset: 0, zIndex: 1500 }
+            : undefined
+        }
+        className={`bg-muted overflow-hidden touch-none ${
+          mapPickMode ? '' : 'relative flex-1 min-h-0'
         }`}
       >
 
