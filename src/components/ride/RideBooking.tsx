@@ -613,16 +613,26 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
             </Marker>
           )}
         </ChopMap>
-        {mapPickMode === 'pickup' && (
-          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-3 py-1.5 text-[11px] font-semibold max-w-[88%] text-center">
-            Touchez la carte pour choisir le départ
-          </div>
+        {mapPickMode && (
+          <>
+            <div
+              data-testid="ride-map-pick-banner"
+              className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-4 py-2 text-[12px] font-semibold max-w-[88%] text-center"
+            >
+              {mapPickMode === 'pickup'
+                ? 'Touchez la carte pour choisir le départ'
+                : 'Touchez la carte pour choisir la destination'}
+            </div>
+            <button
+              type="button"
+              onClick={() => setMapPickMode(null)}
+              className="absolute top-3 left-3 z-[500] rounded-full bg-card shadow-elevated px-3 py-2 text-xs font-semibold text-foreground active:scale-95 transition"
+            >
+              Annuler
+            </button>
+          </>
         )}
-        {mapPickMode === 'destination' && (
-          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-3 py-1.5 text-[11px] font-semibold max-w-[88%] text-center">
-            Touchez la carte pour choisir la destination
-          </div>
-        )}
+
         {!mapPickMode && !pickupCoords && (
           <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
             Touchez la carte pour choisir votre point de départ.
