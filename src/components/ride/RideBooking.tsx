@@ -533,6 +533,8 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
               ))}
               <button
                 type="button"
+                data-testid="ride-pick-on-map"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   const target = activeField ?? 'destination';
                   setMapPickMode(target);
