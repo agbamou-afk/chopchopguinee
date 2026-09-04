@@ -557,8 +557,17 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
         </div>
       </div>
 
-      {/* Interactive map */}
-      <div className="flex-1 min-h-0 bg-muted relative overflow-hidden touch-none">
+      {/* Interactive map. In "choose on map" mode it takes over the whole
+          screen — on a phone the inline slot collapses to a few dozen pixels,
+          which made the pick CTA look inert. */}
+      <div
+        data-testid="ride-map-surface"
+        data-pick-mode={mapPickMode ?? 'off'}
+        className={`bg-muted relative overflow-hidden touch-none ${
+          mapPickMode ? 'fixed inset-0 z-[1500]' : 'flex-1 min-h-0'
+        }`}
+      >
+
         <ChopMap
           ref={mapRef}
           className="absolute inset-0 w-full h-full"
