@@ -138,33 +138,56 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
   // perceived as "a moto with three wheels".
   const product = RIDE_MODE_PRODUCT[type];
 
-  // Reverse-geocode through the backend (Google → Nominatim). Always returns
-  // a usable label so map taps never appear to fail.
+  // Honest fallback label: the coordinate is always preserved, even when the
+  // reverse-geocode provider is unreachable.
+  const coordLabel = (lat: number, lng: number) =>
+    `Point sur la carte (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+
+  // Reverse-geocode through the backend (Google → Nominatim). Never throws.
   const reverseLabel = async (lat: number, lng: number): Promise<string> => {
-    const r = await reverseGeocode(lat, lng);
-    return r?.label ?? "Position sélectionnée";
+    try {
+      const r = await reverseGeocode(lat, lng);
+      return r?.label ?? coordLabel(lat, lng);
+    } catch {
+      return coordLabel(lat, lng);
+    }
   };
 
-  const handleMapTap = async ({ lat, lng }: { lat: number; lng: number }) => {
+  const handleMapTap = ({ lat, lng }: { lat: number; lng: number }) => {
     // Priority: explicit "choose on map" mode > focused input > first-empty heuristic.
     const target = mapPickMode ?? activeField ?? (!pickupCoords ? "pickup" : "destination");
+    // Commit the coordinate and exit pick mode SYNCHRONOUSLY. Reverse geocoding
+    // only refines the label afterwards — a slow or failing provider must never
+    // leave the field empty or trap the user in pick mode.
+    const provisional = coordLabel(lat, lng);
     if (target === "pickup") {
       setPickupCoords([lat, lng]);
       setPickupIsReal(true);
-      const label = await reverseLabel(lat, lng);
-      setPickup(label);
-      setActiveField(null);
-      setMapPickMode(null);
-      return;
+      setPickup(provisional);
+    } else {
+      setDestCoords([lat, lng]);
+      setDestination(provisional);
     }
-    setDestCoords([lat, lng]);
-    const label = await reverseLabel(lat, lng);
-    setDestination(label);
     setActiveField(null);
+    setSuggestions([]);
     setMapPickMode(null);
+    void reverseLabel(lat, lng).then((label) => {
+      if (target === "pickup") setPickup(label);
+      else setDestination(label);
+    });
   };
 
+
   // Visual map center — falls back to Conakry but is never sent as pickup.
+  // Entering/leaving full-screen pick mode changes the map container size;
+  // Mapbox must be told, otherwise the canvas keeps the collapsed size.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      try { (mapRef.current?.getMap() as any)?.resize?.(); } catch { /* map not ready */ }
+    }, 60);
+    return () => window.clearTimeout(id);
+  }, [mapPickMode]);
+
   const mapCenter: [number, number] = pickupCoords
     ? pickupCoords
     : live.coords
@@ -519,6 +542,8 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
               ))}
               <button
                 type="button"
+                data-testid="ride-pick-on-map"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   const target = activeField ?? 'destination';
                   setMapPickMode(target);
@@ -543,8 +568,22 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
         </div>
       </div>
 
-      {/* Interactive map */}
-      <div className="flex-1 min-h-0 bg-muted relative overflow-hidden touch-none">
+      {/* Interactive map. In "choose on map" mode it takes over the whole
+          screen — on a phone the inline slot collapses to a few dozen pixels,
+          which made the pick CTA look inert. */}
+      <div
+        data-testid="ride-map-surface"
+        data-pick-mode={mapPickMode ?? 'off'}
+        style={
+          mapPickMode
+            ? { position: 'fixed', inset: 0, zIndex: 1500 }
+            : undefined
+        }
+        className={`bg-muted overflow-hidden touch-none ${
+          mapPickMode ? '' : 'relative flex-1 min-h-0'
+        }`}
+      >
+
         <ChopMap
           ref={mapRef}
           className="absolute inset-0 w-full h-full"
@@ -590,16 +629,26 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
             </Marker>
           )}
         </ChopMap>
-        {mapPickMode === 'pickup' && (
-          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-3 py-1.5 text-[11px] font-semibold max-w-[88%] text-center">
-            Touchez la carte pour choisir le départ
-          </div>
+        {mapPickMode && (
+          <>
+            <div
+              data-testid="ride-map-pick-banner"
+              className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-4 py-2 text-[12px] font-semibold max-w-[88%] text-center"
+            >
+              {mapPickMode === 'pickup'
+                ? 'Touchez la carte pour choisir le départ'
+                : 'Touchez la carte pour choisir la destination'}
+            </div>
+            <button
+              type="button"
+              onClick={() => setMapPickMode(null)}
+              className="absolute top-3 left-3 z-[500] rounded-full bg-card shadow-elevated px-3 py-2 text-xs font-semibold text-foreground active:scale-95 transition"
+            >
+              Annuler
+            </button>
+          </>
         )}
-        {mapPickMode === 'destination' && (
-          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-primary text-primary-foreground shadow-elevated rounded-full px-3 py-1.5 text-[11px] font-semibold max-w-[88%] text-center">
-            Touchez la carte pour choisir la destination
-          </div>
-        )}
+
         {!mapPickMode && !pickupCoords && (
           <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-card/95 backdrop-blur shadow-card rounded-full px-3 py-1.5 text-[11px] font-medium text-foreground max-w-[88%] text-center">
             Touchez la carte pour choisir votre point de départ.
