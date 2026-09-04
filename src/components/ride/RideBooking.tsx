@@ -179,6 +179,15 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
 
 
   // Visual map center — falls back to Conakry but is never sent as pickup.
+  // Entering/leaving full-screen pick mode changes the map container size;
+  // Mapbox must be told, otherwise the canvas keeps the collapsed size.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      try { (mapRef.current?.getMap() as any)?.resize?.(); } catch { /* map not ready */ }
+    }, 60);
+    return () => window.clearTimeout(id);
+  }, [mapPickMode]);
+
   const mapCenter: [number, number] = pickupCoords
     ? pickupCoords
     : live.coords
