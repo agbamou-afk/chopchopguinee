@@ -126,7 +126,7 @@ describe("Ride booking — choose destination on map", () => {
     renderBooking();
     await openPickMode();
     const surface = screen.getByTestId("ride-map-surface");
-    expect(surface.className).toContain("fixed inset-0");
+    expect(surface.style.position).toBe("fixed");
     expect(surface.className).not.toContain("min-h-0");
     expect(screen.getByTestId("mapbox").getAttribute("data-interactive")).toBe("true");
   });
