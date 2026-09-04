@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 
@@ -283,9 +284,8 @@ export default function ProfileInfo() {
           </h2>
           <div className="space-y-2">
             <Label htmlFor="pw">Nouveau mot de passe</Label>
-            <Input
+            <PasswordInput
               id="pw"
-              type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               maxLength={72}

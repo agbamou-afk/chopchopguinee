@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, ShieldQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { BrandLogo } from "@/components/brand/BrandLogo";
@@ -252,9 +253,8 @@ export default function ForgotPassword() {
               </p>
               <div>
                 <Label htmlFor="np">Nouveau mot de passe</Label>
-                <Input
+                <PasswordInput
                   id="np"
-                  type="password"
                   autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -263,9 +263,8 @@ export default function ForgotPassword() {
               </div>
               <div>
                 <Label htmlFor="np2">Confirmer le mot de passe</Label>
-                <Input
+                <PasswordInput
                   id="np2"
-                  type="password"
                   autoComplete="new-password"
                   value={password2}
                   onChange={(e) => setPassword2(e.target.value)}
