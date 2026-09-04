@@ -138,31 +138,45 @@ export function RideBooking({ type, onClose, onBook, initialDestination, initial
   // perceived as "a moto with three wheels".
   const product = RIDE_MODE_PRODUCT[type];
 
-  // Reverse-geocode through the backend (Google → Nominatim). Always returns
-  // a usable label so map taps never appear to fail.
+  // Honest fallback label: the coordinate is always preserved, even when the
+  // reverse-geocode provider is unreachable.
+  const coordLabel = (lat: number, lng: number) =>
+    `Point sur la carte (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+
+  // Reverse-geocode through the backend (Google → Nominatim). Never throws.
   const reverseLabel = async (lat: number, lng: number): Promise<string> => {
-    const r = await reverseGeocode(lat, lng);
-    return r?.label ?? "Position sélectionnée";
+    try {
+      const r = await reverseGeocode(lat, lng);
+      return r?.label ?? coordLabel(lat, lng);
+    } catch {
+      return coordLabel(lat, lng);
+    }
   };
 
-  const handleMapTap = async ({ lat, lng }: { lat: number; lng: number }) => {
+  const handleMapTap = ({ lat, lng }: { lat: number; lng: number }) => {
     // Priority: explicit "choose on map" mode > focused input > first-empty heuristic.
     const target = mapPickMode ?? activeField ?? (!pickupCoords ? "pickup" : "destination");
+    // Commit the coordinate and exit pick mode SYNCHRONOUSLY. Reverse geocoding
+    // only refines the label afterwards — a slow or failing provider must never
+    // leave the field empty or trap the user in pick mode.
+    const provisional = coordLabel(lat, lng);
     if (target === "pickup") {
       setPickupCoords([lat, lng]);
       setPickupIsReal(true);
-      const label = await reverseLabel(lat, lng);
-      setPickup(label);
-      setActiveField(null);
-      setMapPickMode(null);
-      return;
+      setPickup(provisional);
+    } else {
+      setDestCoords([lat, lng]);
+      setDestination(provisional);
     }
-    setDestCoords([lat, lng]);
-    const label = await reverseLabel(lat, lng);
-    setDestination(label);
     setActiveField(null);
+    setSuggestions([]);
     setMapPickMode(null);
+    void reverseLabel(lat, lng).then((label) => {
+      if (target === "pickup") setPickup(label);
+      else setDestination(label);
+    });
   };
+
 
   // Visual map center — falls back to Conakry but is never sent as pickup.
   const mapCenter: [number, number] = pickupCoords
