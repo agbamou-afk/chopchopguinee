@@ -69,7 +69,7 @@ vi.mock("@/components/map/NearbyAvailableDrivers", () => ({
 }));
 vi.mock("@/components/map/DriverMarker", () => ({ DriverMarker: () => null }));
 vi.mock("@/lib/locations/searchPlaces", () => ({
-  searchConakryPlaces: vi.fn(async () => []),
+  searchConakryPlaces: vi.fn(() => []),
   categoryLabel: () => "",
   confidenceLabel: () => null,
 }));
