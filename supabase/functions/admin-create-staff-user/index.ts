@@ -231,10 +231,12 @@ Deno.serve(async (req) => {
         "Compte créé. Communiquez le mot de passe temporaire en mains propres. L'utilisateur devra le changer à la première connexion.",
     });
   } catch (e) {
-    console.error("[admin-create-staff-user] unhandled exception", e);
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error("[admin-create-staff-user] unhandled exception", detail);
     return json(
-      { error: "exception", message: "Erreur interne." },
+      { error: "exception", message: `Erreur interne : ${detail}` },
       500,
     );
   }
+
 });
