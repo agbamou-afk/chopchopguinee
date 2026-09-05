@@ -12435,6 +12435,8 @@ export type Database = {
         Returns: undefined
       }
       admin_role_canonical: { Args: { _uid?: string }; Returns: string }
+      admin_role_classes: { Args: { _uid: string }; Returns: string[] }
+      admin_role_diagnose: { Args: { _uid?: string }; Returns: Json }
       admin_set_driver_capability: {
         Args: { _capability: string; _driver_user_id: string; _grant: boolean }
         Returns: {
