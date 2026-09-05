@@ -230,7 +230,11 @@ governance.staff.manage   governance.roles.assign   governance.flags.manage
 governance.pricing.change governance.account.ban    governance.account.freeze
 governance.account.close  governance.account.anonymize
 governance.professional.offboard                    governance.audit.read_all
-governance.settings.manage
+governance.settings.manage                          governance.capability.resolve
+governance.sandbox.run    finance.dispute.resolve   finance.dormant.review
+ops.onboarding.decide     ops.analytics.view        ops.notifications.send
+ops.notifications.broadcast
+
 ```
 
 Every audited callable in the G1 audit maps to exactly one of these capabilities.
