@@ -128,7 +128,31 @@ financial-module entries plus operational entries attached to a financial target
 God sees everything including staff and governance entries. No class may delete or edit an
 audit entry — `audit_logs` is append-only for every class.
 
+### 3.4 Remaining domains
+
+| Capability | Ops | Finance | God |
+|---|---|---|---|
+| `ops.onboarding.decide` — field pilots, field check-ins, agent onboarding decisions | A | D | A |
+| `ops.liveops.view` — driver signals, presence, route traces | A | R | A |
+| `finance.dispute.resolve` — Chop Pay / cash-order / package claim outcomes with money effect | D | AR | AR |
+| `finance.dormant.review` — dormant closed-account liabilities | R | A | A |
+| `governance.capability.resolve` — capability/role resolution and four-eyes gate helpers | A (self) | A (self) | A |
+| `governance.sandbox.run` — QA harnesses, sandbox test runs | D | D | A |
+| `ops.analytics.view` — product/behaviour analytics, AI insights | A | R | A |
+| `ops.notifications.send` — operational notification dispatch | A | D | A |
+| `ops.notifications.broadcast` — mass broadcast to a user population | AR | D | AR |
+
+**Product flags vs payment rails.** A non-financial product flag (surface exposure, UI
+capability, service availability) is `governance.flags.manage`: God allows, Operations may
+only propose. Any flag that changes a payment rail, tender, settlement path or fee behaviour
+is `finance.flags.payment`: Finance with four-eyes, Operations denied outright.
+
+**Pricing.** Operations may read tariffs and *propose* a change (`ops.pricing.propose`).
+Turning a proposal into policy — fares, tariff grids, commission, promotions with a money
+effect — is `governance.pricing.change`, God-only and four-eyes.
+
 ---
+
 
 ## 4. Canonical role-normalization law (specification for G2)
 
@@ -184,7 +208,14 @@ Actions that are APPROVAL_REQUIRED under current ChopChop architecture:
 `governance.account.close`, `governance.account.anonymize`,
 `governance.professional.offboard`, agent float increase above policy limit
 (`POLICY_THRESHOLD_REQUIRED`), driver/merchant payout above policy limit
-(`POLICY_THRESHOLD_REQUIRED`), bulk broadcast.
+(`POLICY_THRESHOLD_REQUIRED`), `finance.dispute.resolve`,
+`ops.notifications.broadcast`.
+
+The 21 concrete callables that carry a four-eyes requirement at HEAD are enumerated
+row by row in `docs/admin/G1_ADMIN_AUTHORITY_AUDIT.md` §2 and §3 (4-eyes column = yes).
+No numeric threshold is constitutional: every ceiling is `POLICY_THRESHOLD_REQUIRED`
+and configured later by God Admin in `finance_policies`.
+
 
 ---
 
@@ -206,7 +237,11 @@ governance.staff.manage   governance.roles.assign   governance.flags.manage
 governance.pricing.change governance.account.ban    governance.account.freeze
 governance.account.close  governance.account.anonymize
 governance.professional.offboard                    governance.audit.read_all
-governance.settings.manage
+governance.settings.manage                          governance.capability.resolve
+governance.sandbox.run    finance.dispute.resolve   finance.dormant.review
+ops.onboarding.decide     ops.analytics.view        ops.notifications.send
+ops.notifications.broadcast
+
 ```
 
 Every audited callable in the G1 audit maps to exactly one of these capabilities.
