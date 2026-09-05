@@ -208,7 +208,14 @@ Actions that are APPROVAL_REQUIRED under current ChopChop architecture:
 `governance.account.close`, `governance.account.anonymize`,
 `governance.professional.offboard`, agent float increase above policy limit
 (`POLICY_THRESHOLD_REQUIRED`), driver/merchant payout above policy limit
-(`POLICY_THRESHOLD_REQUIRED`), bulk broadcast.
+(`POLICY_THRESHOLD_REQUIRED`), `finance.dispute.resolve`,
+`ops.notifications.broadcast`.
+
+The 21 concrete callables that carry a four-eyes requirement at HEAD are enumerated
+row by row in `docs/admin/G1_ADMIN_AUTHORITY_AUDIT.md` §2 and §3 (4-eyes column = yes).
+No numeric threshold is constitutional: every ceiling is `POLICY_THRESHOLD_REQUIRED`
+and configured later by God Admin in `finance_policies`.
+
 
 ---
 
