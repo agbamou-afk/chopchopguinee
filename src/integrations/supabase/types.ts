@@ -353,6 +353,33 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_capability_grants: {
+        Row: {
+          admin_role: string
+          capability: string
+          created_at: string
+          mode: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_role: string
+          capability: string
+          created_at?: string
+          mode?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_role?: string
+          capability?: string
+          created_at?: string
+          mode?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           admin_role: Database["public"]["Enums"]["admin_role"]
@@ -11731,6 +11758,14 @@ export type Database = {
         Args: { _expires_at?: string; _reason: string; _target: string }
         Returns: Json
       }
+      admin_capability: {
+        Args: { _capability: string; _uid?: string }
+        Returns: boolean
+      }
+      admin_capability_mode: {
+        Args: { _capability: string; _uid?: string }
+        Returns: string
+      }
       admin_cash_order_dispute_resolve: {
         Args: {
           p_outcome: string
@@ -11832,6 +11867,10 @@ export type Database = {
       admin_enqueue_milestone_refresh: {
         Args: { p_driver: string; p_event?: string }
         Returns: string
+      }
+      admin_four_eyes_gate: {
+        Args: { _approval_id: string; _capability: string }
+        Returns: undefined
       }
       admin_freeze_user: {
         Args: {
@@ -12374,6 +12413,10 @@ export type Database = {
         Args: { p_missing: string[]; p_note: string; p_user_id: string }
         Returns: undefined
       }
+      admin_require_capability: {
+        Args: { _capability: string }
+        Returns: undefined
+      }
       admin_retry_om_credit: { Args: { p_event_id: string }; Returns: Json }
       admin_reverse_starter_credit: {
         Args: { p_driver: string; p_reason: string }
@@ -12391,6 +12434,7 @@ export type Database = {
         Args: { p_action: string; p_reason?: string; p_referral: string }
         Returns: undefined
       }
+      admin_role_canonical: { Args: { _uid?: string }; Returns: string }
       admin_set_driver_capability: {
         Args: { _capability: string; _driver_user_id: string; _grant: boolean }
         Returns: {
