@@ -35,14 +35,13 @@ Deno.serve(async (req) => {
     if (userErr || !userData.user) return json({ error: "invalid_jwt" }, 401);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const { data: adminRow } = await admin
-      .from("admin_users")
-      .select("admin_role,status")
-      .eq("user_id", userData.user.id)
-      .eq("status", "active")
-      .maybeSingle();
-    if (!adminRow || !["god_admin", "super_admin"].includes(adminRow.admin_role)) {
-      return json({ error: "forbidden", message: "Réservé aux god_admin." }, 403);
+    // G2: constitutional capability check (ops.support.manage).
+    const { data: allowed } = await admin.rpc("admin_capability", {
+      _capability: "ops.support.manage",
+      _uid: userData.user.id,
+    });
+    if (!allowed) {
+      return json({ error: "forbidden", message: "Capacité requise : ops.support.manage." }, 403);
     }
 
     const body = await req.json().catch(() => ({}));

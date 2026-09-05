@@ -2,7 +2,8 @@
 // Replaces the old practice of shipping migrations purely to run test harnesses.
 // SAFETY:
 //  - Only the allowlisted, self-rolling-back `_qa_*` harnesses can be invoked.
-//  - Caller must present either the service role key or an `admin` user JWT.
+//  - Caller must present the service role key, or a JWT holding governance.sandbox.run.
+//  - Disabled unless QA_HARNESS_ENABLED is explicitly on. No static x-qa-token path.
 //  - The harnesses themselves roll back every fixture they create.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -90,32 +91,31 @@ Deno.serve(async (req) => {
   const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
   const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  // Two accepted QA tokens so the certification runner can be rotated without
-  // invalidating the existing operator token.
-  const qaTokens = [
-    (Deno.env.get("QA_NODE_HARNESS_TOKEN") ?? "").trim(),
-    (Deno.env.get("QA_NODE_HARNESS_TOKEN_ALT") ?? "").trim(),
-    (Deno.env.get("QA_NODE_HARNESS_TOKEN_CERT") ?? "").trim(),
-  ].filter((t) => t.length > 0);
-  const presented = (req.headers.get("x-qa-token") ?? "").trim();
+  const harnessFlag = (Deno.env.get("QA_HARNESS_ENABLED") ?? "").trim().toLowerCase();
+  if (harnessFlag === "" || ["false", "0", "no", "off", "disabled"].includes(harnessFlag)) {
+    return json({ error: "QA harness disabled in this environment" }, 403);
+  }
+
   const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
-
   const admin = createClient(SUPABASE_URL, SERVICE);
-  let authorized = presented.length > 0 && qaTokens.includes(presented);
 
-  if (!authorized && !token) return json({ error: "Unauthorized" }, 401);
-  authorized = authorized || token === SERVICE;
+  // G2: static x-qa-token bypass removed; bare `admin` alias is no authority.
+  let authorized = token.length > 0 && token === SERVICE;
   if (!authorized) {
+    if (!token) return json({ error: "Unauthorized" }, 401);
     const userClient = createClient(SUPABASE_URL, ANON, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
     const { data: claims } = await userClient.auth.getClaims(token);
     const callerId = claims?.claims?.sub as string | undefined;
     if (!callerId) return json({ error: "Unauthorized" }, 401);
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
-    authorized = !!isAdmin;
+    const { data: allowed } = await admin.rpc("admin_capability", {
+      _capability: "governance.sandbox.run",
+      _uid: callerId,
+    });
+    authorized = !!allowed;
   }
-  if (!authorized) return json({ error: "Admin role required" }, 403);
+  if (!authorized) return json({ error: "governance.sandbox.run required" }, 403);
 
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { /* noop */ }

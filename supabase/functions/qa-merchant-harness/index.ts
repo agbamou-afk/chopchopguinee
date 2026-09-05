@@ -1,7 +1,7 @@
 // QA-only harness to create/cleanup a confirmed merchant user end-to-end.
 // SAFETY:
 //  - Service role stays server-side.
-//  - Caller must be authenticated AND have the `admin` app_role.
+//  - Caller must be authenticated AND hold governance.sandbox.run (God Admin).
 //  - Disabled unless QA_HARNESS_ENABLED === "true" (must NOT be set in prod).
 //  - Created users are tagged: user_metadata.qa_user = true, created_by = "merchant_auth_routing_qa".
 //  - Cleanup refuses if the user has wallet tx, rides, food orders, payouts,
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
 
-  // Validate caller is admin
+  // G2: no bare `admin` alias, no static token. Canonical capability only.
   const userClient = createClient(SUPABASE_URL, ANON, {
     global: { headers: { Authorization: authHeader } },
   });
@@ -45,11 +45,11 @@ Deno.serve(async (req) => {
   const callerId = claims.claims.sub as string;
 
   const admin = createClient(SUPABASE_URL, SERVICE);
-  const { data: isAdmin, error: roleErr } = await admin.rpc("has_role", {
-    _user_id: callerId,
-    _role: "admin",
+  const { data: isAdmin, error: roleErr } = await admin.rpc("admin_capability", {
+    _capability: "governance.sandbox.run",
+    _uid: callerId,
   });
-  if (roleErr || !isAdmin) return json({ error: "Admin role required" }, 403);
+  if (roleErr || !isAdmin) return json({ error: "governance.sandbox.run required" }, 403);
 
   let body: any = {};
   try { body = await req.json(); } catch { /* noop */ }
