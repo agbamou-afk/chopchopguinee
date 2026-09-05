@@ -683,9 +683,17 @@ export type Database = {
       approval_requests: {
         Row: {
           action: string
+          capability: string | null
+          consumed_at: string | null
+          consumed_by: string | null
           created_at: string
+          execution_ref: string | null
+          expires_at: string | null
           id: string
+          intent_hash: string | null
+          material: Json
           module: string
+          outcome: Json | null
           payload: Json
           requested_by: string
           requested_role: Database["public"]["Enums"]["admin_role"] | null
@@ -693,12 +701,22 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           status: Database["public"]["Enums"]["approval_status"]
+          target_id: string | null
+          target_type: string | null
         }
         Insert: {
           action: string
+          capability?: string | null
+          consumed_at?: string | null
+          consumed_by?: string | null
           created_at?: string
+          execution_ref?: string | null
+          expires_at?: string | null
           id?: string
+          intent_hash?: string | null
+          material?: Json
           module: string
+          outcome?: Json | null
           payload?: Json
           requested_by: string
           requested_role?: Database["public"]["Enums"]["admin_role"] | null
@@ -706,12 +724,22 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["approval_status"]
+          target_id?: string | null
+          target_type?: string | null
         }
         Update: {
           action?: string
+          capability?: string | null
+          consumed_at?: string | null
+          consumed_by?: string | null
           created_at?: string
+          execution_ref?: string | null
+          expires_at?: string | null
           id?: string
+          intent_hash?: string | null
+          material?: Json
           module?: string
+          outcome?: Json | null
           payload?: Json
           requested_by?: string
           requested_role?: Database["public"]["Enums"]["admin_role"] | null
@@ -719,6 +747,8 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["approval_status"]
+          target_id?: string | null
+          target_type?: string | null
         }
         Relationships: []
       }
@@ -11752,6 +11782,20 @@ export type Database = {
         Args: { p_campaign: string; p_reason?: string; p_referral: string }
         Returns: undefined
       }
+      admin_audit_write: {
+        Args: {
+          _action: string
+          _after: Json
+          _approval_id: string
+          _before: Json
+          _capability: string
+          _module: string
+          _outcome: string
+          _target_id: string
+          _target_type: string
+        }
+        Returns: undefined
+      }
       admin_auth_user_exists: { Args: { _target: string }; Returns: boolean }
       admin_backfill_missing_driver_earnings: {
         Args: { p_dry_run?: boolean; p_limit?: number; p_reason?: string }
@@ -11871,6 +11915,17 @@ export type Database = {
         Args: { p_email: string }
         Returns: Json
       }
+      admin_enforce: {
+        Args: {
+          _approval_id?: string
+          _capability: string
+          _material?: Json
+          _module?: string
+          _target_id?: string
+          _target_type?: string
+        }
+        Returns: Json
+      }
       admin_enqueue_milestone_refresh: {
         Args: { p_driver: string; p_event?: string }
         Returns: string
@@ -11931,6 +11986,15 @@ export type Database = {
           target_group: string
           target_zone: string
         }[]
+      }
+      admin_intent_hash: {
+        Args: {
+          _capability: string
+          _material: Json
+          _target_id: string
+          _target_type: string
+        }
+        Returns: string
       }
       admin_link_restaurant_to_merchant_store: {
         Args: { p_merchant_store_id: string; p_restaurant_id: string }
@@ -12416,6 +12480,17 @@ export type Database = {
         Args: { p_food_order_id: string; p_reason?: string }
         Returns: Json
       }
+      admin_request_approval: {
+        Args: {
+          _capability: string
+          _material?: Json
+          _module?: string
+          _target_id?: string
+          _target_type?: string
+          _ttl_minutes?: number
+        }
+        Returns: string
+      }
       admin_request_driver_info: {
         Args: { p_missing: string[]; p_note: string; p_user_id: string }
         Returns: undefined
@@ -12427,6 +12502,10 @@ export type Database = {
       admin_retry_om_credit: { Args: { p_event_id: string }; Returns: Json }
       admin_reverse_starter_credit: {
         Args: { p_driver: string; p_reason: string }
+        Returns: Json
+      }
+      admin_review_approval: {
+        Args: { _approval_id: string; _decision: string; _note?: string }
         Returns: Json
       }
       admin_review_commission: {
