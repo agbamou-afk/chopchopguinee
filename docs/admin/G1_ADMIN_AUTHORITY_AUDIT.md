@@ -390,3 +390,7 @@ still accepted by 21 RPCs and both QA harnesses.
 Post-documentation re-census matched the pre-documentation census exactly: 91 `admin_*`
 RPCs, 0 anon-executable, 18 capability grants, 0 approval requests, 3 active staff rows,
 94 audit rows. Nothing changed while this document was written.
+
+| Unclassified callables or pages | 0 |
+
+Unclassified rows: **0**
