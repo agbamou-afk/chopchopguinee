@@ -92,9 +92,12 @@ const PaymentsAdmin = lazy(() => import("./pages/admin/PaymentsAdmin"));
 const SandboxAdmin = lazy(() => import("./pages/admin/SandboxAdmin"));
 const PilotCommandCenter = lazy(() => import("./pages/admin/PilotCommandCenter"));
 const OpsCommandCenter = lazy(() => import("./pages/admin/OpsCommandCenter"));
+const FinanceCommandCenter = lazy(() => import("./pages/admin/FinanceCommandCenter"));
 const MarcheOpsAdmin = lazy(() => import("./pages/admin/MarcheOpsAdmin"));
 const DriverGroupsAdmin = lazy(() => import("./pages/admin/DriverGroupsAdmin"));
 const AdminChangePassword = lazy(() => import("./pages/admin/AdminChangePassword"));
+import { AdminRouteGuard } from "@/components/admin/AdminRouteGuard";
+import { AdminHomeRoute } from "@/components/admin/AdminHomeRoute";
 const LeaderPortal = lazy(() => import("./pages/LeaderPortal"));
 import { ExposureRouteGuard } from "@/components/services/ExposureRouteGuard";
 
@@ -192,7 +195,7 @@ const App = () => {
             element={<Suspense fallback={null}><AdminChangePassword /></Suspense>}
           />
           <Route path="/admin" element={<Suspense fallback={null}><AdminLayout /></Suspense>}>
-            <Route index element={<AdminDashboard />} />
+            <Route index element={<AdminHomeRoute />} />
             <Route path="live" element={<LiveOps />} />
             <Route path="users" element={<UsersAdmin />} />
             <Route path="drivers" element={<DriversAdmin />} />
@@ -218,19 +221,20 @@ const App = () => {
             <Route path="map/places" element={<MapPlacesAdmin />} />
             <Route path="map/tarifs" element={<MapTariffsAdmin />} />
             <Route path="map/duplicates" element={<MapDuplicatesAdmin />} />
-            <Route path="map/routing" element={<MapRoutingAdmin />} />
-            <Route path="map/driver-signals" element={<DriverSignalsAdmin />} />
-            <Route path="field/pilots" element={<FieldPilotsAdmin />} />
+            <Route path="map/routing" element={<AdminRouteGuard module="zones"><MapRoutingAdmin /></AdminRouteGuard>} />
+            <Route path="map/driver-signals" element={<AdminRouteGuard module="live_ops"><DriverSignalsAdmin /></AdminRouteGuard>} />
+            <Route path="field/pilots" element={<AdminRouteGuard module="drivers"><FieldPilotsAdmin /></AdminRouteGuard>} />
             <Route path="flags" element={<FlagsAdmin />} />
             <Route path="finance-policy" element={<FinancePolicyAdmin />} />
             <Route path="settings" element={<SettingsAdmin />} />
             <Route path="admins" element={<AdminsAdmin />} />
             <Route path="audit" element={<AuditAdmin />} />
-            <Route path="analytics" element={<AnalyticsAdmin />} />
+            <Route path="analytics" element={<AdminRouteGuard module="analytics"><AnalyticsAdmin /></AdminRouteGuard>} />
             <Route path="payments" element={<PaymentsAdmin />} />
             <Route path="payments/sandbox" element={<SandboxAdmin />} />
             <Route path="pilot-command" element={<PilotCommandCenter />} />
             <Route path="ops" element={<OpsCommandCenter />} />
+            <Route path="finance" element={<FinanceCommandCenter />} />
             <Route path="marche/ops" element={<MarcheOpsAdmin />} />
             <Route path="driver-groups" element={<DriverGroupsAdmin />} />
           </Route>

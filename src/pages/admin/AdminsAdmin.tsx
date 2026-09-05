@@ -175,12 +175,24 @@ function CreateStaffAccountDialog({ onCreated }: { onCreated: () => void }) {
     const payload = data as { ok?: boolean; message?: string; error?: string;
       username?: string; email?: string; admin_role?: string; temporary_password?: string } | null;
     if (error || !payload?.ok) {
-      toast({
-        title: "Création impossible",
-        description: payload?.message ?? error?.message ?? "Erreur inconnue",
-      });
+      // `invoke` collapses every non-2xx into "non-2xx status code" and leaves `data` null.
+      // The real server message lives in the error context — read it so operators see the cause.
+      let description = payload?.message ?? error?.message ?? "Erreur inconnue";
+      const ctx = (error as { context?: Response } | null)?.context;
+      if (ctx && typeof ctx.text === "function") {
+        try {
+          const body = await ctx.text();
+          const parsed = JSON.parse(body) as { message?: string; error?: string };
+          description = parsed.message ?? parsed.error ?? body ?? description;
+        } catch {
+          /* keep the fallback description */
+        }
+      }
+      toast({ title: "Création impossible", description });
+      onCreated();
       return;
     }
+
     setResult({
       username: payload.username!,
       email: payload.email!,

@@ -131,11 +131,23 @@ Deno.serve(async (req) => {
       },
     });
     if (createErr || !created?.user) {
-      const msg = /already.*registered|exists/i.test(createErr?.message ?? "")
-        ? "Un compte avec cet email existe déjà."
-        : (createErr?.message ?? "Création du compte impossible.");
-      return json({ error: "auth_create_failed", message: msg }, 400);
+      const raw = createErr?.message ?? "";
+      if (/already.*registered|exists|duplicate/i.test(raw)) {
+        return json(
+          {
+            error: "email_conflict",
+            message:
+              "Un compte existe déjà avec cet email. Vérifiez la liste des administrateurs : ce compte a peut-être déjà été créé.",
+          },
+          409,
+        );
+      }
+      return json(
+        { error: "auth_create_failed", message: raw || "Création du compte impossible." },
+        400,
+      );
     }
+
     const newUserId = created.user.id;
 
     // Upsert profile (handle_new_user trigger likely created a base row).
@@ -183,7 +195,10 @@ Deno.serve(async (req) => {
     }
 
     // Audit log — never log the password.
-    await admin.from("audit_logs").insert({
+    // NOTE: a PostgrestBuilder is a thenable, NOT a Promise: calling `.catch()` on it
+    // throws `TypeError: .catch is not a function` AFTER the account is already created.
+    // Always await and inspect `error` instead.
+    const { error: auditErr } = await admin.from("audit_logs").insert({
       actor_user_id: callerId,
       actor_role: "super_admin",
       module: "admins",
@@ -197,7 +212,11 @@ Deno.serve(async (req) => {
         email_domain: email.split("@")[1] ?? null,
         must_change_password: mustChange,
       },
-    }).catch((e) => console.warn("[admin-create-staff-user] audit insert failed", e));
+    });
+    if (auditErr) {
+      console.warn("[admin-create-staff-user] audit insert failed", auditErr.message);
+    }
+
 
     return json({
       ok: true,
@@ -212,10 +231,12 @@ Deno.serve(async (req) => {
         "Compte créé. Communiquez le mot de passe temporaire en mains propres. L'utilisateur devra le changer à la première connexion.",
     });
   } catch (e) {
-    console.error("[admin-create-staff-user] unhandled exception", e);
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error("[admin-create-staff-user] unhandled exception", detail);
     return json(
-      { error: "exception", message: "Erreur interne." },
+      { error: "exception", message: `Erreur interne : ${detail}` },
       500,
     );
   }
+
 });
