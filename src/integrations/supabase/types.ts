@@ -12007,6 +12007,18 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_enforce_as: {
+        Args: {
+          _approval_id?: string
+          _caller: string
+          _capability: string
+          _material?: Json
+          _module?: string
+          _target_id?: string
+          _target_type?: string
+        }
+        Returns: Json
+      }
       admin_enqueue_milestone_refresh: {
         Args: { p_driver: string; p_event?: string }
         Returns: string
