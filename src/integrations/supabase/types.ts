@@ -357,6 +357,7 @@ export type Database = {
         Row: {
           admin_role: string
           capability: string
+          constitutional: boolean
           created_at: string
           mode: string
           note: string | null
@@ -365,6 +366,7 @@ export type Database = {
         Insert: {
           admin_role: string
           capability: string
+          constitutional?: boolean
           created_at?: string
           mode?: string
           note?: string | null
@@ -373,6 +375,7 @@ export type Database = {
         Update: {
           admin_role?: string
           capability?: string
+          constitutional?: boolean
           created_at?: string
           mode?: string
           note?: string | null
@@ -11765,6 +11768,10 @@ export type Database = {
       admin_capability_mode: {
         Args: { _capability: string; _uid?: string }
         Returns: string
+      }
+      admin_capability_read: {
+        Args: { _capability: string; _uid?: string }
+        Returns: boolean
       }
       admin_cash_order_dispute_resolve: {
         Args: {
