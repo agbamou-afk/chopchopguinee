@@ -223,3 +223,38 @@ Every audited callable in the G1 audit maps to exactly one of these capabilities
 - **Node 4 Marché law** and Repas / ride node laws.
 
 No capability in this constitution grants an override of any of the above.
+
+---
+
+## 8. Frontend module → capability mapping (display layer)
+
+The frontend registry (`src/lib/admin/permissions.ts`) exposes 24 modules. Each is an
+*affordance name*, not authority. Binding, so the display layer cannot drift from §3:
+
+| Module | Capability | Ops | Fin | God |
+|---|---|---|---|---|
+| `dashboard` | class landing console | A | A | A |
+| `live_ops` | `ops.liveops.view` | A | R | A |
+| `users` | `ops.users.manage` | A | R | A |
+| `drivers` | `ops.drivers.manage` | A | R | A |
+| `driver_groups` | `ops.drivers.manage` | A | R | A |
+| `merchants` | `ops.merchants.manage` | A | R | A |
+| `vendors` | `ops.merchants.manage` (financial float → `finance.payouts.manage`) | R | A | A |
+| `orders` | `ops.orders.manage` | A | R | A |
+| `repas` / `marche` | `ops.orders.manage` | A | R | A |
+| `support` | `ops.support.manage` | A | R | A |
+| `risk` | `ops.risk.manage` | A | R | A |
+| `zones` | `ops.maps.manage` | A | R | A |
+| `notifications` | `ops.support.manage` | A | R | A |
+| `reports` | `ops.reports.view` | A | R (export) | A |
+| `analytics` | `ops.reports.view` | A | R | A |
+| `wallet` | `finance.wallet.read` / `.credit` / `.adjust` | R | A/AR | AR |
+| `payments` | `finance.payouts.manage`, `finance.payout.confirm` | D | A/AR | A |
+| `pricing` | `ops.pricing.propose` vs `governance.pricing.change` | propose | R | AR |
+| `promotions` | `ops.pricing.propose` vs `governance.pricing.change` | propose | R | AR |
+| `flags` | `governance.flags.manage` / `finance.flags.payment` | propose | D/AR | A/AR |
+| `settings` | `governance.settings.manage` | D | D | A |
+| `admins` | `governance.staff.manage` | D | D | AR |
+| `audit` | `ops.audit.view_own_domain` / `finance.audit.view_financial` / `governance.audit.read_all` | scoped | scoped | A |
+
+Unmapped modules: **0**.
