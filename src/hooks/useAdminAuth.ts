@@ -6,8 +6,8 @@ function toAdminRole(roles: AppRole[]): AdminRole | null {
   if (roles.includes("god_admin")) return "god_admin";
   if (roles.includes("operations_admin")) return "operations_admin";
   if (roles.includes("finance_admin")) return "finance_admin";
-  // Backwards compat with legacy admin_users tier names.
-  if (roles.includes("admin")) return "god_admin";
+  // G2: the legacy bare `admin` label carries NO admin authority (mirrors
+  // public.admin_role_canonical). The server is authoritative either way.
   return null;
 }
 
