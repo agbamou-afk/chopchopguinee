@@ -183,7 +183,10 @@ Deno.serve(async (req) => {
     }
 
     // Audit log — never log the password.
-    await admin.from("audit_logs").insert({
+    // NOTE: a PostgrestBuilder is a thenable, NOT a Promise: calling `.catch()` on it
+    // throws `TypeError: .catch is not a function` AFTER the account is already created.
+    // Always await and inspect `error` instead.
+    const { error: auditErr } = await admin.from("audit_logs").insert({
       actor_user_id: callerId,
       actor_role: "super_admin",
       module: "admins",
@@ -197,7 +200,11 @@ Deno.serve(async (req) => {
         email_domain: email.split("@")[1] ?? null,
         must_change_password: mustChange,
       },
-    }).catch((e) => console.warn("[admin-create-staff-user] audit insert failed", e));
+    });
+    if (auditErr) {
+      console.warn("[admin-create-staff-user] audit insert failed", auditErr.message);
+    }
+
 
     return json({
       ok: true,
