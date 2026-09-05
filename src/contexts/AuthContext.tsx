@@ -37,7 +37,8 @@ export interface FreezeRecord {
   expires_at: string | null;
 }
 
-const ADMIN_ROLES: AppRole[] = ["admin", "operations_admin", "finance_admin", "god_admin"];
+// G2: bare `admin` is not an admin class (mirrors public.admin_role_canonical).
+const ADMIN_ROLES: AppRole[] = ["operations_admin", "finance_admin", "god_admin"];
 
 interface AuthContextValue {
   ready: boolean;

@@ -25,7 +25,11 @@ Deno.serve(async (req) => {
     if (!u?.user) return json({ error: "unauthorized" }, 401);
 
     const admin = createClient(url, service);
-    const { data: isOps, error: opsErr } = await admin.rpc("can_manage_operations", { _user_id: u.user.id });
+    // G2: constitutional capability check (ops.drivers.manage).
+    const { data: isOps, error: opsErr } = await admin.rpc("admin_capability", {
+      _capability: "ops.drivers.manage",
+      _uid: u.user.id,
+    });
     if (opsErr || !isOps) return json({ error: "forbidden" }, 403);
 
     const body = await req.json().catch(() => ({}));

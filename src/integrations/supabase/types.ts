@@ -357,6 +357,7 @@ export type Database = {
         Row: {
           admin_role: string
           capability: string
+          constitutional: boolean
           created_at: string
           mode: string
           note: string | null
@@ -365,6 +366,7 @@ export type Database = {
         Insert: {
           admin_role: string
           capability: string
+          constitutional?: boolean
           created_at?: string
           mode?: string
           note?: string | null
@@ -373,6 +375,7 @@ export type Database = {
         Update: {
           admin_role?: string
           capability?: string
+          constitutional?: boolean
           created_at?: string
           mode?: string
           note?: string | null
@@ -680,9 +683,17 @@ export type Database = {
       approval_requests: {
         Row: {
           action: string
+          capability: string | null
+          consumed_at: string | null
+          consumed_by: string | null
           created_at: string
+          execution_ref: string | null
+          expires_at: string | null
           id: string
+          intent_hash: string | null
+          material: Json
           module: string
+          outcome: Json | null
           payload: Json
           requested_by: string
           requested_role: Database["public"]["Enums"]["admin_role"] | null
@@ -690,12 +701,22 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           status: Database["public"]["Enums"]["approval_status"]
+          target_id: string | null
+          target_type: string | null
         }
         Insert: {
           action: string
+          capability?: string | null
+          consumed_at?: string | null
+          consumed_by?: string | null
           created_at?: string
+          execution_ref?: string | null
+          expires_at?: string | null
           id?: string
+          intent_hash?: string | null
+          material?: Json
           module: string
+          outcome?: Json | null
           payload?: Json
           requested_by: string
           requested_role?: Database["public"]["Enums"]["admin_role"] | null
@@ -703,12 +724,22 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["approval_status"]
+          target_id?: string | null
+          target_type?: string | null
         }
         Update: {
           action?: string
+          capability?: string | null
+          consumed_at?: string | null
+          consumed_by?: string | null
           created_at?: string
+          execution_ref?: string | null
+          expires_at?: string | null
           id?: string
+          intent_hash?: string | null
+          material?: Json
           module?: string
+          outcome?: Json | null
           payload?: Json
           requested_by?: string
           requested_role?: Database["public"]["Enums"]["admin_role"] | null
@@ -716,6 +747,8 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["approval_status"]
+          target_id?: string | null
+          target_type?: string | null
         }
         Relationships: []
       }
@@ -10680,6 +10713,420 @@ export type Database = {
       _finance_privileged: { Args: { p_caller: string }; Returns: boolean }
       _finance_treasury_facts: { Args: never; Returns: Json }
       _finance_treasury_gate: { Args: never; Returns: string }
+      _g2_internal_caller: { Args: never; Returns: boolean }
+      _g2i_admin_account_closure_reconcile: {
+        Args: { _reason?: string; _target: string }
+        Returns: Json
+      }
+      _g2i_admin_adjust_agent_float: {
+        Args: {
+          p_agent_user_id: string
+          p_delta_gnf: number
+          p_reason?: string
+        }
+        Returns: {
+          amount_gnf: number
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          from_wallet_id: string | null
+          id: string
+          metadata: Json
+          reference: string
+          related_entity: string | null
+          related_user_id: string | null
+          status: Database["public"]["Enums"]["txn_status"]
+          to_wallet_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _g2i_admin_anonymize_user: {
+        Args: { _reason?: string; _target: string }
+        Returns: Json
+      }
+      _g2i_admin_backfill_missing_driver_earnings: {
+        Args: { p_dry_run?: boolean; p_limit?: number; p_reason?: string }
+        Returns: Json
+      }
+      _g2i_admin_cash_order_dispute_resolve: {
+        Args: {
+          p_outcome: string
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _g2i_admin_chop_pay_cancel: {
+        Args: {
+          p_reason?: string
+          p_responsible_party: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _g2i_admin_chop_pay_dispute_resolve: {
+        Args: {
+          p_outcome: string
+          p_reason?: string
+          p_source_id: string
+          p_source_module: string
+        }
+        Returns: Json
+      }
+      _g2i_admin_disable_repas_promotion: {
+        Args: { p_id: string; p_reason: string }
+        Returns: Json
+      }
+      _g2i_admin_generate_payout_statement: {
+        Args: {
+          p_from: string
+          p_group: string
+          p_notes?: string
+          p_to: string
+        }
+        Returns: string
+      }
+      _g2i_admin_governance_set_status: {
+        Args: { _reason?: string; _status: string; _target: string }
+        Returns: Json
+      }
+      _g2i_admin_manual_om_credit: {
+        Args: { p_event_id: string; p_topup_request_id: string }
+        Returns: Json
+      }
+      _g2i_admin_marche_capture_and_settle_offer: {
+        Args: { p_offer_id: string; p_reason?: string }
+        Returns: Json
+      }
+      _g2i_admin_mark_om_conflict: {
+        Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
+      }
+      _g2i_admin_package_claim_resolve: {
+        Args: {
+          p_evidence_ref: string
+          p_outcome: string
+          p_package_id: string
+          p_pay_customer_gnf?: number
+          p_reason: string
+        }
+        Returns: Json
+      }
+      _g2i_admin_package_claim_set_documented_value: {
+        Args: {
+          p_documented_actual_value_gnf: number
+          p_evidence_ref: string
+          p_package_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      _g2i_admin_professional_offboard: {
+        Args: { _reason?: string; _target: string }
+        Returns: Json
+      }
+      _g2i_admin_record_om_receipt: {
+        Args: {
+          p_amount_gnf: number
+          p_note?: string
+          p_payer_phone?: string
+          p_provider_transaction_id: string
+          p_receiving_account_id?: string
+        }
+        Returns: Json
+      }
+      _g2i_admin_repas_capture_and_settle_order: {
+        Args: { p_food_order_id: string; p_reason?: string }
+        Returns: Json
+      }
+      _g2i_admin_retry_om_credit: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
+      _g2i_admin_reverse_starter_credit: {
+        Args: { p_driver: string; p_reason: string }
+        Returns: Json
+      }
+      _g2i_admin_set_feature_flag: {
+        Args: { p_enabled: boolean; p_key: string; p_note?: string }
+        Returns: {
+          description: string | null
+          enabled: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "feature_flags"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _g2i_admin_set_finance_delegation: {
+        Args: { p_note?: string; p_provider_fee_to_finance_admin: boolean }
+        Returns: Json
+      }
+      _g2i_admin_set_finance_policy: {
+        Args: {
+          p_cancel_after_dispatch_bps?: number
+          p_cancel_basis?: string
+          p_cancel_before_dispatch_bps?: number
+          p_cash_funding_max_gnf?: number
+          p_cash_funding_mode?: string
+          p_cash_funding_pct_bps?: number
+          p_claims_exposure_max_gnf?: number
+          p_collateral_basis?: string
+          p_collateral_fixed_gnf?: number
+          p_collateral_max_gnf?: number
+          p_collateral_min_gnf?: number
+          p_collateral_mode?: string
+          p_collateral_pct_bps?: number
+          p_commission_bps?: number
+          p_courier_payout_gnf?: number
+          p_delivery_flat_fee_gnf?: number
+          p_delivery_max_distance_km?: number
+          p_effective_from?: string
+          p_fee_basis?: string
+          p_fixed_commission_gnf?: number
+          p_max_declared_value_gnf?: number
+          p_merchant_platform_fee_bps?: number
+          p_min_driver_balance_gnf?: number
+          p_mission_type: string
+          p_note?: string
+          p_pickup_platform_fee_bps?: number
+          p_require_collateral_before_offer?: boolean
+          p_transaction_fee_bps?: number
+        }
+        Returns: Json
+      }
+      _g2i_admin_set_merchant_settlement_policy: {
+        Args: {
+          p_cadence?: string
+          p_configured?: boolean
+          p_effective_from?: string
+          p_fee_bps?: number
+          p_fee_fixed_gnf?: number
+          p_fee_passthrough?: boolean
+          p_max_settlement_gnf?: number
+          p_min_settlement_gnf?: number
+          p_note?: string
+        }
+        Returns: {
+          cadence: string | null
+          configured: boolean
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_bps: number | null
+          fee_fixed_gnf: number | null
+          fee_passthrough: boolean | null
+          id: string
+          max_settlement_gnf: number | null
+          min_settlement_gnf: number | null
+          note: string | null
+          requires_evidence_reconciliation: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "merchant_settlement_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _g2i_admin_set_payout_policy: {
+        Args: {
+          p_cancel_window_seconds?: number
+          p_daily_limit_gnf: number
+          p_effective_from?: string
+          p_max_request_gnf: number
+          p_min_request_gnf: number
+          p_note?: string
+          p_processing_estimate_max_minutes?: number
+          p_processing_estimate_min_minutes?: number
+          p_provider_fee_passthrough?: boolean
+        }
+        Returns: {
+          block_on_dispute_or_freeze: boolean
+          cancel_window_seconds: number
+          created_at: string
+          created_by: string | null
+          daily_limit_gnf: number
+          effective_from: string
+          enabled: boolean
+          id: string
+          max_request_gnf: number
+          min_request_gnf: number
+          note: string | null
+          one_pending_request_only: boolean
+          processing_estimate_max_minutes: number
+          processing_estimate_min_minutes: number
+          provider_fee_passthrough: boolean
+          registered_om_phone_only: boolean
+          restricted_funds_withdrawable: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_payout_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _g2i_admin_set_provider_fee_schedule: {
+        Args: {
+          p_effective_from?: string
+          p_fee_bps: number
+          p_fee_fixed_gnf?: number
+          p_max_fee_gnf?: number
+          p_min_fee_gnf?: number
+          p_note?: string
+          p_passthrough_to_recipient?: boolean
+          p_provider: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          fee_bps: number
+          fee_fixed_gnf: number
+          id: string
+          max_fee_gnf: number | null
+          min_fee_gnf: number
+          note: string | null
+          passthrough_to_recipient: boolean
+          provider: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "provider_fee_schedules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _g2i_admin_set_repas_promotion: {
+        Args: {
+          p_delivery_discount_gnf?: number
+          p_delivery_fee_override_gnf?: number
+          p_ends_at: string
+          p_fulfillment_scope?: string
+          p_name: string
+          p_reason: string
+          p_starts_at: string
+        }
+        Returns: Json
+      }
+      _g2i_admin_set_starter_credit_policy: {
+        Args: {
+          p_amount_gnf: number
+          p_effective_from?: string
+          p_enabled?: boolean
+          p_note?: string
+        }
+        Returns: {
+          amount_gnf: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          enabled: boolean
+          id: string
+          note: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_starter_credit_policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _g2i_admin_set_statement_status: {
+        Args: { p_notes?: string; p_statement: string; p_status: string }
+        Returns: undefined
+      }
+      _g2i_admin_staff_role_grant: {
+        Args: { _reason?: string; _role: string; _target: string }
+        Returns: Json
+      }
+      _g2i_admin_staff_role_revoke: {
+        Args: { _reason?: string; _role: string; _target: string }
+        Returns: Json
+      }
+      _g2i_driver_cashout_mark_paid: {
+        Args: {
+          p_admin_note?: string
+          p_id: string
+          p_provider_reference: string
+        }
+        Returns: {
+          admin_note: string | null
+          amount_gnf: number
+          created_at: string
+          driver_note: string | null
+          driver_user_id: string
+          id: string
+          paid_at: string | null
+          paid_by: string | null
+          payout_method: string
+          payout_phone: string
+          provider_reference: string | null
+          rejected_reason: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_cashout_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _g2i_driver_cashout_reject_request: {
+        Args: { p_id: string; p_reason: string }
+        Returns: {
+          admin_note: string | null
+          amount_gnf: number
+          created_at: string
+          driver_note: string | null
+          driver_user_id: string
+          id: string
+          paid_at: string | null
+          paid_by: string | null
+          payout_method: string
+          payout_phone: string
+          provider_reference: string | null
+          rejected_reason: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          wallet_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "driver_cashout_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      _g2i_payout_reject_release: {
+        Args: { p_payout_order_id: string; p_reason: string }
+        Returns: Json
+      }
       _governance_role_allowed: { Args: { _role: string }; Returns: boolean }
       _hold_account: { Args: { p_kind: string }; Returns: string }
       _is_approved_service_agent: {
@@ -11387,6 +11834,7 @@ export type Database = {
       _qa_a4_cleanup: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_a5_cleanup: { Args: { p_ids: string[] }; Returns: undefined }
       _qa_auth_user_count: { Args: never; Returns: number }
+      _qa_g2_admin_authority: { Args: never; Returns: Json }
       _qa_n4r12_orphan_admins: { Args: never; Returns: number }
       _qa_n5a9_role_governance: { Args: never; Returns: Json }
       _qa_node0_course: { Args: never; Returns: Json }
@@ -11701,11 +12149,12 @@ export type Database = {
       account_mode_context: { Args: never; Returns: Json }
       account_mode_set: { Args: { p_mode: string }; Returns: Json }
       admin_account_closure_reconcile: {
-        Args: { _reason?: string; _target: string }
+        Args: { _g2_approval?: string; _reason?: string; _target: string }
         Returns: Json
       }
       admin_adjust_agent_float: {
         Args: {
+          _g2_approval?: string
           p_agent_user_id: string
           p_delta_gnf: number
           p_reason?: string
@@ -11733,7 +12182,7 @@ export type Database = {
         }
       }
       admin_anonymize_user: {
-        Args: { _reason?: string; _target: string }
+        Args: { _g2_approval?: string; _reason?: string; _target: string }
         Returns: Json
       }
       admin_assign_driver_to_group: {
@@ -11749,9 +12198,28 @@ export type Database = {
         Args: { p_campaign: string; p_reason?: string; p_referral: string }
         Returns: undefined
       }
+      admin_audit_write: {
+        Args: {
+          _action: string
+          _after: Json
+          _approval_id: string
+          _before: Json
+          _capability: string
+          _module: string
+          _outcome: string
+          _target_id: string
+          _target_type: string
+        }
+        Returns: undefined
+      }
       admin_auth_user_exists: { Args: { _target: string }; Returns: boolean }
       admin_backfill_missing_driver_earnings: {
-        Args: { p_dry_run?: boolean; p_limit?: number; p_reason?: string }
+        Args: {
+          _g2_approval?: string
+          p_dry_run?: boolean
+          p_limit?: number
+          p_reason?: string
+        }
         Returns: Json
       }
       admin_ban_user: {
@@ -11766,8 +12234,13 @@ export type Database = {
         Args: { _capability: string; _uid?: string }
         Returns: string
       }
+      admin_capability_read: {
+        Args: { _capability: string; _uid?: string }
+        Returns: boolean
+      }
       admin_cash_order_dispute_resolve: {
         Args: {
+          _g2_approval?: string
           p_outcome: string
           p_reason?: string
           p_source_id: string
@@ -11781,6 +12254,7 @@ export type Database = {
       }
       admin_chop_pay_cancel: {
         Args: {
+          _g2_approval?: string
           p_reason?: string
           p_responsible_party: string
           p_source_id: string
@@ -11790,6 +12264,7 @@ export type Database = {
       }
       admin_chop_pay_dispute_resolve: {
         Args: {
+          _g2_approval?: string
           p_outcome: string
           p_reason?: string
           p_source_id: string
@@ -11831,7 +12306,7 @@ export type Database = {
       admin_create_contract: { Args: { payload: Json }; Returns: string }
       admin_create_driver_group: { Args: { payload: Json }; Returns: string }
       admin_disable_repas_promotion: {
-        Args: { p_id: string; p_reason: string }
+        Args: { _g2_approval?: string; p_id: string; p_reason: string }
         Returns: Json
       }
       admin_dormant_liabilities: {
@@ -11862,6 +12337,29 @@ export type Database = {
       }
       admin_email_delivery_diagnostics: {
         Args: { p_email: string }
+        Returns: Json
+      }
+      admin_enforce: {
+        Args: {
+          _approval_id?: string
+          _capability: string
+          _material?: Json
+          _module?: string
+          _target_id?: string
+          _target_type?: string
+        }
+        Returns: Json
+      }
+      admin_enforce_as: {
+        Args: {
+          _approval_id?: string
+          _caller: string
+          _capability: string
+          _material?: Json
+          _module?: string
+          _target_id?: string
+          _target_type?: string
+        }
         Returns: Json
       }
       admin_enqueue_milestone_refresh: {
@@ -11895,7 +12393,12 @@ export type Database = {
         Returns: Json
       }
       admin_governance_set_status: {
-        Args: { _reason?: string; _status: string; _target: string }
+        Args: {
+          _g2_approval?: string
+          _reason?: string
+          _status: string
+          _target: string
+        }
         Returns: Json
       }
       admin_group_risk_scorecard: {
@@ -11924,6 +12427,15 @@ export type Database = {
           target_group: string
           target_zone: string
         }[]
+      }
+      admin_intent_hash: {
+        Args: {
+          _capability: string
+          _material: Json
+          _target_id: string
+          _target_type: string
+        }
+        Returns: string
       }
       admin_link_restaurant_to_merchant_store: {
         Args: { p_merchant_store_id: string; p_restaurant_id: string }
@@ -11984,7 +12496,11 @@ export type Database = {
         Returns: undefined
       }
       admin_manual_om_credit: {
-        Args: { p_event_id: string; p_topup_request_id: string }
+        Args: {
+          _g2_approval?: string
+          p_event_id: string
+          p_topup_request_id: string
+        }
         Returns: Json
       }
       admin_marche_capture_and_settle_offer: {
@@ -12149,6 +12665,7 @@ export type Database = {
       }
       admin_package_claim_resolve: {
         Args: {
+          _g2_approval?: string
           p_evidence_ref: string
           p_outcome: string
           p_package_id: string
@@ -12159,6 +12676,7 @@ export type Database = {
       }
       admin_package_claim_set_documented_value: {
         Args: {
+          _g2_approval?: string
           p_documented_actual_value_gnf: number
           p_evidence_ref: string
           p_package_id: string
@@ -12379,7 +12897,7 @@ export type Database = {
         }[]
       }
       admin_professional_offboard: {
-        Args: { _reason?: string; _target: string }
+        Args: { _g2_approval?: string; _reason?: string; _target: string }
         Returns: Json
       }
       admin_professional_restore: {
@@ -12409,6 +12927,17 @@ export type Database = {
         Args: { p_food_order_id: string; p_reason?: string }
         Returns: Json
       }
+      admin_request_approval: {
+        Args: {
+          _capability: string
+          _material?: Json
+          _module?: string
+          _target_id?: string
+          _target_type?: string
+          _ttl_minutes?: number
+        }
+        Returns: string
+      }
       admin_request_driver_info: {
         Args: { p_missing: string[]; p_note: string; p_user_id: string }
         Returns: undefined
@@ -12417,9 +12946,16 @@ export type Database = {
         Args: { _capability: string }
         Returns: undefined
       }
-      admin_retry_om_credit: { Args: { p_event_id: string }; Returns: Json }
+      admin_retry_om_credit: {
+        Args: { _g2_approval?: string; p_event_id: string }
+        Returns: Json
+      }
       admin_reverse_starter_credit: {
-        Args: { p_driver: string; p_reason: string }
+        Args: { _g2_approval?: string; p_driver: string; p_reason: string }
+        Returns: Json
+      }
+      admin_review_approval: {
+        Args: { _approval_id: string; _decision: string; _note?: string }
         Returns: Json
       }
       admin_review_commission: {
@@ -12435,6 +12971,8 @@ export type Database = {
         Returns: undefined
       }
       admin_role_canonical: { Args: { _uid?: string }; Returns: string }
+      admin_role_classes: { Args: { _uid: string }; Returns: string[] }
+      admin_role_diagnose: { Args: { _uid?: string }; Returns: Json }
       admin_set_driver_capability: {
         Args: { _capability: string; _driver_user_id: string; _grant: boolean }
         Returns: {
@@ -12471,7 +13009,12 @@ export type Database = {
         }
       }
       admin_set_feature_flag: {
-        Args: { p_enabled: boolean; p_key: string; p_note?: string }
+        Args: {
+          _g2_approval?: string
+          p_enabled: boolean
+          p_key: string
+          p_note?: string
+        }
         Returns: {
           description: string | null
           enabled: boolean
@@ -12487,11 +13030,16 @@ export type Database = {
         }
       }
       admin_set_finance_delegation: {
-        Args: { p_note?: string; p_provider_fee_to_finance_admin: boolean }
+        Args: {
+          _g2_approval?: string
+          p_note?: string
+          p_provider_fee_to_finance_admin: boolean
+        }
         Returns: Json
       }
       admin_set_finance_policy: {
         Args: {
+          _g2_approval?: string
           p_cancel_after_dispatch_bps?: number
           p_cancel_basis?: string
           p_cancel_before_dispatch_bps?: number
@@ -12529,6 +13077,7 @@ export type Database = {
       }
       admin_set_merchant_settlement_policy: {
         Args: {
+          _g2_approval?: string
           p_cadence?: string
           p_configured?: boolean
           p_effective_from?: string
@@ -12564,6 +13113,7 @@ export type Database = {
       }
       admin_set_payout_policy: {
         Args: {
+          _g2_approval?: string
           p_cancel_window_seconds?: number
           p_daily_limit_gnf: number
           p_effective_from?: string
@@ -12602,6 +13152,7 @@ export type Database = {
       }
       admin_set_provider_fee_schedule: {
         Args: {
+          _g2_approval?: string
           p_effective_from?: string
           p_fee_bps: number
           p_fee_fixed_gnf?: number
@@ -12634,6 +13185,7 @@ export type Database = {
       }
       admin_set_repas_promotion: {
         Args: {
+          _g2_approval?: string
           p_delivery_discount_gnf?: number
           p_delivery_fee_override_gnf?: number
           p_ends_at: string
@@ -12646,6 +13198,7 @@ export type Database = {
       }
       admin_set_starter_credit_policy: {
         Args: {
+          _g2_approval?: string
           p_amount_gnf: number
           p_effective_from?: string
           p_enabled?: boolean
@@ -12673,11 +13226,21 @@ export type Database = {
         Returns: undefined
       }
       admin_staff_role_grant: {
-        Args: { _reason?: string; _role: string; _target: string }
+        Args: {
+          _g2_approval?: string
+          _reason?: string
+          _role: string
+          _target: string
+        }
         Returns: Json
       }
       admin_staff_role_revoke: {
-        Args: { _reason?: string; _role: string; _target: string }
+        Args: {
+          _g2_approval?: string
+          _reason?: string
+          _role: string
+          _target: string
+        }
         Returns: Json
       }
       admin_unban_user:
@@ -13365,6 +13928,7 @@ export type Database = {
       }
       driver_cashout_mark_paid: {
         Args: {
+          _g2_approval?: string
           p_admin_note?: string
           p_id: string
           p_provider_reference: string
@@ -13852,6 +14416,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      feature_flag_is_financial: { Args: { _key: string }; Returns: boolean }
       field_submit_visit: {
         Args: {
           p_address_text?: string

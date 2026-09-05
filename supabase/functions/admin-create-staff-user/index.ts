@@ -71,21 +71,9 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // Caller must be god_admin (unified) OR super_admin (legacy admin_users tier).
-    const { data: callerAdmin } = await admin
-      .from("admin_users")
-      .select("admin_role,status")
-      .eq("user_id", callerId)
-      .eq("status", "active")
-      .maybeSingle();
-    const { data: callerRoles } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", callerId);
-    const callerIsGod =
-      (callerAdmin?.admin_role === "super_admin") ||
-      (Array.isArray(callerRoles) && callerRoles.some((r: { role: string }) => r.role === "god_admin"));
-    if (!callerIsGod) {
+    // G2: canonical role law only. No legacy alias, no precedence shortcut.
+    const { data: canonicalRole } = await admin.rpc("admin_role_canonical", { _uid: callerId });
+    if (canonicalRole !== "god_admin") {
       return json(
         { error: "forbidden", message: "Accès refusé : réservé au God Admin." },
         403,
@@ -115,6 +103,32 @@ Deno.serve(async (req) => {
     }
     if (tempPassword.length < 8) {
       return json({ error: "bad_password", message: "Mot de passe temporaire trop court." }, 400);
+    }
+
+    // G2 four-eyes: governance.staff.manage is APPROVAL_REQUIRED. The approval must
+    // bind to this exact email + role, be approved by a *different* active God Admin,
+    // be unexpired and unconsumed. Consumption happens here, before any write.
+    const approvalId = body.approval_id ? String(body.approval_id) : null;
+    const { error: gateErr } = await admin.rpc("admin_enforce_as", {
+      _caller: callerId,
+      _capability: "governance.staff.manage",
+      _target_type: "staff_email",
+      _target_id: email,
+      _material: { admin_role: role, username, must_change_password: mustChange },
+      _approval_id: approvalId,
+      _module: "admins",
+    });
+    if (gateErr) {
+      const m = gateErr.message ?? "";
+      return json(
+        {
+          error: /approval/i.test(m) ? "approval_required" : "forbidden",
+          message: /approval_required/.test(m)
+            ? "Double validation requise : un second God Admin doit approuver la création de ce compte."
+            : `Refusé : ${m}`,
+        },
+        403,
+      );
     }
 
     // Create auth user with temp password, pre-confirm email so they can login immediately.

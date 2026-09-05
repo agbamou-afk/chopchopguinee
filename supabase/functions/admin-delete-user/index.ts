@@ -62,7 +62,10 @@ Deno.serve(async (req) => {
       console.error("[admin-delete-user] admin_users lookup failed", adminErr);
       return json({ error: "admin_lookup_failed", message: "Impossible de vérifier vos droits administrateur." }, 500);
     }
-    if (!adminRow || !["god_admin", "super_admin"].includes(adminRow.admin_role)) {
+    const { data: canonicalRole } = await admin.rpc("admin_role_canonical", {
+      _uid: userData.user.id,
+    });
+    if (!adminRow || canonicalRole !== "god_admin") {
       return json(
         { error: "forbidden", message: "Accès refusé : seul un god_admin peut supprimer un compte test." },
         403,

@@ -83,10 +83,10 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Authorize via admin_users only (single source of admin authority).
-    // Allowed: active god_admin, super_admin, finance_admin.
-    const { data: allowed, error: authzErr } = await admin.rpc("can_manage_wallet", {
-      _user_id: user.id,
+    // G2: constitutional capability check (finance.topup.manage).
+    const { data: allowed, error: authzErr } = await admin.rpc("admin_capability", {
+      _capability: "finance.topup.manage",
+      _uid: user.id,
     });
     if (authzErr || !allowed) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
