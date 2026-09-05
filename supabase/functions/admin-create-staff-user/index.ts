@@ -131,11 +131,23 @@ Deno.serve(async (req) => {
       },
     });
     if (createErr || !created?.user) {
-      const msg = /already.*registered|exists/i.test(createErr?.message ?? "")
-        ? "Un compte avec cet email existe déjà."
-        : (createErr?.message ?? "Création du compte impossible.");
-      return json({ error: "auth_create_failed", message: msg }, 400);
+      const raw = createErr?.message ?? "";
+      if (/already.*registered|exists|duplicate/i.test(raw)) {
+        return json(
+          {
+            error: "email_conflict",
+            message:
+              "Un compte existe déjà avec cet email. Vérifiez la liste des administrateurs : ce compte a peut-être déjà été créé.",
+          },
+          409,
+        );
+      }
+      return json(
+        { error: "auth_create_failed", message: raw || "Création du compte impossible." },
+        400,
+      );
     }
+
     const newUserId = created.user.id;
 
     // Upsert profile (handle_new_user trigger likely created a base row).
