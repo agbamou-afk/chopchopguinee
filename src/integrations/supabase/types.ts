@@ -9727,6 +9727,78 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_lifecycle_requests: {
+        Row: {
+          action: string
+          approval_id: string | null
+          auth_user_id: string | null
+          completed_at: string | null
+          created_at: string
+          error_code: string | null
+          id: string
+          idempotency_key: string
+          intent_hash: string
+          must_change_password: boolean
+          outcome: string | null
+          previous_role: string | null
+          reason: string | null
+          requester_id: string
+          requester_role: string | null
+          state: string
+          target_email_hash: string | null
+          target_key: string
+          target_role: string | null
+          target_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          approval_id?: string | null
+          auth_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          idempotency_key: string
+          intent_hash: string
+          must_change_password?: boolean
+          outcome?: string | null
+          previous_role?: string | null
+          reason?: string | null
+          requester_id: string
+          requester_role?: string | null
+          state?: string
+          target_email_hash?: string | null
+          target_key: string
+          target_role?: string | null
+          target_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          approval_id?: string | null
+          auth_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          idempotency_key?: string
+          intent_hash?: string
+          must_change_password?: boolean
+          outcome?: string | null
+          previous_role?: string | null
+          reason?: string | null
+          requester_id?: string
+          requester_role?: string | null
+          state?: string
+          target_email_hash?: string | null
+          target_key?: string
+          target_role?: string | null
+          target_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_issues: {
         Row: {
           assigned_role: Database["public"]["Enums"]["support_issue_role"]
@@ -11126,6 +11198,31 @@ export type Database = {
       _g2i_payout_reject_release: {
         Args: { p_payout_order_id: string; p_reason: string }
         Returns: Json
+      }
+      _g3_active_god_count: { Args: { _excluding?: string }; Returns: number }
+      _g3_complete: {
+        Args: {
+          _action: string
+          _after: Json
+          _before: Json
+          _outcome: string
+          _request_id: string
+          _target: string
+        }
+        Returns: undefined
+      }
+      _g3_legacy_role: {
+        Args: { _class: string }
+        Returns: Database["public"]["Enums"]["admin_role"]
+      }
+      _g3_set_staff_authority: {
+        Args: {
+          _active: boolean
+          _class: string
+          _must_change: boolean
+          _target: string
+        }
+        Returns: undefined
       }
       _governance_role_allowed: { Args: { _role: string }; Returns: boolean }
       _hold_account: { Args: { p_kind: string }; Returns: string }
@@ -13225,6 +13322,47 @@ export type Database = {
         Args: { p_notes?: string; p_statement: string; p_status: string }
         Returns: undefined
       }
+      admin_staff_fail_as: {
+        Args: { _error_code: string; _final?: boolean; _request_id: string }
+        Returns: Json
+      }
+      admin_staff_finalize_authority_as: {
+        Args: { _request_id: string }
+        Returns: Json
+      }
+      admin_staff_finalize_create_as: {
+        Args: {
+          _display_name: string
+          _phone: string
+          _request_id: string
+          _username: string
+        }
+        Returns: Json
+      }
+      admin_staff_finalize_deactivate_as: {
+        Args: { _request_id: string }
+        Returns: Json
+      }
+      admin_staff_lifecycle_begin_as: {
+        Args: {
+          _action: string
+          _approval_id?: string
+          _caller: string
+          _idempotency_key: string
+          _must_change?: boolean
+          _reason?: string
+          _target_key: string
+          _target_role?: string
+          _target_user_id?: string
+        }
+        Returns: Json
+      }
+      admin_staff_quorum_status: { Args: never; Returns: Json }
+      admin_staff_readiness: { Args: { _uid?: string }; Returns: string }
+      admin_staff_record_auth_as: {
+        Args: { _auth_user_id: string; _request_id: string }
+        Returns: Json
+      }
       admin_staff_role_grant: {
         Args: {
           _g2_approval?: string
@@ -13242,6 +13380,24 @@ export type Database = {
           _target: string
         }
         Returns: Json
+      }
+      admin_staff_roster: {
+        Args: never
+        Returns: {
+          canonical_role: string
+          changed_password_at: string
+          created_at: string
+          full_name: string
+          last_action: string
+          last_action_at: string
+          last_outcome: string
+          legacy_role: string
+          must_change_password: boolean
+          phone: string
+          readiness: string
+          status: string
+          user_id: string
+        }[]
       }
       admin_unban_user:
         | {
