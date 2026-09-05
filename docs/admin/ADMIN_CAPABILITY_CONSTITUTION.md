@@ -1,84 +1,225 @@
 # CHOP CHOP — Admin Capability Constitution
 
-Status: ratified (G1) and enforced in the database (G2).
-Classes: **God Admin** (constitutional super-admin), **Operations Admin**, **Finance Admin**.
+Status: **G1 CANONICAL / FROZEN**. Ratified 2026-09-05.
+This document is the single constitutional source of admin authority. G2 enforcement code
+(SQL helpers, grants, guards, approval gates) must be derived from this text. Where code and
+this document disagree, this document defines the intent and the code is the defect.
 
-## 1. Canonical role resolution
+Companion evidence: [`G1_ADMIN_AUTHORITY_AUDIT.md`](./G1_ADMIN_AUTHORITY_AUDIT.md).
 
-Two role systems exist and both stay live:
+---
 
-- `admin_users.admin_role` (`god_admin`, `super_admin`, `ops_admin`, `operations_admin`, `finance_admin`, `support_admin`) + `status`.
-- `user_roles.role` (`god_admin`, `operations_admin`, `finance_admin`, …), guarded by `guard_user_roles_write`.
+## 1. Governing principles
 
-`public.admin_role_canonical(uuid)` reduces both to exactly one of
-`god_admin | finance_admin | operations_admin | NULL`:
+1. **UI is never authority.** Menus, buttons, route guards, and the frontend permission
+   registry are *affordances*. Authority exists only where the database or an Edge Function
+   verifies the caller server-side. A hidden button is not a control.
+2. **Deny by default.** Absence of an explicit grant is denial. No capability is implied by
+   role name, table access, or historical convenience.
+3. **Least privilege.** A staff class receives the minimum capability set required for its
+   responsibility. Convenience never widens a class.
+4. **Requester ≠ approver.** Any action classified APPROVAL_REQUIRED must be approved by a
+   different natural person of the approver class. Self-approval is void.
+5. **Read visibility does not imply mutation.** A class may be granted READ_ONLY sight of
+   another domain's facts (needed for context and investigation) without any write path.
+6. **Aliases never create authority accidentally.** Legacy role labels
+   (`ops_admin`, `super_admin`, bare `admin`) resolve through one canonical normalization
+   function. An unmapped or ambiguous label resolves to NULL — no authority.
+7. **Frozen law supersedes admin convenience.** Node 5 identity law (closure, anonymization,
+   professional lane exclusivity), Chop Pay / Slice 12 finance law (ledger immutability,
+   named exceptions, no balancing plug), and Node 4 Marché law bind every staff class,
+   including God Admin. An admin action that would violate frozen law must fail closed,
+   not be granted an override.
+8. **Every authority act is provenance-bearing.** Actor, canonical role, capability, target,
+   material parameters, and (where applicable) approval id are recorded in `audit_logs`.
 
-- `super_admin` ≡ `god_admin`; `ops_admin` ≡ `support_admin` ≡ `operations_admin`.
-- `admin_users` rows only count when `status = 'active'`.
-- A terminated/closed account (`auth_uid_active()` NULL) resolves to NULL — no authority survives closure.
+---
 
-## 2. Capability registry
+## 2. The three staff classes
 
-`public.admin_capability_grants (capability, admin_role, mode)` is the constitution as data.
-`mode` is `allow` or `approval_required`. God Admin holds every capability implicitly.
+### God Admin — constitutional / governance authority
+Owns the constitution itself: staff lifecycle, role assignment, product and financial policy,
+feature flags, account closure authority, and full audit visibility. God Admin is the only
+class that may approve four-eyes actions. God Admin authority is *procedural*, not exempt:
+frozen finance and identity law still apply, and destructive acts remain approval-bound.
 
-Checks:
+### Operations Admin — operational authority
+Owns the running of the service: users, drivers, merchants, orders and missions, support,
+risk triage, live ops, maps and place corrections, driver signals, onboarding approvals.
+Sees financial facts attached to the objects it operates (an order's amount, a driver's
+balance) **READ_ONLY**. Holds no path to move, credit, adjust, release, or confirm money.
 
-- `admin_capability(_capability)` → boolean
-- `admin_require_capability(_capability)` → raises `insufficient_privilege` (SQLSTATE 42501)
-- `admin_capability_mode(_capability)` → `allow | approval_required | deny`
-- `admin_four_eyes_gate(_capability, _approval_id)` → server-side four-eyes; requester ≠ approver, approver must be God Admin
+### Finance Admin — financial authority
+Owns money: wallets, reconciliation, top-ups, payouts, driver cashouts, merchant
+settlements, refunds, financial disputes, payment intents, treasury reporting.
+Sees operational context **READ_ONLY** to justify a financial decision. Holds no path to
+approve drivers, intervene in orders, edit maps, or change operational state.
 
-`src/lib/admin/permissions.ts` mirrors this for UI affordances only. **The database is authoritative.**
+Neither Operations nor Finance may create, modify, deactivate, or promote staff.
 
-## 3. ALLOW / DENY / APPROVAL matrix
+---
 
-| Domain | Operations Admin | Finance Admin | God Admin |
+## 3. Constitutional capability matrix
+
+Legend: **A** = ALLOW · **R** = READ_ONLY · **D** = DENY · **AR** = APPROVAL_REQUIRED (four-eyes).
+
+### 3.1 Operations domain
+
+| Capability | Ops | Finance | God |
 |---|---|---|---|
-| Users, drivers, merchants, orders, missions, support, risk, live ops | ALLOW mutate | READ (finance-linked only) | ALLOW |
-| Driver / merchant onboarding approval | ALLOW | DENY | ALLOW |
-| Maps: zones, places, duplicates, routing, driver signals | ALLOW | DENY | ALLOW |
-| Tariff grid, pricing, promotions | propose → approval | propose → approval | ALLOW |
-| Wallet credit/debit, manual OM credit, refunds, adjustments | DENY | ALLOW via canonical RPCs (four-eyes above threshold) | ALLOW |
-| Payouts, cashouts, settlements, reconciliation approval | READ | ALLOW (confirm = four-eyes) | ALLOW |
-| Treasury, master wallet, dormant liabilities | DENY | READ + governed movement (four-eyes) | ALLOW |
-| Finance / payout / settlement policy | DENY | propose → God Admin approval | ALLOW |
-| Feature flags — non-financial | propose → approval | DENY | ALLOW |
-| Feature flags — payment rails | DENY | propose → approval | ALLOW |
-| Staff creation / deactivation / role change | DENY | DENY | ALLOW (four-eyes) |
-| Account closure / anonymization / ban | reversible ops ban only | DENY | ALLOW |
-| Audit logs | READ own scope | READ own scope | READ all |
+| `ops.users.manage` — profile edit, contact correction, operational notes | A | R | A |
+| `ops.drivers.manage` — application approve/reject, capability lanes, presence, groups | A | R | A |
+| `ops.merchants.manage` — store verification, catalogue state, onboarding approvals | A | R | A |
+| `ops.orders.manage` — order/mission intervention, reassignment, operational cancel | A | R | A |
+| `ops.support.manage` — support issues, escalation, messaging | A | R | A |
+| `ops.risk.manage` — risk queues, reversible flags, review outcomes | A | R | A |
+| `ops.liveops.view` — live ops board, driver signals, route traces | A | R | A |
+| `ops.maps.manage` — zones, places, duplicates, routing corrections | A | R | A |
+| `ops.reports.view` — operational reporting | A | R | A |
+| `ops.audit.view_own_domain` — audit entries for operational modules | A | R | A |
 
-Four-eyes actions: large refunds/credits, manual payouts, finance/payout/settlement policy change,
-payment-rail flag activation, treasury movement, sensitive closure/anonymization, staff creation
-and deactivation, emergency operational override.
+### 3.2 Finance domain
 
-## 4. G1 audit findings (verified)
+| Capability | Ops | Finance | God |
+|---|---|---|---|
+| `finance.wallet.read` — wallets, ledger, transactions | R | A | A |
+| `finance.wallet.credit` — manual credit / correction | D | AR | AR |
+| `finance.wallet.adjust` — reversal, write-off, commission correction | D | AR | AR |
+| `finance.topup.manage` — OM reconciliation queues, match, expire, cancel | D | A | A |
+| `finance.payouts.manage` — driver cashouts, merchant settlements, payout release | D | A | A |
+| `finance.payout.confirm` — confirm a manual provider payout (money leaves) | D | AR | AR |
+| `finance.reconciliation.approve` — close an exception with a stated cause | D | A | A |
+| `finance.refund.approve` — refund above policy threshold | D | AR | AR |
+| `finance.treasury.read` — treasury overview, exceptions, drilldown | D | A | A |
+| `finance.treasury.move` — any treasury-affecting movement | D | AR | AR |
+| `finance.policy.change` — finance policy / commission / settlement policy | D | AR | AR |
+| `finance.flags.payment` — payment-rail and financial feature flags | D | AR | AR |
+| `finance.audit.view_financial` — audit entries for financial modules | R | A | A |
 
-- 86 `admin_*` RPCs. **34 were EXECUTE-granted to `anon`** — all revoked in G2.
-- Every `admin_*` RPC guards internally through one of `is_god_admin`, `has_admin_role`,
-  `can_manage_operations`, `can_manage_wallet`, `is_any_admin`, `has_role`, `_finance_privileged`,
-  `_governance_role_allowed`, `_marche_ops_actor_role`, or an explicit `admin_users` lookup —
-  **except** `admin_log_test_delete`, which had no guard at all and now requires a staff role.
-  (The earlier "32 unguarded" figure was a scan artefact: those functions guard through helper
-  names the first scan did not match.)
-- `/admin/*` is wrapped once by `AdminGuard` (is-any-admin). Per-module gating comes from
-  `<ModulePage module=…>`; the four pages without it (`AnalyticsAdmin`, `DriverSignalsAdmin`,
-  `FieldPilotsAdmin`, `MapRoutingAdmin`) are now wrapped by `AdminRouteGuard` at the route level.
-- `admin-create-staff-user` called `.catch()` on a Postgrest builder (a thenable, not a Promise):
-  it threw *after* all writes succeeded, so accounts were created while the UI reported a 500.
-  Fixed in G3, together with real error surfacing via `FunctionsHttpError.context`.
+Refund thresholds, cashout ceilings, and float limits are **`POLICY_THRESHOLD_REQUIRED`**:
+no numeric value is constitutional. Thresholds live in God-configured finance policy
+(`finance_policies`) and the gate reads them at execution time.
 
-## 5. Frozen laws — untouched by this work
+### 3.3 Governance / identity domain
 
-Node 5 identity law (lane exclusivity, `auth_uid_active()`, `pgrst_pre_request`, closure blockers,
-`account_access_terminations`); Chop Pay / Slice 12 finance law (ledger immutability,
-`_finance_treasury_facts` service_role only, treasury exception classes, raw finance tables
-SELECT-only, Stage 5/6/7 flags OFF); Marché Node 4 order/economics/procurement contracts.
-No RLS policy was weakened.
+| Capability | Ops | Finance | God |
+|---|---|---|---|
+| `governance.staff.manage` — create/deactivate staff, change admin role | D | D | AR |
+| `governance.roles.assign` — grant or revoke an app role | D | D | AR |
+| `governance.flags.manage` — non-financial product feature flags | D (propose) | D | A |
+| `ops.flags.propose` / `ops.pricing.propose` — submit a change for approval | A | D | A |
+| `governance.pricing.change` — tariffs, fares, promotions as policy | D | D | AR |
+| `governance.account.ban` — reversible ban / unban | A | D | A |
+| `governance.account.freeze` — reversible account freeze / unfreeze | A | AR | A |
+| `governance.account.close` — closure with financial consequence | D | D | AR |
+| `governance.account.anonymize` — destructive identity erasure (Node 5) | D | D | AR |
+| `governance.professional.offboard` — professional lane termination | D | D | AR |
+| `governance.audit.read_all` — full cross-domain audit visibility | D | D | A |
+| `governance.settings.manage` — app settings, provider configuration | D | D | A |
 
-## 6. Landing consoles
+**Reversible vs destructive.** Ban and freeze are reversible operational controls and stay
+with Operations (freeze with a financial dimension needs Finance sign-off). Closure,
+anonymization, and professional offboarding are destructive identity acts, God-only and
+four-eyes, and remain subject to Node 5 blockers (`_account_closure_blockers`) which no
+staff class can override.
 
-- Operations Admin → `/admin/ops`
-- Finance Admin → `/admin/finance`
-- God Admin → full `/admin` dashboard
+**Audit log visibility scope.** Operations sees operational-module entries; Finance sees
+financial-module entries plus operational entries attached to a financial target;
+God sees everything including staff and governance entries. No class may delete or edit an
+audit entry — `audit_logs` is append-only for every class.
+
+---
+
+## 4. Canonical role-normalization law (specification for G2)
+
+Canonical names, and only these three: **`god_admin`**, **`operations_admin`**,
+**`finance_admin`**.
+
+| Legacy label | Source | Canonical resolution |
+|---|---|---|
+| `super_admin` | `admin_users.admin_role` | `god_admin` |
+| `god_admin` | either source | `god_admin` |
+| `ops_admin` | `admin_users.admin_role` | `operations_admin` |
+| `support_admin` | `admin_users.admin_role` | `operations_admin` |
+| `operations_admin` | either source | `operations_admin` |
+| `finance_admin` | either source | `finance_admin` |
+| `admin` (bare) | `user_roles.role` | **no authority** — legacy fallback is not constitutional; a bare `admin` row must be migrated to an explicit class |
+| anything else / unknown | either | NULL |
+
+Resolution law:
+1. `auth_uid_active()` must return a live, non-terminated identity, else NULL.
+2. `admin_users` counts only when `status = 'active'`.
+3. Both sources are consulted; the resolver returns the **highest** matching class in the
+   order god_admin > finance_admin > operations_admin.
+4. **Conflicts fail closed.** If a subject carries labels that map to different classes and
+   the higher class cannot be corroborated in `admin_users` with `status='active'`, resolution
+   returns NULL rather than guessing.
+5. G1 mutates no role row. Reconciling existing rows is a G2 item.
+
+---
+
+## 5. Four-eyes law (server-side, conceptual)
+
+An APPROVAL_REQUIRED action executes only when a server-side gate finds an approval that:
+
+1. **Distinct persons** — `requested_by <> reviewed_by`; self-approval is void even for God.
+2. **Approver class** — reviewer resolves to `god_admin` at review time and at consumption time.
+3. **Exact binding** — the approval names the exact capability, the exact target id, and the
+   material parameters (amount, currency, new policy value). A change to any bound parameter
+   invalidates the approval; it does not "cover" a different amount or a different target.
+4. **Expiry** — an approval unused past its validity window is dead and cannot be revived.
+5. **Single consumption + idempotency** — one approval authorizes one execution; a replay with
+   the same idempotency key returns the original outcome instead of executing twice.
+6. **Provenance** — the executing statement writes the approval id, requester, approver,
+   capability, target, and parameters to `audit_logs`.
+7. **No browser enforcement.** The frontend may only *display* whether approval is needed;
+   `requiresApproval()` in `src/lib/admin/permissions.ts` is advisory. The database gate is
+   the enforcement point.
+
+Actions that are APPROVAL_REQUIRED under current ChopChop architecture:
+`finance.wallet.credit`, `finance.wallet.adjust` (reversal/write-off),
+`finance.payout.confirm`, `finance.refund.approve` (`POLICY_THRESHOLD_REQUIRED`),
+`finance.treasury.move`, `finance.policy.change`, `finance.flags.payment`,
+`governance.staff.manage`, `governance.roles.assign`, `governance.pricing.change`,
+`governance.account.close`, `governance.account.anonymize`,
+`governance.professional.offboard`, agent float increase above policy limit
+(`POLICY_THRESHOLD_REQUIRED`), driver/merchant payout above policy limit
+(`POLICY_THRESHOLD_REQUIRED`), bulk broadcast.
+
+---
+
+## 6. Capability namespace (exhaustive for G2 mapping)
+
+```
+ops.users.manage          ops.drivers.manage        ops.merchants.manage
+ops.orders.manage         ops.support.manage        ops.risk.manage
+ops.liveops.view          ops.maps.manage           ops.reports.view
+ops.flags.propose         ops.pricing.propose       ops.audit.view_own_domain
+
+finance.wallet.read       finance.wallet.credit     finance.wallet.adjust
+finance.topup.manage      finance.payouts.manage    finance.payout.confirm
+finance.reconciliation.approve                      finance.refund.approve
+finance.treasury.read     finance.treasury.move     finance.policy.change
+finance.flags.payment     finance.audit.view_financial
+
+governance.staff.manage   governance.roles.assign   governance.flags.manage
+governance.pricing.change governance.account.ban    governance.account.freeze
+governance.account.close  governance.account.anonymize
+governance.professional.offboard                    governance.audit.read_all
+governance.settings.manage
+```
+
+Every audited callable in the G1 audit maps to exactly one of these capabilities.
+
+---
+
+## 7. Frozen law this constitution does not touch
+
+- **Node 5 identity law** — lane exclusivity, capability gates, mode switcher, governance
+  isolation, recovery, closure blockers, anonymization integrity.
+- **Chop Pay / Slice 12 finance law** — ledger immutability, `_finance_treasury_facts`
+  service-role only, named/quantified exception classes, no inferred adjustment or plug,
+  raw finance tables SELECT-only for `authenticated`.
+- **Node 4 Marché law** and Repas / ride node laws.
+
+No capability in this constitution grants an override of any of the above.
