@@ -196,47 +196,51 @@ const App = () => {
           />
           <Route path="/admin" element={<Suspense fallback={null}><AdminLayout /></Suspense>}>
             <Route index element={<AdminHomeRoute />} />
-            <Route path="live" element={<LiveOps />} />
-            <Route path="users" element={<UsersAdmin />} />
-            <Route path="drivers" element={<DriversAdmin />} />
-            <Route path="merchants" element={<MerchantsAdmin />} />
-            <Route path="vendors" element={<VendorsAdmin />} />
-            <Route path="wallet" element={<WalletAdmin />} />
-            <Route path="wallet/reconciliation" element={<WalletReconciliation />} />
-            <Route path="wallet/driver-cashouts" element={<DriverCashouts />} />
-            <Route path="wallet/payouts" element={<PayoutsAdmin />} />
-            <Route path="treasury" element={<TreasuryAdmin />} />
-            <Route path="pricing" element={<PricingAdmin />} />
-            <Route path="orders" element={<OrdersAdmin />} />
-            <Route path="repas" element={<RepasAdmin />} />
-            <Route path="repas/payments" element={<RepasPayments />} />
-            <Route path="marche" element={<MarcheAdmin />} />
-            <Route path="support" element={<SupportAdmin />} />
-            <Route path="risk" element={<RiskAdmin />} />
-            <Route path="notifications" element={<NotificationsAdmin />} />
-            <Route path="promotions" element={<PromotionsAdmin />} />
-            <Route path="reports" element={<ReportsAdmin />} />
-            <Route path="zones" element={<ZonesAdmin />} />
-            <Route path="map/zones" element={<MapZonesAdmin />} />
-            <Route path="map/places" element={<MapPlacesAdmin />} />
-            <Route path="map/tarifs" element={<MapTariffsAdmin />} />
-            <Route path="map/duplicates" element={<MapDuplicatesAdmin />} />
+            {/* G4: every admin route carries its module gate. Hidden navigation is
+                never authority — the database capability gate stays authoritative —
+                but a direct URL must not render a forbidden console either. */}
+            <Route path="live" element={<AdminRouteGuard module="live_ops"><LiveOps /></AdminRouteGuard>} />
+            <Route path="users" element={<AdminRouteGuard module="users"><UsersAdmin /></AdminRouteGuard>} />
+            <Route path="drivers" element={<AdminRouteGuard module="drivers"><DriversAdmin /></AdminRouteGuard>} />
+            <Route path="merchants" element={<AdminRouteGuard module="merchants"><MerchantsAdmin /></AdminRouteGuard>} />
+            <Route path="vendors" element={<AdminRouteGuard module="vendors"><VendorsAdmin /></AdminRouteGuard>} />
+            <Route path="wallet" element={<AdminRouteGuard module="wallet"><WalletAdmin /></AdminRouteGuard>} />
+            <Route path="wallet/reconciliation" element={<AdminRouteGuard module="wallet"><WalletReconciliation /></AdminRouteGuard>} />
+            <Route path="wallet/driver-cashouts" element={<AdminRouteGuard module="wallet"><DriverCashouts /></AdminRouteGuard>} />
+            <Route path="wallet/payouts" element={<AdminRouteGuard module="payments"><PayoutsAdmin /></AdminRouteGuard>} />
+            <Route path="treasury" element={<AdminRouteGuard module="wallet"><TreasuryAdmin /></AdminRouteGuard>} />
+            <Route path="pricing" element={<AdminRouteGuard module="pricing"><PricingAdmin /></AdminRouteGuard>} />
+            <Route path="orders" element={<AdminRouteGuard module="orders"><OrdersAdmin /></AdminRouteGuard>} />
+            <Route path="repas" element={<AdminRouteGuard module="repas"><RepasAdmin /></AdminRouteGuard>} />
+            <Route path="repas/payments" element={<AdminRouteGuard module="payments"><RepasPayments /></AdminRouteGuard>} />
+            <Route path="marche" element={<AdminRouteGuard module="marche"><MarcheAdmin /></AdminRouteGuard>} />
+            <Route path="support" element={<AdminRouteGuard module="support"><SupportAdmin /></AdminRouteGuard>} />
+            <Route path="risk" element={<AdminRouteGuard module="risk"><RiskAdmin /></AdminRouteGuard>} />
+            <Route path="notifications" element={<AdminRouteGuard module="notifications"><NotificationsAdmin /></AdminRouteGuard>} />
+            <Route path="promotions" element={<AdminRouteGuard module="promotions"><PromotionsAdmin /></AdminRouteGuard>} />
+            <Route path="reports" element={<AdminRouteGuard module="reports"><ReportsAdmin /></AdminRouteGuard>} />
+            <Route path="zones" element={<AdminRouteGuard module="zones"><ZonesAdmin /></AdminRouteGuard>} />
+            <Route path="map/zones" element={<AdminRouteGuard module="zones"><MapZonesAdmin /></AdminRouteGuard>} />
+            <Route path="map/places" element={<AdminRouteGuard module="zones"><MapPlacesAdmin /></AdminRouteGuard>} />
+            <Route path="map/tarifs" element={<AdminRouteGuard module="zones"><MapTariffsAdmin /></AdminRouteGuard>} />
+            <Route path="map/duplicates" element={<AdminRouteGuard module="zones"><MapDuplicatesAdmin /></AdminRouteGuard>} />
             <Route path="map/routing" element={<AdminRouteGuard module="zones"><MapRoutingAdmin /></AdminRouteGuard>} />
             <Route path="map/driver-signals" element={<AdminRouteGuard module="live_ops"><DriverSignalsAdmin /></AdminRouteGuard>} />
             <Route path="field/pilots" element={<AdminRouteGuard module="drivers"><FieldPilotsAdmin /></AdminRouteGuard>} />
-            <Route path="flags" element={<FlagsAdmin />} />
-            <Route path="finance-policy" element={<FinancePolicyAdmin />} />
-            <Route path="settings" element={<SettingsAdmin />} />
-            <Route path="admins" element={<AdminsAdmin />} />
-            <Route path="audit" element={<AuditAdmin />} />
+            <Route path="flags" element={<AdminRouteGuard module="flags"><FlagsAdmin /></AdminRouteGuard>} />
+            <Route path="finance-policy" element={<AdminRouteGuard module="payments"><FinancePolicyAdmin /></AdminRouteGuard>} />
+            <Route path="settings" element={<AdminRouteGuard module="settings"><SettingsAdmin /></AdminRouteGuard>} />
+            <Route path="admins" element={<AdminRouteGuard module="admins"><AdminsAdmin /></AdminRouteGuard>} />
+            <Route path="audit" element={<AdminRouteGuard module="audit"><AuditAdmin /></AdminRouteGuard>} />
             <Route path="analytics" element={<AdminRouteGuard module="analytics"><AnalyticsAdmin /></AdminRouteGuard>} />
-            <Route path="payments" element={<PaymentsAdmin />} />
-            <Route path="payments/sandbox" element={<SandboxAdmin />} />
-            <Route path="pilot-command" element={<PilotCommandCenter />} />
-            <Route path="ops" element={<OpsCommandCenter />} />
-            <Route path="finance" element={<FinanceCommandCenter />} />
-            <Route path="marche/ops" element={<MarcheOpsAdmin />} />
-            <Route path="driver-groups" element={<DriverGroupsAdmin />} />
+            <Route path="payments" element={<AdminRouteGuard module="payments"><PaymentsAdmin /></AdminRouteGuard>} />
+            <Route path="payments/sandbox" element={<AdminRouteGuard module="payments"><SandboxAdmin /></AdminRouteGuard>} />
+            <Route path="pilot-command" element={<AdminRouteGuard module="drivers"><PilotCommandCenter /></AdminRouteGuard>} />
+            <Route path="ops" element={<AdminRouteGuard module="live_ops"><OpsCommandCenter /></AdminRouteGuard>} />
+            <Route path="finance" element={<AdminRouteGuard module="payments"><FinanceCommandCenter /></AdminRouteGuard>} />
+            <Route path="marche/ops" element={<AdminRouteGuard module="marche"><MarcheOpsAdmin /></AdminRouteGuard>} />
+            <Route path="driver-groups" element={<AdminRouteGuard module="driver_groups"><DriverGroupsAdmin /></AdminRouteGuard>} />
+
           </Route>
           <Route path="/agent" element={<AgentDashboard />} />
           <Route path="/agent/topup" element={<AgentTopup />} />
