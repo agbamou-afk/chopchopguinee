@@ -11215,6 +11215,7 @@ export type Database = {
         Args: { _class: string }
         Returns: Database["public"]["Enums"]["admin_role"]
       }
+      _g3_require_governance_read: { Args: never; Returns: undefined }
       _g3_set_staff_authority: {
         Args: {
           _active: boolean
@@ -13324,6 +13325,22 @@ export type Database = {
         Args: { p_notes?: string; p_statement: string; p_status: string }
         Returns: undefined
       }
+      admin_staff_approvals: {
+        Args: { _limit?: number }
+        Returns: {
+          consumed_at: string
+          created_at: string
+          expires_at: string
+          id: string
+          material: Json
+          requested_by: string
+          reviewed_by: string
+          status: string
+          target_id: string
+          target_type: string
+          usable: boolean
+        }[]
+      }
       admin_staff_fail_as: {
         Args: { _error_code: string; _final?: boolean; _request_id: string }
         Returns: Json
@@ -13358,6 +13375,25 @@ export type Database = {
           _target_user_id?: string
         }
         Returns: Json
+      }
+      admin_staff_lifecycle_history: {
+        Args: { _limit?: number }
+        Returns: {
+          action: string
+          approval_id: string
+          completed_at: string
+          created_at: string
+          error_code: string
+          id: string
+          outcome: string
+          previous_role: string
+          reason: string
+          requester_id: string
+          state: string
+          target_label: string
+          target_role: string
+          target_user_id: string
+        }[]
       }
       admin_staff_quorum_status: { Args: never; Returns: Json }
       admin_staff_readiness: { Args: { _uid?: string }; Returns: string }
