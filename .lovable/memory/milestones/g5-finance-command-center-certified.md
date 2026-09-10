@@ -5,7 +5,7 @@ type: milestone
 ---
 Locked 2026-09-10. Doc: `docs/admin/G5_FINANCE_COMMAND_CENTER.md`.
 
-- `public.finance_command_overview()` is the only finance console read model: read-only, gated by `admin_capability('finance.wallet.read')` (allow → God + Finance), no PII, sandbox excluded,each attention row carries its server capability mode.
+- `public.finance_command_overview()` is the only finance console read model: read-only, gated by `admin_capability('finance.wallet.read')` (allow → God + Finance), no PII, sandbox excluded, each attention row carries its server capability mode.
 - Direct browser mutation of `payment_provider_events` removed (policy dropped, grants revoked). Rejection goes through `admin_reject_om_event(uuid,text)` — `finance.topup.manage`, reason required, credited events refused, audited.
 - Operations keeps `finance.wallet.read` in READ mode (facts only) and is denied every finance console. Finance holds `ops.*` in READ mode and no `governance.*` grant.
 - Money movement stays approval-bound: wallet credit/adjust, payout confirm, refund approve, dispute resolve, treasury move, policy change.
