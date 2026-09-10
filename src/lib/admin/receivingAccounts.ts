@@ -65,7 +65,7 @@ export async function fetchReceivingAccounts(): Promise<ReceivingAccount[]> {
   return (data ?? []) as unknown as ReceivingAccount[];
 }
 
-type Result = { ok: true } | { ok: false; error: string };
+type Result = { ok: boolean; error?: string };
 
 async function call(fn: string, args: Record<string, unknown>): Promise<Result> {
   const { error } = await (supabase as unknown as {
