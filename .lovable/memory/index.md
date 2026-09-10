@@ -58,3 +58,4 @@
 - [G2 Backend Capability Enforcement](mem://milestones/g2-backend-capability-enforcement) — Canonical admin roles, 44-capability registry, four-eyes approvals, 34 gated RPCs
 - [G3 Staff Account Lifecycle — Certified](mem://milestones/g3-staff-account-lifecycle-certified) — Governed staff saga (create/deactivate/reactivate/role-change/access-reset), readiness law, retired admin-create-staff-user, quorum truth
 - [G4 Operations Command Center — Certified](mem://milestones/g4-operations-command-center-certified) — Operations Admin scope: operational domains + read-only finance facts, no governance; ops_command_overview RPC, route guards, 40/40 server board
+- [G5 Finance Command Center — Certified](mem://milestones/g5-finance-command-center-certified) — Canonical finance read model (finance_command_overview), governed provider-event rejection, Finance/Ops/Governance separation; 36/36 server board
