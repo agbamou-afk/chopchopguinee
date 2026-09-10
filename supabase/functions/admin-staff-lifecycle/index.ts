@@ -345,8 +345,10 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
-    console.error("[admin-staff-lifecycle] unhandled", detail);
     const mapped = mapDbError(detail);
+    // Redacted: only the classified outcome code is logged, never raw payloads
+    // or anything that could carry a temporary password.
+    console.error("[admin-staff-lifecycle] unhandled", mapped.code);
     return fail(mapped.code, mapped.message);
   }
 });

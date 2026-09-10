@@ -1,256 +1,29 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 /**
- * admin-create-staff-user
+ * admin-create-staff-user — RETIRED (G3).
  *
- * God Admin only. Provisions a brand-new staff account end-to-end:
- *   1) creates the auth user with a temporary password
- *   2) upserts profile (display name + phone)
- *   3) inserts admin_users row with admin_role + must_change_password=true
- *   4) inserts a parallel user_roles row for the unified role system
- *   5) writes an audit_logs entry
+ * Staff provisioning now goes exclusively through the governed lifecycle saga
+ * `admin-staff-lifecycle` (idempotency key, four-eyes binding, Auth-identity
+ * recording before authority finalization, machine-readable outcomes).
  *
- * Forbidden: creating another god_admin/super_admin via this endpoint.
- * The temporary password is returned exactly once and never persisted.
+ * This endpoint is kept only as an explicit tombstone so that any stale client
+ * receives a precise refusal instead of silently provisioning authority through
+ * an ungoverned second path. It performs NO writes of any kind.
  */
-
-type StaffRole = "ops_admin" | "finance_admin";
-
-const ALLOWED_ROLES: ReadonlyArray<StaffRole> = ["ops_admin", "finance_admin"];
-const ROLE_TO_APP_ROLE: Record<StaffRole, string> = {
-  ops_admin: "operations_admin",
-  finance_admin: "finance_admin",
-};
-
-const DEFAULT_TEMP_PASSWORD = "Welcome%2026";
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
-Deno.serve(async (req) => {
+Deno.serve((req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") {
-    return json({ error: "method_not_allowed", message: "Méthode non autorisée." }, 405);
-  }
-
-  try {
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const ANON = Deno.env.get("SUPABASE_ANON_KEY");
-    if (!SUPABASE_URL || !SERVICE_ROLE || !ANON) {
-      return json(
-        { error: "server_misconfigured", message: "Configuration serveur manquante." },
-        500,
-      );
-    }
-
-    const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return json({ error: "missing_jwt", message: "Session expirée. Reconnectez-vous." }, 401);
-    }
-
-    const userClient = createClient(SUPABASE_URL, ANON, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData.user) {
-      return json({ error: "invalid_jwt", message: "Session invalide." }, 401);
-    }
-    const callerId = userData.user.id;
-
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-
-    // G2: canonical role law only. No legacy alias, no precedence shortcut.
-    const { data: canonicalRole } = await admin.rpc("admin_role_canonical", { _uid: callerId });
-    if (canonicalRole !== "god_admin") {
-      return json(
-        { error: "forbidden", message: "Accès refusé : réservé au God Admin." },
-        403,
-      );
-    }
-
-    const body = await req.json().catch(() => ({}));
-    const username = String(body.username ?? "").trim();
-    const displayName = String(body.display_name ?? username ?? "").trim();
-    const email = String(body.email ?? "").trim().toLowerCase();
-    const phoneRaw = body.phone ? String(body.phone).trim() : "";
-    const role = String(body.role ?? "") as StaffRole;
-    const tempPassword = String(body.temporary_password ?? DEFAULT_TEMP_PASSWORD);
-    const mustChange = body.require_password_change !== false;
-
-    if (!username || username.length < 3 || username.length > 64) {
-      return json({ error: "bad_username", message: "Nom d'utilisateur invalide (3-64 caractères)." }, 400);
-    }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return json({ error: "bad_email", message: "Email valide requis." }, 400);
-    }
-    if (!ALLOWED_ROLES.includes(role)) {
-      return json(
-        { error: "bad_role", message: "Rôle interdit. Création de God Admin refusée." },
-        400,
-      );
-    }
-    if (tempPassword.length < 8) {
-      return json({ error: "bad_password", message: "Mot de passe temporaire trop court." }, 400);
-    }
-
-    // G2 four-eyes: governance.staff.manage is APPROVAL_REQUIRED. The approval must
-    // bind to this exact email + role, be approved by a *different* active God Admin,
-    // be unexpired and unconsumed. Consumption happens here, before any write.
-    const approvalId = body.approval_id ? String(body.approval_id) : null;
-    const { error: gateErr } = await admin.rpc("admin_enforce_as", {
-      _caller: callerId,
-      _capability: "governance.staff.manage",
-      _target_type: "staff_email",
-      _target_id: email,
-      _material: { admin_role: role, username, must_change_password: mustChange },
-      _approval_id: approvalId,
-      _module: "admins",
-    });
-    if (gateErr) {
-      const m = gateErr.message ?? "";
-      return json(
-        {
-          error: /approval/i.test(m) ? "approval_required" : "forbidden",
-          message: /approval_required/.test(m)
-            ? "Double validation requise : un second God Admin doit approuver la création de ce compte."
-            : `Refusé : ${m}`,
-        },
-        403,
-      );
-    }
-
-    // Create auth user with temp password, pre-confirm email so they can login immediately.
-    const { data: created, error: createErr } = await admin.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: {
-        full_name: displayName || username,
-        username,
-        phone: phoneRaw || null,
-        provisioned_by: callerId,
-        provisioned_at: new Date().toISOString(),
-      },
-    });
-    if (createErr || !created?.user) {
-      const raw = createErr?.message ?? "";
-      if (/already.*registered|exists|duplicate/i.test(raw)) {
-        return json(
-          {
-            error: "email_conflict",
-            message:
-              "Un compte existe déjà avec cet email. Vérifiez la liste des administrateurs : ce compte a peut-être déjà été créé.",
-          },
-          409,
-        );
-      }
-      return json(
-        { error: "auth_create_failed", message: raw || "Création du compte impossible." },
-        400,
-      );
-    }
-
-    const newUserId = created.user.id;
-
-    // Upsert profile (handle_new_user trigger likely created a base row).
-    const { error: profErr } = await admin
-      .from("profiles")
-      .upsert(
-        {
-          user_id: newUserId,
-          full_name: displayName || username,
-          phone: phoneRaw || null,
-        },
-        { onConflict: "user_id" },
-      );
-    if (profErr) {
-      console.warn("[admin-create-staff-user] profile upsert failed", profErr.message);
-    }
-
-    // Insert admin_users row.
-    const { error: adminErr } = await admin.from("admin_users").insert({
-      user_id: newUserId,
-      admin_role: role,
-      status: "active",
-      created_by: callerId,
-      must_change_password: mustChange,
-      created_via: "admin-create-staff-user",
-      notes: `Provisioned via God Admin UI (${username})`,
-    });
-    if (adminErr) {
-      // Rollback: delete the freshly-created auth user so we don't leave a half-provisioned record.
-      await admin.auth.admin.deleteUser(newUserId, false).catch(() => {});
-      return json(
-        { error: "admin_insert_failed", message: adminErr.message },
-        500,
-      );
-    }
-
-    // Unified role system: insert the matching app_role.
-    const appRole = ROLE_TO_APP_ROLE[role];
-    const { error: roleErr } = await admin.from("user_roles").insert({
-      user_id: newUserId,
-      role: appRole,
-    });
-    if (roleErr && !/duplicate|unique/i.test(roleErr.message)) {
-      console.warn("[admin-create-staff-user] user_roles insert failed", roleErr.message);
-    }
-
-    // Audit log — never log the password.
-    // NOTE: a PostgrestBuilder is a thenable, NOT a Promise: calling `.catch()` on it
-    // throws `TypeError: .catch is not a function` AFTER the account is already created.
-    // Always await and inspect `error` instead.
-    const { error: auditErr } = await admin.from("audit_logs").insert({
-      actor_user_id: callerId,
-      actor_role: "super_admin",
-      module: "admins",
-      action: "staff.create",
-      target_type: "user",
-      target_id: newUserId,
-      after: {
-        admin_role: role,
-        app_role: appRole,
-        username,
-        email_domain: email.split("@")[1] ?? null,
-        must_change_password: mustChange,
-      },
-    });
-    if (auditErr) {
-      console.warn("[admin-create-staff-user] audit insert failed", auditErr.message);
-    }
-
-
-    return json({
-      ok: true,
-      user_id: newUserId,
-      username,
-      email,
-      admin_role: role,
-      app_role: appRole,
-      temporary_password: tempPassword,
-      must_change_password: mustChange,
+  return new Response(
+    JSON.stringify({
+      ok: false,
+      result: "ENDPOINT_RETIRED",
       message:
-        "Compte créé. Communiquez le mot de passe temporaire en mains propres. L'utilisateur devra le changer à la première connexion.",
-    });
-  } catch (e) {
-    const detail = e instanceof Error ? e.message : String(e);
-    console.error("[admin-create-staff-user] unhandled exception", detail);
-    return json(
-      { error: "exception", message: `Erreur interne : ${detail}` },
-      500,
-    );
-  }
-
+        "Cette voie de création est retirée. Utilisez la console Administrateurs : le cycle de vie staff gouverné est le seul chemin autorisé.",
+    }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
 });
