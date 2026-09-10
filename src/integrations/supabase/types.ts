@@ -8475,42 +8475,62 @@ export type Database = {
           admin_notes: string | null
           created_at: string
           created_by: string | null
+          effective_from: string
           id: string
           is_active: boolean
           label: string
           phone_e164: string
           provider: string
           public_instructions: string | null
+          retired_at: string | null
+          superseded_by: string | null
           updated_at: string
           updated_by: string | null
+          version: number
         }
         Insert: {
           admin_notes?: string | null
           created_at?: string
           created_by?: string | null
+          effective_from?: string
           id?: string
           is_active?: boolean
           label: string
           phone_e164: string
           provider?: string
           public_instructions?: string | null
+          retired_at?: string | null
+          superseded_by?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
         Update: {
           admin_notes?: string | null
           created_at?: string
           created_by?: string | null
+          effective_from?: string
           id?: string
           is_active?: boolean
           label?: string
           phone_e164?: string
           provider?: string
           public_instructions?: string | null
+          retired_at?: string | null
+          superseded_by?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_receiving_accounts_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "payment_receiving_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_reconciliation_events: {
         Row: {
@@ -11838,6 +11858,11 @@ export type Database = {
         Args: { p_actor: string; p_evidence_id: string; p_order_id: string }
         Returns: Json
       }
+      _pra_in_financial_use: { Args: { _id: string }; Returns: boolean }
+      _pra_valid_phone: {
+        Args: { _phone: string; _provider: string }
+        Returns: boolean
+      }
       _professional_actor_class: { Args: { _user: string }; Returns: string }
       _professional_conflict_scan: {
         Args: never
@@ -13007,6 +13032,45 @@ export type Database = {
         Returns: Json
       }
       admin_promotional_credit_treasury: { Args: never; Returns: Json }
+      admin_receiving_account_create: {
+        Args: {
+          _g2_approval?: string
+          p_admin_notes?: string
+          p_label: string
+          p_phone_e164: string
+          p_provider: string
+          p_public_instructions?: string
+        }
+        Returns: string
+      }
+      admin_receiving_account_replace_routing: {
+        Args: {
+          _g2_approval?: string
+          p_id: string
+          p_new_phone_e164: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      admin_receiving_account_set_active: {
+        Args: {
+          _g2_approval?: string
+          p_active: boolean
+          p_id: string
+          p_reason: string
+        }
+        Returns: undefined
+      }
+      admin_receiving_account_update_metadata: {
+        Args: {
+          _g2_approval?: string
+          p_admin_notes?: string
+          p_id: string
+          p_label: string
+          p_public_instructions?: string
+        }
+        Returns: undefined
+      }
       admin_record_om_receipt: {
         Args: {
           p_amount_gnf: number
