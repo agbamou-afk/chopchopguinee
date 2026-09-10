@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import {
   FINANCE_ESCALATION, OPS_UNAVAILABLE_MESSAGE, OpsAttentionItem, OpsOverview,
-  SEVERITY_CLASS, SEVERITY_LABEL, fetchOpsOverview, relativeAge,
+  OpsOverviewResult, SEVERITY_CLASS, SEVERITY_LABEL, fetchOpsOverview, relativeAge,
 } from "@/lib/admin/opsCommandCenter";
 
 const REFRESH_MS = 60_000;
