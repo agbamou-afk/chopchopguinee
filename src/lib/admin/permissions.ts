@@ -57,10 +57,12 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     support: ["view", "edit"],
     risk: ["view", "edit"],
     notifications: ["view", "edit"],
-
+    // ops.maps.manage = ALLOW: zones, places, duplicates, routing corrections.
+    zones: ["view", "edit"],
     reports: ["view"],
     audit: ["view"],
     analytics: ["view"],
+
   },
   finance_admin: {
     dashboard: ["view"],
