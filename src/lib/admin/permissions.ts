@@ -157,3 +157,18 @@ export const MODULE_CAPABILITY: Record<AdminModule, string> = {
 export const OPERATIONS_FORBIDDEN_MODULES: AdminModule[] = [
   "wallet", "vendors", "payments", "promotions", "flags", "settings", "admins",
 ];
+
+/**
+ * G5 — modules a Finance Admin must never mutate, even by direct URL: the
+ * operational command surfaces and every governance/policy control. Finance may
+ * READ operational facts (orders, support, risk) but never dispatch, cancel,
+ * approve staff, or flip a platform switch.
+ */
+export const FINANCE_FORBIDDEN_MODULES: AdminModule[] = [
+  "live_ops", "zones", "flags", "settings", "admins", "promotions",
+];
+
+/** Operational modules Finance may only read. */
+export const FINANCE_READ_ONLY_MODULES: AdminModule[] = [
+  "users", "drivers", "orders", "repas", "marche", "support", "notifications", "pricing",
+];
