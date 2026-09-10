@@ -45,8 +45,11 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     drivers: ["view", "edit"],
     driver_groups: ["view", "edit"],
     merchants: ["view", "edit"],
-    vendors: ["view"],
-    wallet: ["view"],
+    // G4: financial consoles (recharge-agent float, wallet/ledger, treasury,
+    // payouts, payment intents, finance policy) are Finance/God surfaces. The
+    // constitution grants Operations READ of financial *facts*, which G4 serves
+    // through operational read models (ops_command_overview, order context),
+    // not through mutation consoles. Least privilege: no module entry at all.
     pricing: ["view"],
     orders: ["view", "edit"],
     repas: ["view", "edit"],
@@ -54,7 +57,7 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     support: ["view", "edit"],
     risk: ["view", "edit"],
     notifications: ["view", "edit"],
-    promotions: ["view"],
+
     reports: ["view"],
     audit: ["view"],
     analytics: ["view"],
