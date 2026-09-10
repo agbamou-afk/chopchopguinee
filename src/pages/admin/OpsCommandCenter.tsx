@@ -1,446 +1,252 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Activity, AlertTriangle, Bike, CheckCircle2, Coins, LifeBuoy, Mail,
-  Map as MapIcon, RefreshCw, ShoppingBag, Store, UtensilsCrossed, Wallet,
+  Activity, AlertTriangle, Bike, Compass, Info, LifeBuoy, Map as MapIcon,
+  RefreshCw, Send, ShoppingBag, Store, UtensilsCrossed, Users2,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ModulePage } from "@/components/admin/ModulePage";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-
-type Status = "ready" | "action" | "degraded" | "unknown";
-
-interface ReadinessItem {
-  key: string;
-  label: string;
-  status: Status;
-  detail: string;
-  href?: string;
-}
-
-interface CountCard {
-  key: string;
-  label: string;
-  value: number | null;
-  href?: string;
-  hint?: string;
-  icon: typeof Activity;
-  hidden?: boolean;
-}
-
-const STATUS_META: Record<Status, { label: string; cls: string }> = {
-  ready:    { label: "Prêt",                cls: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
-  action:   { label: "Action requise",      cls: "bg-amber-500/10 text-amber-700 dark:text-amber-300" },
-  degraded: { label: "Mode dégradé",        cls: "bg-orange-500/10 text-orange-700 dark:text-orange-300" },
-  unknown:  { label: "À vérifier",          cls: "bg-muted text-muted-foreground" },
-};
+import {
+  FINANCE_ESCALATION, OPS_UNAVAILABLE_MESSAGE, OpsAttentionItem, OpsOverview,
+  SEVERITY_CLASS, SEVERITY_LABEL, fetchOpsOverview, relativeAge,
+} from "@/lib/admin/opsCommandCenter";
 
 const REFRESH_MS = 60_000;
-const DRIVER_TARGET = 10;
 
-function startOfTodayISO() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
+type MetricKey = keyof OpsOverview["snapshot"];
+
+const METRICS: { key: MetricKey; label: string; href: string; icon: typeof Activity }[] = [
+  { key: "rides_active", label: "Courses actives", href: "/admin/live", icon: Bike },
+  { key: "rides_unassigned", label: "Courses sans chauffeur", href: "/admin/live", icon: AlertTriangle },
+  { key: "missions_active", label: "Missions actives", href: "/admin/orders", icon: Activity },
+  { key: "envoyer_active", label: "Colis en cours", href: "/admin/orders", icon: Send },
+  { key: "repas_active", label: "Commandes Repas", href: "/admin/repas", icon: UtensilsCrossed },
+  { key: "marche_active", label: "Commandes Marché", href: "/admin/marche/ops", icon: ShoppingBag },
+  { key: "drivers_online", label: "Chauffeurs en ligne (15 min)", href: "/admin/map/driver-signals", icon: Users2 },
+  { key: "driver_apps_pending", label: "Candidatures chauffeur", href: "/admin/drivers", icon: Bike },
+  { key: "merchant_apps_pending", label: "Boutiques à valider", href: "/admin/merchants", icon: Store },
+  { key: "ops_cases_open", label: "Cas opérationnels ouverts", href: "/admin/marche/ops", icon: AlertTriangle },
+  { key: "support_open", label: "Tickets support ouverts", href: "/admin/support", icon: LifeBuoy },
+  { key: "support_critical", label: "Tickets critiques", href: "/admin/support", icon: AlertTriangle },
+];
+
+const SERVICES: { name: string; href: string; icon: typeof Activity; kinds: string[] }[] = [
+  { name: "Courses (Moto · Bonbonna · Taxi)", href: "/admin/live", icon: Bike, kinds: ["ride_unassigned"] },
+  { name: "Envoyer", href: "/admin/orders", icon: Send, kinds: ["envoyer_stuck", "mission_stuck"] },
+  { name: "Repas", href: "/admin/repas", icon: UtensilsCrossed, kinds: ["repas_exception", "repas_case"] },
+  { name: "Marché", href: "/admin/marche/ops", icon: ShoppingBag, kinds: ["marche_exception", "marche_case"] },
+];
+
+const FIELD_LINKS = [
+  { label: "Carte opérationnelle", href: "/admin/live", icon: MapIcon },
+  { label: "Lieux & anomalies", href: "/admin/map/places", icon: Compass },
+  { label: "Doublons de lieux", href: "/admin/map/duplicates", icon: Compass },
+  { label: "Signaux chauffeurs", href: "/admin/map/driver-signals", icon: Activity },
+  { label: "Terrain / pilotes", href: "/admin/field/pilots", icon: Users2 },
+];
+
+function Metric({ label, value, href, Icon }: {
+  label: string; value: number | null | undefined; href: string; Icon: typeof Activity;
+}) {
+  const unavailable = value === null || value === undefined;
+  return (
+    <Link to={href} className="block">
+      <Card className="p-3 h-full hover:border-primary/50 transition-colors">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-[11px] leading-tight text-muted-foreground">{label}</p>
+          <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
+        </div>
+        {unavailable ? (
+          <p className="mt-1.5 text-[12px] text-muted-foreground italic">Indisponible</p>
+        ) : (
+          <p className="mt-1 text-2xl font-semibold tabular-nums leading-none">{value}</p>
+        )}
+      </Card>
+    </Link>
+  );
 }
 
-async function safeCount(
-  table: string,
-  build?: (q: any) => any,
-): Promise<number | null> {
-  try {
-    let q: any = (supabase.from as any)(table).select("*", { count: "exact", head: true });
-    if (build) q = build(q);
-    const { count, error } = await q;
-    if (error) return null;
-    return count ?? 0;
-  } catch {
-    return null;
-  }
+function AttentionRow({ item }: { item: OpsAttentionItem }) {
+  return (
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 border-b border-border/50 last:border-0">
+      <Badge variant="outline" className={`shrink-0 text-[10px] ${SEVERITY_CLASS[item.severity] ?? ""}`}>
+        {SEVERITY_LABEL[item.severity] ?? item.severity}
+      </Badge>
+      <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">
+        {item.service}
+      </span>
+      <span className="text-[13px] font-medium min-w-0 truncate">{item.label}</span>
+      <span className="text-[11px] font-mono text-muted-foreground">#{item.reference}</span>
+      {item.state && <span className="text-[11px] text-muted-foreground">état : {item.state}</span>}
+      <span className="text-[11px] text-muted-foreground tabular-nums">depuis {relativeAge(item.since)}</span>
+      {item.finance_context && (
+        <span className="text-[11px] text-muted-foreground">
+          {item.finance_context} · <span className="italic">{FINANCE_ESCALATION}</span>
+        </span>
+      )}
+      <Button asChild size="sm" variant="outline" className="h-6 px-2 text-[11px] ml-auto">
+        <Link to={item.href}>Ouvrir</Link>
+      </Button>
+    </li>
+  );
 }
 
 export default function OpsCommandCenter() {
   const { role } = useAdminAuth();
-  const isGod = role === "god_admin";
-  const isFinance = role === "finance_admin" || isGod;
-  const isOps = role === "operations_admin" || isGod;
-
+  const [data, setData] = useState<OpsOverview | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-
-  const [readiness, setReadiness] = useState<ReadinessItem[]>([]);
-  const [emailHealth, setEmailHealth] = useState<{
-    sent_7d: number; failed_7d: number; dlq_7d: number;
-    queue_backlog: number; dlq_backlog: number; last_sent_at: string | null;
-  } | null>(null);
-  const [today, setToday] = useState<CountCard[]>([]);
-  const [urgent, setUrgent] = useState<{ support: number | null; pendingDrivers: number | null;
-    pendingTopups: number | null; pendingCashouts: number | null; mapDups: number | null;
-    storesNoLocation: number | null; restaurantsNoMenu: number | null; }>({
-    support: null, pendingDrivers: null, pendingTopups: null, pendingCashouts: null,
-    mapDups: null, storesNoLocation: null, restaurantsNoMenu: null,
-  });
-  const [masterBalance, setMasterBalance] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const since = startOfTodayISO();
-
-    const [
-      ridesToday, ridesActive, ridesCompleted, ridesCancelled,
-      missionsActive, missionsDelivered,
-      repasToday, repasPending,
-      marcheInterests, supportOpen,
-      driversApproved, driversOnlineRecent,
-      pendingTopups, pendingCashouts, supportHigh,
-      pendingDrivers, mapDups, storesNoLocation, restaurantsNoMenu,
-    ] = await Promise.all([
-      safeCount("rides", (q) => q.gte("created_at", since)),
-      safeCount("rides", (q) => q.in("status", ["requested", "accepted", "en_route", "in_progress", "arrived"])),
-      safeCount("rides", (q) => q.eq("status", "completed").gte("created_at", since)),
-      safeCount("rides", (q) => q.eq("status", "cancelled").gte("created_at", since)),
-      safeCount("missions", (q) => q.in("status", ["assigned", "in_progress", "picked_up"])),
-      safeCount("missions", (q) => q.eq("status", "delivered").gte("created_at", since)),
-      safeCount("food_orders", (q) => q.gte("created_at", since)),
-      safeCount("food_orders", (q) => q.in("status", ["pending", "accepted", "preparing", "ready"])),
-      safeCount("listing_interests", (q) => q.gte("created_at", since)),
-      safeCount("support_issues", (q) => q.in("status", ["open", "in_progress", "pending"])),
-      safeCount("driver_profiles", (q) => q.eq("status", "approved")),
-      safeCount("driver_locations", (q) =>
-        q.gte("updated_at", new Date(Date.now() - 30 * 60_000).toISOString())),
-      isFinance ? safeCount("topup_requests", (q) => q.eq("status", "pending")) : Promise.resolve(null),
-      isFinance ? safeCount("driver_cashout_requests", (q) => q.eq("status", "pending")) : Promise.resolve(null),
-      safeCount("support_issues", (q) => q.in("status", ["open", "in_progress"]).eq("severity", "high")),
-      safeCount("driver_applications", (q) => q.eq("status", "submitted")),
-      safeCount("map_place_duplicate_candidates", (q) => q.eq("status", "open")),
-      safeCount("merchant_stores", (q) => q.is("location_lat", null)),
-      safeCount("food_restaurants", (q) => q.eq("is_active", true)),
-    ]);
-
-    // Master balance: God Admin only
-    let master: number | null = null;
-    if (isGod) {
-      try {
-        const { data } = await supabase.rpc("wallet_get_master_balance");
-        master = typeof data === "number" ? data : null;
-      } catch { master = null; }
-    }
-    setMasterBalance(master);
-
-    // Email pipeline health probe
-    let email: typeof emailHealth = null;
-    try {
-      const { data } = await supabase.rpc("email_get_health");
-      if (data && typeof data === "object") email = data as any;
-    } catch { email = null; }
-    setEmailHealth(email);
-
-    // Readiness strip
-    const driversTested = driversOnlineRecent ?? 0;
-    const smtp: { status: Status; detail: string } = (() => {
-      if (!email) return { status: "unknown", detail: "Sonde indisponible. Vérifier configuration." };
-      if ((email.dlq_backlog ?? 0) > 0 || (email.dlq_7d ?? 0) > 0)
-        return { status: "degraded", detail: `${email.dlq_7d} en DLQ / 7j. Backlog ${email.queue_backlog}.` };
-      if ((email.failed_7d ?? 0) > 0)
-        return { status: "action", detail: `${email.failed_7d} échec(s) / 7j. Vérifier logs.` };
-      if ((email.sent_7d ?? 0) === 0)
-        return { status: "action", detail: "Aucun envoi 7j. Faire un test signup/reset." };
-      return { status: "ready", detail: `${email.sent_7d} envoyés / 7j. Backlog ${email.queue_backlog}.` };
-    })();
-    const r: ReadinessItem[] = [
-      {
-        key: "smtp",
-        label: "Emails auth",
-        status: smtp.status,
-        detail: smtp.detail,
-        href: "/admin/settings",
-      },
-      {
-        key: "drivers",
-        label: "Chauffeurs approuvés",
-        status: (driversApproved ?? 0) >= DRIVER_TARGET ? "ready" : "action",
-        detail: `${driversApproved ?? "?"}/${DRIVER_TARGET} approuvés`,
-        href: "/admin/drivers",
-      },
-      {
-        key: "drivers_online",
-        label: "Chauffeurs récents",
-        status: driversTested >= 5 ? "ready" : "action",
-        detail: `${driversTested} actifs <30 min`,
-        href: "/admin/map/driver-signals",
-      },
-      {
-        key: "topup",
-        label: "Recharge OM",
-        status: "action",
-        detail: "Vérification opérateur manuelle. Aucun crédit automatique.",
-        href: "/admin/wallet/reconciliation",
-      },
-      {
-        key: "maps",
-        label: "Cartes",
-        status: "ready",
-        detail: "Mode dégradé disponible.",
-        href: "/admin/map/routing",
-      },
-      {
-        key: "support",
-        label: "Support",
-        status: (supportOpen ?? 0) > 0 ? "action" : "ready",
-        detail: `${supportOpen ?? "?"} tickets ouverts`,
-        href: "/admin/support",
-      },
-    ];
-    setReadiness(r);
-
-    setToday([
-      { key: "rides_today", label: "Courses créées", value: ridesToday, href: "/admin/orders", icon: Bike },
-      { key: "rides_active", label: "Courses actives", value: ridesActive, href: "/admin/live", icon: Activity },
-      { key: "rides_done", label: "Courses terminées", value: ridesCompleted, href: "/admin/orders", icon: CheckCircle2 },
-      { key: "rides_cxl", label: "Courses annulées", value: ridesCancelled, href: "/admin/orders", icon: AlertTriangle },
-      { key: "missions_active", label: "Missions actives", value: missionsActive, href: "/admin/orders", icon: Activity },
-      { key: "missions_done", label: "Missions livrées", value: missionsDelivered, href: "/admin/orders", icon: CheckCircle2 },
-      { key: "repas_today", label: "Commandes Repas", value: repasToday, href: "/admin/repas", icon: UtensilsCrossed },
-      { key: "repas_pending", label: "Repas en cours", value: repasPending, href: "/admin/repas", icon: UtensilsCrossed },
-      { key: "marche_interest", label: "Intérêts Marché", value: marcheInterests, href: "/admin/marche", icon: ShoppingBag },
-      { key: "support_open", label: "Tickets ouverts", value: supportOpen, href: "/admin/support", icon: LifeBuoy },
-      { key: "topup_pending", label: "Top-ups en attente", value: pendingTopups, href: "/admin/wallet/reconciliation",
-        icon: Wallet, hidden: !isFinance },
-      { key: "cashout_pending", label: "Cashouts en attente", value: pendingCashouts, href: "/admin/wallet/driver-cashouts",
-        icon: Coins, hidden: !isFinance },
-    ]);
-
-    setUrgent({
-      support: supportHigh,
-      pendingDrivers,
-      pendingTopups: isFinance ? pendingTopups : null,
-      pendingCashouts: isFinance ? pendingCashouts : null,
-      mapDups,
-      storesNoLocation,
-      restaurantsNoMenu,
-    });
-
-    setLastRefresh(new Date());
+    const res = await fetchOpsOverview();
+    if (res.ok) { setData(res.data); setError(null); }
+    else { setError(res.error); }
     setLoading(false);
-  }, [isFinance, isGod]);
+  }, []);
 
   useEffect(() => {
     void load();
-    const interval = setInterval(() => {
+    const id = setInterval(() => {
       if (document.visibilityState === "visible") void load();
     }, REFRESH_MS);
-    const onVis = () => { if (document.visibilityState === "visible") void load(); };
-    document.addEventListener("visibilitychange", onVis);
-    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVis); };
+    return () => clearInterval(id);
   }, [load]);
 
+  const snap = data?.snapshot;
+  const attention = data?.attention ?? [];
+
   return (
-    <ModulePage
-      module="dashboard"
-      title="Centre opérations"
-      subtitle="Console de pilotage mission launch — vue unique des actions critiques"
-    >
-      {/* Header / refresh */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-xs text-muted-foreground">
-          {lastRefresh ? `Dernière mise à jour : ${lastRefresh.toLocaleTimeString()}` : "Chargement…"}
+    <div className="space-y-4 max-w-6xl mx-auto">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border/60 pb-2">
+        <div className="min-w-0">
+          <p className="admin-eyebrow">operations</p>
+          <h1 className="text-[18px] font-semibold tracking-tight leading-tight mt-0.5">
+            Centre des opérations
+          </h1>
+          <p className="text-[12px] text-muted-foreground mt-0.5">
+            Vue opérationnelle temps réel. Les faits financiers sont en lecture seule.
+          </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-          <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? "animate-spin" : ""}`} />
-          Rafraîchir
-        </Button>
+        <div className="flex items-center gap-2">
+          {data?.generated_at && (
+            <span className="text-[11px] text-muted-foreground tabular-nums">
+              MAJ {new Date(data.generated_at).toLocaleTimeString("fr-FR")}
+            </span>
+          )}
+          <Button size="sm" variant="outline" className="h-7" onClick={() => void load()} disabled={loading}>
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+            Actualiser
+          </Button>
+        </div>
       </div>
 
-      {/* Launch readiness strip */}
-      <section className="mb-6">
-        <h2 className="text-sm font-semibold mb-2">Prêt pour le lancement</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-          {readiness.map((r) => {
-            const meta = STATUS_META[r.status];
-            const body = (
-              <Card className="p-3 h-full">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{r.label}</span>
-                  <Badge className={`${meta.cls} text-[10px] border-0`}>{meta.label}</Badge>
-                </div>
-                <p className="text-xs leading-snug">{r.detail}</p>
-              </Card>
-            );
-            return r.href ? (
-              <Link key={r.key} to={r.href} className="block hover:opacity-90 transition">{body}</Link>
-            ) : <div key={r.key}>{body}</div>;
-          })}
-        </div>
-        {isGod && masterBalance !== null && (
-          <Card className="p-3 mt-2 bg-primary/5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Solde master wallet (God Admin uniquement)</span>
-              <span className="font-mono font-semibold">
-                {new Intl.NumberFormat("fr-FR").format(masterBalance)} GNF
-              </span>
+      {error && (
+        <Card className="p-3 border-destructive/40 bg-destructive/5">
+          <p className="text-[13px] text-destructive font-medium">{error}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Aucun chiffre n'est affiché tant que la lecture n'a pas abouti.
+          </p>
+        </Card>
+      )}
+
+      {loading && !data && !error && (
+        <p className="text-[13px] text-muted-foreground">Chargement des données opérationnelles…</p>
+      )}
+
+      {data && (
+        <>
+          <section aria-labelledby="ops-snapshot" className="space-y-2">
+            <h2 id="ops-snapshot" className="admin-eyebrow">Instantané de service</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {METRICS.map((m) => (
+                <Metric key={m.key} label={m.label} value={snap?.[m.key]} href={m.href} Icon={m.icon} />
+              ))}
             </div>
-          </Card>
-        )}
-      </section>
+          </section>
 
-      {/* Today overview */}
-      <section className="mb-6">
-        <h2 className="text-sm font-semibold mb-2">Aujourd'hui</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-          {today.filter((c) => !c.hidden).map((c) => {
-            const Icon = c.icon;
-            const body = (
-              <Card className="p-3 h-full">
-                <div className="flex items-center justify-between mb-1">
-                  <Icon className="w-4 h-4 text-muted-foreground" />
-                  {c.value === null && <Badge variant="secondary" className="text-[10px]">Non activé</Badge>}
-                </div>
-                <p className="text-xl font-semibold">{c.value ?? "—"}</p>
-                <p className="text-[11px] text-muted-foreground">{c.label}</p>
-              </Card>
-            );
-            return c.href ? (
-              <Link key={c.key} to={c.href} className="block hover:opacity-90 transition">{body}</Link>
-            ) : <div key={c.key}>{body}</div>;
-          })}
-        </div>
-      </section>
+          <section aria-labelledby="ops-attention" className="space-y-2">
+            <h2 id="ops-attention" className="admin-eyebrow">À traiter maintenant</h2>
+            <Card className="p-3">
+              {attention.length === 0 ? (
+                <p className="text-[13px] text-muted-foreground">
+                  Aucun élément opérationnel en attente. (0 élément — lecture réussie.)
+                </p>
+              ) : (
+                <ul className="divide-y-0">
+                  {attention.map((item) => (
+                    <AttentionRow key={`${item.kind}-${item.reference}`} item={item} />
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </section>
 
-      {/* Urgent queues */}
-      <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <UrgentCard
-          icon={LifeBuoy}
-          title="Support — haute gravité"
-          value={urgent.support}
-          href="/admin/support"
-          actionLabel="Voir tickets"
-          empty="Aucune urgence support"
-          show
-        />
-        <UrgentCard
-          icon={Bike}
-          title="Chauffeurs à approuver"
-          value={urgent.pendingDrivers}
-          href="/admin/drivers"
-          actionLabel="Ouvrir approbations"
-          empty="Aucune demande en attente"
-          show={isOps}
-        />
-        <UrgentCard
-          icon={Wallet}
-          title="Top-ups OM en attente"
-          value={urgent.pendingTopups}
-          href="/admin/wallet/reconciliation"
-          actionLabel="Vérifier (manuel)"
-          empty="Aucun top-up en attente"
-          hint="Ne pas créditer sans preuve. Vérification opérateur uniquement."
-          show={isFinance}
-        />
-        <UrgentCard
-          icon={Coins}
-          title="Cashouts chauffeurs"
-          value={urgent.pendingCashouts}
-          href="/admin/wallet/driver-cashouts"
-          actionLabel="Traiter manuellement"
-          empty="Aucun cashout en attente"
-          hint="Paiement Orange Money manuel uniquement. Aucun virement automatique."
-          show={isFinance}
-        />
-        <UrgentCard
-          icon={MapIcon}
-          title="Doublons de lieux à fusionner"
-          value={urgent.mapDups}
-          href="/admin/map/duplicates"
-          actionLabel="Réviser"
-          empty="Aucun doublon ouvert"
-          show={isOps}
-        />
-        <UrgentCard
-          icon={Store}
-          title="Boutiques sans localisation"
-          value={urgent.storesNoLocation}
-          href="/admin/merchants"
-          actionLabel="Vérifier marchands"
-          empty="Toutes localisées"
-          show={isOps}
-        />
-      </section>
+          <section aria-labelledby="ops-services" className="space-y-2">
+            <h2 id="ops-services" className="admin-eyebrow">Services</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {SERVICES.map((s) => {
+                const open = attention.filter((a) => s.kinds.includes(a.kind));
+                const critical = open.filter((a) => a.severity === "critical").length;
+                return (
+                  <Card key={s.name} className="p-3">
+                    <div className="flex items-center gap-2">
+                      <s.icon className="w-4 h-4 text-muted-foreground" aria-hidden />
+                      <p className="text-[13px] font-medium min-w-0 truncate">{s.name}</p>
+                      <Button asChild size="sm" variant="ghost" className="h-6 px-2 text-[11px] ml-auto">
+                        <Link to={s.href}>Ouvrir</Link>
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1 tabular-nums">
+                      {open.length} exception(s) · {critical} critique(s)
+                    </p>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
 
-      {/* Quick links */}
-      <section className="mb-6">
-        <h2 className="text-sm font-semibold mb-2">Liens rapides</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          <QuickLink to="/admin/drivers" icon={Bike} label="Approbations chauffeurs" />
-          <QuickLink to="/admin/map/driver-signals" icon={Activity} label="Signaux chauffeurs" show={isOps} />
-          <QuickLink to="/admin/support" icon={LifeBuoy} label="Tickets support" />
-          <QuickLink to="/admin/wallet/reconciliation" icon={Wallet} label="Réconciliation OM" show={isFinance} />
-          <QuickLink to="/admin/wallet/driver-cashouts" icon={Coins} label="Cashouts chauffeurs" show={isFinance} />
-          <QuickLink to="/admin/merchants" icon={Store} label="Marchands" show={isOps} />
-          <QuickLink to="/admin/repas" icon={UtensilsCrossed} label="Restaurants Repas" show={isOps} />
-          <QuickLink to="/admin/marche" icon={ShoppingBag} label="Marché — boutiques" show={isOps} />
-          <QuickLink to="/admin/map/duplicates" icon={MapIcon} label="Doublons lieux" show={isOps} />
-          <QuickLink to="/admin/map/routing" icon={MapIcon} label="Routage & ETA" show={isOps} />
-          <QuickLink to="/admin/field/pilots" icon={Activity} label="Pilots terrain" show={isOps} />
-          <QuickLink to="/admin/settings" icon={Mail} label="SMTP / paramètres" />
-        </div>
-      </section>
+          <section aria-labelledby="ops-supply" className="space-y-2">
+            <h2 id="ops-supply" className="admin-eyebrow">Offre & partenaires</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <Metric label="Chauffeurs approuvés" value={snap?.drivers_approved} href="/admin/drivers" Icon={Bike} />
+              <Metric label="Candidatures chauffeur" value={snap?.driver_apps_pending} href="/admin/drivers" Icon={Bike} />
+              <Metric label="Boutiques à valider" value={snap?.merchant_apps_pending} href="/admin/merchants" Icon={Store} />
+              <Metric label="Doublons de lieux" value={snap?.map_duplicates_open} href="/admin/map/duplicates" Icon={Compass} />
+            </div>
+          </section>
 
-      {/* Safety footer */}
-      <Card className="p-3 bg-muted/30">
-        <p className="text-[11px] text-muted-foreground leading-relaxed">
-          <strong>Règles d'exploitation :</strong> aucun crédit automatique de wallet,
-          aucun paiement Orange Money automatique, aucune approbation chauffeur automatique.
-          Toute action sensible passe par l'écran dédié. Solde master wallet visible uniquement par le God Admin.
-        </p>
-      </Card>
-    </ModulePage>
-  );
-}
+          <section aria-labelledby="ops-field" className="space-y-2">
+            <h2 id="ops-field" className="admin-eyebrow">Carte & terrain</h2>
+            <div className="flex flex-wrap gap-2">
+              {FIELD_LINKS.map((l) => (
+                <Button key={l.href} asChild size="sm" variant="outline" className="h-7 text-[12px]">
+                  <Link to={l.href}><l.icon className="w-3.5 h-3.5 mr-1.5" />{l.label}</Link>
+                </Button>
+              ))}
+            </div>
+          </section>
 
-function UrgentCard({
-  icon: Icon, title, value, href, actionLabel, empty, hint, show,
-}: {
-  icon: typeof Activity; title: string; value: number | null; href: string;
-  actionLabel: string; empty: string; hint?: string; show: boolean;
-}) {
-  if (!show) return null;
-  const hasAction = (value ?? 0) > 0;
-  return (
-    <Card className="p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-            hasAction ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"
-          }`}>
-            <Icon className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{title}</p>
-            <p className="text-[11px] text-muted-foreground">
-              {value === null ? "Non disponible" : hasAction ? `${value} à traiter` : empty}
-            </p>
-            {hint && <p className="text-[10px] text-muted-foreground/80 mt-1">{hint}</p>}
-          </div>
-        </div>
-        <Button asChild size="sm" variant={hasAction ? "default" : "outline"}>
-          <Link to={href}>{hasAction ? actionLabel : "Voir"}</Link>
-        </Button>
-      </div>
-    </Card>
-  );
-}
+          {role === "operations_admin" && (
+            <Card className="p-3 border-dashed">
+              <p className="text-[12px] text-muted-foreground flex items-start gap-2">
+                <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" aria-hidden />
+                <span>
+                  Les états de paiement, règlement et remboursement affichés ici sont un
+                  contexte <strong>en lecture seule</strong>. Toute action monétaire relève de
+                  la Finance : <em>{FINANCE_ESCALATION}</em>.
+                </span>
+              </p>
+            </Card>
+          )}
+        </>
+      )}
 
-function QuickLink({ to, icon: Icon, label, show = true }: {
-  to: string; icon: typeof Activity; label: string; show?: boolean;
-}) {
-  if (!show) return null;
-  return (
-    <Link to={to} className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted/50 transition text-xs">
-      <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-      <span className="truncate">{label}</span>
-    </Link>
+      {!data && !loading && !error && (
+        <p className="text-[13px] text-muted-foreground">{OPS_UNAVAILABLE_MESSAGE}</p>
+      )}
+    </div>
   );
 }
