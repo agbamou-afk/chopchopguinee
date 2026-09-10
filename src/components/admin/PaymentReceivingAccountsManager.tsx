@@ -69,7 +69,7 @@ export function PaymentReceivingAccountsManager({
       instructions: nInstr.trim() || null, notes: nNotes.trim() || null,
     });
     setCreating(false);
-    if (!res.ok) { toast.error(res.error); return; }
+    if (!res.ok) { toast.error(res.error ?? "Action refusée"); return; }
     toast.success("Compte créé — inactif. Activez-le explicitement.");
     setNLabel(""); setNPhone(""); setNInstr(""); setNNotes("");
     void load();
@@ -82,7 +82,7 @@ export function PaymentReceivingAccountsManager({
       id: a.id, label: d.label, instructions: d.instructions || null, notes: d.notes || null,
     });
     setBusy(null);
-    if (!res.ok) { toast.error(res.error); return; }
+    if (!res.ok) { toast.error(res.error ?? "Action refusée"); return; }
     toast.success("Informations enregistrées");
     void load();
   };
@@ -93,7 +93,7 @@ export function PaymentReceivingAccountsManager({
     setBusy(a.id);
     const res = await setReceivingAccountActive(a.id, !a.is_active, reason);
     setBusy(null);
-    if (!res.ok) { toast.error(res.error); return; }
+    if (!res.ok) { toast.error(res.error ?? "Action refusée"); return; }
     toast.success(a.is_active ? "Compte désactivé" : "Compte activé");
     void load();
   };
@@ -104,7 +104,7 @@ export function PaymentReceivingAccountsManager({
     setBusy(a.id);
     const res = await replaceReceivingAccountRouting(a.id, d.phone.trim(), d.reason.trim());
     setBusy(null);
-    if (!res.ok) { toast.error(res.error); return; }
+    if (!res.ok) { toast.error(res.error ?? "Action refusée"); return; }
     toast.success("Routage remplacé");
     void load();
   };

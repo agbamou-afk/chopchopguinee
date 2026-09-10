@@ -59,3 +59,4 @@
 - [G3 Staff Account Lifecycle — Certified](mem://milestones/g3-staff-account-lifecycle-certified) — Governed staff saga (create/deactivate/reactivate/role-change/access-reset), readiness law, retired admin-create-staff-user, quorum truth
 - [G4 Operations Command Center — Certified](mem://milestones/g4-operations-command-center-certified) — Operations Admin scope: operational domains + read-only finance facts, no governance; ops_command_overview RPC, route guards, 40/40 server board
 - [G5 Finance Command Center — Certified](mem://milestones/g5-finance-command-center-certified) — Canonical finance read model (finance_command_overview), governed provider-event rejection, Finance/Ops/Governance separation; 36/36 server board
+- [G6 Final Admin Architecture — LOCKED](mem://milestones/g6-final-admin-architecture-locked) — Adversarial lock: versioned governed receiving accounts, readiness-gated approvals, no direct writes to governed tables; 128/128 server board
