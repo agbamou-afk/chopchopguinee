@@ -102,8 +102,8 @@ describe("G4 A — routing and navigation", () => {
   });
 
   it("every admin route in App.tsx carries a module guard", () => {
-    const routes = [...app.matchAll(/<Route path="(?!\/)([^"]+)" element=\{([^]*?)\}\s*\/>/g)]
-      .filter(([, p]) => !p.startsWith("/") && app.indexOf(`path="${p}"`) > app.indexOf('path="/admin"'));
+    const block = app.slice(app.indexOf('path="/admin" element'), app.indexOf("</Route>"));
+    const routes = [...block.matchAll(/<Route path="([^"]+)" element=\{([^]*?)\}\s*\/>/g)];
     const unguarded = routes.filter(([, , el]) => !el.includes("AdminRouteGuard"));
     expect(unguarded.map(([, p]) => p)).toEqual([]);
   });
@@ -191,7 +191,8 @@ describe("G4 E — finance separation", () => {
     const res = await fetchOpsOverview();
     const repas = res.ok ? res.data.attention.find((a) => a.kind === "repas_exception") : null;
     expect(repas?.finance_context).toMatch(/Paiement/);
-    expect(page).toContain(FINANCE_ESCALATION);
+    expect(page).toContain("FINANCE_ESCALATION");
+    expect(FINANCE_ESCALATION).toBe("Intervention Finance requise");
   });
 
   it("21-26. no financial mutation control exists on any Operations surface", () => {
