@@ -45,8 +45,11 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     drivers: ["view", "edit"],
     driver_groups: ["view", "edit"],
     merchants: ["view", "edit"],
-    vendors: ["view"],
-    wallet: ["view"],
+    // G4: financial consoles (recharge-agent float, wallet/ledger, treasury,
+    // payouts, payment intents, finance policy) are Finance/God surfaces. The
+    // constitution grants Operations READ of financial *facts*, which G4 serves
+    // through operational read models (ops_command_overview, order context),
+    // not through mutation consoles. Least privilege: no module entry at all.
     pricing: ["view"],
     orders: ["view", "edit"],
     repas: ["view", "edit"],
@@ -54,10 +57,12 @@ export const PERMISSIONS: Record<AdminRole, Partial<Record<AdminModule, Capabili
     support: ["view", "edit"],
     risk: ["view", "edit"],
     notifications: ["view", "edit"],
-    promotions: ["view"],
+    // ops.maps.manage = ALLOW: zones, places, duplicates, routing corrections.
+    zones: ["view", "edit"],
     reports: ["view"],
     audit: ["view"],
     analytics: ["view"],
+
   },
   finance_admin: {
     dashboard: ["view"],
@@ -112,3 +117,43 @@ export const ROLE_LABELS: Record<AdminRole, string> = {
   operations_admin: "Operations Admin",
   finance_admin: "Finance Admin",
 };
+/**
+ * G4 — constitutional binding of each frontend module to its G1 capability
+ * (`docs/admin/ADMIN_CAPABILITY_CONSTITUTION.md` §8). The display layer must not
+ * drift from the registry; the database capability gate remains authority.
+ */
+export const MODULE_CAPABILITY: Record<AdminModule, string> = {
+  dashboard: "governance.capability.resolve",
+  live_ops: "ops.liveops.view",
+  users: "ops.users.manage",
+  drivers: "ops.drivers.manage",
+  driver_groups: "ops.drivers.manage",
+  merchants: "ops.merchants.manage",
+  vendors: "finance.payouts.manage",
+  wallet: "finance.wallet.read",
+  pricing: "ops.pricing.propose",
+  orders: "ops.orders.manage",
+  repas: "ops.orders.manage",
+  marche: "ops.orders.manage",
+  support: "ops.support.manage",
+  risk: "ops.risk.manage",
+  notifications: "ops.notifications.send",
+  promotions: "governance.pricing.change",
+  reports: "ops.reports.view",
+  zones: "ops.maps.manage",
+  flags: "governance.flags.manage",
+  settings: "governance.settings.manage",
+  admins: "governance.staff.manage",
+  audit: "ops.audit.view_own_domain",
+  analytics: "ops.analytics.view",
+  payments: "finance.payouts.manage",
+};
+
+/**
+ * Modules an Operations Admin must never reach, even by direct URL: financial
+ * mutation consoles and governance/policy controls. Kept as an explicit list so
+ * a regression in PERMISSIONS is caught by the G4 suite rather than by a user.
+ */
+export const OPERATIONS_FORBIDDEN_MODULES: AdminModule[] = [
+  "wallet", "vendors", "payments", "promotions", "flags", "settings", "admins",
+];

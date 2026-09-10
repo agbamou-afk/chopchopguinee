@@ -12,18 +12,20 @@ import {
 import { AdminModule } from "@/lib/admin/permissions";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
-type Item = { title: string; url: string; icon: any; module: AdminModule };
+type Item = { title: string; url: string; icon: any; module: AdminModule; godOnly?: boolean };
 
 const GROUPS: { label: string; items: Item[] }[] = [
   {
     label: "Vue d'ensemble",
     items: [
-      { title: "Tableau de bord", url: "/admin", icon: LayoutDashboard, module: "dashboard" },
-      { title: "Centre opérations", url: "/admin/ops", icon: Radar, module: "dashboard" },
+      // G4: the class landing console. Operations and Finance land on their own
+      // command center (AdminHomeRoute), so this generic entry is God-only.
+      { title: "Tableau de bord", url: "/admin", icon: LayoutDashboard, module: "dashboard", godOnly: true },
+      { title: "Centre des opérations", url: "/admin/ops", icon: Radar, module: "live_ops" },
       { title: "Centre finance", url: "/admin/finance", icon: Wallet, module: "payments" },
 
       { title: "Live Operations", url: "/admin/live", icon: Activity, module: "live_ops" },
-      { title: "Pilot Command", url: "/admin/pilot-command", icon: Radar, module: "dashboard" },
+      { title: "Pilot Command", url: "/admin/pilot-command", icon: Radar, module: "drivers" },
     ],
   },
   {
@@ -35,7 +37,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
       { title: "Marchands", url: "/admin/merchants", icon: Store, module: "merchants" },
       { title: "Courses & livraisons", url: "/admin/orders", icon: ClipboardList, module: "orders" },
       { title: "Repas", url: "/admin/repas", icon: UtensilsCrossed, module: "repas" },
-      { title: "Paiements Repas", url: "/admin/repas/payments", icon: Wallet, module: "repas" },
+      { title: "Paiements Repas", url: "/admin/repas/payments", icon: Wallet, module: "payments" },
       { title: "Marché", url: "/admin/marche", icon: ShoppingBag, module: "marche" },
       { title: "Opérations Marché", url: "/admin/marche/ops", icon: ShieldAlert, module: "marche" },
       { title: "Support", url: "/admin/support", icon: LifeBuoy, module: "support" },
@@ -69,7 +71,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
     label: "Plateforme",
     items: [
       { title: "Zones", url: "/admin/zones", icon: MapPin, module: "zones" },
-      { title: "Politique financière", url: "/admin/finance-policy", icon: ToggleLeft, module: "pricing" },
+      { title: "Politique financière", url: "/admin/finance-policy", icon: ToggleLeft, module: "payments" },
       { title: "Feature flags", url: "/admin/flags", icon: ToggleLeft, module: "flags" },
       { title: "Paramètres", url: "/admin/settings", icon: Settings, module: "settings" },
       { title: "Admins", url: "/admin/admins", icon: UserCog, module: "admins" },
@@ -94,7 +96,7 @@ export function AdminSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname, search } = useLocation();
-  const { can } = useAdminAuth();
+  const { can, role } = useAdminAuth();
   const isActive = (url: string) => {
     const [path, query] = url.split("?");
     const currentTab = new URLSearchParams(search).get("tab");
@@ -116,7 +118,7 @@ export function AdminSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent className="gap-1 py-2">
         {GROUPS.map((group) => {
-          const visible = group.items.filter((i) => can(i.module));
+          const visible = group.items.filter((i) => can(i.module) && (!i.godOnly || role === "god_admin"));
           if (!visible.length) return null;
           return (
             <SidebarGroup key={group.label} className="py-1">
