@@ -181,7 +181,7 @@ describe("G6 · admin routes are guarded", () => {
   const app = readFileSync(join(SRC, "App.tsx"), "utf8");
 
   it("admin routes sit behind the admin guard", () => {
-    expect(app).toContain("AdminGuard");
+    expect(readFileSync(join(SRC, "components/admin/AdminLayout.tsx"), "utf8")).toContain("AdminGuard");
   });
 
   it("module-level guards exist for direct URL entry", () => {

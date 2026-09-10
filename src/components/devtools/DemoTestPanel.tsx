@@ -3,13 +3,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical, Wallet, Car, Bell, Trash2, RefreshCw, User, ShieldCheck, Send, Lock } from "lucide-react";
+import { FlaskConical, Car, Bell, Trash2, RefreshCw, User, ShieldCheck, Send, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { chopToast } from "@/lib/toast";
 import { notifications } from "@/lib/notifications";
 import { useAuth } from "@/contexts/AuthContext";
 
-const DEFAULT_TEST_BALANCE = 100_000;
 
 /**
  * Hidden internal E2E test harness for the two demo accounts.
