@@ -11936,6 +11936,7 @@ export type Database = {
       _qa_g3_purge_fixtures: { Args: { _ids: string[] }; Returns: undefined }
       _qa_g3_staff_lifecycle: { Args: never; Returns: Json }
       _qa_g4_operations_command_center: { Args: never; Returns: Json }
+      _qa_g5_finance_command_center: { Args: never; Returns: Json }
       _qa_n4r12_orphan_admins: { Args: never; Returns: number }
       _qa_n5a9_role_governance: { Args: never; Returns: Json }
       _qa_node0_course: { Args: never; Returns: Json }
