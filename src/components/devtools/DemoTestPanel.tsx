@@ -237,18 +237,8 @@ export function DemoTestPanel() {
                 <Car className="w-4 h-4" />
                 {busy === "rides" ? "Annulation…" : "Annuler courses & commandes actives"}
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!!busy || !user}
-                onClick={resetWallet}
-                className="w-full justify-start gap-2"
-              >
-                <Wallet className="w-4 h-4" />
-                {busy === "wallet"
-                  ? "Reset…"
-                  : `Reset wallet → ${DEFAULT_TEST_BALANCE.toLocaleString("fr-FR")} GNF`}
-              </Button>
+              {/* G6: no surface, not even a dev harness, edits a wallet balance
+                  directly. Money moves only through governed server actions. */}
             </div>
             {!user && (
               <p className="text-[11px] text-muted-foreground mt-1.5">
