@@ -512,13 +512,18 @@ function ApprovalsList() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  // G6: approvals are decided only through the governed server action.
+  // Raw table writes are revoked — requester != approver, approver class,
+  // intent binding, expiry and single consumption are enforced server-side.
   const review = async (id: string, status: "approved" | "rejected") => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from("approval_requests").update({
-      status, reviewed_by: user?.id ?? null, reviewed_at: new Date().toISOString(),
-    }).eq("id", id);
+    const { error } = await (supabase as unknown as {
+      rpc: (n: string, a: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+    }).rpc("admin_review_approval", {
+      _approval_id: id,
+      _decision: status,
+      _note: null,
+    });
     if (error) { toast({ title: "Erreur", description: error.message }); return; }
-    await logAction({ module: "admins", action: `approval.${status}`, target_type: "approval_request", target_id: id });
     load();
   };
 
