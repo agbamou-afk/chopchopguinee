@@ -3,13 +3,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical, Wallet, Car, Bell, Trash2, RefreshCw, User, ShieldCheck, Send, Lock } from "lucide-react";
+import { FlaskConical, Car, Bell, Trash2, RefreshCw, User, ShieldCheck, Send, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { chopToast } from "@/lib/toast";
 import { notifications } from "@/lib/notifications";
 import { useAuth } from "@/contexts/AuthContext";
 
-const DEFAULT_TEST_BALANCE = 100_000;
 
 /**
  * Hidden internal E2E test harness for the two demo accounts.
@@ -60,23 +59,8 @@ export function DemoTestPanel() {
       chopToast.success(`Courses annulées : ${data?.length ?? 0}`);
     });
 
-  const resetWallet = () =>
-    run("wallet", async () => {
-      if (!user) return chopToast.warning("Connecte-toi à un compte démo d'abord.");
-      const { error } = await supabase
-        .from("wallets")
-        .update({
-          balance_gnf: DEFAULT_TEST_BALANCE,
-          held_gnf: 0,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("owner_user_id", user.id);
-      if (error) {
-        chopToast.error("Reset wallet échoué", { description: error.message });
-        return;
-      }
-      chopToast.success(`Solde remis à ${DEFAULT_TEST_BALANCE.toLocaleString("fr-FR")} GNF`);
-    });
+  // G6: the wallet reset action was removed. A balance is a financial fact and
+  // may only change through a governed, audited server action.
 
   const seedNotifications = () =>
     run("seed", async () => {
@@ -237,18 +221,8 @@ export function DemoTestPanel() {
                 <Car className="w-4 h-4" />
                 {busy === "rides" ? "Annulation…" : "Annuler courses & commandes actives"}
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!!busy || !user}
-                onClick={resetWallet}
-                className="w-full justify-start gap-2"
-              >
-                <Wallet className="w-4 h-4" />
-                {busy === "wallet"
-                  ? "Reset…"
-                  : `Reset wallet → ${DEFAULT_TEST_BALANCE.toLocaleString("fr-FR")} GNF`}
-              </Button>
+              {/* G6: no surface, not even a dev harness, edits a wallet balance
+                  directly. Money moves only through governed server actions. */}
             </div>
             {!user && (
               <p className="text-[11px] text-muted-foreground mt-1.5">
