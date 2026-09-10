@@ -60,23 +60,8 @@ export function DemoTestPanel() {
       chopToast.success(`Courses annulées : ${data?.length ?? 0}`);
     });
 
-  const resetWallet = () =>
-    run("wallet", async () => {
-      if (!user) return chopToast.warning("Connecte-toi à un compte démo d'abord.");
-      const { error } = await supabase
-        .from("wallets")
-        .update({
-          balance_gnf: DEFAULT_TEST_BALANCE,
-          held_gnf: 0,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("owner_user_id", user.id);
-      if (error) {
-        chopToast.error("Reset wallet échoué", { description: error.message });
-        return;
-      }
-      chopToast.success(`Solde remis à ${DEFAULT_TEST_BALANCE.toLocaleString("fr-FR")} GNF`);
-    });
+  // G6: the wallet reset action was removed. A balance is a financial fact and
+  // may only change through a governed, audited server action.
 
   const seedNotifications = () =>
     run("seed", async () => {
