@@ -13020,6 +13020,10 @@ export type Database = {
         Args: { p_code?: string; p_group: string }
         Returns: string
       }
+      admin_reject_om_event: {
+        Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
+      }
       admin_remove_driver_from_group: {
         Args: { p_membership: string; p_reason?: string }
         Returns: undefined
@@ -14630,6 +14634,7 @@ export type Database = {
         }
         Returns: string
       }
+      finance_command_overview: { Args: never; Returns: Json }
       finance_confirm_manual_om_payout: {
         Args: {
           p_attestation?: boolean
