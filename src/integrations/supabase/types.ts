@@ -16708,6 +16708,7 @@ export type Database = {
         }
         Returns: string
       }
+      ops_command_overview: { Args: never; Returns: Json }
       package_claim_open: {
         Args: {
           p_evidence_ref?: string
