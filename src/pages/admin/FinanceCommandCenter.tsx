@@ -48,8 +48,11 @@ export default function FinanceCommandCenter() {
   const load = useCallback(async () => {
     setLoading(true);
     const res = await fetchFinanceOverview();
-    if (res.ok) { setData(res.data); setError(null); setDenied(false); }
-    else { setData(null); setError(res.error); setDenied(res.denied); }
+    if (res.ok === true) {
+      setData(res.data); setError(null); setDenied(false);
+    } else {
+      setData(null); setError(res.error); setDenied(res.denied === true);
+    }
     setLoading(false);
   }, []);
 
