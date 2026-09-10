@@ -11936,6 +11936,7 @@ export type Database = {
       _qa_g3_purge_fixtures: { Args: { _ids: string[] }; Returns: undefined }
       _qa_g3_staff_lifecycle: { Args: never; Returns: Json }
       _qa_g4_operations_command_center: { Args: never; Returns: Json }
+      _qa_g5_finance_command_center: { Args: never; Returns: Json }
       _qa_n4r12_orphan_admins: { Args: never; Returns: number }
       _qa_n5a9_role_governance: { Args: never; Returns: Json }
       _qa_node0_course: { Args: never; Returns: Json }
@@ -13019,6 +13020,10 @@ export type Database = {
       admin_regenerate_group_referral_code: {
         Args: { p_code?: string; p_group: string }
         Returns: string
+      }
+      admin_reject_om_event: {
+        Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
       }
       admin_remove_driver_from_group: {
         Args: { p_membership: string; p_reason?: string }
@@ -14630,6 +14635,7 @@ export type Database = {
         }
         Returns: string
       }
+      finance_command_overview: { Args: never; Returns: Json }
       finance_confirm_manual_om_payout: {
         Args: {
           p_attestation?: boolean

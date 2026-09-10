@@ -345,10 +345,12 @@ export default function WalletReconciliation() {
   const reject = async (note: string) => {
     if (!reviewEvent) return;
     setActing(true);
-    const { error } = await supabase
-      .from("payment_provider_events")
-      .update({ processing_status: "rejected", notes: note, processed_at: new Date().toISOString() })
-      .eq("id", reviewEvent.id);
+    // G5: provider events are never mutated from the browser. The governed RPC
+    // enforces `finance.topup.manage`, requires a reason and writes the audit.
+    const { error } = await (supabase.rpc as any)("admin_reject_om_event", {
+      p_event_id: reviewEvent.id,
+      p_reason: note,
+    });
     setActing(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Événement rejeté");
