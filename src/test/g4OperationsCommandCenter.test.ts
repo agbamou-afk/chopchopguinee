@@ -224,7 +224,8 @@ describe("G4 F/G — governance separation and authority derivation", () => {
   });
 
   it("32. sidebar entries are derived from capability, never from a generic isAdmin", () => {
-    expect(sidebar).toMatch(/group\.items\.filter\(\(i\) => can\(i\.module\)\)/);
+    expect(sidebar).toMatch(/group\.items\.filter\(\(i\) => can\(i\.module\)/);
+    expect(sidebar).toMatch(/module: "dashboard", godOnly: true/);
     expect(sidebar).not.toMatch(/isAdmin|isSuperAdmin/);
     expect(page).not.toMatch(/isAdmin/);
   });
