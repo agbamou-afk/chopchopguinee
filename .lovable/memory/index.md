@@ -57,3 +57,4 @@
 - [Admin Capability Architecture — Stable](mem://milestones/admin-capability-architecture-stable) — God/Operations/Finance constitution enforced in DB, anon admin RPC access revoked, staff creation fixed
 - [G2 Backend Capability Enforcement](mem://milestones/g2-backend-capability-enforcement) — Canonical admin roles, 44-capability registry, four-eyes approvals, 34 gated RPCs
 - [G3 Staff Account Lifecycle — Certified](mem://milestones/g3-staff-account-lifecycle-certified) — Governed staff saga (create/deactivate/reactivate/role-change/access-reset), readiness law, retired admin-create-staff-user, quorum truth
+- [G4 Operations Command Center — Certified](mem://milestones/g4-operations-command-center-certified) — Operations Admin scope: operational domains + read-only finance facts, no governance; ops_command_overview RPC, route guards, 40/40 server board
