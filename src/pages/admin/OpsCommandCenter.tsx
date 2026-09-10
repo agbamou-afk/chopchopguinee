@@ -101,8 +101,8 @@ export default function OpsCommandCenter() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetchOpsOverview();
-    if (res.ok) { setData(res.data); setError(null); }
+    const res: OpsOverviewResult = await fetchOpsOverview();
+    if (res.ok === true) { setData(res.data); setError(null); }
     else { setError(res.error); }
     setLoading(false);
   }, []);
