@@ -56,3 +56,4 @@
 - [Node 5 · A3 Professional Lane Claim — Certified](mem://milestones/node5-a3-professional-lane-claim-certified-stable) — One active professional class per account (driver XOR merchant), unbypassable through every onboarding path
 - [Admin Capability Architecture — Stable](mem://milestones/admin-capability-architecture-stable) — God/Operations/Finance constitution enforced in DB, anon admin RPC access revoked, staff creation fixed
 - [G2 Backend Capability Enforcement](mem://milestones/g2-backend-capability-enforcement) — Canonical admin roles, 44-capability registry, four-eyes approvals, 34 gated RPCs
+- [G3 Staff Account Lifecycle — Certified](mem://milestones/g3-staff-account-lifecycle-certified) — Governed staff saga (create/deactivate/reactivate/role-change/access-reset), readiness law, retired admin-create-staff-user, quorum truth
